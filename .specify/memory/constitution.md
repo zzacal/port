@@ -1,25 +1,27 @@
 <!--
 Sync Impact Report
-- Version change: 1.1.0 → 2.0.0 (MAJOR)
-- Rationale: Principle III rule 2 redefined. Removed text, verbatim: "Visitors MUST only receive
-  server-generated derivatives." Derivatives are now produced in the owner's admin browser
-  (feature 001 decision). The guarantee that withdrew is that the server produced every
-  derivative's bytes and so knew by construction that it held no metadata. The replacement
-  controls (III.5–III.8: server-side validation, reject-whole-image, server-only metadata
-  extraction, no pixel processing on the server) now ARE the protection, and they are written as
-  MUST rules. Per Governance, a redefined guarantee is MAJOR.
+- Version change: 2.0.0 → 3.0.0 (MAJOR)
+- Rationale: The owner's hosting interview (feature 001) replaced R2 with Azure Blob Storage, kept
+  masters permanently, and moved logs to Application Insights. Withdrawn guarantee, verbatim from
+  VIII.1: "Every other component MUST use a free tier or free offering unless an amendment raises
+  the ceiling." The site may now incur metered spend beyond the B1 plan. The replacement control is
+  a hard monthly cap ($10) with a budget alert ($7) and a per-item cost table (VIII.1, VIII.4).
+  Per Governance, a withdrawn guarantee is MAJOR.
 - Modified principles:
-  III. Published Images Leak Nothing (rule 2 redefined; rules 5–8 added; rationale extended)
-  IV. Performance: Measured and Perceived (rule 2: client-side operations report timing to the
-      server log; rule 6: ladder production may happen in the owner's client)
+  VIII. Fixed Cost Ceiling → VIII. Cost Ceiling (rule 1 redefined; rule 3 reworded; rule 4 added)
+- Modified sections:
+  Platform Constraints (Identity session lifetime; image storage = Azure Blob via Cloudflare Cloud
+  Connector; new Observability bullet)
+  Development Workflow (integration tests use an Azure Blob emulator instead of S3-compatible storage)
 - Added sections: none
 - Removed sections: none
 - Templates requiring updates: none (templates read the constitution at runtime).
-- Prior specs swept: specs/001-architecture-stack-design/spec.md (FR-025 satisfied; Derivative
-  entity already worded as "generated in the owner's browser and validated by the server").
+- Prior specs swept: specs/001-architecture-stack-design/spec.md, where the logging clarification,
+  FR-020, US4, SC-004, and Assumptions are annotated or updated in place.
 - Deferred TODOs: none
-- History: 1.0.0 (2026-10-27) initial ratification, principles I–VIII. 1.1.0 (2026-10-27)
-  IV expanded with perceived-performance rules 6–22; II private = unlisted, edge-cache allowance.
+- History: 1.0.0 initial ratification, I–VIII. 1.1.0 expanded IV (perceived performance) and made
+  II "private = unlisted". 2.0.0 (MAJOR) redefined III.2 for client-generated derivatives plus
+  server validation III.5–III.8. All dated 2026-10-27.
 -->
 
 # Gallery Constitution
@@ -194,15 +196,19 @@ project or manifest file contents.
 Rationale: hosting, TLS, storage, and identity choices interlock; deciding them piecemeal
 inside feature plans produces contradictions that are expensive to unwind.
 
-### VIII. Fixed Cost Ceiling
+### VIII. Cost Ceiling
 
 1. Recurring fixed hosting cost MUST NOT exceed one Azure App Service Basic B1 (Linux) plan.
-   Every other component MUST use a free tier or free offering unless an amendment raises
-   the ceiling.
+   Metered spend on everything else (storage, operations, egress, log ingestion) MUST NOT exceed
+   US$10 per month. An Azure budget alert MUST fire at US$7 per month. Exceeding the cap requires
+   an amendment. Free tiers MUST be used wherever one covers the need.
 2. TLS certificates MUST be free (Cloudflare Universal SSL at the edge; Cloudflare Origin CA
    to the origin). No paid certificate.
-3. Designs MUST identify each metered cost (egress, operations, storage) and its free-tier
-   limit.
+3. Designs MUST identify each metered cost (egress, operations, storage, log ingestion), its
+   free-tier limit if one exists, its unit price, and its projected monthly cost at the stated
+   scale. The projected total MUST stay under the VIII.1 alert threshold.
+4. Every metered service that offers a hard spending limit MUST have one configured, set inside
+   the VIII.1 cap. One example is a daily ingestion cap on logs.
 
 ## Platform Constraints
 
@@ -212,10 +218,20 @@ These are binding inputs to every plan:
   interactivity.
 - Hosting: Azure App Service (Linux, B1). Origin MUST accept traffic only from Cloudflare.
 - Edge: Cloudflare DNS, proxy, cache, and TLS in "Full (strict)" mode. Never "Flexible".
-- Identity: Google OIDC, cookie session.
+- Identity: Google OIDC, with a cookie session that has a 7-day sliding expiry (renewed while it
+  is in use).
 - Data: MongoDB (Atlas free tier, same region as the app).
-- Image storage: S3-compatible object storage (Cloudflare R2 by default) behind a storage
-  abstraction, with a public derivatives location and a private masters location.
+- Image storage: Azure Blob Storage (general-purpose v2, LRS, same region as the app) behind a
+  storage abstraction. It has two containers. The public derivatives container is in the Hot tier
+  and is anonymous read only through the edge. The private masters container is in the Cool tier,
+  and masters are kept permanently. The app reaches storage by managed identity (no account keys).
+  Uploads use short-lived SAS tokens.
+- Image delivery: derivatives are served on a custom image hostname through Cloudflare Cloud
+  Connector to the public container. If Cloud Connector is unavailable on the zone, a Cloudflare
+  Worker on the free plan fetches from the container instead. Browsers never fetch directly from
+  the Blob endpoint.
+- Observability: workspace-based Azure Application Insights, with 30-day retention and a daily
+  ingestion cap that keeps it inside the free monthly allowance (VIII.4).
 - The app MUST honor forwarded headers from Cloudflare (scheme, client IP via
   `CF-Connecting-IP`) so generated URLs and audit logs are correct.
 
@@ -228,7 +244,8 @@ These are binding inputs to every plan:
   lower-cost executor; design decisions are escalated, never made by executors.
 - Build and test gates are run independently before work is accepted; existing tests MUST pass
   unmodified unless a requirement change is stated.
-- Integration tests run against real Mongo and S3-compatible storage in containers, and every
+- Integration tests run against real Mongo and an Azure Blob Storage emulator (Azurite) in
+  containers, and every
   feature ends with a live-server walkthrough.
 - Each feature keeps a `decisions.md` log (decision, rationale, pivot cost).
 
@@ -243,4 +260,4 @@ These are binding inputs to every plan:
   place, not silently edited.
 - Every plan and analyze pass verifies compliance and cites principles by number.
 
-**Version**: 2.0.0 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-10-27
+**Version**: 3.0.0 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-10-27
