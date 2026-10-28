@@ -14,7 +14,7 @@ code (Constitution VII.1). The document fixes every architectural decision for t
 - server-side structural validation of uploads
 - a server-persisted upload batch with Restart, Delete, and gated Confirm
 - the edge-cache and purge model
-- the cost budget against the free tiers
+- the cost budget against the $10/month metered cap (constitution 3.0.0)
 
 The document's structure is fixed by [contracts/design-doc-contract.md](contracts/design-doc-contract.md),
 so a script checks every spec requirement by counting. The design inputs are verified facts in
@@ -30,16 +30,20 @@ The admin client is browser JavaScript, with WebAssembly codecs running in a Web
 
 **Primary Dependencies** (each justified per V.2 in research.md):
 - Server: ASP.NET Core built-ins (auth cookies, OIDC, antiforgery, output caching, forwarded
-  headers), MongoDB.Driver, AWSSDK.S3 (for R2's S3-compatible API), and MetadataExtractor
-  (reads EXIF from the master without decoding pixels).
+  headers), MongoDB.Driver, Azure.Storage.Blobs with Azure.Identity (managed identity),
+  Microsoft.OpenTelemetry (Application Insights export), and MetadataExtractor (reads EXIF from
+  the master without decoding pixels).
 - Admin client: jSquash AVIF and WebP encoders (WASM) and htmx.
 - Public pages: no JavaScript dependencies.
 
-**Storage**: MongoDB Atlas free cluster for records. Cloudflare R2 in two buckets: a private one
-for staging and a public one for derivatives, served on a custom domain.
+**Storage**: MongoDB Atlas free cluster for records. One Azure Blob Storage account (GPv2, LRS)
+with two containers:
+- `public`: Hot tier, holds derivatives, served as `img.<domain>` through Cloudflare Cloud
+  Connector (Worker fallback).
+- `private`: Cool tier, holds staging and the permanent masters.
 
 **Testing**: The designed system will use xUnit with WebApplicationFactory, plus Testcontainers
-for Mongo and an S3-compatible container. For this feature, the testing is `evidence/validate.sh`
+for Mongo and Azurite. For this feature, the testing is `evidence/validate.sh`
 (contract counts) and `evidence/links.sh` (source URLs).
 
 **Target Platform**: Azure App Service Linux B1, Always On, behind Cloudflare Free. The admin
@@ -53,7 +57,8 @@ origin. In the admin browser, a 24 MP image takes at most 15 s for its full ladd
 (measured via FR-024 timings).
 
 **Constraints**:
-- At most one B1 plan of fixed cost; everything else stays on a free tier (VIII).
+- At most one B1 plan of fixed cost. Metered spend stays at or under $10/month, with an alert at
+  $7; the projection is about $1/month (VIII.1).
 - The origin never decodes pixels (III.8).
 - Public pages work with no JavaScript (V.3).
 - Uploads are JPEG only, 20 MB at most.
@@ -69,25 +74,24 @@ These rows are checked against constitution v2.0.0.
 
 | Principle | Status | Justification |
 |---|---|---|
-| I. Single Owner, Claimed Once | PASS | Atomic conditional claim on a single site document (data-model). Claim without a token is the accepted risk in spec Assumptions; I permits an optional token, so omitting it is compliant. |
-| II. Anonymous Viewing, Visibility | PASS | Opaque 128-bit ids, `/g/{id}/{slug}` with a 301 redirect for a stale slug, default private, content-hash derivative keys. Unlisted-but-reachable derivatives match II's "private means unlisted". |
-| III. Published Images Leak Nothing | PASS, with one open item | III.2 and III.5–III.8 are designed (server-validation contract in research R-06). **Open item: D-masters.** Deleting masters after confirm conflicts with III.1 as worded ("Masters MUST be stored privately"). It is flagged requires-amendment per FR-021 and needs an owner decision before `/speckit-tasks` of the first build feature. It does not block this document-only feature. |
-| IV. Performance | PASS | Every rule IV.1–IV.22 is mapped to a mechanism and a verification method in the traceability matrix. Browser timings are logged server-side (IV.2). |
-| V. Minimal Scope and Dependencies | PASS | Four server packages and two client codec packages, each justified in research.md. Public pages have no JavaScript dependency. |
-| VI. Official CLIs | PASS (justified N/A) | No scaffolding happens in this feature. The document records that the build features scaffold with `dotnet new`, `az`, and `wrangler`. |
+| I. Single Owner, Claimed Once | PASS | Atomic conditional claim on a single site document (data-model). Claim without a token is the accepted risk in spec Assumptions; I permits an optional token, so omitting it is compliant. The 7-day sliding session is a Platform Constraint. |
+| II. Anonymous Viewing, Visibility | PASS | Opaque 128-bit ids, `/g/{id}/{slug}` with a 301 redirect for a stale slug, default private, content-hash derivative names. Unlisted-but-reachable derivatives, including through the raw Blob URL, match "private means unlisted". |
+| III. Published Images Leak Nothing | PASS | Masters are kept privately in the `private` container (III.1). III.2 and III.5–III.8 are designed (validation contract in research R-06). The earlier D-masters conflict is gone. |
+| IV. Performance | PASS | Every rule IV.1–IV.22 is mapped to a mechanism and a verification method in the traceability matrix. Browser timings are logged to Application Insights (IV.2). Sampling is off, so evidence is complete (IV.4). |
+| V. Minimal Scope and Dependencies | PASS | Six server packages and three client packages, each justified in research.md. Public pages have no JavaScript dependency. |
+| VI. Official CLIs | PASS (justified N/A) | No scaffolding happens in this feature. The build features use `dotnet new`, `az`, and `wrangler`. |
 | VII. Design Before Code | PASS | This feature is the design. Every decision entry carries Choice, Rationale, Alternatives, and Pivot cost (contract C2). |
-| VIII. Fixed Cost Ceiling | PASS, with a stated ceiling | B1 is the only fixed cost. R2 holds about 4,000 images of derivatives free if masters are not kept (D-masters). Above that, storage bills about $0.15 per 10 GB-month (D-capacity, research R-02). The design records this ceiling and its reversals. It does not hide it. |
-| Platform Constraints | PASS | All seven bullets are designed as given. |
+| VIII. Cost Ceiling | PASS | B1 is the only fixed cost. The projected metered total is about $1/month at 5,000 images, against the $7 alert and the $10 cap (research R-02). The Application Insights daily cap and the Azure budget are the configured hard limits (VIII.4). |
+| Platform Constraints | PASS | Every bullet in 3.0.0 is designed as given: Blob, image delivery, observability, and the session lifetime. |
 | Workflow: timing logs | PASS (justified N/A) | This feature has no runtime. Its substitute is the recorded validation output (`evidence/validate-output.txt`). |
 
-**Gate result**: PASS. Two owner decisions are outstanding, D-masters and D-capacity (see
-decisions.md). Each has a default chosen and is flagged instead of resolved silently. Neither
-blocks this document-only feature, but both MUST be settled before the first build feature's
-`/speckit-plan`.
+**Gate result**: PASS against constitution 3.0.0. No owner decisions are outstanding. The
+owner still has to confirm that Cloud Connector appears on the Cloudflare zone; if it does not,
+the Worker fallback is already approved.
 
-**Post-design re-check (after Phase 1)**: PASS, and nothing changed. data-model.md and the
-contract introduce no new constitution conflicts. The contract's C6 check counts rule ids from
-the live constitution, so any later amendment is enforced automatically.
+**Post-design re-check (after Phase 1)**: PASS. data-model.md (Blob layout) and the contract
+introduce no new conflicts. The contract's C6 check counts rule ids from the live constitution,
+so VIII.4 and any later amendment are enforced automatically.
 
 ## Project Structure
 
@@ -99,7 +103,7 @@ specs/001-architecture-stack-design/
 ├── plan.md                 # this file
 ├── research.md             # Phase 0: consolidated decisions (R-01 …)
 ├── research-notes/         # Phase 0 evidence: fetched quotes per area (committed)
-├── data-model.md           # Phase 1: entities, state machines, R2 layout
+├── data-model.md           # Phase 1: entities, state machines, Blob layout
 ├── contracts/
 │   └── design-doc-contract.md   # Phase 1: machine-checkable structure of docs/design.md
 ├── quickstart.md           # Phase 1: how to validate the design document
@@ -121,5 +125,4 @@ first build feature with the official CLIs (VI).
 
 ## Complexity Tracking
 
-There are no constitution violations needing justification. The one requires-amendment item
-(D-masters) is an owner decision, not a complexity trade-off.
+There are no constitution violations needing justification.

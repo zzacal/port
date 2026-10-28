@@ -110,9 +110,9 @@ This is one table with the header row:
 Rule ids are listed exactly once, in the order of the constitution version that is current when
 the design is written:
 
-- I.1–I.6, II.1–II.5, and III.1–III.8 (plus any rules added by amendment)
-- IV.1–IV.22, V.1–V.3, VI.1, VII.1–VII.3, and VIII.1–VIII.3
-- PC.1–PC.7, the Platform Constraints bullets in order
+- I.1–I.6, II.1–II.5, and III.1–III.8
+- IV.1–IV.22, V.1–V.3, VI.1, VII.1–VII.3, and VIII.1–VIII.4
+- PC.1–PC.9, the Platform Constraints bullets in order (as of 3.0.0)
 
 Status is one of `designed`, `deferred:<feature>`, or `n/a:<reason>`. Rows IV.5 and IV.11–IV.22
 MUST name `markup/header assertion` or `browser measurement` in the Verification column.
@@ -126,18 +126,22 @@ This is one table with the header row:
 ```
 
 - Every external service named in section 2 appears in at least one row.
-- A final row with Service = `TOTAL fixed` gives the monthly fixed cost.
+- A row with Service = `TOTAL fixed` gives the monthly fixed cost.
+- A row with Service = `TOTAL metered` gives the projected monthly metered cost, which MUST be
+  below the $7 alert.
+- Every row also has a unit price, either in its Free limit cell or in its Overage cell.
 - The Projected column states the scale assumption it is based on.
 
 ## C8. Accepted-risk register (FR-007)
 
 Each risk is an entry `### R-NN: <title>` with the labeled lines `**Failure**:`,
-`**Detection**:`, `**Recovery**:`, and `**Reversal cost**:`. These six risks MUST be present, and
+`**Detection**:`, `**Recovery**:`, and `**Reversal cost**:`. These seven risks MUST be present, and
 each must contain its keyword in the title:
 
 - `claim token`
 - `backups`
 - `log retention`
+- `Cloud Connector`
 - `unlisted`
 - `browser cache`
 - `client-generated`

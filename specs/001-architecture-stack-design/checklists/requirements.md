@@ -66,4 +66,10 @@
   batch entity; FR-010 grew from 13 to 17 events; edge cases went from 16 to 19. Defaults chosen:
   one open batch at a time (FR-029); Restart reuses the master already on the server, or asks the
   owner to pick the named file again (FR-027).
+- Hosting interview (2026-10-27): storage changed to Azure Blob (masters kept, Cool tier), images
+  are delivered through Cloud Connector, logs go to Application Insights (30 days), sessions last
+  7 days, and metered spend is capped at $10. This drove constitution 3.0.0 (MAJOR: VIII.1's
+  "free tier only" guarantee is withdrawn). Spec changes: 7 clarification bullets, FR-006, FR-020,
+  SC-004, US4, one edge case, Assumptions, and two accepted risks. Counts are unchanged: 30 FRs
+  and 19 edge cases.
 - Counts for the SC-003 check: 17 lifecycle events (FR-010) and 19 edge cases.

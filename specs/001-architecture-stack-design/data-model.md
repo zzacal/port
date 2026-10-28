@@ -1,7 +1,8 @@
 # Data Model: Gallery (designed in 001, built in later features)
 
 This model is a design input to `docs/design.md` section 4. The collections are MongoDB
-documents (Platform Constraints). Storage keys refer to R2. All ids are opaque: 128-bit random
+documents (Platform Constraints). Storage paths refer to Azure Blob containers (constitution
+3.0.0). All ids are opaque: 128-bit random
 values, base32-encoded, 26 characters, never sequential and never derived from titles
 (Constitution II.3).
 
@@ -71,7 +72,7 @@ BatchItem is defined as follows:
 | fileSize | int | 20 MB at most (FR-014). |
 | state | `queued` \| `processing` \| `uploading` \| `succeeded` \| `failed` \| `interrupted` | |
 | reason | string? | Set when the state is `failed`. |
-| masterStored | bool | |
+| masterStored | bool | Lets Restart reuse the staged master (FR-027). |
 | derivativesStored | key[] | |
 | heartbeatAt | datetime | Updated by the client while it works on the item. |
 | attemptId | id | A new value on each Restart. Uploads that carry a stale attemptId are refused. |
@@ -94,22 +95,36 @@ open → confirmed   only when the batch has at least one item and every item is
 open → discarded   always allowed; all staged keys are deleted (FR-029)
 ```
 
-On confirm, each item's derivatives are published to the public bucket, its Image document is
-created, and the batch is marked confirmed. A confirm that crashes partway through can be re-run.
+On confirm, each item's derivatives and master are copied out of staging (see the Blob layout
+section), its Image document is created, and the batch is marked confirmed. A confirm that
+crashes partway through can be re-run.
 
-## R2 key layout
+## Blob layout
 
-There are two buckets. Only the public bucket is attached to a custom domain; R2 exposes a
-whole bucket at a time, not a prefix.
+There is one storage account with two containers. Only `public` allows anonymous read, and it is
+served to visitors as `img.<domain>` through Cloud Connector (research R-04).
 
 ```
-gallery-private:  staging/{batchId}/{itemId}/{attemptId}/master.jpg         (see D-masters)
-                  staging/{batchId}/{itemId}/{attemptId}/{w}.{avif|webp}
-gallery-public:   d/{sha256-16hex}.{avif|webp}                              immutable (IV.21)
+private/staging/{batchId}/{itemId}/{attemptId}/master.jpg         Cool; replaced on confirm by:
+private/masters/{imageId}.jpg                                     Cool; kept permanently
+private/staging/{batchId}/{itemId}/{attemptId}/{w}.{avif|webp}    Hot; deleted after confirm
+public/{sha256-16hex}.{avif|webp}                                 Hot; immutable (IV.21)
 ```
 
-Derivatives are named by their content hash, so their addresses are unguessable and
-content-addressed (II.3, FR-011). On confirm, each derivative is copied across buckets into the
-public bucket and its staged copy is deleted. The confirm step is idempotent per item.
-A lifecycle rule on the private bucket deletes any `staging/` object older than 7 days. This is the
-backstop sweep for orphaned files (FR-030).
+Derivative names are content hashes, so their addresses are unguessable and content-addressed
+(II.3, FR-011). They are uploaded with blob property
+`Cache-Control: public, max-age=31536000, immutable`, which the edge respects.
+
+On confirm, for each item:
+
+1. Copy the staged derivatives into `public/`.
+2. Copy the master into `private/masters/`.
+3. Delete the staged blobs.
+
+These are same-account server-side copies. The confirm step is idempotent per item.
+
+A lifecycle policy deletes `private/staging/` blobs 7 days after creation. This is the backstop
+sweep for orphaned files (FR-030).
+
+Deleting an image (FR-013) deletes `private/masters/{imageId}.jpg` and every `public/`
+derivative, then purges the image URLs at the edge.

@@ -26,8 +26,8 @@ through C9:
 | C4 lifecycle | 17 `### L-` entries × 4 labeled fields |
 | C5 edge cases | 19 `### E-` entries × 2 labeled fields |
 | C6 matrix | every rule id from the current constitution appears exactly once; no row has an empty Status |
-| C7 cost | a `TOTAL fixed` row is present; every service in section 2 has a row |
-| C8 risks | all 6 keyword risks are present, each with 4 labeled fields |
+| C7 cost | `TOTAL fixed` and `TOTAL metered` rows are present, and the metered total is below $7; every service in section 2 has a row |
+| C8 risks | all 7 keyword risks are present, each with 4 labeled fields |
 | C9 hygiene | no TBD, TODO, NEEDS CLARIFICATION, or `??` |
 
 For check C6, the script extracts rule ids from `.specify/memory/constitution.md` itself

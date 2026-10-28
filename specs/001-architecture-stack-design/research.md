@@ -1,11 +1,11 @@
 # Research: Architecture and Stack Design (Phase 0)
 
-The evidence lives in `research-notes/`: five area files, each claim with a fetched quote and a
+The evidence lives in `research-notes/`: six area files, each claim with a fetched quote and a
 `Fetch: OK` line, plus a `## Gaps` section. This file consolidates the decisions that
 `docs/design.md` will record. Area files are cited as [cf] cloudflare.md, [st]
-storage-datastore.md, [br] browser-encoding.md, [az] azure-dotnet.md, and [wp] web-platform.md.
+storage-datastore.md, [br] browser-encoding.md, [az] azure-dotnet.md, and [wp] web-platform.md, and [asl] azure-storage-logs.md.
 
-## R-01: Edge on Cloudflare Free covers every Principle IV delivery rule
+## R-01: Edge on Cloudflare Free covers every Principle IV delivery rule (HTML and images)
 
 - **Decision**: Use Cloudflare Free with the following features:
   - Smart Tiered Cache.
@@ -24,33 +24,40 @@ storage-datastore.md, [br] browser-encoding.md, [az] azure-dotnet.md, and [wp] w
   - A Worker in front of the origin: the Free plan has 100k requests/day and 10 ms CPU [cf Q7].
     It is unnecessary because Cache Rules do the cookie bypass.
 
-## R-02: Storage budget, where R2's free 10 GB is the binding constraint
+## R-02: Storage budget on Azure Blob, with masters kept (constitution 3.0.0)
 
-- **Facts**:
-  - The R2 free tier is 10 GB-month, 1M Class A operations, and 10M Class B operations, with
-    free egress [st Q1].
-  - PutObject and CopyObject are Class A; DeleteObject is free [st Q5].
-- **Estimate**: These are design estimates, verified at implementation from logged byte counts.
-  - The derivative ladder of 6 widths × 2 formats is about 2.2 MB per image (AVIF about 0.9 MB,
-    WebP about 1.3 MB).
-  - A master is about 8–15 MB.
-  - Derivatives only: about 11 GB at 5,000 images, so the free tier holds about 4,000 images.
-  - Derivatives plus retained masters: about 60–85 GB at 5,000 images, so the free tier holds
-    about 700 images.
-- **Decision (default, needs owner review, D-masters)**: Masters are kept only in the private
-  staging area until their batch is confirmed. They are needed for Restart (FR-027). After
-  confirm they are deleted, and the owner's local exports remain the source of truth, which is
-  consistent with the accepted no-backup risk. This conflicts with III.1 as worded ("Masters
-  MUST be stored privately"), so the decision is flagged `requires-amendment`.
-- **Capacity default (D-capacity)**: The design states a free-tier capacity of about 4,000
-  images. Above that, R2 bills $0.015 per GB-month; another 10 GB costs about $0.15/month. That
-  breaks VIII.1 literally, so the decision is recorded as a known ceiling with two cheap
-  reversals. One reversal is to amend VIII to allow metered storage under $1/month. The other is
-  to drop the 2560 width or WebP (all current browsers decode AVIF [wp Q6]), which roughly
-  halves storage but needs an amendment to IV.6.
-- **Class A ops**: There are 13 PUTs (master plus 12 derivatives) and 12 cross-bucket copies on
-  confirm, about 25 per image. 5,000 images is about 125k, within 1M.
-
+- **Facts** [asl Q1, Q2, Q6, Q7]:
+  - There is no free storage allowance. Prices are per GB-month on LRS in East US. These are
+    indicative, because the pricing page renders with JavaScript; verify them in the calculator:
+    - Hot: about $0.0184
+    - Cool: about $0.010 (minimum stay 30 days)
+    - Cold: about $0.0045
+  - Write operations cost $0.065 (Hot) and $0.13 (Cool) per 10,000.
+  - The first 100 GB/month of internet egress is free.
+  - Lifecycle policies and deletes are free.
+  - A same-account Copy Blob is billed as a write on the destination.
+- **Estimate** at 5,000 images. These are design estimates, to be verified from logged byte
+  counts.
+  - Derivatives are about 2.2 MB per image, about 11 GB in Hot, so about $0.20/month.
+  - Masters are about 8–15 MB per image, about 60–75 GB in Cool, so about $0.60–0.75/month.
+  - Writes: 13 PUTs per image to staging (master in Cool, derivatives in Hot), plus 12 copies to
+    public on confirm, about 25 writes per image. At 5,000 images uploaded over a year, that is
+    about 125k writes, about $1 in total, or about $0.10/month amortized.
+  - Egress: origin pulls from Cloudflare only on edge cache misses. At low-thousands of page
+    views, that is well under 100 GB, so it is free.
+  - Application Insights: under 5 GB/month, so it is free (R-09).
+  - **Projected metered total: about $1/month**, against the $7 alert and the $10 cap (VIII.1).
+- **Decision**:
+  - One GPv2 LRS account in the App Service region, with two containers:
+    - `public`: Hot, anonymous blob-level read.
+    - `private`: Cool, no anonymous access. It holds `staging/` and `masters/`.
+  - On confirm, the master is copied from `staging/` to `masters/{imageId}.jpg`, which stays in
+    Cool permanently.
+  - An Azure budget is set at $10, with an alert at $7 (VIII.1).
+- **Cool minimum-stay charge**: a master deleted within 30 days is billed for the full 30 days,
+  which is at most about $0.0015 per image. That is negligible and recorded.
+- **Capacity**: there is no hard ceiling. At $10/month the budget would cover roughly 50,000+
+  images, so the D-capacity concern from the R2 design is gone.
 ## R-03: Datastore on Atlas Free fits comfortably
 
 - **Facts**:
@@ -66,34 +73,61 @@ storage-datastore.md, [br] browser-encoding.md, [az] azure-dotnet.md, and [wp] w
 - **Sizing**: An image document is about 3 KB including a placeholder of at most 1 KB, so 5,000
   images is about 15 MB, which is 3% of the 0.5 GB quota.
 
-## R-04: R2 layout uses two buckets
+## R-04: Image delivery via Cloudflare Cloud Connector (Worker fallback)
 
-- **Decision**: `gallery-private` holds staging (masters and unconfirmed derivatives).
-  `gallery-public` holds confirmed derivatives and is bound to a custom domain on the same
-  Cloudflare zone. The custom domain gets the Cloudflare cache and Cache Rules; `r2.dev` does
-  not, and is never used [st Q2].
-- **Rationale**: R2 public access works per bucket. Staging must never be publicly reachable,
-  even by a guessed key.
-- **Backstop sweep**: A lifecycle rule on `gallery-private` deletes `staging/` objects after 7
-  days, and incomplete multipart uploads abort after 7 days by default [st Q4]. This removes
-  orphans without any app timer (FR-030).
+- **Facts**:
+  - Azure Blob rejects requests whose Host header is not its own endpoint or a registered custom
+    domain, and Azure custom domains don't support HTTPS without Azure CDN [asl Q4].
+  - Cloudflare's Origin Rules Host-header override is Enterprise-only [asl Q4].
+  - Cloud Connector is free on all plans, in beta, and supports `<account>.blob.core.windows.net`
+    origins [asl Q4].
+- **Decision**:
+  - `img.<domain>` is a proxied Cloudflare hostname. A Cloud Connector rule routes it to
+    `https://<account>.blob.core.windows.net/public/`.
+  - A Cache Rule sets the edge TTL to 1 year and respects the origin's
+    `Cache-Control: public, max-age=31536000, immutable`, which is set as blob metadata at
+    upload (IV.21).
+  - Tiered Cache applies [cf Q2].
+- **Fallback (owner-approved)**: if Cloud Connector is not offered on the zone, a Worker (about
+  20 lines) proxies `img.<domain>/*` to the blob URL. The Workers free plan allows 100k
+  requests/day [cf Q7]. Every request on a Worker route invokes the Worker, cache hits included,
+  so the limit covers all image requests. At about 20 images per page view, that is about 5,000
+  page views/day, far above the expected traffic. The Worker MUST use the Cache API so that
+  cache hits do not pull from Blob.
+- **Public container exposure**: anonymous read must be enabled for the edge to fetch, so the
+  raw `blob.core.windows.net` URL is also publicly readable. This is acceptable: derivative
+  names are unguessable content hashes (II.3), derivatives are "unlisted, not secret" (FR-012),
+  and egress beyond 100 GB is the only exposure, which the budget alert covers. The app never
+  emits raw blob URLs.
+- **Alternatives**:
+  - Azure Front Door: about $35/month or more, which breaks the cap.
+  - Direct Blob URLs: no edge cache, and the egress is billed.
+  - Making the public container private and signing every URL: this breaks immutable caching.
 
-## R-05: Upload path is direct from the browser to R2 with presigned PUTs
+## R-05: Upload path is direct from the browser to Blob with SAS
 
 - **Decision**:
-  1. The server issues presigned PUT URLs scoped to `staging/{batch}/{item}/{attempt}/…`, with a
-     15-minute expiry.
-  2. The browser uploads the master and the derivatives directly to R2. The bucket's CORS
-     configuration allows only the admin origin [st Q3].
-  3. The browser then calls `complete`, and the server validates the staged files.
-- **Rationale**: 20 MB masters never pass through the B1's single vCPU and 1.75 GB of RAM
-  [az Q1]. Presigned URLs also keep the R2 credentials server-side.
-- **Alternatives**: Streaming uploads through the app was rejected because it would push
-  every master and derivative through the B1 and its single vCPU.
+  1. The server issues a **user delegation SAS** per blob. It is signed through managed identity
+     (no account key exists in config), is write-only, scoped to
+     `private/staging/{batch}/{item}/{attempt}/{name}`, and expires after 15 minutes [asl Q5,
+     Q10].
+  2. The browser PUTs each file with a single Put Blob request. 20 MB is far below the 5,000 MiB
+     single-request limit [asl Q5].
+  3. Blob-service CORS allows only the admin origin, for PUT and OPTIONS [asl Q5].
+  4. The browser then calls `complete`, and the server validates the staged files.
+- **Staging tiers**: derivatives are staged in the `private` container. Each upload sets the
+  per-blob tier: Hot for derivatives, so they can be copied immediately without a Cool minimum
+  charge, and Cool for the master.
+- **Rationale**: 20 MB masters never pass through the B1. The managed identity removes stored
+  storage keys.
+- **Backstop sweep**: a lifecycle policy deletes `private/staging/` blobs 7 days after creation.
+  Lifecycle runs daily and is free [asl Q6] (FR-030).
+- **Alternatives**: streaming uploads through the app was rejected because of the origin's CPU
+  and memory.
 
 ## R-06: Server-side validation without decoding pixels (III.5–III.8)
 
-- **Decision**: For each staged derivative, the server reads it with a ranged GET (Class B) and
+- **Decision**: For each staged derivative, the server reads it with a ranged blob download [asl Q7] and
   parses the container structure only:
   - **AVIF** (ISOBMFF): `ftyp` must be `avif`. Dimensions come from `ispe`. The file must contain
     no `infe` item of type `Exif`, and no `mime` item whose content type is `application/rdf+xml`
@@ -102,7 +136,7 @@ storage-datastore.md, [br] browser-encoding.md, [az] azure-dotnet.md, and [wp] w
     and XMP flags must be clear and the file must contain no `EXIF` or `XMP ` chunk. Dimensions
     come from the bitstream or the canvas header [az Q6].
 - **Master**: The server reads the EXIF allowlist with MetadataExtractor, which is Apache-2.0
-  and parses headers without decoding [az Q5]. It reads only the first 256 KB via a ranged GET.
+  and parses headers without decoding [az Q5]. It reads only the first 256 KB via a ranged download.
   A JPEG with its EXIF segment beyond 256 KB is read in full; it is still never decoded.
 - **Library**: Hand-written parsers of about 200 lines each cover AVIF and WebP, because only
   "find boxes or chunks" is needed. MetadataExtractor also reads AVIF and WebP, so the
@@ -155,19 +189,34 @@ storage-datastore.md, [br] browser-encoding.md, [az] azure-dotnet.md, and [wp] w
 - **Background work**: One `BackgroundService` timer runs best-effort orphan cleanup for
   explicit deletes that failed. Always On keeps it alive, and restarts are tolerated because the
   sweep is idempotent [az Q4].
+- **Identity to Azure**: the system-assigned managed identity holds the Storage Blob Data
+  Contributor role on the account. The app uses `DefaultAzureCredential` [asl Q10], so no
+  storage key or connection string is stored anywhere.
 
-## R-09: Observability
+## R-09: Observability in Application Insights
 
 - **Decision**:
-  - Log JSON to the console (built-in formatter).
-  - App Service logs → File System, with a 35 MB quota and 7-day retention, which is free.
-  - Evidence is pulled with `az webapp log download` or the log stream [az Q3].
-  - Event names are `http.request` (route, status, duration_ms, cache) and `op.timing` (op,
-    duration_ms, outcome).
+  - Use workspace-based Application Insights, exporting through the Azure Monitor OpenTelemetry
+    distro. New projects use `Microsoft.OpenTelemetry` [asl Q9].
+  - Requests are auto-collected and become the `http.request` events.
+  - `op.timing` events are `ILogger` structured logs, so their fields land in `customDimensions`
+    and can be queried with KQL [asl Q9].
+  - Sampling is explicitly OFF. It is not enabled by default [asl Q9], and the time-bound success
+    criteria need every event.
+  - Retention is 30 days, inside the 90 days included free [asl Q8].
+  - A daily cap of 150 MB keeps usage inside the 5 GB/month free ingestion (about 4.5 GB/month
+    worst case) (VIII.4).
   - `Server-Timing` is sent on public pages [wp Q7].
-- **Alternatives**: Application Insights was rejected because of metered ingestion (VIII.3)
-  and the clarification that chose free logs only.
-
+- **Evidence procedure**: a saved KQL query per success criterion (for example the p95 of
+  `requests | where name startswith "GET /g/"`) is run with `az monitor app-insights query`.
+  Its output is tee'd into `<feature>/evidence/`. The queries are committed as files.
+- **Volume check**: at low-thousands of page views, most are served from the edge, so origin
+  requests are maybe 20–50k/month, at about 1 KB each including dependencies. That is under
+  100 MB/month, 2% of the free 5 GB.
+- **When the cap is hit**: ingestion stops until the daily reset. Recorded as an accepted risk.
+- **Alternatives**:
+  - App Service file logs: free, but not searchable, and the owner chose Application Insights.
+  - An external log service: adds a vendor.
 ## R-10: Perceived performance on the public site
 
 - **Speculation Rules**: Use an inline rule set with `prerender` at `eagerness: moderate` on
@@ -207,7 +256,8 @@ storage-datastore.md, [br] browser-encoding.md, [az] azure-dotnet.md, and [wp] w
 | Package | Requirement served |
 |---|---|
 | MongoDB.Driver | The datastore is a platform constraint. |
-| AWSSDK.S3 | R2's S3 API for presigning, copy, delete, and ranged GET. |
+| Azure.Storage.Blobs + Azure.Identity | Blob SAS (user delegation), copy, delete, and ranged download, with managed identity. |
+| Microsoft.OpenTelemetry | The Application Insights export (Platform Constraints, Observability). |
 | MetadataExtractor | III.3 and III.7, reading EXIF without decoding, plus a second check on derivative metadata. |
 | @jsquash/avif, @jsquash/webp | IV.6 encoding in the browser. Safari cannot encode WebP, and no browser encodes AVIF reliably. |
 | thumbhash (about 1 KB, MIT) | IV.7 placeholder. |
@@ -215,10 +265,13 @@ storage-datastore.md, [br] browser-encoding.md, [az] azure-dotnet.md, and [wp] w
 
 ## Open gaps carried into the design (from research-notes)
 
-- The exact B1 price for the chosen region.
+- The exact B1 price for the chosen region, and the exact Blob and Application Insights unit
+  prices. The pricing pages render with JavaScript; confirm them in the Azure Pricing Calculator.
+- Whether Cloud Connector is offered on the owner's zone. The owner will check in the dashboard;
+  if it is missing, the Worker fallback applies.
 - The list of Free-eligible Atlas regions on Azure.
 - The Safari AVIF `toBlob` claim. It is not relied on, since jSquash is used everywhere.
 - The ThumbHash data-URI byte size, to be measured.
 
-All four are verified at provisioning or in the first build feature and are listed in design
+All of these are verified at provisioning or in the first build feature and are listed in design
 section 10.
