@@ -12,8 +12,8 @@ values, base32-encoded, 26 characters, never sequential and never derived from t
 |---|---|---|
 | claimedSubject | string? | Google `sub`. Null means the site is unclaimed (I.2). |
 | claimedAt | datetime? | |
-| claimedIp | string? | Taken from CF-Connecting-IP (I.5, PC.7). |
-| homeOrder | id[] | Gallery ids in the owner's manual order on the home page. |
+| claimedIp | string? | Taken from CF-Connecting-IP (I.5, PC.9). |
+| homeOrder | id[] | Every gallery id, public and private, in the owner's manual order. The home page shows the public ones in this order; private ones keep their position so publishing restores them in place. |
 | homeCards | GalleryCard[] | Denormalized cards for the public galleries in `homeOrder`, so the home page is one read (IV.9). |
 
 The claim is a single conditional update, `{_id:"site", claimedSubject:null}` → set. A matched

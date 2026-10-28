@@ -24,6 +24,10 @@ Each row records the decision, its rationale, and its pivot cost: how expensive 
 | 17 | Interrupted = no heartbeat for 2 minutes, evaluated when the batch is read. | No timer is needed, and the result is deterministic. | Low. |
 | 18 | Telemetry sampling is OFF. | The time-bound success criteria need every event, and the volume is tiny. | Low. |
 | 19 | Image title defaults to the file name without its extension. | Required field, with no friction at upload. | Low. |
+| 20 | Sources list: the dead URL `developers.cloudflare.com/ssl/origin/origin-ca` (404, cited only in a Gaps note in research-notes/cloudflare.md) is replaced by its live canonical page `.../ssl/origin-configuration/origin-ca/`, which was already cited for [cf Q5]. The claim is unchanged. | Link rot found by links.sh (T026). | Low. |
+| 21 | links.sh treats 402, 403, and 429 responses as WARN rather than FAIL. | GitHub, npm, Stack Overflow, and metacpan rate-limit or bot-wall automated clients while the pages exist. Failing on them would force the deletion of valid citations. Each affected URL is still listed in links-output.txt. | Low: tighten the script. |
+| 22 | `site.homeOrder` holds every gallery, public and private; `homeCards` is the public subset in that order. | data-model.md left it ambiguous, and the lifecycle draft contradicted itself (L-10, L-11, L-12). Keeping private galleries in the order means publishing, unpublishing, and republishing never lose the owner's chosen position. | Low. |
+| 23 | Review corrections to the executor drafts: (a) D-09's rejected alternative restated as the owner-machine native worker from FR-023 (the draft had invented a "libvips WASM" option); (b) D-18, E-19, and section 8 no longer claim an Azure-enforced $10 hard cap, because Azure budgets alert and do not stop resources; (c) D-18 and D-19 alternatives restated from the actual interview options and research; (d) D-02 alternatives replaced with TLS-relevant options. | Rule 1 (no new facts) and accuracy. Caught by reading the drafts in full; the structural validation could not see them. | Low. |
 
 ## Superseded
 

@@ -56,7 +56,7 @@ stories can be written in parallel without editing the same file.
 
 **Purpose**: Create the folders, the fragment skeleton, and the assembly script.
 
-- [ ] T001 Create the directories `docs/`, `FD/draft/`, and `FD/evidence/`. Create one fragment
+- [X] T001 Create the directories `docs/`, `FD/draft/`, and `FD/evidence/`. Create one fragment
   file per section, each containing only its exact contract-C1 heading line plus one blank line:
   - `FD/draft/00-title.md`: `# Gallery Architecture and Stack Design`, followed by a line
     `Source of truth for later features (Constitution VII.2). Generated from specs/001-architecture-stack-design/draft/ — do not edit by hand.`
@@ -74,7 +74,7 @@ stories can be written in parallel without editing the same file.
   - `09-risks.md`: `## 9. Accepted-Risk Register`
   - `10-deferred.md`: `## 10. Deferred to Later Features`
   - `11-sources.md`: `## 11. Sources`
-- [ ] T002 Write `FD/evidence/assemble.sh` (bash, `set -euo pipefail`). It concatenates
+- [X] T002 Write `FD/evidence/assemble.sh` (bash, `set -euo pipefail`). It concatenates
   `FD/draft/*.md` in `LC_ALL=C` sort order into `docs/design.md`, with one blank line between
   fragments, and prints the line count. It is run from the repository root. Acceptance: running it
   produces a `docs/design.md` with the 12 heading lines from T001, in order.
@@ -88,7 +88,7 @@ skeleton.
 
 **⚠️ CRITICAL**: No story content is written until T005 has recorded a FAILING baseline.
 
-- [ ] T003 Write `FD/evidence/validate.sh` (bash; uses only grep, awk, sed, and sort). It runs
+- [X] T003 Write `FD/evidence/validate.sh` (bash; uses only grep, awk, sed, and sort). It runs
   `FD/evidence/assemble.sh` first, then checks `docs/design.md`. It prints one
   `PASS <id> <detail>` or `FAIL <id> <detail>` line per check and exits non-zero if any check
   fails. The checks:
@@ -137,14 +137,14 @@ skeleton.
       each equal the R-heading count.
   - **C9**: zero matches for `TBD|TODO|NEEDS CLARIFICATION|\?\?`.
   Acceptance: the script runs on the T002 skeleton without a shell error.
-- [ ] T004 [P] Write `FD/evidence/links.sh`. It extracts every `https?://` URL from section 11 of
+- [X] T004 [P] Write `FD/evidence/links.sh`. It extracts every `https?://` URL from section 11 of
   `docs/design.md`, de-duplicates them, and runs `curl -sIL -o /dev/null -w '%{http_code}'` on each
   with the User-Agent
   `Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36`
   and `--max-time 20`. It prints `<code> <url>` for each URL. It exits non-zero if any code is
   outside 200–399. If a URL returns 403 or 405 on a HEAD request, the script retries it once with
   GET (`-X GET`) before failing.
-- [ ] T005 Run `bash FD/evidence/validate.sh > FD/evidence/validate-baseline.txt` against the
+- [X] T005 Run `bash FD/evidence/validate.sh > FD/evidence/validate-baseline.txt` against the
   skeleton. Acceptance: the exit code is non-zero, C1 PASSes, and C2–C8 FAIL. If any of C2–C8
   passes on the empty skeleton, that check is wrong: fix it in T003 and re-run. Commit
   `validate-baseline.txt`.
@@ -164,7 +164,7 @@ reject each `### D-NN` entry on its own (SC-001, SC-006).
 **Numbering**: Number decision entries D-01 to D-19 across the four 02 fragments in the order
 listed below. Executors working in parallel use the ranges given, so the ids never collide.
 
-- [ ] T006 [P] [US1] Write `FD/draft/02a-decisions-platform.md` (keep its heading), with entries
+- [X] T006 [P] [US1] Write `FD/draft/02a-decisions-platform.md` (keep its heading), with entries
   D-01 to D-06. Use this area-key-to-source mapping:
   - D-01 `hosting-runtime`: given. App Service Linux B1 with Always On, and .NET 10 minimal APIs
     (Constitution VIII.1, Platform Constraints; research R-08).
@@ -183,7 +183,7 @@ listed below. Executors working in parallel use the ranges given, so the ids nev
   Each entry follows contract C2 exactly. Alternatives come from the matching research section.
   Pivot cost comes from decisions.md where a row exists. Otherwise use `low`, `medium`, or `high`
   with one sentence on what a reversal would take.
-- [ ] T007 [P] [US1] Write `FD/draft/02b-decisions-media.md` (no heading), with entries D-07 to
+- [X] T007 [P] [US1] Write `FD/draft/02b-decisions-media.md` (no heading), with entries D-07 to
   D-12:
   - D-07 `storage-layout`: one GPv2 LRS account. `public` is Hot with anonymous read;
     `private` is Cool and holds staging and the permanent masters. Derivatives are named by
@@ -209,7 +209,7 @@ listed below. Executors working in parallel use the ranges given, so the ids nev
     customDimensions. Retention is 30 days, with a 150 MB daily cap. `Server-Timing` is sent on
     public pages. Evidence comes from saved KQL queries run via `az monitor app-insights query`
     (research R-09; decisions #4, #18; spec FR-020, FR-024).
-- [ ] T008 [P] [US1] Write `FD/draft/02c-decisions-content.md` (no heading), with entries D-13 and
+- [X] T008 [P] [US1] Write `FD/draft/02c-decisions-content.md` (no heading), with entries D-13 and
   D-14:
   - D-13 `content-model`: library first. Galleries are ordered `items` lists, manually ordered on
     the home page and within each gallery. Images have a title (defaulting to the file name) and
@@ -219,7 +219,7 @@ listed below. Executors working in parallel use the ranges given, so the ids nev
     stale slug, private by default with `noindex`, and derivatives that are unlisted but
     reachable, including through the raw Blob URL (Constitution II; spec FR-011, FR-012;
     research R-04).
-- [ ] T009 [P] [US1] Write `FD/draft/02d-decisions-delivery.md` (no heading), with entries D-15 to
+- [X] T009 [P] [US1] Write `FD/draft/02d-decisions-delivery.md` (no heading), with entries D-15 to
   D-19:
   - D-15 `public-rendering`: server-rendered HTML with no client framework, inlined critical CSS,
     system fonts, built-in output caching, and `<picture>` with AVIF, then WebP, then `img`, plus
@@ -238,13 +238,13 @@ listed below. Executors working in parallel use the ranges given, so the ids nev
     VIII.4; decisions #6).
   - D-19 `other`: Status `chosen`. Image delivery fallback trigger. When Cloud Connector is absent from the zone,
     the Worker route is used. The image URLs are unchanged either way (decisions #5).
-- [ ] T010 [P] [US1] Write `FD/draft/01-overview.md` in about 250–400 words:
+- [X] T010 [P] [US1] Write `FD/draft/01-overview.md` in about 250–400 words:
   - purpose, and that the document is the source of truth (VII.2)
   - the stack at a glance, as one bullet per component, taken from Platform Constraints v3.0.0
   - the scale assumption (5,000 images, 50 galleries, low thousands of page views a month)
   - how to read the document (sections 2–11)
   - that the document is validated by `FD/evidence/validate.sh`
-- [ ] T011 [P] [US1] Write `FD/draft/03-diagrams.md` with the four contract-C3 headings, in order,
+- [X] T011 [P] [US1] Write `FD/draft/03-diagrams.md` with the four contract-C3 headings, in order,
   each followed by a `mermaid` flowchart or sequence diagram:
   1. **Visitor public page**: browser → Cloudflare edge (HTML hit) → `img.<domain>` → edge
      (image hit), with the miss path into note-level references to the next diagram.
@@ -259,7 +259,7 @@ listed below. Executors working in parallel use the ranges given, so the ids nev
      (won / lost / already-claimed-by-other → refused, with no session) → claim event logged with
      IP.
   Use only components named in Platform Constraints v3.0.0.
-- [ ] T012 [US1] Run `bash FD/evidence/validate.sh`. Acceptance: C1, C2, and C3 PASS. This depends
+- [X] T012 [US1] Run `bash FD/evidence/validate.sh`. Acceptance: C1, C2, and C3 PASS. This depends
   on T006–T011. Fix the fragments, never the script.
 
 **Checkpoint**: The decision record is reviewable on its own (MVP).
@@ -272,7 +272,7 @@ listed below. Executors working in parallel use the ranges given, so the ids nev
 
 **Independent Test**: `validate.sh` C6 PASSes.
 
-- [ ] T013 [US2] Write `FD/draft/07-traceability.md` (keep its heading). It holds one table with
+- [X] T013 [US2] Write `FD/draft/07-traceability.md` (keep its heading). It holds one table with
   the header `| Rule | Mechanism | Verification | Status |` and one row per rule id derived exactly
   as described in T003-C6. Read `.specify/memory/constitution.md` v3.0.0 directly to get the ids.
   - **Mechanism**: names the decision id(s), for example `D-10`, plus a short phrase.
@@ -290,7 +290,7 @@ listed below. Executors working in parallel use the ranges given, so the ids nev
     for VI.1, which has no scaffolding in this feature.
   - III.5–III.8 MUST cite D-10 and the GPS-rejection test.
   - VIII.1–VIII.4 MUST cite section 8.
-- [ ] T014 [US2] Run `validate.sh`. Acceptance: C6 PASSes with no missing or extra ids. This
+- [X] T014 [US2] Run `validate.sh`. Acceptance: C6 PASSes with no missing or extra ids. This
   depends on T013 and T006–T009, because the mechanisms cite D-ids.
 
 ---
@@ -302,12 +302,12 @@ listed below. Executors working in parallel use the ranges given, so the ids nev
 **Independent Test**: `validate.sh` C4 and C5 PASS. A reader can trace any lifecycle event to its
 record, storage, cache, and visitor effects.
 
-- [ ] T015 [P] [US3] Write `FD/draft/04-content-model.md`. It restates data-model.md for readers:
+- [X] T015 [P] [US3] Write `FD/draft/04-content-model.md`. It restates data-model.md for readers:
   the entities Owner/site, Image, Gallery, GalleryCard, Upload batch, and BatchItem, as field
   tables; the item and batch state machines, as mermaid `stateDiagram-v2`; the Blob layout; and
   the cover rule and visibility rule in one paragraph each. Copy the field names and limits
   exactly from data-model.md. Add nothing new.
-- [ ] T016 [P] [US3] Write `FD/draft/05-lifecycle.md`. It holds the 17 contract-C4 entries with
+- [X] T016 [P] [US3] Write `FD/draft/05-lifecycle.md`. It holds the 17 contract-C4 entries with
   the 4 labeled lines each. Derive every effect from data-model.md, D-11, D-16, and spec FR-013.
   The following MUST be stated:
   - L-05: copies to `public/` and `private/masters/`, staged blobs deleted, Image documents
@@ -317,12 +317,12 @@ record, storage, cache, and visitor effects.
   - L-12: purge, plus the up-to-1-day edge staleness bound if the purge fails (II.2).
   - L-13: the slug changes, and old URLs 301 to the new one.
   - L-01 to L-06: the library and public pages are unchanged until L-05.
-- [ ] T017 [P] [US3] Write `FD/draft/06-edge-cases.md`. It holds 19 entries, E-01 to E-19, in the
+- [X] T017 [P] [US3] Write `FD/draft/06-edge-cases.md`. It holds 19 entries, E-01 to E-19, in the
   exact order of the bullets under "### Edge Cases" in `FD/spec.md`. Each entry's title is a short
   form of that bullet, followed by `**Outcome**:` and `**Mechanism**:`, where the mechanism cites
   D-ids and L-ids. E-19 (limits and cost alerts) MUST cover the Atlas 0.5 GB limit, the
   Application Insights daily cap, and the $7 alert.
-- [ ] T018 [US3] Run `validate.sh`. Acceptance: C4 and C5 PASS.
+- [X] T018 [US3] Run `validate.sh`. Acceptance: C4 and C5 PASS.
 
 ---
 
@@ -332,7 +332,7 @@ record, storage, cache, and visitor effects.
 
 **Independent Test**: `validate.sh` C7 PASSes, and the metered total is below $7.
 
-- [ ] T019 [P] [US4] Write `FD/draft/08-cost.md`. It holds one paragraph stating the scale
+- [X] T019 [P] [US4] Write `FD/draft/08-cost.md`. It holds one paragraph stating the scale
   assumption, then the contract-C7 table. The rows come ONLY from the research R-02, R-03, R-04,
   R-08, and R-09 figures:
   - App Service B1 (fixed, about $13; to be verified for the region)
@@ -352,7 +352,7 @@ record, storage, cache, and visitor effects.
   After the table, list the configured hard limits: the Azure budget ($10, alert at $7) and the
   Application Insights daily cap. Add one sentence noting that prices marked "verify" come from
   JavaScript-rendered pricing pages ([asl Gaps]).
-- [ ] T020 [US4] Run `validate.sh`. Acceptance: C7 PASSes.
+- [X] T020 [US4] Run `validate.sh`. Acceptance: C7 PASSes.
 
 ---
 
@@ -363,7 +363,7 @@ record, storage, cache, and visitor effects.
 **Independent Test**: `validate.sh` C8 PASSes, and every "Accepted risk" bullet in the spec's
 Assumptions has an R-entry.
 
-- [ ] T021 [P] [US5] Write `FD/draft/09-risks.md`. It holds one `### R-NN:` entry for each
+- [X] T021 [P] [US5] Write `FD/draft/09-risks.md`. It holds one `### R-NN:` entry for each
   "Accepted risk" bullet in `FD/spec.md` Assumptions. There are 7 of them, and their titles carry
   the keywords:
   - `claim token`
@@ -377,13 +377,13 @@ Assumptions has an R-entry.
   Each entry has the 4 labeled lines. Copy the failure, detection, and recovery wording from the
   spec bullet, and the reversal cost from it as well. The `unlisted` entry MUST mention that the
   raw Blob URL is also reachable (research R-04).
-- [ ] T022 [US5] Run `validate.sh`. Acceptance: C8 PASSes.
+- [X] T022 [US5] Run `validate.sh`. Acceptance: C8 PASSes.
 
 ---
 
 ## Phase 8: Polish and cross-cutting
 
-- [ ] T023 [P] Write `FD/draft/10-deferred.md`. It holds a bullet list of what the first build
+- [X] T023 [P] Write `FD/draft/10-deferred.md`. It holds a bullet list of what the first build
   feature owns:
   - provisioning
   - deployment
@@ -396,16 +396,16 @@ Assumptions has an R-entry.
   - the saved KQL evidence queries
   - scaffolding via `dotnet new` (VI)
   Each bullet names the decision id it depends on.
-- [ ] T024 [P] Write `FD/draft/11-sources.md`. It lists every URL from `FD/research-notes/*.md`
+- [X] T024 [P] Write `FD/draft/11-sources.md`. It lists every URL from `FD/research-notes/*.md`
   `Source:` lines, de-duplicated and grouped by note file, one per line as
   `- [tag] <url>`, where the tag is the note's short tag (cf, st, br, az, wp, asl).
-- [ ] T025 Run `bash FD/evidence/validate.sh | tee FD/evidence/validate-output.txt`. Acceptance:
+- [X] T025 Run `bash FD/evidence/validate.sh | tee FD/evidence/validate-output.txt`. Acceptance:
   the exit code is 0 and every line is PASS. This depends on all previous tasks.
-- [ ] T026 Run `bash FD/evidence/links.sh | tee FD/evidence/links-output.txt`. Acceptance: the
+- [X] T026 Run `bash FD/evidence/links.sh | tee FD/evidence/links-output.txt`. Acceptance: the
   exit code is 0. If a URL is permanently dead, replace it with the live canonical URL from the
   same site, and record the replacement in `FD/decisions.md` as a new row. Never delete the claim
   that relied on it.
-- [ ] T027 Append rows to `FD/decisions.md` for any decision made while writing the document
+- [X] T027 Append rows to `FD/decisions.md` for any decision made while writing the document
   (there should be none, per Rule 1; state "none" if so). Mark tasks T001–T026 `[X]` in this
   file. Commit with a message stating the validate and links results.
 
