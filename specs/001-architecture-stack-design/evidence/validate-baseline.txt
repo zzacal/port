@@ -1,0 +1,18 @@
+PASS C1 12 headings in order
+FAIL C2.keys missing/duplicate: hosting-runtime(0) edge-dns-tls(0) origin-lockdown(0) identity-claim(0) datastore(0) storage-layout(0) upload-intake(0) client-derivatives(0) server-validation(0) upload-batch(0) content-model(0) visibility-addressing(0) public-rendering(0) edge-cache(0) predictive-loading(0) observability(0) csrf(0)
+FAIL C2.fields D=0 Area=0 Status=0 Choice=0 Rationale=0 Alternatives=0 Pivot cost=0
+FAIL C2.status invalid/none: no entries
+FAIL C2.pivot invalid/none: no entries
+FAIL C2.given uncited given: no entries
+FAIL C3 missing: [Visitor public page] [Cache miss to origin] [Owner upload to library] [Owner sign-in and claim]
+FAIL C4.titles lifecycle headings differ (0 found)
+FAIL C4.fields  Records=0 Storage=0 Pages and caches=0 Visitor sees=0 (want 17 each)
+FAIL C5 E=0 Outcome=0 Mechanism=0 (want 19)
+FAIL C6.ids expected=61 missing=[I.1 I.2 I.3 I.4 I.5 I.6 II.1 II.2 II.3 II.4 II.5 III.1 III.2 III.3 III.4 III.5 III.6 III.7 III.8 IV.1 IV.10 IV.11 IV.12 IV.13 IV.14 IV.15 IV.16 IV.17 IV.18 IV.19 IV.2 IV.20 IV.21 IV.22 IV.3 IV.4 IV.5 IV.6 IV.7 IV.8 IV.9 PC.1 PC.2 PC.3 PC.4 PC.5 PC.6 PC.7 PC.8 PC.9 V.1 V.2 V.3 VI.1 VII.1 VII.2 VII.3 VIII.1 VIII.2 VIII.3 VIII.4 ] extra=[ ] dups=[]
+FAIL C6.status bad status: no rows
+FAIL C6.verif wrong verification: IV.5 IV.11 IV.12 IV.13 IV.14 IV.15 IV.16 IV.17 IV.18 IV.19 IV.20 IV.21 IV.22
+FAIL C7 header=0 fixed=0 metered=none services_missing=none
+FAIL C8 R=0 Failure=0 Detection=0 Recovery=0 Reversal cost=0 missing: [claim token] [backups] [log retention] [unlisted] [browser cache] [client-generated] [Cloud Connector]
+PASS C9 no banned strings
+---
+failures: 14
