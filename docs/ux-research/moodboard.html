@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gallery — UX reference board</title>
+<style>
+  :root { --ink:#111; --mute:#777; --line:#e5e5e5; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font:15px/1.5 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; color:var(--ink); background:#fff; padding:48px 56px 96px; max-width:1500px; margin:0 auto; }
+  h1 { font-size:20px; font-weight:600; letter-spacing:-.01em; }
+  h2 { font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.08em; margin:64px 0 20px; color:var(--mute); }
+  h3 { font-size:15px; font-weight:600; }
+  p.lede { color:var(--mute); max-width:760px; margin-top:8px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(420px,1fr)); gap:40px 32px; }
+  figure img { width:100%; display:block; border:1px solid var(--line); }
+  figure .pair { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  figcaption { margin-top:10px; }
+  figcaption a { color:var(--ink); }
+  figcaption .tags { color:var(--mute); font-size:13px; margin-top:2px; }
+  figcaption p { font-size:13px; margin-top:6px; max-width:60ch; }
+  .dirs { display:grid; grid-template-columns:repeat(3,1fr); gap:32px; }
+  .dir { border-top:2px solid var(--ink); padding-top:14px; }
+  .dir ul { margin:10px 0 0 18px; font-size:13px; }
+  .dir li { margin-bottom:4px; }
+  table { border-collapse:collapse; font-size:13px; width:100%; }
+  th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--mute); font-weight:500; }
+</style>
+</head>
+<body>
+
+<h1>Gallery: UX reference board</h1>
+<p class="lede">These are twelve live portfolios by individual photographers, screenshotted on 2026-10-29 at 1440×900.
+They are grouped by how closely they match our structure (home → gallery → single image). For each one,
+the caption says what is worth borrowing. Raw research notes are in candidates-a.md and candidates-b.md.</p>
+
+<h2>Closest to our structure</h2>
+<div class="grid">
+  <figure>
+    <div class="pair"><img src="shots/kander-series.png"><img src="shots/kander-home.png"></div>
+    <figcaption><h3><a href="https://www.nadavkander.com/works-in-series">Nadav Kander</a></h3>
+      <div class="tags">one image per page (left) · series index (right, faded in capture) · white</div>
+      <p>This is the best model for our solo view. There is one image, centred, on a white field, with a small title line
+      under it and quiet prev/next controls. The series index uses text only, with titles and "Series of N" and no thumbnails.</p></figcaption>
+  </figure>
+  <figure>
+    <div class="pair"><img src="shots/kenna-gallery.png"><img src="shots/kenna-home.png"></div>
+    <figcaption><h3><a href="https://michaelkenna.com/gallery.php?id=11">Michael Kenna</a></h3>
+      <div class="tags">contact-sheet grid (left) · home with featured image (right) · white</div>
+      <p>This has exactly our three levels. The gallery is an even grid of small thumbnails with generous white space,
+      and each thumbnail opens its own image page. The chrome is dated, but the structure is right, and it is
+      plain server-rendered PHP, so it works without JavaScript.</p></figcaption>
+  </figure>
+  <figure>
+    <div class="pair"><img src="shots/kawauchi-gallery.png"><img src="shots/kawauchi-home.png"></div>
+    <figcaption><h3><a href="https://rinkokawauchi.com/en/works/">Rinko Kawauchi</a></h3>
+      <div class="tags">left text column + one large image · pale grey</div>
+      <p>This is the calmest site in the set. A thin serif text column on the left lists the works, and one large image
+      fills the rest of the page. Chrome is nearly absent, and the pale warm-grey background flatters the photographs.</p></figcaption>
+  </figure>
+  <figure>
+    <img src="shots/angibaud-images.png">
+    <figcaption><h3><a href="https://www.samuelangibaud.com/photography">Samuel Angibaud</a></h3>
+      <div class="tags">uniform thumbnail grid with tiny captions · white</div>
+      <p>This is the cleanest gallery grid seen. The thumbnails are small, every image keeps its own aspect ratio inside
+      equal cells, captions are tiny, and the rows have lots of air between them. It is a good model for our gallery page.
+      The home page offers just two entry cards, "Design (7)" and "Images (36)".</p></figcaption>
+  </figure>
+</div>
+
+<h2>Strong home-page ideas</h2>
+<div class="grid">
+  <figure><img src="shots/skj-home.png">
+    <figcaption><h3><a href="https://stephenkentjohnson.com">Stephen Kent Johnson</a></h3>
+      <div class="tags">dense contact-sheet mosaic · light grey</div>
+      <p>The home page is a single dense mosaic of every project's images. It shows the whole body of work at once.
+      Here it is interiors; for us it could be every public gallery's cover.</p></figcaption></figure>
+  <figure><img src="shots/mitchell-home.png">
+    <figcaption><h3><a href="https://tylermitchell.co/">Tyler Mitchell</a></h3>
+      <div class="tags">tiny-thumbnail archive grid · white</div>
+      <p>The home page is an archive of hundreds of very small thumbnails in a loose grid, with a one-line top nav.
+      It reads like a contact sheet. The photography page then shows one large image at a time.</p></figcaption></figure>
+  <figure><img src="shots/tessa-home.png">
+    <figcaption><h3><a href="https://tessavandenberg.com">Tessa van den Berg</a></h3>
+      <div class="tags">name + contact, a row of portraits · white</div>
+      <p>This is the most minimal site seen. It has a name at top left, "contact" at top right, and a horizontal run of
+      equal-height images. It has no galleries at all, which is too thin for us, but the restraint is right.</p></figcaption></figure>
+  <figure><img src="shots/delmarmol-home.png">
+    <figcaption><h3><a href="https://helenedelmarmol.com">Hélène del Marmol</a></h3>
+      <div class="tags">big wordmark + text project index · white</div>
+      <p>The name is set in large grey type as the hero, with a small text project list above it. Images appear only
+      when you choose a project. This is a type-led alternative to a cover grid.</p></figcaption></figure>
+  <figure><img src="shots/thies-home.png">
+    <figcaption><h3><a href="https://samthies.com">Sam Thies</a></h3>
+      <div class="tags">one thin film-strip per project · warm off-white</div>
+      <p>Each project is a single horizontal strip of small frames numbered 1.1–1.4. It is compact, it previews
+      several images per gallery instead of one cover, and the off-white background is warm.</p></figcaption></figure>
+  <figure><img src="shots/floede-project.png">
+    <figcaption><h3><a href="https://lassefloede.com">Lasse Fløde</a></h3>
+      <div class="tags">cover grid → typewriter-text project page · cream</div>
+      <p>The images fade in through scroll scripts, so the screenshots came out mostly empty. The capture shows the
+      cream background and monospace project text. Treat this one as unverified visually.</p></figcaption></figure>
+</div>
+
+<h2>Checked and set aside</h2>
+<table>
+  <tr><th>Site</th><th>Why it doesn't fit</th></tr>
+  <tr><td>Danielle Levitt</td><td>Loud brand: giant red display type over images. Clean, but the opposite of a calm, image-first feel.</td></tr>
+  <tr><td>Ami Vitale</td><td>A text-heavy storytelling site whose galleries run in a third-party slideshow widget.</td></tr>
+  <tr><td>Alex Strohl</td><td>A commercial studio site with client logos and a shop.</td></tr>
+  <tr><td>Yuri Roga, Alexandra Tellez, Angela Ricciardi</td><td>Commercial or campaign portfolios mixing video and direction work. The structure is project-led, not gallery-led.</td></tr>
+</table>
+
+<h2>Patterns that repeat across the best ones</h2>
+<table>
+  <tr><th>Pattern</th><th>Seen on</th><th>Fits our constitution?</th></tr>
+  <tr><td>White or near-white ground; images carry all the colour</td><td>almost all</td><td>Yes</td></tr>
+  <tr><td>Name as wordmark top-left, at most 3–5 nav words, small type</td><td>Kander, Kawauchi, Tessa, Mitchell, Angibaud</td><td>Yes. System fonts (IV.22)</td></tr>
+  <tr><td>Thumbnails kept small, with lots of whitespace; images never cropped to squares</td><td>Kenna, Angibaud, Mitchell</td><td>Yes. Stored aspect ratios (IV.8)</td></tr>
+  <tr><td>Solo view: one image centred, a small caption line below, prev/next as text</td><td>Kander, Kenna, Kawauchi</td><td>Yes. Works without JS as plain links</td></tr>
+  <tr><td>No hover effects, no animations, no carousels</td><td>Kander, Kenna, Kawauchi, Angibaud</td><td>Yes. Fade-ins made four sites unscreenshottable</td></tr>
+  <tr><td>Text-only index instead of covers</td><td>Kander, del Marmol, Kawauchi</td><td>Possible, but it conflicts with our cover-card home (IV.9)</td></tr>
+</table>
+
+<h2>Three directions to choose from</h2>
+<div class="dirs">
+  <div class="dir"><h3>A. Contact sheet</h3>
+    <p style="font-size:13px;color:#777">Kenna + Angibaud + Kander solo view</p>
+    <ul>
+      <li>Home: a grid of gallery covers, small, with title and count under each</li>
+      <li>Gallery: an even grid of small thumbnails at natural aspect ratios</li>
+      <li>Solo: one image on white, a caption line, text prev/next</li>
+      <li>Feels like a printed contact sheet: orderly and archival</li>
+    </ul></div>
+  <div class="dir"><h3>B. Monograph</h3>
+    <p style="font-size:13px;color:#777">Kawauchi + del Marmol</p>
+    <ul>
+      <li>Home: a text index of galleries on the left, with one large featured image</li>
+      <li>Gallery: one large image at a time with a thin list of thumbnails</li>
+      <li>Solo: the image fills the page, with a quiet side column of text</li>
+      <li>Feels like a photo book: slow and immersive</li>
+    </ul></div>
+  <div class="dir"><h3>C. Film strip</h3>
+    <p style="font-size:13px;color:#777">Thies + Mitchell</p>
+    <ul>
+      <li>Home: one row per gallery showing 4–5 small frames, not a single cover</li>
+      <li>Gallery: a dense contact grid</li>
+      <li>Solo: as in A</li>
+      <li>Shows more of the work up front; a busier home page</li>
+    </ul></div>
+</div>
+
+</body>
+</html>
