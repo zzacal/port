@@ -11,7 +11,7 @@ Status values: `proposed` (awaiting owner), `accepted` (moved to design.md), `re
 
 ## P-01: Solution and project layout
 
-**Status**: proposed (2026-10-27)
+**Status**: accepted (2026-10-27): now D-22 in docs/design.md, refined to xUnit v3 (see specs/002-local-app-scaffold/research.md R-02)
 **Resolves**: design.md section 10, "Application scaffolding"
 
 Four .NET projects. They're kept small because the server never decodes pixels (D-09, D-10).
