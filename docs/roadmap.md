@@ -27,17 +27,23 @@ against:
 - **Edge**: none locally. Cache and purge behaviour (D-16) is verified by response-header
   assertions until hosting exists.
 
-R2 setup needed before 006 (owner, in the Cloudflare dashboard). The bucket that exists now is
-`port`:
+R2 setup needed before 006 (owner, in the Cloudflare dashboard):
 
-- Use `port` as the dev `private` bucket and create a dev `public` bucket, or create a matching
-  pair under new names. Production gets its own pair later.
-- Attach a dev image hostname (for example `img-dev.<domain>`) to the dev public bucket. Leave
-  r2.dev disabled on both buckets (III.9).
-- Create one API token with Object Read & Write, scoped to the two dev buckets only (III.9). Keep
-  its keys in .NET user-secrets on your machine, never in the repo.
-- CORS on the dev private bucket comes with 008, which is the first feature that uploads from the
+- [x] Dev buckets created: `gallery-dev-private` and `gallery-dev-public`. Production gets its
+  own pair later. The old `port` bucket is unused and can be deleted.
+- [ ] Attach a dev image hostname (for example `img-dev.<domain>`) to `gallery-dev-public`.
+  Leave r2.dev disabled on both buckets (III.9).
+- [ ] Create one API token with Object Read & Write, scoped to the two dev buckets only (III.9).
+  Keep its keys in .NET user-secrets on your machine, never in the repo.
+- CORS on `gallery-dev-private` comes with 008, which is the first feature that uploads from the
   browser.
+
+Storage tests run one suite against two targets. The emulator runs on every test run. The dev R2
+buckets run on demand when the R2 keys are present in the environment, and must pass before any
+storage change merges. That second run catches R2 differences an emulator accepts: streaming
+payload signing, default SDK checksums, unsupported copy headers, and storage class. It also
+checks bucket settings (r2.dev off, token scope). All R2-specific client settings live in one
+place, so both targets exercise the same code.
 
 ## Order
 
