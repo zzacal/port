@@ -1,0 +1,14 @@
+@* Admin select-mark atom (feature 005): a visually hidden checkbox styled as a circular check overlay. *@
+<label class="select-mark">
+    <input type="checkbox" class="vh-input" name="@Name" value="@Value" checked="@Checked" form="@FormId" />
+    <span class="dot" aria-hidden="true"></span>
+    <span class="vh">@Label</span>
+</label>
+
+@code {
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+    [Parameter] public string? Name { get; set; }
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public bool Checked { get; set; }
+    [Parameter] public string? FormId { get; set; }
+}

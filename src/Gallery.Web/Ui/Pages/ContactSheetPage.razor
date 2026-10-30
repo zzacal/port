@@ -1,4 +1,6 @@
 @inject SampleCatalog Samples
+@* The public configurations come first; the admin usages follow as extra states of the same
+   component (feature 005: components are not split by where they are used). *@
 <UiLayout Title="ContactSheet">
     <Specimen Label="Home configuration (3/3/1)" Note="Large ≥ 1200 px: 3 · Medium 600–1199 px: 3 · Small: 1">
         <div class="bleed"><ContactSheet Items="All" Large="3" Medium="3" Small="1" /></div>
@@ -9,9 +11,61 @@
     <Specimen Label="Fewer than one row (4/3/1, 2 items)" Note="Cells keep the size of a full row.">
         <div class="bleed"><ContactSheet Items="Two" Large="4" Medium="3" Small="1" PriorityCount="0" /></div>
     </Specimen>
+    <Specimen Label="Admin library, 3 selected" Note="Same grid as a gallery (4/3/1), with a select mark on each photo.">
+        <div class="bleed under">
+            <ContactSheet Large="4" Medium="3" Small="1">
+                @for (var i = 0; i < Eight.Count; i++)
+                {
+                    var img = Eight[i];
+                    var selected = i is 0 or 2 or 5;
+                    <Tile Image="img" Sizes="@G4" CssClass="@(selected ? "is-selected" : null)">
+                        <Overlay><div class="pos-tl"><SelectMark Label="@("Select " + img.Title)" Name="select" Value="@img.Id" Checked="selected" /></div></Overlay>
+                    </Tile>
+                }
+            </ContactSheet>
+        </div>
+        <SelectionBar Count="3" Total="8">
+            <Button Variant="ButtonVariant.Primary">Add to gallery…</Button>
+            <Button>Edit titles</Button>
+            <Button Variant="ButtonVariant.Danger">Delete…</Button>
+        </SelectionBar>
+    </Specimen>
+    <Specimen Label="Admin gallery list, 2 private" Note="Same grid as home (3/3/1). Private galleries are dimmed, never hidden.">
+        <div class="bleed under">
+            <ContactSheet Large="3" Medium="3" Small="1">
+                @for (var i = 0; i < Six.Count; i++)
+                {
+                    var img = Six[i];
+                    var isPrivate = i is 1 or 4;
+                    <Tile Image="img" Sizes="@G3" CssClass="@(isPrivate ? "is-private" : null)">
+                        <Caption><div class="row"><DragHandle Label="@("Move " + img.Title)" Position="@(i + 1)" Total="@Six.Count" /><span class="vis">@(isPrivate ? "Private" : "Public")</span></div></Caption>
+                    </Tile>
+                }
+            </ContactSheet>
+        </div>
+    </Specimen>
+    <Specimen Label="Admin upload batch" Note="Same grid as a gallery (4/3/1), one item per state.">
+        <div class="bleed under">
+            <ContactSheet Large="4" Medium="3" Small="1">
+                <BatchItem FileName="DSC_0412.jpg" SizeBytes="2516582" State="BatchItemState.Succeeded" Preview="Samples.All[0]" />
+                <BatchItem FileName="DSC_0413.jpg" SizeBytes="3145728" State="BatchItemState.Succeeded" Preview="Samples.All[1]" />
+                <BatchItem FileName="DSC_0415.jpg" SizeBytes="4194304" State="BatchItemState.Uploading" Percent="64" Preview="Samples.All[2]" />
+                <BatchItem FileName="DSC_0418.jpg" SizeBytes="2516582" State="BatchItemState.Processing" Preview="Samples.All[3]" />
+                <BatchItem FileName="DSC_0420.jpg" SizeBytes="2097152" State="BatchItemState.Queued" />
+                <BatchItem FileName="DSC_0421.jpg" SizeBytes="2516582" State="BatchItemState.Failed" Reason="Server rejected a size: metadata found in the 1280 px WebP" Preview="Samples.All[4]" />
+                <BatchItem FileName="DSC_0425.jpg" SizeBytes="2516582" State="BatchItemState.Interrupted" Preview="Samples.All[5]" />
+            </ContactSheet>
+        </div>
+        <BatchFooter State="BatchState.Blocked" Total="40" Ready="38" Failed="2" />
+    </Specimen>
 </UiLayout>
 
 @code {
+    private IReadOnlyList<ImageView> Eight => Samples.All.Take(8).ToList();
+    private IReadOnlyList<ImageView> Six => Samples.All.Take(6).ToList();
+    private static readonly string G4 = Gallery.Core.Images.Sizes.ForGrid(4, 3, 1);
+    private static readonly string G3 = Gallery.Core.Images.Sizes.ForGrid(3, 3, 1);
+
     private IReadOnlyList<ContactSheetItem> All => Samples.All.Select(i => new ContactSheetItem(i, "#")).ToList();
     private IReadOnlyList<ContactSheetItem> Two => All.Take(2).ToList();
 }

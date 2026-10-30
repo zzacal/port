@@ -1,0 +1,48 @@
+.batch-footer {
+    font-size: var(--type-body);
+    position: sticky;
+    bottom: 0;
+    background: var(--color-bg);
+    border-top: 1px solid var(--color-rule);
+    padding: 12px var(--space-s);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.bf-summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.bf-summary progress {
+    width: 100%;
+    height: 4px;
+    accent-color: var(--color-text);
+}
+
+@media (min-width: 600px) {
+    .bf-summary progress {
+        width: 160px;
+    }
+}
+
+.bf-failed {
+    color: var(--color-danger);
+}
+
+.bf-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.bf-reason {
+    font-size: var(--type-caption);
+    color: var(--color-muted);
+}

@@ -1,0 +1,22 @@
+@inject SampleCatalog Samples
+<UiLayout Title="GalleryBuilder">
+    <Specimen Label="At rest (cover pinned on photo 3)">
+        <GalleryBuilder Title="Coast, winter" Description="Walks along the north shore, December." Items="Eight" PinnedIndex="2" ViewHref="/g/abc/coast-winter" />
+    </Specimen>
+    <Specimen Label="Dragging photo 2 to position 5">
+        <GalleryBuilder Title="Coast, winter" Items="Eight" State="BuilderState.Dragging" ActiveIndex="1" DropIndex="4" />
+    </Specimen>
+    <Specimen Label="Photo 3 lifted for keyboard moving">
+        <GalleryBuilder Title="Coast, winter" Items="Eight" State="BuilderState.KeyboardLifted" ActiveIndex="2" />
+    </Specimen>
+    <Specimen Label="Publish warning">
+        <GalleryBuilder Title="Coast, winter" Items="Eight" State="BuilderState.PublishWarning" />
+    </Specimen>
+    <Specimen Label="Empty gallery">
+        <GalleryBuilder Title="New gallery" State="BuilderState.Empty" />
+    </Specimen>
+</UiLayout>
+
+@code {
+    private IReadOnlyList<ImageView> Eight => Samples.All.Take(8).ToList();
+}

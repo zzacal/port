@@ -1,0 +1,74 @@
+@* Admin gallery-builder organism (feature 005): sortable photo grid with side panel for editing.
+   Per-tile controls sit in a row under the title, not over the photo: photos are letterboxed, so
+   corner overlays floated over empty cell space and covered small photos (browser review, T032). *@
+@using Gallery.Core.Images
+<div class="builder">
+    <section class="b-grid" aria-label="Photos">
+        @if (State == BuilderState.Empty)
+        {
+            <p class="b-empty">No photos in this gallery yet. <a href="/admin/library">Add photos from the library</a></p>
+        }
+        else
+        {
+            <ContactSheet Large="4" Medium="3" Small="1">
+                @for (var i = 0; i < Items.Count; i++)
+                {
+                    var index = i;
+                    var item = Items[index];
+                    var tileTitle = item.Title;
+                    var coverState = index == PinnedIndex
+                        ? CoverState.Pinned
+                        : (PinnedIndex == null && index == 0 ? CoverState.Automatic : CoverState.Unpinned);
+                    var handleState = (State == BuilderState.KeyboardLifted && index == ActiveIndex)
+                        ? HandleState.Lifted
+                        : HandleState.Rest;
+                    var cssClass = (State == BuilderState.Dragging && index == ActiveIndex) ? "is-dragging"
+                        : (State == BuilderState.KeyboardLifted && index == ActiveIndex) ? "is-lifted"
+                        : null;
+
+                    if (State == BuilderState.Dragging && index == DropIndex)
+                    {
+                        <div class="drop-slot" aria-hidden="true"></div>
+                    }
+                    <Tile Image="item" Href="@((string?)null)" Sizes="@Sizes.ForGrid(4, 3, 1)" CssClass="@cssClass">
+                        <Caption>
+                            <div class="b-ctl">
+                                <DragHandle Label="@($"Move {tileTitle}")" State="@handleState" Position="@(index + 1)" Total="@Items.Count" />
+                                <CoverMarker State="@coverState" ImageTitle="@tileTitle" />
+                            </div>
+                        </Caption>
+                    </Tile>
+                }
+            </ContactSheet>
+        }
+    </section>
+    <SidePanel Heading="Gallery" State="SaveState.Idle" FormId="@FormId"
+               SaveVariant="@(State == BuilderState.PublishWarning ? ButtonVariant.Secondary : ButtonVariant.Primary)">
+        <ChildContent>
+            <Input Label="Title" Name="title" Value="@Title" MaxLength="200" />
+            <Input Label="Description" Name="description" Value="@Description" Multiline="true" MaxLength="5000" />
+            <VisibilityToggle Public="@Public" GalleryTitle="@Title" PhotoCount="@Items.Count" Warning="@(State == BuilderState.PublishWarning)" FormId="@FormId" />
+            <p class="b-view"><Button Element="ButtonElement.Link" Variant="ButtonVariant.Quiet" Href="@ViewHref">View gallery ↗</Button></p>
+        </ChildContent>
+        <Danger>
+            <DangerConfirm Action="Delete gallery"
+                           Target="@Title"
+                           Consequence="@($"Its {Items.Count} photos stay in your library. This can't be undone.")"
+                           ConfirmLabel="Delete gallery"
+                           FormId="@FormId" />
+        </Danger>
+    </SidePanel>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    [Parameter] public string? Description { get; set; }
+    [Parameter] public bool Public { get; set; }
+    [Parameter] public IReadOnlyList<ImageView> Items { get; set; } = [];
+    [Parameter] public BuilderState State { get; set; }
+    [Parameter] public int? PinnedIndex { get; set; }
+    [Parameter] public int ActiveIndex { get; set; }
+    [Parameter] public int DropIndex { get; set; }
+    [Parameter] public string ViewHref { get; set; } = "/";
+    [Parameter] public string? FormId { get; set; }
+}

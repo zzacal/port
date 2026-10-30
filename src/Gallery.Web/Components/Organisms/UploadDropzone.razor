@@ -1,0 +1,40 @@
+@* Admin upload dropzone organism (feature 005): file input, drag-over state, refusals list. *@
+<div class="dropzone state-@StateName">
+    <label class="dz-target">
+        <input type="file" class="dz-input" name="@Name" multiple accept="image/jpeg" form="@FormId" />
+        @if (State == DropzoneState.DragOver)
+        {
+            <span class="dz-title">Drop to add these photos to the batch</span>
+        }
+        else
+        {
+            <span class="dz-title">Drop JPEG photos here, or <u>choose files</u></span>
+        }
+        <span class="dz-limits">JPEG only · up to @MaxMb MB each</span>
+    </label>
+    @if (Refusals.Count > 0)
+    {
+        <ul class="dz-refusals" aria-live="polite">
+            @foreach (var r in Refusals)
+            {
+                <li><span class="fname" title="@r.FileName">@r.FileName</span> — @r.Reason</li>
+            }
+        </ul>
+    }
+</div>
+
+@code {
+    [Parameter] public DropzoneState State { get; set; } = DropzoneState.Idle;
+    [Parameter] public IReadOnlyList<Refusal> Refusals { get; set; } = Array.Empty<Refusal>();
+    [Parameter] public int MaxMb { get; set; } = 20;
+    [Parameter] public string Name { get; set; } = "files";
+    [Parameter] public string? FormId { get; set; }
+
+    private string StateName => State switch
+    {
+        DropzoneState.Idle => "idle",
+        DropzoneState.DragOver => "dragover",
+        DropzoneState.Refused => "refused",
+        _ => "idle"
+    };
+}

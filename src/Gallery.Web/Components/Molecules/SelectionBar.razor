@@ -1,0 +1,16 @@
+@* Admin selection-bar molecule (feature 005): sticky bar showing selected count and batch actions. *@
+@if (Count > 0)
+{
+    <div class="selection-bar" role="region" aria-label="Selection">
+        <span class="count">@Count selected</span>
+        <Button Variant="ButtonVariant.Quiet" Type="button">Clear</Button>
+        <span class="spacer"></span>
+        @ChildContent
+    </div>
+}
+
+@code {
+    [Parameter] public int Count { get; set; }
+    [Parameter] public int Total { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

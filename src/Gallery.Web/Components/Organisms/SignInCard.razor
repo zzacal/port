@@ -1,0 +1,42 @@
+@* Admin sign-in card organism (feature 005): sign-in, claim, and refused states with optional cover. *@
+@using Gallery.Web.Components.Atoms
+<div class="signin @(Cover is not null ? "has-cover" : "")">
+    @if (Cover is not null)
+    {
+        <div class="si-bg">
+            <Picture Image="@Cover" Sizes="100vw" Fit="PictureFit.Contain" Priority="PicturePriority.High" />
+        </div>
+    }
+    <div class="si-card">
+        <p class="si-site">@SiteName</p>
+        @if (State == SignInState.SignIn)
+        {
+            <h1>Sign in</h1>
+            <p>Only the owner can manage this site.</p>
+            <form method="post" action="/admin/signin">
+                <Button Variant="ButtonVariant.Primary">Sign in with Google</Button>
+            </form>
+        }
+        else if (State == SignInState.Claim)
+        {
+            <h1>Claim this site</h1>
+            <p>This site has no owner yet. The first Google account to sign in becomes the owner. It can't be changed later from the web.</p>
+            <form method="post" action="/admin/signin">
+                <Button Variant="ButtonVariant.Primary">Sign in with Google and claim</Button>
+            </form>
+        }
+        else if (State == SignInState.Refused)
+        {
+            <h1>Not the owner</h1>
+            <p>That Google account doesn't own this site, so it can't manage it. Nothing was saved.</p>
+            <Button Element="ButtonElement.Link" Variant="ButtonVariant.Secondary" Href="/">Back to the gallery</Button>
+            <Button Element="ButtonElement.Link" Variant="ButtonVariant.Quiet" Href="/admin/signin">Try another account</Button>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public SignInState State { get; set; } = SignInState.SignIn;
+    [Parameter] public ImageView? Cover { get; set; }
+    [Parameter] public string SiteName { get; set; } = "Gallery";
+}

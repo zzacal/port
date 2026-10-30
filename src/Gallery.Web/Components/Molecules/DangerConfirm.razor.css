@@ -1,0 +1,27 @@
+.danger-confirm {
+    display: block;
+}
+
+.danger-confirm:focus-visible {
+    outline: 2px solid var(--color-text);
+    outline-offset: 2px;
+}
+
+.confirm-body {
+    margin-top: 8px;
+    padding: 12px;
+    border-left: 4px solid var(--color-danger);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.confirm-body p {
+    font-size: var(--type-body);
+    margin: 0;
+}
+
+.cancel-hint {
+    font-size: var(--type-caption);
+    color: var(--color-muted);
+}

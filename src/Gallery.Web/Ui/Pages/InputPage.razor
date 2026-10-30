@@ -1,0 +1,26 @@
+@inject SampleCatalog Samples
+<UiLayout Title="Input">
+    <Specimen Label="Single-line, empty">
+        <Input Label="Title" Name="title-empty" MaxLength="200" />
+    </Specimen>
+    <Specimen Label="Single-line, filled">
+        <Input Label="Title" Name="title-filled" Value="Coast, winter" MaxLength="200" />
+    </Specimen>
+    <Specimen Label="Too long">
+        <Input Label="Title" Name="title-toolong" Value="@TooLongTitle" MaxLength="200" />
+    </Specimen>
+    <Specimen Label="Multi-line, empty">
+        <Input Label="Caption" Name="caption-empty" Multiline="true" MaxLength="2000" />
+    </Specimen>
+    <Specimen Label="Saving">
+        <Input Label="Title" Name="title-saving" Value="Coast, winter" MaxLength="200" State="SaveState.Saving" />
+    </Specimen>
+    <Specimen Label="Saved">
+        <Input Label="Title" Name="title-saved" Value="Coast, winter" MaxLength="200" State="SaveState.Saved" />
+    </Specimen>
+</UiLayout>
+
+@code {
+    // 212-character title (limit 200) — from data-model.md
+    private string TooLongTitle => new string('A', 212);
+}

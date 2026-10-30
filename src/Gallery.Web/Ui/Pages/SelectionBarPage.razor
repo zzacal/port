@@ -1,0 +1,22 @@
+@inject SampleCatalog Samples
+<UiLayout Title="SelectionBar">
+    <Specimen Label="None selected (renders nothing)" Note="Count 0 renders nothing; the box below is intentionally empty.">
+        <SelectionBar Count="0" Total="8">
+            <Button Variant="ButtonVariant.Primary">Add to gallery…</Button>
+        </SelectionBar>
+    </Specimen>
+    <Specimen Label="One selected">
+        <SelectionBar Count="1" Total="8">
+            <Button Variant="ButtonVariant.Primary">Add to gallery…</Button>
+            <Button Variant="ButtonVariant.Secondary">Edit titles</Button>
+            <Button Variant="ButtonVariant.Danger">Delete…</Button>
+        </SelectionBar>
+    </Specimen>
+    <Specimen Label="Many selected (5 of 8)">
+        <SelectionBar Count="5" Total="8">
+            <Button Variant="ButtonVariant.Primary">Add to gallery…</Button>
+            <Button Variant="ButtonVariant.Secondary">Edit titles</Button>
+            <Button Variant="ButtonVariant.Danger">Delete…</Button>
+        </SelectionBar>
+    </Specimen>
+</UiLayout>

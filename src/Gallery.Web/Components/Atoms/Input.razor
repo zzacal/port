@@ -1,0 +1,58 @@
+@* Admin input atom (feature 005): single-line or multiline, with label, hint, char count, and save state. *@
+<div class="@FieldClass">
+    <label for="@Id">@Label</label>
+    @if (Multiline)
+    {
+        <textarea id="@Id" name="@Name" maxlength="@MaxLength" aria-invalid="@AriaInvalid" aria-describedby="@Id-foot" rows="@Rows">@Value</textarea>
+    }
+    else
+    {
+        <input id="@Id" name="@Name" value="@Value" maxlength="@MaxLength" aria-invalid="@AriaInvalid" aria-describedby="@Id-foot" />
+    }
+    <div class="field-foot" id="@Id-foot">
+        <span class="@MsgClass">@MsgText</span>
+        @if (MaxLength.HasValue)
+        {
+            <span class="@CountClass">@CharCount / @MaxLength</span>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+    [Parameter, EditorRequired] public string Name { get; set; } = "";
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public bool Multiline { get; set; }
+    [Parameter] public int? MaxLength { get; set; }
+    [Parameter] public string? Hint { get; set; }
+    [Parameter] public SaveState State { get; set; } = SaveState.Idle;
+    [Parameter] public int Rows { get; set; } = 4;
+
+    private string Id => "f-" + Name;
+
+    private bool IsTooLong => MaxLength.HasValue && (Value?.Length ?? 0) > MaxLength.Value;
+
+    private string FieldClass => IsTooLong ? "field is-invalid" : "field";
+
+    private string? AriaInvalid => IsTooLong ? "true" : null;
+
+    private int CharCount => Value?.Length ?? 0;
+
+    private string MsgText => State switch
+    {
+        SaveState.Saving => "Saving\u2026",
+        SaveState.Saved => "Saved",
+        _ => IsTooLong
+            ? $"{CharCount} characters; the limit is {MaxLength}."
+            : (Hint ?? "")
+    };
+
+    private string MsgClass => State switch
+    {
+        SaveState.Saving => "msg msg-saving",
+        SaveState.Saved => "msg msg-saved",
+        _ => IsTooLong ? "msg msg-invalid" : "msg"
+    };
+
+    private string CountClass => IsTooLong ? "count count-over" : "count";
+}

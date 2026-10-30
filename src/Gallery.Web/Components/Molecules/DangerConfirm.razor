@@ -1,0 +1,20 @@
+@* Admin danger-confirm molecule (feature 005): expandable details panel for a destructive action. *@
+<details class="danger-confirm" open="@Open">
+    <Button Element="ButtonElement.Summary" Variant="ButtonVariant.Danger">@Action&#x2026;</Button>
+    <div class="confirm-body" role="group" aria-label="@($"Confirm {Action}")">
+        <p><strong>@Action &#x201C;@Target&#x201D;?</strong> @Consequence</p>
+        <Button Variant="ButtonVariant.Danger" Type="submit" FormId="@FormId" Name="@Name" Value="@Value">@ConfirmLabel</Button>
+        <span class="cancel-hint">Click &#x201C;@Action&#x2026;&#x201D; again to cancel.</span>
+    </div>
+</details>
+
+@code {
+    [Parameter, EditorRequired] public string Action { get; set; } = "";
+    [Parameter, EditorRequired] public string Target { get; set; } = "";
+    [Parameter, EditorRequired] public string Consequence { get; set; } = "";
+    [Parameter, EditorRequired] public string ConfirmLabel { get; set; } = "";
+    [Parameter] public bool Open { get; set; }
+    [Parameter] public string? FormId { get; set; }
+    [Parameter] public string? Name { get; set; }
+    [Parameter] public string? Value { get; set; }
+}

@@ -1,0 +1,33 @@
+@* Admin layout template (feature 005): full document with owner bar, main, and optional aside. *@
+@inject Gallery.Web.Styles.InlineStyles Styles
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@Title</title>
+    <meta name="robots" content="noindex">
+    <style>@((MarkupString)Styles.Css)</style>
+</head>
+<body class="admin">
+    <OwnerBar Current="@Current" ViewHref="@ViewHref" PrimaryAction="@PrimaryAction" />
+    <div class="@BodyClass">
+        <main class="admin-main">@ChildContent</main>
+        @if (Aside is not null)
+        {
+            <aside class="admin-aside">@Aside</aside>
+        }
+    </div>
+</body>
+</html>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    [Parameter] public AdminPage? Current { get; set; }
+    [Parameter] public string ViewHref { get; set; } = "/";
+    [Parameter] public RenderFragment? PrimaryAction { get; set; }
+    [Parameter] public RenderFragment? Aside { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private string BodyClass => Aside is not null ? "admin-body with-aside" : "admin-body";
+}

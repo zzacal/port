@@ -1,0 +1,27 @@
+@inject SampleCatalog Samples
+<UiLayout Title="DangerConfirm">
+    <Specimen Label="Delete image, closed">
+        <DangerConfirm
+            Action="Delete image"
+            Target="Mountain Lake"
+            Consequence="This removes it from every gallery and deletes the original file. It can't be undone."
+            ConfirmLabel="Delete image permanently"
+            Open="false" />
+    </Specimen>
+    <Specimen Label="Delete image, open">
+        <DangerConfirm
+            Action="Delete image"
+            Target="Mountain Lake"
+            Consequence="This removes it from every gallery and deletes the original file. It can't be undone."
+            ConfirmLabel="Delete image permanently"
+            Open="true" />
+    </Specimen>
+    <Specimen Label="Delete gallery, open">
+        <DangerConfirm
+            Action="Delete gallery"
+            Target="Coast, winter"
+            Consequence="Its 24 photos stay in your library. This can't be undone."
+            ConfirmLabel="Delete gallery"
+            Open="true" />
+    </Specimen>
+</UiLayout>

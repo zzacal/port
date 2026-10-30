@@ -1,0 +1,21 @@
+@inject SampleCatalog Samples
+<UiLayout Title="SelectMark">
+    <Specimen Label="Not selected" Width="w-240">
+        <Tile Image="Samples.Landscape[0]" Sizes="240px">
+            <Overlay>
+                <div class="pos-tl">
+                    <SelectMark Label="@("Select " + Samples.Landscape[0].Title)" Name="select" Value="@Samples.Landscape[0].Id" Checked="false" />
+                </div>
+            </Overlay>
+        </Tile>
+    </Specimen>
+    <Specimen Label="Selected" Width="w-240">
+        <Tile Image="Samples.Landscape[1]" Sizes="240px">
+            <Overlay>
+                <div class="pos-tl">
+                    <SelectMark Label="@("Select " + Samples.Landscape[1].Title)" Name="select" Value="@Samples.Landscape[1].Id" Checked="true" />
+                </div>
+            </Overlay>
+        </Tile>
+    </Specimen>
+</UiLayout>

@@ -11,6 +11,11 @@ public class OrganismPageTests
     public async Task ContactSheet_page_shows_home_gallery_and_short_row_configurations()
     {
         var html = await Render.Html<ContactSheetPage>();
+        // Feature 005 appends admin-usage specimens to this page (owner: one list, no admin split).
+        // These assertions are about the three public configurations, so scope them to the part of
+        // the page before the first admin specimen. The 003 assertions themselves are unchanged.
+        var cut = html.IndexOf(">Admin library", StringComparison.Ordinal);
+        if (cut > 0) html = html[..cut];
         Assert.Contains("cs cs-l3 cs-m3 cs-s1", html);
         Assert.Equal(2, Guards.Count(html, "cs cs-l4 cs-m3 cs-s1"));
         Assert.Contains("Fewer than one row", html);

@@ -1,0 +1,23 @@
+@inject SampleCatalog Samples
+<UiLayout Title="Button">
+    <Specimen Label="Variants">
+        <Button Variant="ButtonVariant.Primary">Primary</Button>
+        <Button Variant="ButtonVariant.Secondary">Secondary</Button>
+        <Button Variant="ButtonVariant.Quiet">Quiet</Button>
+        <Button Variant="ButtonVariant.Danger">Danger</Button>
+    </Specimen>
+    <Specimen Label="Link as button in a row">
+        <div class="row">
+            <Button Variant="ButtonVariant.Secondary" Type="button">Cancel</Button>
+            <Button Variant="ButtonVariant.Secondary" Element="ButtonElement.Link" Href="#">View gallery</Button>
+            <Button Variant="ButtonVariant.Primary">Save</Button>
+        </div>
+    </Specimen>
+    <Specimen Label="Disabled">
+        <Button Variant="ButtonVariant.Primary" Disabled="true">Primary</Button>
+        <Button Variant="ButtonVariant.Secondary" Disabled="true">Secondary</Button>
+    </Specimen>
+    <Specimen Label="Busy">
+        <Button Variant="ButtonVariant.Primary" Busy="true">Saving</Button>
+    </Specimen>
+</UiLayout>

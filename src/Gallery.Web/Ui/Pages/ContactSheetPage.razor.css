@@ -2,3 +2,14 @@
 .bleed { margin: 0 calc(-1 * var(--space-s)); }
 @media (min-width: 600px) { .bleed { margin: 0 calc(-1 * var(--space-m)); } }
 @media (min-width: 1200px) { .bleed { margin: 0 calc(-1 * var(--space-l)); } }
+
+/* Admin usages (feature 005). Overlay wrappers and captions are authored here; Tile's own .cell
+   needs ::deep (research R-06). */
+.under { margin-bottom: var(--space-s); }
+.pos-tl { position: absolute; top: 8px; left: 8px; }
+
+.bleed ::deep .is-selected .cell { outline: 3px solid var(--color-text); outline-offset: -3px; }
+.bleed ::deep .is-private .cell { opacity: .45; }
+
+.row { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+.vis { font-size: var(--type-caption); color: var(--color-muted); }

@@ -1,0 +1,60 @@
+.signin {
+    position: relative;
+    min-height: 480px;
+    display: grid;
+    place-items: center;
+    background: var(--color-surface);
+}
+
+.signin.has-cover {
+    background: #000;
+}
+
+.si-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    opacity: .55;
+}
+
+.si-bg ::deep .pic {
+    width: 100%;
+    height: 100%;
+}
+
+.si-bg ::deep img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.si-card {
+    position: relative;
+    z-index: 1;
+    max-width: 360px;
+    width: 100%;
+    background: var(--color-bg);
+    padding: var(--space-m);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-sizing: border-box;
+}
+
+.si-site {
+    font-size: var(--type-caption);
+    color: var(--color-muted);
+    margin: 0;
+}
+
+.si-card h1 {
+    font-size: var(--type-brand);
+    font-weight: 600;
+    margin: 0;
+}
+
+.si-card p {
+    font-size: var(--type-body);
+    margin: 0;
+}

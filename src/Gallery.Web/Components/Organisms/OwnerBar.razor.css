@@ -1,0 +1,70 @@
+.owner-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-rule);
+    padding: 8px var(--space-s);
+}
+
+@media (min-width: 600px) {
+    .owner-bar { padding: 8px var(--space-m); }
+}
+
+@media (min-width: 1200px) {
+    .owner-bar { padding: 8px var(--space-l); }
+}
+
+.ob-brand {
+    font-size: var(--type-brand);
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--color-text);
+}
+
+.ob-brand span {
+    font-weight: 400;
+    color: var(--color-muted);
+}
+
+.ob-brand:focus-visible {
+    outline: 2px solid var(--color-text);
+    outline-offset: 2px;
+}
+
+nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+nav a {
+    font-size: var(--type-body);
+    color: var(--color-muted);
+    text-decoration: none;
+}
+
+nav a:focus-visible {
+    outline: 2px solid var(--color-text);
+    outline-offset: 2px;
+}
+
+nav a[aria-current="page"] {
+    color: var(--color-text);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 6px;
+    text-decoration-thickness: 2px;
+}
+
+.ob-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}

@@ -25,6 +25,9 @@ public static class Tokens
     public const string ColorText = "#000";
     public const string ColorMuted = "#666";
     public const string ColorRule = "#ddd";
+    public const string ColorDanger = "#b3261e";
+    public const string ColorSuccess = "#1e7a3c";
+    public const string ColorSurface = "#f4f4f4";
 
     // Font
     public const string FontStack = "system-ui, -apple-system, \"Helvetica Neue\", Arial, sans-serif";
@@ -34,6 +37,7 @@ public static class Tokens
         $"--cell-ratio:{CellRatioW}/{CellRatioH};" +
         $"--type-caption:{TypeCaption}px;--type-body:{TypeBody}px;--type-brand:{TypeBrand}px;" +
         $"--color-bg:{ColorBg};--color-text:{ColorText};--color-muted:{ColorMuted};--color-rule:{ColorRule};" +
+        $"--color-danger:{ColorDanger};--color-success:{ColorSuccess};--color-surface:{ColorSurface};" +
         $"--font:{FontStack}}}";
 
     public static IReadOnlyList<(string Group, string Name, string Value)> All() =>
@@ -52,6 +56,9 @@ public static class Tokens
         ("Color",       "ColorText",   ColorText),
         ("Color",       "ColorMuted",  ColorMuted),
         ("Color",       "ColorRule",   ColorRule),
+        ("Color",       "ColorDanger", ColorDanger),
+        ("Color",       "ColorSuccess", ColorSuccess),
+        ("Color",       "ColorSurface", ColorSurface),
         ("Font",        "FontStack",   FontStack),
     ];
 }
