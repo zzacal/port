@@ -1,6 +1,6 @@
-namespace Gallery.Web.Components.Admin;
+namespace Gallery.Web.Components;
 
-// View-state inputs for the admin components (feature 005, contracts/admin-components.md).
+// View-state inputs shared by components across levels (feature 005, contracts/admin-components.md).
 // Every transient state is a parameter so /ui/ can render it statically.
 
 public enum ButtonVariant { Primary, Secondary, Quiet, Danger }

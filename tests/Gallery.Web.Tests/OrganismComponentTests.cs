@@ -1,14 +1,14 @@
-using Gallery.Web.Components.Admin;
-using Gallery.Web.Components.Admin.Organisms;
-using Gallery.Web.Components.Admin.Templates;
+using Gallery.Web.Components;
+using Gallery.Web.Components.Organisms;
+using Gallery.Web.Components.Templates;
 using Gallery.Core.Images;
 using Microsoft.AspNetCore.Components;
 using System.Text.RegularExpressions;
 
 namespace Gallery.Web.Tests;
 
-/// <summary>Tests for admin organism components: OwnerBar, SidePanel, UploadDropzone, SignInCard (feature 005, T024).</summary>
-public class AdminOrganismTests
+/// <summary>Tests for the feature 005 organisms: OwnerBar, SidePanel, UploadDropzone, SignInCard (feature 005, T024).</summary>
+public class OrganismComponentTests
 {
     private static RenderFragment Frag(string text) => b => b.AddContent(0, text);
 

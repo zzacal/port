@@ -187,6 +187,15 @@ report a blocker. Do not invent.
     public specimen
   - update verify.sh, the spec (US1, FR-007, SC-001) and contracts/http.md
 
+- [X] T035 Flatten the component code (decisions #26):
+  - `Components/Admin/{level}/*` moved to `Components/{level}/`
+  - `AdminTypes.cs` becomes `Components/ComponentTypes.cs` (namespace `Gallery.Web.Components`)
+  - Admin usings dropped
+  - test files renamed by level (AtomComponentTests, MoleculeComponentTests,
+    OrganismComponentTests, AtomMoleculeStatePageTests, OrganismStatePageTests,
+    TileContactSheetAdditionsTests)
+  - The paths in T003–T029 above are historical; current paths are in plan.md and the contract.
+
 ## Phase 7: Polish and verification (high tier)
 
 - [X] T030 Amend D-21 in `specs/001-architecture-stack-design/draft/02d-decisions-delivery.md`:

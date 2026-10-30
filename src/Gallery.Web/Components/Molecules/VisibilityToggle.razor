@@ -1,5 +1,4 @@
 @* Admin visibility-toggle molecule (feature 005): switch to publish/unpublish a gallery, with publish warning. *@
-@using Gallery.Web.Components.Admin
 @* While the publish warning is up the switch shows the requested state (on), per contract. *@
 <Switch Label="Public" Name="public" Checked="@(Public || Warning)" Hint="@Hint" />
 @if (Warning)

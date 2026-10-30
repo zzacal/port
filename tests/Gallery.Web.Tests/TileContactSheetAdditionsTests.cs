@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Components;
 namespace Gallery.Web.Tests;
 
 /// <summary>Optional admin additions to the public Tile and ContactSheet (feature 005, FR-002).</summary>
-public class AdminGridAdditionsTests
+public class TileContactSheetAdditionsTests
 {
     private static RenderFragment Text(string s) => b => b.AddContent(0, s);
     private static RenderFragment Markup(string s) => b => b.AddMarkupContent(0, s);

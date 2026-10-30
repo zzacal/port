@@ -2,7 +2,7 @@
 
 No persisted data. These are view-input shapes only.
 
-- **AdminTypes** (`src/Gallery.Web/Components/Admin/AdminTypes.cs`): the enums and `Refusal`
+- **Shared component types** (`src/Gallery.Web/Components/ComponentTypes.cs`): the enums and `Refusal`
   record in contracts/admin-components.md, under "Shared enums".
 - **BatchItem view**: FileName, SizeBytes, State (Queued | Processing | Uploading | Succeeded |
   Failed | Interrupted), Percent (Uploading only), Reason (Failed only), Preview (ImageView?).

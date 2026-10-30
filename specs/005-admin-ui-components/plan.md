@@ -7,7 +7,7 @@
 ## Summary
 
 This feature builds the D-23 admin component set as static, server-rendered Razor components in
-`src/Gallery.Web/Components/Admin/`:
+`src/Gallery.Web/Components/{Atoms,Molecules,Organisms,Templates}/`, next to the existing components:
 - 4 atoms
 - 6 molecules
 - 6 organisms
@@ -75,11 +75,11 @@ src/Gallery.Core/Design/Tokens.cs                   (+3 colours)
 src/Gallery.Web/Components/_Imports.razor           (+admin namespaces)
 src/Gallery.Web/Components/Molecules/Tile.razor(.css)              (optional params)
 src/Gallery.Web/Components/Organisms/ContactSheet.razor            (optional ChildContent)
-src/Gallery.Web/Components/Admin/AdminTypes.cs
-src/Gallery.Web/Components/Admin/Atoms/{Button,Input,Switch,SelectMark}.razor(.css)
-src/Gallery.Web/Components/Admin/Molecules/{BatchItem,CoverMarker,DragHandle,SelectionBar,DangerConfirm,VisibilityToggle}.razor(.css)
-src/Gallery.Web/Components/Admin/Organisms/{OwnerBar,SidePanel,UploadDropzone,BatchFooter,GalleryBuilder,SignInCard}.razor(.css)
-src/Gallery.Web/Components/Admin/Templates/AdminLayout.razor(.css)
+src/Gallery.Web/Components/ComponentTypes.cs
+src/Gallery.Web/Components/Atoms/{Button,Input,Switch,SelectMark}.razor(.css)
+src/Gallery.Web/Components/Molecules/{BatchItem,CoverMarker,DragHandle,SelectionBar,DangerConfirm,VisibilityToggle}.razor(.css)
+src/Gallery.Web/Components/Organisms/{OwnerBar,SidePanel,UploadDropzone,BatchFooter,GalleryBuilder,SignInCard}.razor(.css)
+src/Gallery.Web/Components/Templates/AdminLayout.razor(.css)
 src/Gallery.Web/Ui/UiCatalog.cs                     (+17 entries in the existing levels)
 src/Gallery.Web/Ui/Pages/Index.razor                (level display names)
 src/Gallery.Web/Ui/Pages/*Page.razor(.css)          (17 new pages; ContactSheetPage extended)

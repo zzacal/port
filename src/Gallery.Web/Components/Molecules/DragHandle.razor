@@ -1,5 +1,4 @@
 @* Admin drag-handle molecule (feature 005): button to lift and keyboard-move a photo in a grid. *@
-@using Gallery.Web.Components.Admin
 <button type="button" class="@CssClass" aria-label="@Label" aria-pressed="@(State == HandleState.Lifted ? "true" : "false")" aria-describedby="@(State == HandleState.Lifted ? LiftHelpId : null)">
     <span aria-hidden="true">&#x2807;</span>
 </button>

@@ -2,9 +2,9 @@ using Gallery.Web.Ui.Pages;
 
 namespace Gallery.Web.Tests;
 
-/// <summary>Tests for admin atom and molecule /ui pages: one test per page asserting every
+/// <summary>State-label tests for the feature 005 atom and molecule /ui pages: one test per page asserting every
 /// contract state label appears (feature 005, T027/T029).</summary>
-public class AdminPageTests
+public class AtomMoleculeStatePageTests
 {
     // ── ButtonPage ────────────────────────────────────────────────────────────
 

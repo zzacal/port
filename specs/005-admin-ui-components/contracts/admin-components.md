@@ -5,9 +5,10 @@ executor implements exactly this. Anything not stated here is escalated, never i
 
 ## Global rules (every component)
 
-- **G1 Location and namespace.** Files live in
-  `src/Gallery.Web/Components/Admin/{Atoms,Molecules,Organisms,Templates}/` with namespace
-  `Gallery.Web.Components.Admin.{Atoms,…}`. CSS is in a sibling `.razor.css` file, using SDK
+- **G1 Location and namespace.** Files live alongside the existing components in
+  `src/Gallery.Web/Components/{Atoms,Molecules,Organisms,Templates}/`, with namespace
+  `Gallery.Web.Components.{Atoms,…}`. There is no admin folder: components are organised by
+  atomic level only (owner, decisions #23 and #26). CSS is in a sibling `.razor.css` file, using SDK
   CSS isolation. Use `::deep` only where this contract says so.
 - **G2 No inline styles, no scripts.** No `style="…"` attribute anywhere and no `<script>`.
   Per-instance values become modifier classes or real attributes (`value`, `max`).
@@ -47,7 +48,7 @@ executor implements exactly this. Anything not stated here is escalated, never i
 All three are appended to `ToCssRoot()` and `All()` (group "Color"). The Tokens page gets swatch
 classes for them.
 
-## Shared enums (src/Gallery.Web/Components/Admin/AdminTypes.cs)
+## Shared enums (src/Gallery.Web/Components/ComponentTypes.cs, namespace `Gallery.Web.Components`)
 
 ```
 ButtonVariant { Primary, Secondary, Quiet, Danger }

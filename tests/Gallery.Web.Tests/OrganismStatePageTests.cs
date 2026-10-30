@@ -7,7 +7,7 @@ namespace Gallery.Web.Tests;
 /// Organism and template /ui pages (feature 005, T028/T029). Labels are matched as Specimen
 /// headings, not loose substrings, so a label can't pass by appearing in body copy.
 /// </summary>
-public class AdminOrganismPageTests
+public class OrganismStatePageTests
 {
     public static TheoryData<Type, string[]> Pages() => new()
     {

@@ -1,11 +1,11 @@
-using Gallery.Web.Components.Admin;
-using Gallery.Web.Components.Admin.Atoms;
+using Gallery.Web.Components;
+using Gallery.Web.Components.Atoms;
 using Microsoft.AspNetCore.Components;
 
 namespace Gallery.Web.Tests;
 
-/// <summary>Tests for admin atom components: Button, Input, Switch, SelectMark (feature 005, T009).</summary>
-public class AdminAtomTests
+/// <summary>Tests for the feature 005 atoms: Button, Input, Switch, SelectMark (feature 005, T009).</summary>
+public class AtomComponentTests
 {
     private static RenderFragment Frag(string text) => b => b.AddContent(0, text);
 

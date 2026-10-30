@@ -1,11 +1,11 @@
-using Gallery.Web.Components.Admin;
-using Gallery.Web.Components.Admin.Molecules;
+using Gallery.Web.Components;
+using Gallery.Web.Components.Molecules;
 using Microsoft.AspNetCore.Components;
 
 namespace Gallery.Web.Tests;
 
-/// <summary>Tests for admin molecule components: BatchItem, CoverMarker, DragHandle, SelectionBar, DangerConfirm, VisibilityToggle (feature 005, T016).</summary>
-public class AdminMoleculeTests
+/// <summary>Tests for the feature 005 molecules: BatchItem, CoverMarker, DragHandle, SelectionBar, DangerConfirm, VisibilityToggle (feature 005, T016).</summary>
+public class MoleculeComponentTests
 {
     private static RenderFragment Frag(string text) => b => b.AddContent(0, text);
 
