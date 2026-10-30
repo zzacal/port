@@ -1,0 +1,26 @@
+@inject Gallery.Web.Styles.InlineStyles Styles
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@Title</title>
+    @if (NoIndex)
+    {
+        <meta name="robots" content="noindex">
+    }
+    <style>@((MarkupString)Styles.Css)</style>
+</head>
+<body class="public">
+    <SiteHeader SiteName="Gallery" NavItems="_nav" />
+    <main class="public-main">@ChildContent</main>
+</body>
+</html>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public bool NoIndex { get; set; }
+
+    private static readonly IReadOnlyList<NavItem> _nav = [new("Galleries", "/")];
+}

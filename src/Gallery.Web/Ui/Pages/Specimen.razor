@@ -1,0 +1,18 @@
+<section class="specimen">
+    <h2 class="specimen-label">@Label</h2>
+    @if (!string.IsNullOrEmpty(Note))
+    {
+        <p class="specimen-note">@Note</p>
+    }
+    <div class="specimen-body @Width">@ChildContent</div>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+    [Parameter] public string? Note { get; set; }
+
+    /// <summary>Optional width class for the body: "w-240", "w-320", "w-480", or "" for full width.</summary>
+    [Parameter] public string Width { get; set; } = "";
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

@@ -1,0 +1,20 @@
+@* A missing direction renders nothing (no disabled link). *@
+<nav class="pager" aria-label="Image navigation">
+    <span class="prev">
+        @if (!string.IsNullOrEmpty(PrevHref))
+        {
+            <TextLink Href="@PrevHref" Rel="prev">Previous</TextLink>
+        }
+    </span>
+    <span class="next">
+        @if (!string.IsNullOrEmpty(NextHref))
+        {
+            <TextLink Href="@NextHref" Rel="next">Next</TextLink>
+        }
+    </span>
+</nav>
+
+@code {
+    [Parameter] public string? PrevHref { get; set; }
+    [Parameter] public string? NextHref { get; set; }
+}

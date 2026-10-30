@@ -1,0 +1,7 @@
+<UiLayout Title="Nav">
+    <Specimen Label="Default"><Nav Items="Items" /></Specimen>
+</UiLayout>
+
+@code {
+    private static readonly IReadOnlyList<NavItem> Items = [new("Galleries", "/", Current: true)];
+}

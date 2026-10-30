@@ -1,0 +1,17 @@
+@inject SampleCatalog Samples
+<UiLayout Title="ContactSheet">
+    <Specimen Label="Home configuration (3/3/1)" Note="Large ≥ 1200 px: 3 · Medium 600–1199 px: 3 · Small: 1">
+        <div class="bleed"><ContactSheet Items="All" Large="3" Medium="3" Small="1" /></div>
+    </Specimen>
+    <Specimen Label="Gallery configuration (4/3/1)" Note="Large: 4 · Medium: 3 · Small: 1">
+        <div class="bleed"><ContactSheet Items="All" Large="4" Medium="3" Small="1" /></div>
+    </Specimen>
+    <Specimen Label="Fewer than one row (4/3/1, 2 items)" Note="Cells keep the size of a full row.">
+        <div class="bleed"><ContactSheet Items="Two" Large="4" Medium="3" Small="1" PriorityCount="0" /></div>
+    </Specimen>
+</UiLayout>
+
+@code {
+    private IReadOnlyList<ContactSheetItem> All => Samples.All.Select(i => new ContactSheetItem(i, "#")).ToList();
+    private IReadOnlyList<ContactSheetItem> Two => All.Take(2).ToList();
+}

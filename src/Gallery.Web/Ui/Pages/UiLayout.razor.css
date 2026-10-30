@@ -1,0 +1,38 @@
+/* Chrome for the /ui/ pages only. Breakpoint literals must equal Tokens (see TokenMediaAgreementTests).
+   body is rendered by this component, so the scoped selector applies to it. */
+body.ui {
+    margin: 0;
+    font-family: var(--font);
+    color: var(--color-text);
+    background: var(--color-bg);
+}
+
+.ui-back {
+    padding: var(--space-s) var(--space-s) 0;
+    font-size: var(--type-caption);
+}
+
+.ui-back a {
+    color: var(--color-muted);
+}
+
+.ui-title {
+    margin: 0;
+    padding: var(--space-s);
+    font-size: var(--type-brand);
+    font-weight: 600;
+}
+
+.ui-main {
+    padding: 0 var(--space-s) var(--space-l);
+}
+
+@media (min-width: 600px) {
+    .ui-back, .ui-title { padding-left: var(--space-m); padding-right: var(--space-m); }
+    .ui-main { padding: 0 var(--space-m) var(--space-l); }
+}
+
+@media (min-width: 1200px) {
+    .ui-back, .ui-title { padding-left: var(--space-l); padding-right: var(--space-l); }
+    .ui-main { padding: 0 var(--space-l) var(--space-l); }
+}

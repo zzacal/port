@@ -1,0 +1,18 @@
+.nav ul {
+    display: flex;
+    gap: var(--space-s);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.nav a {
+    color: var(--color-muted);
+    text-decoration: none;
+    font-size: var(--type-caption);
+}
+
+.nav a[aria-current="page"] {
+    color: var(--color-text);
+    font-weight: 600;
+}

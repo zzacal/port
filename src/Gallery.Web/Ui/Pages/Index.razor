@@ -1,0 +1,14 @@
+<UiLayout Title="Components">
+    @foreach (var group in UiCatalog.Entries.GroupBy(e => e.Level))
+    {
+        <section class="ui-group">
+            <h2>@group.Key</h2>
+            <ul>
+                @foreach (var entry in group)
+                {
+                    <li><a href="/ui/@entry.Slug">@entry.Name</a></li>
+                }
+            </ul>
+        </section>
+    }
+</UiLayout>

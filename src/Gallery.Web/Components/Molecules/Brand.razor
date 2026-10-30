@@ -1,0 +1,6 @@
+<a class="brand" href="@Href">@Name</a>
+
+@code {
+    [Parameter, EditorRequired] public string Name { get; set; } = "";
+    [Parameter] public string Href { get; set; } = "/";
+}

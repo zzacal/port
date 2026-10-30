@@ -1,0 +1,18 @@
+@* Solo image view: thumbnail-first layering (IV.15), photo letterboxed in a viewport-bounded
+   stage, then title, metadata, and previous/next. The photo is not a link (III.1). *@
+<article class="solo">
+    <div class="stage">
+        <Picture Image="Image" Sizes="100vw" Fit="PictureFit.Contain" Priority="PicturePriority.High" ShowThumbLayer="true" />
+    </div>
+    <div class="caption">
+        <Title Text="@Image.Title" Element="h1" />
+        <MetadataBar Exif="Image.Exif" />
+        <Pager PrevHref="@PrevHref" NextHref="@NextHref" />
+    </div>
+</article>
+
+@code {
+    [Parameter, EditorRequired] public ImageView Image { get; set; } = default!;
+    [Parameter] public string? PrevHref { get; set; }
+    [Parameter] public string? NextHref { get; set; }
+}

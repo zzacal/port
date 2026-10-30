@@ -1,0 +1,35 @@
+/* Columns are fixed-count minmax(0,1fr) tracks, so a short row keeps the cell size of a full
+   row (edge case "fewer photos than one row"). Breakpoints must equal Tokens. */
+.cs {
+    display: grid;
+    gap: var(--space-s);
+    padding: 0 var(--space-s);
+    align-items: start;
+}
+
+.cs-s1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+.cs-s2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.cs-s3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.cs-s4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.cs-s5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.cs-s6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+
+@media (min-width: 600px) {
+    .cs { gap: var(--space-m); padding: 0 var(--space-m); }
+    .cs-m1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+    .cs-m2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .cs-m3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .cs-m4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .cs-m5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .cs-m6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1200px) {
+    .cs { gap: var(--space-l); padding: 0 var(--space-l); }
+    .cs-l1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+    .cs-l2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .cs-l3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .cs-l4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .cs-l5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .cs-l6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}

@@ -1,0 +1,15 @@
+@* One contact-sheet cell (D-20): the whole photo letterboxed and centred in a fixed 4:3
+   cell, title only below. The Tile owns the link; there is no separate picture-link. *@
+<a class="tile" href="@Href">
+    <div class="cell">
+        <Picture Image="Image" Sizes="@Sizes" Fit="PictureFit.Contain" Priority="Priority" />
+    </div>
+    <Title Text="@Image.Title" />
+</a>
+
+@code {
+    [Parameter, EditorRequired] public ImageView Image { get; set; } = default!;
+    [Parameter, EditorRequired] public string Href { get; set; } = "";
+    [Parameter, EditorRequired] public string Sizes { get; set; } = "";
+    [Parameter] public PicturePriority Priority { get; set; } = PicturePriority.Lazy;
+}

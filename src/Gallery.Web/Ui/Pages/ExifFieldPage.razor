@@ -1,0 +1,18 @@
+@inject SampleCatalog Samples
+<UiLayout Title="ExifField">
+    <Specimen Label="Camera"><ExifField Label="Camera" Value="@ExifFormat.Camera(Full)" /></Specimen>
+    <Specimen Label="Lens"><ExifField Label="Lens" Value="@ExifFormat.Lens(Full)" /></Specimen>
+    <Specimen Label="Focal length"><ExifField Label="Focal length" Value="@ExifFormat.FocalLength(Full)" /></Specimen>
+    <Specimen Label="Aperture"><ExifField Label="Aperture" Value="@ExifFormat.Aperture(Full)" /></Specimen>
+    <Specimen Label="Shutter speed"><ExifField Label="Shutter speed" Value="@ExifFormat.Shutter(Full)" /></Specimen>
+    <Specimen Label="Shutter speed, 1 s or longer"><ExifField Label="Shutter speed" Value="@ExifFormat.Shutter(Long)" /></Specimen>
+    <Specimen Label="ISO"><ExifField Label="ISO" Value="@ExifFormat.Iso(Full)" /></Specimen>
+    <Specimen Label="No value" Note="Renders nothing: no dash, no empty label.">
+        <ExifField Label="Lens" Value="@null" />
+    </Specimen>
+</UiLayout>
+
+@code {
+    private Exif? Full => Samples.Landscape[0].Exif;
+    private Exif? Long => Samples.All.First(i => i.Exif?.ExposureSeconds >= 1m).Exif;
+}

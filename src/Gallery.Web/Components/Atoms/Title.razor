@@ -1,0 +1,13 @@
+@switch (Element)
+{
+    case "h1": <h1 class="title" title="@Text">@Text</h1> break;
+    case "h2": <h2 class="title" title="@Text">@Text</h2> break;
+    default:   <p class="title" title="@Text">@Text</p> break;
+}
+
+@code {
+    [Parameter, EditorRequired] public string Text { get; set; } = "";
+
+    /// <summary>"p" (default), "h1", or "h2".</summary>
+    [Parameter] public string Element { get; set; } = "p";
+}

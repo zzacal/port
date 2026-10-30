@@ -1,0 +1,9 @@
+.title {
+    margin: 0;
+    font-size: var(--type-caption);
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

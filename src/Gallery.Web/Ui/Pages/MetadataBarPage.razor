@@ -1,0 +1,6 @@
+@inject SampleCatalog Samples
+<UiLayout Title="MetadataBar">
+    <Specimen Label="All fields"><MetadataBar Exif="Samples.Landscape[0].Exif" /></Specimen>
+    <Specimen Label="Some fields"><MetadataBar Exif="Samples.PartialExifPortrait.Exif" /></Specimen>
+    <Specimen Label="No fields" Note="Renders nothing."><MetadataBar Exif="Samples.Panorama.Exif" /></Specimen>
+</UiLayout>

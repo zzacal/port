@@ -1,0 +1,4 @@
+.ui-group { margin-bottom: var(--space-m); }
+.ui-group h2 { margin: 0 0 8px; font-size: var(--type-caption); color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.ui-group ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.ui-group a { color: var(--color-text); font-size: var(--type-body); }

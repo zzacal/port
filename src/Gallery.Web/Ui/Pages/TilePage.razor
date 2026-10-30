@@ -1,0 +1,13 @@
+@inject SampleCatalog Samples
+<UiLayout Title="Tile">
+    <Specimen Label="Landscape" Width="w-320"><Tile Image="Samples.Landscape[0]" Href="#" Sizes="320px" /></Specimen>
+    <Specimen Label="Portrait" Width="w-320"><Tile Image="Samples.Portrait[0]" Href="#" Sizes="320px" /></Specimen>
+    <Specimen Label="Long title" Width="w-320"><Tile Image="LongTitled" Href="#" Sizes="320px" /></Specimen>
+</UiLayout>
+
+@code {
+    private ImageView LongTitled => Samples.Landscape[2] with
+    {
+        Title = "An evening walk along the northern ridge above the lake, when the last of the light caught the far shore"
+    };
+}

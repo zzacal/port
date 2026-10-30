@@ -1,0 +1,14 @@
+@inject SampleCatalog Samples
+<UiLayout Title="Picture">
+    <Specimen Label="Landscape" Width="w-480"><Picture Image="Samples.Landscape[0]" Sizes="@S" /></Specimen>
+    <Specimen Label="Portrait" Width="w-320"><Picture Image="Samples.Portrait[0]" Sizes="@S" /></Specimen>
+    <Specimen Label="Square" Width="w-320"><Picture Image="Samples.Square" Sizes="@S" /></Specimen>
+    <Specimen Label="Panorama" Width="w-480"><Picture Image="Samples.Panorama" Sizes="@S" /></Specimen>
+    <Specimen Label="High priority (eager)" Note="fetchpriority=high, loading=eager" Width="w-480">
+        <Picture Image="Samples.Landscape[1]" Sizes="@S" Priority="PicturePriority.High" />
+    </Specimen>
+</UiLayout>
+
+@code {
+    private const string S = "(min-width: 600px) 480px, 100vw";
+}

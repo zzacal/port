@@ -1,0 +1,11 @@
+body.public {
+    margin: 0;
+    font-family: var(--font);
+    font-size: var(--type-body);
+    background: var(--color-bg);
+    color: var(--color-text);
+}
+
+.public-main {
+    padding-bottom: var(--space-l);
+}
