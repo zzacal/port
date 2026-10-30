@@ -31,9 +31,9 @@ R2 setup needed before 006 (owner, in the Cloudflare dashboard):
 
 - [x] Dev buckets created: `gallery-dev-private` and `gallery-dev-public`. Production gets its
   own pair later. The old `port` bucket is unused and can be deleted.
-- [ ] Attach a dev image hostname (for example `img-dev.<domain>`) to `gallery-dev-public`.
+- [x] Dev image hostname `img-dev.zacal.me` attached to `gallery-dev-public`.
   Leave r2.dev disabled on both buckets (III.9).
-- [ ] Create one API token with Object Read & Write, scoped to the two dev buckets only (III.9).
+- [x] Create one API token with Object Read & Write, scoped to the two dev buckets only (III.9).
   Keep its keys in .NET user-secrets on your machine, never in the repo.
 - CORS on `gallery-dev-private` comes with 008, which is the first feature that uploads from the
   browser.
