@@ -28,17 +28,17 @@ flowchart LR
   AOPGuard["Authenticated Origin Pulls and IP allowlist"]
   AppSvc["App Service .NET 10"]
   Atlas["MongoDB Atlas"]
-  CC["Cloud Connector"]
-  BlobPublic["Azure Blob Storage public"]
+  ImgHost["img.domain R2 custom domain"]
+  R2Public["R2 public bucket"]
 
   CFEdge -->|"HTML cache MISS"| AOPGuard
   AOPGuard -->|"mTLS and IP verified"| AppSvc
   AppSvc -->|"one read"| Atlas
   Atlas -->|"gallery or image document"| AppSvc
   AppSvc -->|"HTML with Server-Timing and Early Hints Link"| CFEdge
-  CFEdge -->|"image cache MISS via img.domain"| CC
-  CC -->|"fetch derivative"| BlobPublic
-  BlobPublic -->|"derivative bytes"| CFEdge
+  CFEdge -->|"image cache MISS"| ImgHost
+  ImgHost -->|"fetch derivative"| R2Public
+  R2Public -->|"derivative bytes"| CFEdge
 ```
 
 ### Diagram: Owner upload to library
@@ -48,25 +48,25 @@ flowchart TD
   Admin["Admin page"]
   Worker["Web Worker - decode, resize, encode, ThumbHash"]
   AppPresign["App Service presign"]
-  BlobStaging["Blob private/staging"]
+  R2Staging["R2 private/staging"]
   AppComplete["App Service complete"]
   AppInsights["Application Insights"]
   ItemOK["Item succeeded"]
   AppConfirm["App Service confirm batch"]
-  BlobFinal["Blob public and private/masters"]
+  R2Final["R2 public and private/masters"]
   Atlas["MongoDB Atlas"]
   CFEdge["Cloudflare Edge purge and warm"]
 
   Admin -->|"select files"| Worker
-  Worker -->|"request SAS"| AppPresign
-  AppPresign -->|"SAS token write-only 15 min"| Worker
-  Worker -->|"PUT master and derivatives"| BlobStaging
+  Worker -->|"request upload URLs"| AppPresign
+  AppPresign -->|"presigned PUT per object, 15 min"| Worker
+  Worker -->|"PUT master and derivatives"| R2Staging
   Worker -->|"POST complete with timings"| AppComplete
-  AppComplete -->|"ranged download for validation"| BlobStaging
+  AppComplete -->|"ranged GET for validation"| R2Staging
   AppComplete -->|"log op.timing events"| AppInsights
   AppComplete -->|"validation passed"| ItemOK
   ItemOK -->|"owner presses Confirm"| AppConfirm
-  AppConfirm -->|"copy"| BlobFinal
+  AppConfirm -->|"copy"| R2Final
   AppConfirm -->|"Image documents created"| Atlas
   AppConfirm -->|"purge and warm"| CFEdge
 ```

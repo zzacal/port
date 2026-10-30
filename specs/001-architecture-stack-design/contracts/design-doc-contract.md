@@ -141,7 +141,7 @@ each must contain its keyword in the title:
 - `claim token`
 - `backups`
 - `log retention`
-- `Cloud Connector`
+- `credential` (was `Cloud Connector` before constitution 4.0.0)
 - `unlisted`
 - `browser cache`
 - `client-generated`

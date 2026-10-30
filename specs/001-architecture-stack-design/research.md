@@ -26,6 +26,8 @@ storage-datastore.md, [br] browser-encoding.md, [az] azure-dotnet.md, and [wp] w
 
 ## R-02: Storage budget on Azure Blob, with masters kept (constitution 3.0.0)
 
+> **AMENDED by constitution 4.0.0 (2026-10-30)**: image storage moved from Azure Blob to Cloudflare R2. This section is kept as the record of the 3.0.0 design; the current decision is in docs/design.md D-07, D-08, D-19 and research-notes/storage-datastore.md Q1–Q6, Q11, Q12.
+
 - **Facts** [asl Q1, Q2, Q6, Q7]:
   - There is no free storage allowance. Prices are per GB-month on LRS in East US. These are
     indicative, because the pricing page renders with JavaScript; verify them in the calculator:
@@ -75,6 +77,8 @@ storage-datastore.md, [br] browser-encoding.md, [az] azure-dotnet.md, and [wp] w
 
 ## R-04: Image delivery via Cloudflare Cloud Connector (Worker fallback)
 
+> **AMENDED by constitution 4.0.0 (2026-10-30)**: image storage moved from Azure Blob to Cloudflare R2. This section is kept as the record of the 3.0.0 design; the current decision is in docs/design.md D-07, D-08, D-19 and research-notes/storage-datastore.md Q1–Q6, Q11, Q12.
+
 - **Facts**:
   - Azure Blob rejects requests whose Host header is not its own endpoint or a registered custom
     domain, and Azure custom domains don't support HTTPS without Azure CDN [asl Q4].
@@ -105,6 +109,8 @@ storage-datastore.md, [br] browser-encoding.md, [az] azure-dotnet.md, and [wp] w
   - Making the public container private and signing every URL: this breaks immutable caching.
 
 ## R-05: Upload path is direct from the browser to Blob with SAS
+
+> **AMENDED by constitution 4.0.0 (2026-10-30)**: image storage moved from Azure Blob to Cloudflare R2. This section is kept as the record of the 3.0.0 design; the current decision is in docs/design.md D-07, D-08, D-19 and research-notes/storage-datastore.md Q1–Q6, Q11, Q12.
 
 - **Decision**:
   1. The server issues a **user delegation SAS** per blob. It is signed through managed identity
@@ -256,7 +262,7 @@ storage-datastore.md, [br] browser-encoding.md, [az] azure-dotnet.md, and [wp] w
 | Package | Requirement served |
 |---|---|
 | MongoDB.Driver | The datastore is a platform constraint. |
-| Azure.Storage.Blobs + Azure.Identity | Blob SAS (user delegation), copy, delete, and ranged download, with managed identity. |
+| ~~Azure.Storage.Blobs + Azure.Identity~~ AWSSDK.S3 (amended by constitution 4.0.0) | R2 through its S3-compatible API: presigned PUT, server-side copy, delete, and ranged GET. Justified again in the plan of the feature that adds it. |
 | Microsoft.OpenTelemetry | The Application Insights export (Platform Constraints, Observability). |
 | MetadataExtractor | III.3 and III.7, reading EXIF without decoding, plus a second check on derivative metadata. |
 | @jsquash/avif, @jsquash/webp | IV.6 encoding in the browser. Safari cannot encode WebP, and no browser encodes AVIF reliably. |
@@ -267,8 +273,7 @@ storage-datastore.md, [br] browser-encoding.md, [az] azure-dotnet.md, and [wp] w
 
 - The exact B1 price for the chosen region, and the exact Blob and Application Insights unit
   prices. The pricing pages render with JavaScript; confirm them in the Azure Pricing Calculator.
-- Whether Cloud Connector is offered on the owner's zone. The owner will check in the dashboard;
-  if it is missing, the Worker fallback applies.
+- ~~Whether Cloud Connector is offered on the owner's zone.~~ Not needed since constitution 4.0.0.
 - The list of Free-eligible Atlas regions on Azure.
 - The Safari AVIF `toBlob` claim. It is not relied on, since jSquash is used everywhere.
 - The ThumbHash data-URI byte size, to be measured.

@@ -22,7 +22,7 @@
 
 ### E-06: Derivative reaches server with embedded metadata, wrong dimensions, or disallowed format
 **Outcome**: The server rejects the whole image (FR-016). Every staged file for that image is discarded, and the item shows as failed with the rejection reason and offers Restart and Delete.
-**Mechanism**: D-10 runs hand-written AVIF and WebP structural parsers plus MetadataExtractor; any metadata present, dimension mismatch, or disallowed format causes rejection. Staged blobs for the item are deleted. The BatchItem transitions to failed with the reason (data-model item state machine).
+**Mechanism**: D-10 runs hand-written AVIF and WebP structural parsers plus MetadataExtractor; any metadata present, dimension mismatch, or disallowed format causes rejection. Staged objects for the item are deleted. The BatchItem transitions to failed with the reason (data-model item state machine).
 
 ### E-07: Owner tries to confirm a batch with failed or interrupted images
 **Outcome**: Confirmation is refused — by the page and by the server — and the page states how many images still need Restart or Delete.
@@ -50,7 +50,7 @@
 
 ### E-13: Datastore is lost
 **Outcome**: All gallery structure, ordering, image titles, captions, gallery descriptions, gallery visibility, and the claim record are permanently lost (accepted risk). The owner rebuilds from local exports by re-uploading images and re-creating galleries.
-**Mechanism**: D-05 (Atlas Free, no backup mechanism) and FR-019 record this as an accepted risk. Image masters remain in Blob `private/masters/` (D-07, decisions #2); derivatives remain in `public/`. Nothing in the datastore is recoverable from the stack (data-model Owner, Image, Gallery).
+**Mechanism**: D-05 (Atlas Free, no backup mechanism) and FR-019 record this as an accepted risk. Image masters remain in R2 `private/masters/` (D-07, decisions #2); derivatives remain in `public/`. Nothing in the datastore is recoverable from the stack (data-model Owner, Image, Gallery).
 
 ### E-14: Cover image removed from gallery or deleted
 **Outcome**: If it was the pinned cover, the pin is cleared. The cover falls back to the first image in the gallery's order, or to an empty card when no images remain. The denormalized GalleryCard and the home page are refreshed immediately.
@@ -70,7 +70,7 @@
 
 ### E-18: Edge purge fails after an image is deleted
 **Outcome**: The edge serves cached derivatives until their immutable-cache TTL expires (up to one year). Storage no longer has the files, so once the edge cache entry expires the files are gone everywhere.
-**Mechanism**: D-07 sets `Cache-Control: public, max-age=31536000, immutable` on all `public/` derivatives (data-model Blob layout, Constitution IV.21). L-09 triggers D-16 URL purge; if the purge fails, the derivative is unreachable from storage but may remain in the edge cache until the TTL expires. This bound is stated as the browser-cache persistence caveat in the accepted-risk register (FR-013).
+**Mechanism**: D-07 sets `Cache-Control: public, max-age=31536000, immutable` on all `public/` derivatives (data-model Storage layout, Constitution IV.21). L-09 triggers D-16 URL purge; if the purge fails, the derivative is unreachable from storage but may remain in the edge cache until the TTL expires. This bound is stated as the browser-cache persistence caveat in the accepted-risk register (FR-013).
 
 ### E-19: Free-tier limit reached, ingestion cap hit, or $7 alert fires
 **Outcome**: Atlas at 0.5 GB stops accepting writes, returning errors to the app; the Application Insights 150 MB daily cap stops ingesting logs for the rest of that day; the Azure budget alert at $7 sends a notification to the owner and no automatic action halts the service.

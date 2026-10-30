@@ -10,7 +10,7 @@ Constitution Check and update this document in the same feature. No application 
 files, or infrastructure changes are produced here; those belong to the first build feature
 (FR-001, FR-022).
 
-**Stack at a glance** (Platform Constraints v3.0.0):
+**Stack at a glance** (Platform Constraints v4.0.0):
 
 - **Application**: .NET 10 minimal APIs, server-rendered HTML; htmx and web components for admin
   interactivity.
@@ -19,14 +19,13 @@ files, or infrastructure changes are produced here; those belong to the first bu
 - **Identity**: Google OIDC, with a cookie session that has a 7-day sliding expiry renewed while
   it is in use.
 - **Data**: MongoDB Atlas free tier, same region as the app.
-- **Image storage**: Azure Blob Storage (general-purpose v2, LRS, same region as the app) behind
-  a storage abstraction. Two containers: public Hot derivatives for anonymous read via the edge;
-  private Cool masters kept permanently. The app uses managed identity; uploads use short-lived
-  SAS tokens.
-- **Image delivery**: derivatives are served on a custom image hostname through Cloudflare Cloud
-  Connector to the public container. If Cloud Connector is unavailable on the zone, a Cloudflare
-  Worker on the free plan fetches from the container instead. Browsers never fetch directly from
-  the Blob endpoint.
+- **Image storage**: Cloudflare R2 behind a storage abstraction. Two buckets: a public bucket of
+  derivatives reachable only through the image hostname, and a private bucket of staged uploads and
+  masters kept permanently. The app uses a bucket-scoped credential; uploads use short-lived
+  presigned URLs (Constitution 4.0.0, III.9).
+- **Image delivery**: derivatives are served on a custom image hostname attached to the public
+  bucket as an R2 custom domain, through the Cloudflare cache. Browsers never fetch from the R2 S3
+  endpoint or an r2.dev URL.
 - **Observability**: workspace-based Azure Application Insights with 30-day retention and a daily
   ingestion cap that keeps it inside the free monthly allowance (VIII.4).
 - **Forwarded headers**: the app honors `CF-Connecting-IP` and the forwarded scheme from
@@ -57,7 +56,7 @@ human review.
 **Choice**: Azure App Service Linux B1 with Always On enabled, running .NET 10 minimal APIs.
 **Rationale**: Platform Constraints (v3.0.0) fix the hosting tier to Azure App Service Linux B1 and the runtime to .NET 10 minimal APIs; Constitution VIII.1 bounds the fixed recurring cost to one B1 plan; Always On prevents the Atlas cluster from pausing after 30 days of zero connections (research R-08; research R-03).
 **Alternatives**: None; the hosting tier and runtime are binding Platform Constraints (v3.0.0) with no alternative configurations evaluated in this design.
-**Pivot cost**: high: changing the hosting tier or runtime requires a constitution amendment, re-provisioning the managed identity and access restrictions, and re-validating all cost projections.
+**Pivot cost**: high: changing the hosting tier or runtime requires a constitution amendment, re-provisioning the access restrictions, and re-validating all cost projections.
 
 ### D-02: Cloudflare Free in Full (Strict) TLS Mode with Origin CA
 **Area**: edge-dns-tls
@@ -89,7 +88,7 @@ human review.
 **Choice**: One MongoDB Atlas Free cluster in a Free-eligible Azure region co-located with the App Service; Always On keeps a persistent connection open so the cluster never pauses after 30 days of inactivity (research R-03; [st Q7], [st Q10]).
 **Rationale**: Platform Constraints (v3.0.0) specify MongoDB Atlas free tier in the same Azure region as the app; Constitution VIII.1 requires free tiers wherever one covers the need. The Free cluster supports transactions and unique indexes; at 5,000 images the document store occupies about 15 MB, which is 3% of the 0.5 GB quota; the 100 ops/s limit and 10 GB per 7 days of transfer are comfortable at the stated scale (research R-03; [st Q7], [st Q10]).
 **Alternatives**: None; MongoDB Atlas Free is a binding Platform Constraint (v3.0.0) with no alternative datastores evaluated in this design.
-**Pivot cost**: medium: migrating to a different datastore requires updating the data-access layer, rewriting all queries, and performing a live data migration, though image files in Blob Storage are unaffected.
+**Pivot cost**: medium: migrating to a different datastore requires updating the data-access layer, rewriting all queries, and performing a live data migration, though image files in R2 are unaffected.
 
 ### D-06: Built-In Antiforgery for Forms and Header Token for JSON Endpoints
 **Area**: csrf
@@ -102,18 +101,18 @@ human review.
 ### D-07: Storage layout
 **Area**: storage-layout
 **Status**: given
-**Choice**: One GPv2 LRS account in the same region as the App Service. Container `public` is Hot tier with anonymous blob-level read and is served to visitors via `img.<domain>`. Container `private` is Cool and holds `staging/` (staging blobs) and `masters/` (permanent originals kept forever). Derivative blob names are content hashes (`{sha256-16hex}.{avif|webp}`); the app authenticates to storage via system-assigned managed identity with no account keys in any config.
-**Rationale**: Constitution Platform Constraints PC.6 binds the layout: GPv2 LRS, Hot public derivatives, Cool private masters, managed identity, two containers, and permanent master retention (III.1). Permanent masters supersede the R2-era delete-after-confirm default (decisions #1, #2; research R-02, R-05; data-model "Blob layout").
-**Alternatives**: Cold tier for masters would reduce storage cost but adds retrieval latency and a different minimum-stay charge (decisions #2). A single container is rejected because staging blobs would be anonymously readable (decisions #8). Sequential or title-derived derivative names are rejected because they are guessable, violating II.3 (decisions #9).
-**Pivot cost**: high: after launch, derivative URLs are immutable content-addressed hashes; changing the layout requires re-copying all public blobs, updating every link, and purging the edge — reversible only during a maintenance window (decisions #1, #8, #9).
+**Choice**: Two Cloudflare R2 buckets in the same Cloudflare account as the zone. The `public` bucket holds derivatives in Standard storage and is reachable only through `img.<domain>`, attached as an R2 custom domain; its r2.dev development URL is disabled. The `private` bucket has no public access of any kind and holds `staging/` (uploads in progress) and `masters/` (permanent originals). A lifecycle rule moves `masters/` objects to Infrequent Access storage after 30 days. Derivative object names are content hashes (`{sha256-16hex}.{avif|webp}`). The app reaches R2 through its S3-compatible API with one API token limited to Object Read and Write on these two buckets, supplied by configuration outside source control. The bucket names are configuration, so development and production use different buckets.
+**Rationale**: Constitution Platform Constraints (4.0.0) bind R2 with two buckets and permanent masters (III.1), and III.9 binds the private bucket, the credential scope, and the disabled development URL. A separate bucket is required for privacy because a custom domain exposes the whole bucket it is attached to [st Q2]. Egress is free and the first 10 GB-month is free [st Q1]. Infrequent Access costs about a third less for files read only at upload time; its 30-day minimum and retrieval fee do not apply to masters that are kept and rarely read [st Q1]. Bucket-scoped Object Read and Write tokens exist [st Q11], which keeps a leaked credential away from account settings and other buckets.
+**Alternatives**: Azure Blob Storage with managed identity (constitution 3.0.0) was replaced by the owner: it tied images to Azure while hosting is under review, and it needed Cloud Connector or a Worker for the image hostname. One bucket with prefixes was rejected because the custom domain would expose staging and masters. Masters in Standard storage forever was rejected for cost. An account-scoped or admin token was rejected by III.9. Sequential or title-derived derivative names are rejected because they are guessable, violating II.3 (decisions #9).
+**Pivot cost**: high after launch: derivative URLs are immutable content-addressed hashes; moving storage again means copying every object and keeping `img.<domain>` URLs unchanged. Low before launch, since nothing is stored yet (decisions #9, #34).
 
 ### D-08: Upload intake
 **Area**: upload-intake
 **Status**: chosen
-**Choice**: JPEG only, at most 20 MB per file; the admin page refuses any other file before processing starts, and the server enforces the same type and size limits again before issuing the SAS and when validating the staged master. Each upload is a direct browser PUT to `private/staging/{batchId}/{itemId}/{attemptId}/master.jpg` using a per-blob user delegation SAS that is write-only, scoped to that exact path, and expires after 15 minutes.
-**Rationale**: A 20 MB file is far below the 5,000 MiB single-PUT limit, avoiding multipart complexity (spec FR-014; research R-05 [asl Q5]). Routing directly to Blob keeps large files off the single-vCPU B1. Managed identity removes every stored storage key (decisions #7; research R-05).
-**Alternatives**: Streaming uploads through the app were rejected because B1 has 1 vCPU and 1.75 GB RAM; a 20 MB upload under concurrent use would saturate them (research R-05). Presigned POST or chunked upload is unnecessary because a single Put Blob request covers files up to 5,000 MiB.
-**Pivot cost**: medium: switching to a server-side streaming path requires a new upload endpoint, a change to the storage abstraction, and removal of the SAS issuance step (decisions #7).
+**Choice**: JPEG only, at most 20 MB per file; the admin page refuses any other file before processing starts, and the server enforces the same type and size limits again before presigning and when validating the staged master. Each upload is a direct browser PUT to `private/staging/{batchId}/{itemId}/{attemptId}/{name}` using an S3 presigned URL that allows PUT on that exact key only, carries the expected content type, and expires after 15 minutes. The `private` bucket's CORS policy allows PUT from the admin origin only [st Q3].
+**Rationale**: A 20 MB file needs one PUT, so no multipart upload (spec FR-014). Sending files straight to R2 keeps 20 MB uploads off the single-vCPU origin. Presigned URLs give the browser a capability for one object and one method without ever giving it the credential (Constitution III.9; [st Q3]).
+**Alternatives**: Streaming uploads through the app was rejected because the origin's CPU and memory are small (research R-05). Presigned POST policies and multipart upload are unnecessary at 20 MB. R2 temporary credentials were rejected: a presigned URL is narrower, one object and one method.
+**Pivot cost**: medium: switching to a server-side streaming path requires a new upload endpoint, a change to the storage abstraction, and removal of the presign step (decisions #7).
 
 ### D-09: Client-side derivative pipeline
 **Area**: client-derivatives
@@ -126,7 +125,7 @@ human review.
 ### D-10: Server-side validation
 **Area**: server-validation
 **Status**: given
-**Choice**: For each staged derivative, the server reads it via a ranged blob download and parses only the container structure: AVIF (`ftyp` must be `avif`; dimensions from `ispe`; no `Exif` or XMP `infe`/`mime` items; `colr` box only with nclx or sRGB ICC) and WebP (RIFF/WEBP with VP8, VP8L, or VP8X; EXIF and XMP flags clear; no EXIF or XMP chunks). MetadataExtractor is used as a second independent check and must report zero Exif and XMP directories. The whole image is rejected if any derivative fails. For the master, the server reads EXIF camera-allowlist fields only via a ranged download of the first 256 KB; pixels are never decoded anywhere on the server.
+**Choice**: For each staged derivative, the server reads it with a ranged GET from the `private` bucket and parses only the container structure: AVIF (`ftyp` must be `avif`; dimensions from `ispe`; no `Exif` or XMP `infe`/`mime` items; `colr` box only with nclx or sRGB ICC) and WebP (RIFF/WEBP with VP8, VP8L, or VP8X; EXIF and XMP flags clear; no EXIF or XMP chunks). MetadataExtractor is used as a second independent check and must report zero Exif and XMP directories. The whole image is rejected if any derivative fails. For the master, the server reads EXIF camera-allowlist fields only via a ranged download of the first 256 KB; pixels are never decoded anywhere on the server.
 **Rationale**: Constitution III.5 requires that the server validate every uploaded derivative by parsing the file structure, never trusting client-declared values. III.6 requires rejecting the whole image when any derivative fails. III.7 requires the server to extract the camera allowlist from the master. III.8 prohibits the origin from decoding or encoding pixels. A fixture AVIF and a fixture WebP, each with injected GPS, must be rejected (research R-06 [az Q5, Q6]; decisions #11).
 **Alternatives**: Trusting client-declared dimension and metadata flags is prohibited by Constitution III.5. Using a full image decoder such as ImageSharp would violate III.8 and add image-decode CPU load to the fixed-cost B1. MetadataExtractor alone without hand-written parsers was rejected because two independent readers are required for the GPS-rejection guarantee (decisions #11; research R-06).
 **Pivot cost**: low: the parsers are about 200 lines each and are isolated behind a validation interface; replacing them does not affect storage, upload, or confirm paths (decisions #11).
@@ -134,8 +133,8 @@ human review.
 ### D-11: Upload batch lifecycle
 **Area**: upload-batch
 **Status**: chosen
-**Choice**: At most one open batch exists, enforced by a unique partial index on `{state:"open"}`. Each BatchItem has a state machine (`queued → processing → uploading → succeeded`; `failed` and `interrupted` from any non-terminal state; Restart resets to `queued` with a new `attemptId`; Delete removes the item and its staged blobs). An item is marked interrupted when no heartbeat has arrived in 2 minutes, evaluated when the batch is read. Confirm is gated client- and server-side on every item being in `succeeded`, and each confirm copy step is idempotent. A 7-day Blob lifecycle rule and a best-effort server timer sweep orphaned staging blobs.
-**Rationale**: A single open batch matches the single-owner model and prevents concurrent batch confusion (spec FR-029). Heartbeat-based interrupted detection requires no running timer and is deterministic on read (decisions #17; spec FR-026, FR-027). Idempotent confirm copies allow safe retry after a mid-confirm crash (data-model "Upload batch"; decisions #16; spec FR-028). The 7-day lifecycle rule is a free backstop requiring no error-path code (spec FR-030; decisions #16; research R-05 [asl Q6]).
+**Choice**: At most one open batch exists, enforced by a unique partial index on `{state:"open"}`. Each BatchItem has a state machine (`queued → processing → uploading → succeeded`; `failed` and `interrupted` from any non-terminal state; Restart resets to `queued` with a new `attemptId`; Delete removes the item and its staged objects). An item is marked interrupted when no heartbeat has arrived in 2 minutes, evaluated when the batch is read. Confirm is gated client- and server-side on every item being in `succeeded`, and each confirm copy step is idempotent. A 7-day R2 lifecycle rule on `staging/` and a best-effort server timer sweep orphaned staged objects [st Q4].
+**Rationale**: A single open batch matches the single-owner model and prevents concurrent batch confusion (spec FR-029). Heartbeat-based interrupted detection requires no running timer and is deterministic on read (decisions #17; spec FR-026, FR-027). Idempotent confirm copies allow safe retry after a mid-confirm crash (data-model "Upload batch"; decisions #16; spec FR-028). The 7-day lifecycle rule is a free backstop requiring no error-path code (spec FR-030; decisions #16; research R-05 [st Q4]).
 **Alternatives**: A server-side timer enforcing item timeouts in real time was rejected as unnecessary complexity when the interrupted state can be computed lazily on read (decisions #17). Immediate staging cleanup on every failure path was rejected because the lifecycle rule backstop covers the same ground for free (decisions #16).
 **Pivot cost**: low: the state machine and heartbeat logic are self-contained in the batch service; adding a real-time timer or changing the interrupted threshold requires only changes to that service (decisions #16, #17).
 
@@ -174,10 +173,10 @@ human review.
 ### D-16: Edge Caching and Purge
 **Area**: edge-cache
 **Status**: chosen
-**Choice**: Anonymous HTML responses for public pages are cached at the Cloudflare edge with a 1-day TTL. The cache is bypassed when the owner session cookie is present. On a content change, affected pages are purged by URL (limit: 800 URLs/s, 100 URLs per API call). Images are served on `img.<domain>` through Cloud Connector, which routes to the Azure Blob `public` container, with a 1-year edge TTL matching the blob's `Cache-Control: public, max-age=31536000, immutable` header. When Cloud Connector is unavailable on the zone, a Cloudflare Worker (~20 lines) proxies the same hostname and uses the Cache API so cache hits do not pull from Blob. Smart Tiered Cache is enabled. Public pages and their referenced derivatives are warmed after each purge.
-**Rationale**: A 1-day HTML TTL bounds the staleness window when a purge fails, satisfying IV.18's self-healing requirement. URL purge is the most precise and fastest purge available on the Free plan (research R-01; [cf Q1]). Cloud Connector is free on all plans and routes `img.<domain>` to Blob without a Host-header override, which Azure Blob requires; Cloudflare's Origin Rules Host-header override is Enterprise-only and unavailable on Free (research R-04; [asl Q4]; decisions #5, #15). Tiered Cache reduces origin pull frequency ([cf Q2]).
-**Alternatives**: Azure Front Door was rejected because it costs about $35/month, violating the Constitution VIII.1 cap (research R-04). Tag and prefix purge were rejected because the Free plan rate-limits them to 5 requests/min, which is too slow for a batch of page purges ([cf Q1]). Cache Reserve was rejected as paid-only ([cf Q1]). Serving images directly from the Blob endpoint without a CDN was rejected because it bypasses the edge cache and bills egress (research R-04).
-**Pivot cost**: low: adjusting TTL values and purge strategy is Cloudflare dashboard and Cache Rules configuration; switching between Cloud Connector and the Worker fallback is a single routing change and does not alter image URLs (decisions #5, #15).
+**Choice**: Anonymous HTML responses for public pages are cached at the Cloudflare edge with a 1-day TTL. The cache is bypassed when the owner session cookie is present. On a content change, affected pages are purged by URL (limit: 800 URLs/s, 100 URLs per API call). Images are served on `img.<domain>`, the R2 custom domain of the `public` bucket (D-19), with a 1-year edge TTL matching each object's `Cache-Control: public, max-age=31536000, immutable` metadata. Derivative URLs on `img.<domain>` are purged by URL like pages. Smart Tiered Cache is enabled, which puts one upper tier next to the bucket [st Q2]. Public pages and their referenced derivatives are warmed after each purge.
+**Rationale**: A 1-day HTML TTL bounds the staleness window when a purge fails, satisfying IV.18's self-healing requirement. URL purge is the most precise and fastest purge available on the Free plan (research R-01; [cf Q1]). An R2 custom domain is part of the zone, so the zone's cache, cache rules, and URL purge apply to images with no proxy or Worker (research R-04; [st Q2]; decisions #15, #34). Tiered Cache reduces origin pull frequency ([cf Q2]).
+**Alternatives**: Azure Front Door was rejected because it costs about $35/month, violating the Constitution VIII.1 cap (research R-04). Tag and prefix purge were rejected because the Free plan rate-limits them to 5 requests/min, which is too slow for a batch of page purges ([cf Q1]). Cache Reserve was rejected as paid-only ([cf Q1]). Serving images from the R2 S3 endpoint or an r2.dev URL was rejected: neither is cached, and III.9 forbids the development URL.
+**Pivot cost**: low: adjusting TTL values and purge strategy is Cloudflare dashboard and Cache Rules configuration; image URLs do not depend on the storage service behind `img.<domain>` (decisions #15).
 
 ### D-17: Predictive Loading and View Transitions
 **Area**: predictive-loading
@@ -195,13 +194,13 @@ human review.
 **Alternatives**: The owner was offered caps of $2 (alert $1.50), $5 (alert $3), $10 (alert $7), or no cap, and chose $10 with a $7 alert in the hosting interview (decisions #6). A higher daily Application Insights cap was rejected because 150 MB/day already keeps monthly ingestion inside the 5 GB free allowance (research R-09).
 **Pivot cost**: low: changing the cap requires an amendment to Constitution VIII.1 and an update to the Azure budget rule; neither touches application code (decisions #6).
 
-### D-19: Image Delivery Fallback
+### D-19: Image Hostname
 **Area**: other
 **Status**: chosen
-**Choice**: When Cloud Connector is present on the Cloudflare zone, it routes `img.<domain>/*` to `https://<account>.blob.core.windows.net/public/`. When Cloud Connector is absent from the zone, a Cloudflare Worker (~20 lines) is deployed on the same `img.<domain>` route; it proxies requests to the same Blob URL and uses the Cache API so cache hits do not pull from Blob on every request. The image URLs (`img.<domain>/<hash>.<ext>`) are identical under both paths. The owner confirms Cloud Connector availability at provisioning time; the Worker is the fallback if it is not offered.
-**Rationale**: Cloud Connector is free on all plans and routes the custom hostname to Blob without requiring an Enterprise Host-header override. The Worker free plan allows 100,000 requests/day, covering about 5,000 page views/day at ~20 images per page, which is well above expected traffic (research R-04; decisions #5). Because image URLs are unchanged in both cases, switching between the two paths requires no purge and no change to markup or records.
-**Alternatives**: Azure Front Door was rejected because it costs about $35/month, which breaks the Constitution VIII.1 cap (research R-04). Serving images with direct Blob URLs in app markup was rejected because it bypasses the edge cache and bills egress above 100 GB (research R-04). Making the Worker the primary path was rejected because it is code to maintain and every image request on a Worker route counts against the 100,000 requests/day free limit, whereas Cloud Connector is a configuration rule with no request quota (research R-04; [cf Q7]; decisions #5).
-**Pivot cost**: low: swapping Cloud Connector for the Worker route, or vice versa, is a single Cloudflare routing change; image URLs and application code are unchanged (decisions #5).
+**Choice**: `img.<domain>` is attached to the `public` R2 bucket as an R2 custom domain in the same Cloudflare account, so image URLs are `https://img.<domain>/<hash>.<ext>`. The bucket's r2.dev development URL is disabled, and the app never emits an R2 S3 endpoint URL. A cache rule on `img.<domain>` caches everything with a 1-year edge TTL. Development and production use different public buckets, each attached to its own image hostname; the hostname is configuration.
+**Rationale**: Constitution Platform Constraints (4.0.0) require that browsers fetch derivatives only through the image hostname and the Cloudflare cache, and III.9 requires the development URL to be off. A custom domain is the documented way to put an R2 bucket behind the zone's cache, WAF, and cache rules; the r2.dev URL supports none of them [st Q2, Q12]. This replaces the Azure-era Cloud Connector and Worker fallback, which existed only because Azure Blob needs its own Host header (constitution 3.0.0; decisions #5, #34).
+**Alternatives**: A Worker in front of the bucket was rejected: code to maintain, and it would count every image request against the Workers free quota for no gain. The r2.dev URL was rejected by III.9 and because it is not cached [st Q2]. Serving images through the app was rejected because it puts image bytes on the origin.
+**Pivot cost**: low: the hostname is a custom-domain attachment and a cache rule; image URLs do not change if the bucket behind them changes (decisions #34).
 
 ### D-20: Contact-Sheet Grid Component
 **Area**: public-layout
@@ -245,7 +244,7 @@ Design for these states found no public reference and is owed by the wireframe s
 ### D-24: Infrastructure as Code
 **Area**: infrastructure-as-code
 **Status**: chosen
-**Choice**: OpenTofu (the open-source Terraform fork, installed with `brew install opentofu`, run as `tofu`) manages every Azure, Cloudflare, and MongoDB Atlas resource from one root module in `infra/`. The module has no sub-modules and uses four providers: `azurerm`, `azuread` (the app registration and GitHub federated credential for D-25), `cloudflare`, and `mongodbatlas`. It has one environment, production. Files: `main.tf` (providers and backend), `azure.tf` (B1 plan and Web App with Always On, system managed identity, app settings, and custom domain; Origin CA certificate binding; access restrictions built from the `cloudflare_ip_ranges` data source; GPv2 LRS storage with `public` and `private` containers, a 7-day staging lifecycle rule, and upload CORS; role assignments for the app identity; Log Analytics and Application Insights with a 150 MB daily cap; a subscription budget alerting at $7 and $10), `cloudflare.tf` (site and `img.<domain>` DNS, the `asuid` TXT record, Full (strict) TLS, Always Use HTTPS, Authenticated Origin Pulls, the Origin CA certificate, cache rules, Tiered Cache, Early Hints, the Cloud Connector rule or the D-19 Worker, and a purge-only API token), `atlas.tf` (M0 cluster, database user, and an access list of the Web App's possible outbound IPs), `deploy.tf` (the D-25 app registration, federated credential, and role assignment), plus `variables.tf` and `outputs.tf`. Cross-provider values (hostnames, verification ids, IP ranges, the connection string, and the purge token) flow between resources inside one plan. State lives in a dedicated small storage account and `tfstate` container, created once with `az` before the first `tofu init` and locked by blob lease. Secrets are App Service app settings written by OpenTofu; there is no Key Vault. Steps with no usable API stay in a runbook (`infra/README.md`): adding the domain to Cloudflare, creating the Google OAuth client, and creating the provisioning credentials (Azure CLI login, a Cloudflare provisioning token, and Atlas API keys), which stay on the owner's machine and never reach the app. OpenTofu runs only from the owner's machine (`tofu plan`, then `tofu apply`); the D-25 pipeline never runs it.
+**Choice**: OpenTofu (the open-source Terraform fork, installed with `brew install opentofu`, run as `tofu`) manages every Azure, Cloudflare (including R2), and MongoDB Atlas resource from one root module in `infra/`. Since constitution 4.0.0 this decision is on hold: hosting is under review and the site is built locally (docs/roadmap.md); the R2 buckets are created by hand until then. The module has no sub-modules and uses four providers: `azurerm`, `azuread` (the app registration and GitHub federated credential for D-25), `cloudflare`, and `mongodbatlas`. It has one environment, production. Files: `main.tf` (providers and backend), `azure.tf` (B1 plan and Web App with Always On, system managed identity, app settings, and custom domain; Origin CA certificate binding; access restrictions built from the `cloudflare_ip_ranges` data source; Log Analytics and Application Insights with a 150 MB daily cap; a subscription budget alerting at $7 and $10), `cloudflare.tf` (site and `img.<domain>` DNS, the `asuid` TXT record, Full (strict) TLS, Always Use HTTPS, Authenticated Origin Pulls, the Origin CA certificate, cache rules, Tiered Cache, Early Hints, the two R2 buckets with their custom domain, CORS, and lifecycle rules, a bucket-scoped R2 token, and a purge-only API token), `atlas.tf` (M0 cluster, database user, and an access list of the Web App's possible outbound IPs), `deploy.tf` (the D-25 app registration, federated credential, and role assignment), plus `variables.tf` and `outputs.tf`. Cross-provider values (hostnames, verification ids, IP ranges, the connection string, and the purge token) flow between resources inside one plan. State lives in a dedicated small storage account and `tfstate` container, created once with `az` before the first `tofu init` and locked by blob lease. Secrets are App Service app settings written by OpenTofu; there is no Key Vault. Steps with no usable API stay in a runbook (`infra/README.md`): adding the domain to Cloudflare, creating the Google OAuth client, and creating the provisioning credentials (Azure CLI login, a Cloudflare provisioning token, and Atlas API keys), which stay on the owner's machine and never reach the app. OpenTofu runs only from the owner's machine (`tofu plan`, then `tofu apply`); the D-25 pipeline never runs it.
 **Rationale**: Accepted from proposal P-02 option A by the owner. The deciding factor is the cross-provider wiring: the Web App hostname and verification id feed Cloudflare DNS, Cloudflare's IP ranges feed Azure access restrictions (Constitution, Platform Constraints: origin accepts only Cloudflare), outbound IPs feed the Atlas access list, and three secrets feed app settings. One plan wires and previews all of it and detects drift when a dashboard setting is edited. OpenTofu was chosen over HashiCorp Terraform because Homebrew core no longer ships Terraform after its licence change, while OpenTofu installs with one official command and uses the same providers and language (Constitution VI). The state account is separate from the app's storage account because the app account is itself created by the plan, so it cannot hold the state for its own first apply. The budget and the ingestion cap are provisioned with the first resources because metered spend starts then (Constitution VIII.1, VIII.4).
 **Alternatives**: Bicep through `az` for Azure, with a curl script for Cloudflare and the `atlas` CLI, was not chosen: native and stateless, but the cross-provider wiring becomes hand glue between three imperative scripts, Cloudflare changes cannot be previewed, and nothing re-syncs the IP ranges. Dashboards plus a checklist were not chosen: there is nothing to rebuild from or diff against. HashiCorp Terraform was not chosen only because of installation; the files are compatible. Storing state in the app's own storage account (as P-02 first proposed) was rejected because of the bootstrap order. Key Vault was rejected: metered per operation, and one more component for three secrets. Running OpenTofu in GitHub Actions (plan-only or plan-and-apply) was rejected by the owner: Cloudflare and Atlas tokens would have to be stored as GitHub secrets, and the pipeline identity would need subscription-wide rights to create role assignments. Infrastructure changes are rare enough that a local run costs little.
 **Pivot cost**: low before provisioning; after, moving to another tool is a re-import of about 40 resources (about an hour), and moving to dashboards is simply deleting `infra/` and the state account.
@@ -288,17 +287,17 @@ flowchart LR
   AOPGuard["Authenticated Origin Pulls and IP allowlist"]
   AppSvc["App Service .NET 10"]
   Atlas["MongoDB Atlas"]
-  CC["Cloud Connector"]
-  BlobPublic["Azure Blob Storage public"]
+  ImgHost["img.domain R2 custom domain"]
+  R2Public["R2 public bucket"]
 
   CFEdge -->|"HTML cache MISS"| AOPGuard
   AOPGuard -->|"mTLS and IP verified"| AppSvc
   AppSvc -->|"one read"| Atlas
   Atlas -->|"gallery or image document"| AppSvc
   AppSvc -->|"HTML with Server-Timing and Early Hints Link"| CFEdge
-  CFEdge -->|"image cache MISS via img.domain"| CC
-  CC -->|"fetch derivative"| BlobPublic
-  BlobPublic -->|"derivative bytes"| CFEdge
+  CFEdge -->|"image cache MISS"| ImgHost
+  ImgHost -->|"fetch derivative"| R2Public
+  R2Public -->|"derivative bytes"| CFEdge
 ```
 
 ### Diagram: Owner upload to library
@@ -308,25 +307,25 @@ flowchart TD
   Admin["Admin page"]
   Worker["Web Worker - decode, resize, encode, ThumbHash"]
   AppPresign["App Service presign"]
-  BlobStaging["Blob private/staging"]
+  R2Staging["R2 private/staging"]
   AppComplete["App Service complete"]
   AppInsights["Application Insights"]
   ItemOK["Item succeeded"]
   AppConfirm["App Service confirm batch"]
-  BlobFinal["Blob public and private/masters"]
+  R2Final["R2 public and private/masters"]
   Atlas["MongoDB Atlas"]
   CFEdge["Cloudflare Edge purge and warm"]
 
   Admin -->|"select files"| Worker
-  Worker -->|"request SAS"| AppPresign
-  AppPresign -->|"SAS token write-only 15 min"| Worker
-  Worker -->|"PUT master and derivatives"| BlobStaging
+  Worker -->|"request upload URLs"| AppPresign
+  AppPresign -->|"presigned PUT per object, 15 min"| Worker
+  Worker -->|"PUT master and derivatives"| R2Staging
   Worker -->|"POST complete with timings"| AppComplete
-  AppComplete -->|"ranged download for validation"| BlobStaging
+  AppComplete -->|"ranged GET for validation"| R2Staging
   AppComplete -->|"log op.timing events"| AppInsights
   AppComplete -->|"validation passed"| ItemOK
   ItemOK -->|"owner presses Confirm"| AppConfirm
-  AppConfirm -->|"copy"| BlobFinal
+  AppConfirm -->|"copy"| R2Final
   AppConfirm -->|"Image documents created"| Atlas
   AppConfirm -->|"purge and warm"| CFEdge
 ```
@@ -463,35 +462,35 @@ stateDiagram-v2
     open --> discarded : always allowed — all staged keys are deleted (FR-029)
 ```
 
-On confirm, each item's derivatives and master are copied out of staging (see the Blob Layout
+On confirm, each item's derivatives and master are copied out of staging (see the Storage Layout
 section below), its Image document is created, and the batch is marked confirmed. A confirm that
 crashes partway through can be re-run (D-11).
 
-### Blob Layout
+### Storage Layout
 
-There is one storage account with two containers (D-07). Only `public` allows anonymous read and is
-served to visitors as `img.<domain>` through Cloud Connector.
+There are two R2 buckets (D-07). Only `public` is reachable from outside, and only as
+`img.<domain>` (D-19). Keys below are `bucket/key`.
 
 ```
-private/staging/{batchId}/{itemId}/{attemptId}/master.jpg         Cool; replaced on confirm by:
-private/masters/{imageId}.jpg                                     Cool; kept permanently
-private/staging/{batchId}/{itemId}/{attemptId}/{w}.{avif|webp}    Hot; deleted after confirm
-public/{sha256-16hex}.{avif|webp}                                 Hot; immutable (IV.21)
+private/staging/{batchId}/{itemId}/{attemptId}/master.jpg         replaced on confirm by:
+private/masters/{imageId}.jpg                                     kept permanently; Infrequent Access after 30 days
+private/staging/{batchId}/{itemId}/{attemptId}/{w}.{avif|webp}    deleted after confirm
+public/{sha256-16hex}.{avif|webp}                                 immutable (IV.21)
 ```
 
 Derivative names are content hashes, so their addresses are unguessable and content-addressed
-(II.3, FR-011). They are uploaded with blob property
+(II.3, FR-011). They are stored with object metadata
 `Cache-Control: public, max-age=31536000, immutable`, which the edge respects.
 
 On confirm, for each item:
 
-1. Copy the staged derivatives into `public/`.
+1. Copy the staged derivatives into the `public` bucket.
 2. Copy the master into `private/masters/`.
-3. Delete the staged blobs.
+3. Delete the staged objects.
 
-These are same-account server-side copies. The confirm step is idempotent per item.
+These are server-side copies inside R2. The confirm step is idempotent per item.
 
-A lifecycle policy deletes `private/staging/` blobs 7 days after creation. This is the backstop
+A lifecycle rule deletes `private/staging/` objects 7 days after creation. This is the backstop
 sweep for orphaned files (FR-030).
 
 Deleting an image (FR-013) deletes `private/masters/{imageId}.jpg` and every `public/` derivative,
@@ -520,103 +519,103 @@ slug is cosmetic—a stale slug triggers a 301 redirect to the current one (D-14
 
 ### L-01: Image succeeded in batch
 **Records**: The BatchItem state changes from `processing` or `uploading` to `succeeded`; the `validated` field is set with width, height, placeholder, camera metadata, and derivative keys (data-model BatchItem; D-11).
-**Storage**: Staged derivatives and the staged master are already in `private/staging/` from the prior upload step; no new blob operations occur at this point (data-model Blob layout; D-07).
+**Storage**: Staged derivatives and the staged master are already in `private/staging/` from the prior upload step; no new storage operations occur at this point (data-model Storage layout; D-07).
 **Pages and caches**: No public page or edge cache is affected. The library and all public pages are unchanged until L-05 (FR-017; D-11).
 **Visitor sees**: Nothing changes. The image is not yet in the library, and no public page or listing references it (FR-011; FR-017).
 
 ### L-02: Image failed or interrupted in batch
 **Records**: The BatchItem state changes to `failed` (with a reason string) or `interrupted`; `heartbeatAt` stops advancing for interrupted items, which are detected as interrupted when the batch is next read (data-model BatchItem; D-11; decisions #17).
-**Storage**: Staged blobs already written remain in `private/staging/` until the owner chooses Restart or Delete, or until the 7-day lifecycle sweep removes them (data-model; D-11; decisions #16).
+**Storage**: Staged objects already written remain in `private/staging/` until the owner chooses Restart or Delete, or until the 7-day lifecycle sweep removes them (data-model; D-11; decisions #16).
 **Pages and caches**: No public page or edge cache is affected. The library and all public pages are unchanged until L-05 (FR-017).
 **Visitor sees**: Nothing changes. The image is not in the library (FR-017; FR-011).
 
 ### L-03: Image restarted
-**Records**: The BatchItem state returns to `queued`; a new `attemptId` is generated; staged blobs from the previous attempt are deleted if the master already reached the server (`masterStored` is checked) and the owner is not re-using it; if the master was not stored, `masterStored` remains false and the owner is asked to pick the same named file again (data-model BatchItem; FR-027; D-11).
+**Records**: The BatchItem state returns to `queued`; a new `attemptId` is generated; staged objects from the previous attempt are deleted if the master already reached the server (`masterStored` is checked) and the owner is not re-using it; if the master was not stored, `masterStored` remains false and the owner is asked to pick the same named file again (data-model BatchItem; FR-027; D-11).
 **Storage**: Previous-attempt staged derivatives are deleted from `private/staging/`. If `masterStored` is true, the staged master is reused; otherwise nothing is in storage until the next upload (FR-027; D-11; decisions #16).
 **Pages and caches**: No public page or edge cache is affected (FR-017).
 **Visitor sees**: Nothing changes. The batch remains open and unconfirmed (FR-017; FR-011).
 
 ### L-04: Image deleted from batch
 **Records**: The BatchItem is removed from the batch's `items` array; the batch's `updatedAt` is refreshed (data-model BatchItem; FR-027).
-**Storage**: All staged blobs for that item — master and all derivatives — are deleted from `private/staging/` immediately; the 7-day lifecycle sweep acts as a backstop if the explicit delete fails (data-model; FR-030; D-11; decisions #16).
+**Storage**: All staged objects for that item — master and all derivatives — are deleted from `private/staging/` immediately; the 7-day lifecycle sweep acts as a backstop if the explicit delete fails (data-model; FR-030; D-11; decisions #16).
 **Pages and caches**: No public page or edge cache is affected (FR-017).
 **Visitor sees**: Nothing changes. The item was never in the library (FR-017; FR-011).
 
 ### L-05: Batch confirmed
 **Records**: Each BatchItem's `itemId` becomes the `_id` of a new Image document; the Image documents are written to the `images` collection with all validated fields; the batch `state` changes to `confirmed`; every Gallery whose `items` array contains an id from this batch has its `card` recomputed; `site.homeCards` is refreshed for any affected gallery in `homeOrder` (data-model; D-11; D-13; FR-017).
-**Storage**: For each item: (1) staged derivatives are copied from `private/staging/` to `public/` with `Cache-Control: public, max-age=31536000, immutable`; (2) the staged master is copied to `private/masters/{imageId}.jpg` in Cool tier; (3) all staged blobs are deleted. These are same-account server-side copies and the confirm step is idempotent per item (data-model Blob layout; D-07; decisions #1, #2, #8, #9).
+**Storage**: For each item: (1) staged derivatives are copied from `private/staging/` to `public/` with `Cache-Control: public, max-age=31536000, immutable`; (2) the staged master is copied to `private/masters/{imageId}.jpg`; (3) all staged objects are deleted. These are server-side copies inside R2 and the confirm step is idempotent per item (data-model Storage layout; D-07; decisions #1, #2, #8, #9).
 **Pages and caches**: If any affected gallery is public, the home page and that gallery's page are purged by URL at the edge (up to 100 URLs per call, 800/s) and then warmed. The purge is best-effort; a failed purge self-heals within the 1-day HTML edge TTL (D-16; decisions #15; R-01).
 **Visitor sees**: Images from the confirmed batch appear in any public gallery they belong to immediately after purge and warm; visitors hitting a cached page see the new images within at most 1 day if purge fails (D-16; FR-017).
 
 ### L-06: Batch discarded
 **Records**: The batch `state` changes to `discarded` (data-model; FR-029).
-**Storage**: All staged blobs for every item in the batch — masters and derivatives — are deleted from `private/staging/` immediately; the 7-day lifecycle policy is the backstop for any that were not cleaned up (data-model; FR-029; FR-030; D-11; decisions #16).
+**Storage**: All staged objects for every item in the batch — masters and derivatives — are deleted from `private/staging/` immediately; the 7-day lifecycle policy is the backstop for any that were not cleaned up (data-model; FR-029; FR-030; D-11; decisions #16).
 **Pages and caches**: No public page or edge cache is affected. No Image documents were ever created for this batch (FR-017).
 **Visitor sees**: Nothing changes. The library is unaffected (FR-017; FR-011).
 
 ### L-07: Image added to gallery
 **Records**: The image's `_id` is appended to the Gallery `items` array at the owner's chosen position; the gallery's `card` is recomputed if the image becomes the new cover (first item or pinned cover); `galleryIds` on the Image document gains this gallery's id; `site.homeCards` is updated if the gallery is in `homeOrder` and is public (data-model Gallery, Image; D-13; FR-009).
-**Storage**: No blob operations. The image's derivatives are already in `public/` from L-05 (D-07).
+**Storage**: No storage operations. The image's derivatives are already in `public/` from L-05 (D-07).
 **Pages and caches**: If the gallery is public, its page and the home page are purged and re-warmed at the edge (D-16; decisions #15; R-01).
 **Visitor sees**: If the gallery is public, the image appears in the gallery and on the home card after purge and warm, within at most 1 day if purge fails (D-16; FR-011).
 
 ### L-08: Image removed from gallery
 **Records**: The image's `_id` is removed from the Gallery `items` array; if the image was the `pinnedCover`, the pin is cleared and the cover falls back to the new first item (or null if the gallery is empty); the gallery `card` is recomputed; `galleryIds` on the Image document loses this gallery's id; `site.homeCards` is updated if the gallery is public and in `homeOrder` (data-model Gallery, Image; D-13; FR-009).
-**Storage**: No blob operations. Derivatives remain in `public/` because the image may still be in other galleries or the library (D-07; FR-013).
+**Storage**: No storage operations. Derivatives remain in `public/` because the image may still be in other galleries or the library (D-07; FR-013).
 **Pages and caches**: If the gallery is public, its page and the home page are purged and re-warmed (D-16; decisions #15; R-01).
 **Visitor sees**: If the gallery was public, the image disappears from the gallery page and the home card after purge and warm, within at most 1 day if purge fails (D-16; FR-011).
 
 ### L-09: Image deleted
 **Records**: The Image document is removed from `images`; the image's `_id` is removed from `items` in every Gallery document in `galleryIds`; for each affected gallery, `pinnedCover` is cleared if it matched, the `card` is recomputed, and `site.homeCards` is updated for public galleries in `homeOrder` (data-model Image, Gallery; D-13; FR-013).
-**Storage**: Hard delete: `private/masters/{imageId}.jpg` is deleted from the Cool container, and every `public/{hash}.{avif|webp}` derivative is deleted from the Hot container. These are immediate deletions triggered by the app (data-model; D-07; FR-013; decisions #1, #2).
-**Pages and caches**: An immediate edge purge is issued for every derivative URL and for every public page that referenced the image (gallery pages and the home page for affected public galleries). The purge is best-effort at up to 100 URLs per call and 800/s (D-16; decisions #15; R-01; FR-013). Copies already held in visitor browser caches can persist for up to the immutable `max-age=31536000` lifetime because `immutable` blobs carry no `must-revalidate`; this is an accepted risk (FR-013; decisions #9; spec Assumptions).
+**Storage**: Hard delete: `private/masters/{imageId}.jpg` is deleted from the `private` bucket, and every `public/{hash}.{avif|webp}` derivative is deleted from the `public` bucket. These are immediate deletions triggered by the app (data-model; D-07; FR-013; decisions #1, #2).
+**Pages and caches**: An immediate edge purge is issued for every derivative URL and for every public page that referenced the image (gallery pages and the home page for affected public galleries). The purge is best-effort at up to 100 URLs per call and 800/s (D-16; decisions #15; R-01; FR-013). Copies already held in visitor browser caches can persist for up to the immutable `max-age=31536000` lifetime because `immutable` objects carry no `must-revalidate`; this is an accepted risk (FR-013; decisions #9; spec Assumptions).
 **Visitor sees**: The image ceases to appear on public gallery pages and the home page after purge and warm. Visitors who have the derivative URLs cached in their browser may continue to load them for up to 1 year; this caveat is an accepted risk documented in the risk register (FR-013; spec Assumptions).
 
 ### L-10: Gallery created
 **Records**: A new Gallery document is inserted with `visibility: "private"`, an empty `items` array, no `pinnedCover`, and a generated 128-bit base32 `_id` and slug. The gallery id is appended to the end of `site.homeOrder`, which holds every gallery so a private gallery keeps its position when published; `site.homeCards` is unchanged because the gallery is private (data-model Gallery, Owner; D-13; D-14; FR-009).
-**Storage**: No blob operations (D-07).
+**Storage**: No storage operations (D-07).
 **Pages and caches**: No public page or edge cache is affected. The gallery starts private (II.5; D-14).
 **Visitor sees**: Nothing. The gallery is private and does not appear in any public listing, feed, or sitemap (FR-011; D-14).
 
 ### L-11: Gallery made public
 **Records**: The Gallery `visibility` changes to `"public"`; `site.homeCards` gains the gallery's `card` at the position given by `site.homeOrder` (data-model Gallery, Owner; D-14; FR-009).
-**Storage**: No blob operations. Derivatives for all member images are already in `public/` (D-07).
+**Storage**: No storage operations. Derivatives for all member images are already in `public/` (D-07).
 **Pages and caches**: The gallery page and the home page are purged and re-warmed at the edge (D-16; decisions #15; R-01). The gallery page changes from `noindex` to indexable. A failed purge is bounded by the 1-day HTML edge TTL (D-16; decisions #15).
 **Visitor sees**: The gallery and its images appear on the home page and the gallery page after purge and warm, within at most 1 day if purge fails (D-16; FR-011).
 
 ### L-12: Gallery made private
 **Records**: The Gallery `visibility` changes to `"private"`; its card is removed from `site.homeCards`; it keeps its position in `site.homeOrder` so republishing restores it in place (data-model Gallery, Owner; D-14; FR-009).
-**Storage**: No blob operations. Derivatives remain in `public/` because the image addresses are permanent and unlisted (D-07; FR-012).
+**Storage**: No storage operations. Derivatives remain in `public/` because the image addresses are permanent and unlisted (D-07; FR-012).
 **Pages and caches**: The gallery page and the home page are purged by URL at the edge immediately. A failed purge means the gallery page and its home-card entry remain visible at the edge for up to the 1-day HTML TTL (D-16; decisions #15; R-01; II.2). The gallery page is re-served with `noindex` on the next origin hit.
 **Visitor sees**: The gallery ceases to appear on the home page and its page is marked non-indexable after purge; with a failed purge, up-to-1-day edge staleness is the bound (II.2; D-16; FR-011).
 
 ### L-13: Gallery renamed
 **Records**: The Gallery `title` is updated and a new `slug` is generated from the new title; the old slug is superseded. The `_id` is unchanged (data-model Gallery; D-14; FR-009).
-**Storage**: No blob operations (D-07).
+**Storage**: No storage operations (D-07).
 **Pages and caches**: The gallery page at the new URL (`/g/{id}/{new-slug}`) is served immediately; requests to the old URL (`/g/{id}/{old-slug}`) are served with a 301 redirect to the new URL by the app (D-14; decisions #15). Both the old and new gallery page URLs are purged and the new URL is re-warmed (D-16).
 **Visitor sees**: Previously shared links (`/g/{id}/{old-slug}`) continue to resolve via 301 to the new URL. No content is lost (D-14; II.4; FR-009).
 
 ### L-14: Gallery reordered
 **Records**: `site.homeOrder` is updated to reflect the new gallery positions (public and private alike); `site.homeCards` is recomputed in the new order for public galleries (data-model Owner; D-13; FR-009).
-**Storage**: No blob operations (D-07).
+**Storage**: No storage operations (D-07).
 **Pages and caches**: The home page is purged and re-warmed at the edge (D-16; decisions #15; R-01).
 **Visitor sees**: The home page shows galleries in the new order after purge and warm, within at most 1 day if purge fails (D-16).
 
 ### L-15: Images reordered
 **Records**: The Gallery `items` array is updated to reflect the new image order; if the gallery has no `pinnedCover`, the `card.coverImageId` changes to the new first item, and the `card` is recomputed; `site.homeCards` is updated for affected public galleries in `homeOrder` (data-model Gallery; D-13; FR-009).
-**Storage**: No blob operations (D-07).
+**Storage**: No storage operations (D-07).
 **Pages and caches**: If the gallery is public, the gallery page and the home page are purged and re-warmed at the edge (D-16; decisions #15; R-01).
 **Visitor sees**: If the gallery is public, the gallery page shows images in the new order and the home card may show a new cover after purge and warm, within at most 1 day if purge fails (D-16; FR-009).
 
 ### L-16: Gallery cover changed
 **Records**: The Gallery `pinnedCover` is set to the chosen image id (which must be an element of `items`); the `card` is recomputed with the new cover image's placeholder and derivatives; `site.homeCards` is updated if the gallery is public and in `homeOrder` (data-model Gallery; D-13; FR-009).
-**Storage**: No blob operations. The new cover image's derivatives are already in `public/` (D-07).
+**Storage**: No storage operations. The new cover image's derivatives are already in `public/` (D-07).
 **Pages and caches**: If the gallery is public, the gallery page and the home page are purged and re-warmed at the edge (D-16; decisions #15; R-01).
 **Visitor sees**: If the gallery is public, the home card and the gallery page show the new cover image after purge and warm, within at most 1 day if purge fails (D-16; FR-009).
 
 ### L-17: Gallery deleted
 **Records**: The Gallery document is removed from `galleries`; the gallery's `_id` is removed from `site.homeOrder`; the corresponding card is removed from `site.homeCards`; `galleryIds` on every member Image document is updated to remove this gallery's id (data-model Gallery, Image, Owner; D-13; D-14; FR-013).
-**Storage**: No blob operations. Deleting a gallery MUST NOT delete the library images; their masters and derivatives remain in storage (FR-013; D-07).
+**Storage**: No storage operations. Deleting a gallery MUST NOT delete the library images; their masters and derivatives remain in storage (FR-013; D-07).
 **Pages and caches**: The gallery page and the home page are purged and re-warmed at the edge (D-16; decisions #15; R-01). The gallery page ceases to be served after purge.
 **Visitor sees**: The gallery disappears from the home page and the gallery URL returns 404 after purge and warm, within at most 1 day if purge fails (D-16; FR-013). Member images remain in the library and in any other galleries they belong to.
 
@@ -644,7 +643,7 @@ slug is cosmetic—a stale slug triggers a 301 redirect to the current one (D-14
 
 ### E-06: Derivative reaches server with embedded metadata, wrong dimensions, or disallowed format
 **Outcome**: The server rejects the whole image (FR-016). Every staged file for that image is discarded, and the item shows as failed with the rejection reason and offers Restart and Delete.
-**Mechanism**: D-10 runs hand-written AVIF and WebP structural parsers plus MetadataExtractor; any metadata present, dimension mismatch, or disallowed format causes rejection. Staged blobs for the item are deleted. The BatchItem transitions to failed with the reason (data-model item state machine).
+**Mechanism**: D-10 runs hand-written AVIF and WebP structural parsers plus MetadataExtractor; any metadata present, dimension mismatch, or disallowed format causes rejection. Staged objects for the item are deleted. The BatchItem transitions to failed with the reason (data-model item state machine).
 
 ### E-07: Owner tries to confirm a batch with failed or interrupted images
 **Outcome**: Confirmation is refused — by the page and by the server — and the page states how many images still need Restart or Delete.
@@ -672,7 +671,7 @@ slug is cosmetic—a stale slug triggers a 301 redirect to the current one (D-14
 
 ### E-13: Datastore is lost
 **Outcome**: All gallery structure, ordering, image titles, captions, gallery descriptions, gallery visibility, and the claim record are permanently lost (accepted risk). The owner rebuilds from local exports by re-uploading images and re-creating galleries.
-**Mechanism**: D-05 (Atlas Free, no backup mechanism) and FR-019 record this as an accepted risk. Image masters remain in Blob `private/masters/` (D-07, decisions #2); derivatives remain in `public/`. Nothing in the datastore is recoverable from the stack (data-model Owner, Image, Gallery).
+**Mechanism**: D-05 (Atlas Free, no backup mechanism) and FR-019 record this as an accepted risk. Image masters remain in R2 `private/masters/` (D-07, decisions #2); derivatives remain in `public/`. Nothing in the datastore is recoverable from the stack (data-model Owner, Image, Gallery).
 
 ### E-14: Cover image removed from gallery or deleted
 **Outcome**: If it was the pinned cover, the pin is cleared. The cover falls back to the first image in the gallery's order, or to an empty card when no images remain. The denormalized GalleryCard and the home page are refreshed immediately.
@@ -692,7 +691,7 @@ slug is cosmetic—a stale slug triggers a 301 redirect to the current one (D-14
 
 ### E-18: Edge purge fails after an image is deleted
 **Outcome**: The edge serves cached derivatives until their immutable-cache TTL expires (up to one year). Storage no longer has the files, so once the edge cache entry expires the files are gone everywhere.
-**Mechanism**: D-07 sets `Cache-Control: public, max-age=31536000, immutable` on all `public/` derivatives (data-model Blob layout, Constitution IV.21). L-09 triggers D-16 URL purge; if the purge fails, the derivative is unreachable from storage but may remain in the edge cache until the TTL expires. This bound is stated as the browser-cache persistence caveat in the accepted-risk register (FR-013).
+**Mechanism**: D-07 sets `Cache-Control: public, max-age=31536000, immutable` on all `public/` derivatives (data-model Storage layout, Constitution IV.21). L-09 triggers D-16 URL purge; if the purge fails, the derivative is unreachable from storage but may remain in the edge cache until the TTL expires. This bound is stated as the browser-cache persistence caveat in the accepted-risk register (FR-013).
 
 ### E-19: Free-tier limit reached, ingestion cap hit, or $7 alert fires
 **Outcome**: Atlas at 0.5 GB stops accepting writes, returning errors to the app; the Application Insights 150 MB daily cap stops ingesting logs for the rest of that day; the Azure budget alert at $7 sends a notification to the owner and no automatic action halts the service.
@@ -718,7 +717,8 @@ can only be checked once the resource exists.
 | II.3 | D-14, D-07: 128-bit base32 ids; content-hash derivative names | integration test: ids are 26-char base32 and differ across titles | designed |
 | II.4 | D-14: `/g/{id}/{slug}`, stale slug 301s to current | integration test: renamed gallery old URL returns 301 to new URL | designed |
 | II.5 | D-14, D-13: galleries default private; upload and edit never change visibility | integration test: new gallery and confirmed batch leave visibility private | designed |
-| III.1 | D-07: masters in the `private` Cool container, no anonymous access, no route serves them | config check: `private` container access level is off; route inventory has no master route | designed |
+| III.1 | D-07: masters in the `private` R2 bucket, no public access, no route serves them | config check: `private` bucket has no custom domain and no r2.dev URL; route inventory has no master route | designed |
+| III.9 | D-07, D-08, D-19: private bucket, bucket-scoped Object Read and Write token from configuration, presigned PUT per object for 15 minutes or less, r2.dev disabled | integration test: a presigned URL allows only PUT on its own key and expires; config check: token scope and bucket public-access settings; markup assertion that no credential or S3 endpoint appears in served HTML or script | designed |
 | III.2 | D-09, D-10: visitors receive only client-generated, server-validated derivatives | integration test: only validated derivatives are copied to `public` on confirm | designed |
 | III.3 | D-10: camera allowlist extracted at upload; derivatives carry no metadata | integration test: rendered camera fields equal the allowlist subset | designed |
 | III.4 | D-09: `createImageBitmap` applies orientation before encoding | browser measurement: rotated-EXIF fixture produces upright derivatives | designed |
@@ -764,8 +764,8 @@ can only be checked once the resource exists.
 | PC.3 | D-02: Cloudflare proxy, cache, Full (strict) TLS | config check: zone SSL mode is Full (strict) | deferred:first-build-feature |
 | PC.4 | D-04: Google OIDC, `__Host-` cookie with 7-day sliding expiry | integration test: session cookie attributes and expiry | designed |
 | PC.5 | D-05: Atlas Free in a Free-eligible Azure region next to the app | config check: cluster tier and region | deferred:first-build-feature |
-| PC.6 | D-07, D-08: GPv2 LRS, `public` Hot and `private` Cool, managed identity, SAS uploads | config check: container tiers and access levels; no account key in app settings | deferred:first-build-feature |
-| PC.7 | D-16, D-19: `img.<domain>` through Cloud Connector, Worker fallback | config check: image hostname route; markup assertion that no raw Blob URL is emitted | deferred:first-build-feature |
+| PC.6 | D-07, D-08: R2 `public` and `private` buckets, bucket-scoped credential, presigned uploads | config check: bucket access settings and token scope | deferred:first-build-feature |
+| PC.7 | D-16, D-19: `img.<domain>` as the R2 custom domain through the Cloudflare cache | config check: custom domain attached and r2.dev disabled; markup assertion that no R2 endpoint URL is emitted | deferred:first-build-feature |
 | PC.8 | D-12: workspace-based Application Insights, 30-day retention, daily cap | config check: retention and daily cap settings | deferred:first-build-feature |
 | PC.9 | D-03: forwarded headers from `CF-Connecting-IP`, Cloudflare ranges as known networks | integration test: logged client IP equals `CF-Connecting-IP` | designed |
 
@@ -779,16 +779,14 @@ scale changes.
 | Service | Dimension | Free limit | Projected | Overage behaviour |
 |---|---|---|---|---|
 | Azure App Service | Linux B1: 1 vCPU, 1.75 GB RAM, Always On — fixed monthly plan | none | ~$13/month (verify in pricing calculator for region) [az Q1, Gaps] | n/a — fixed plan; no metered component |
-| Azure Blob Storage | `public` container, Hot tier — derivative storage | none (no free storage allowance on LRS) [asl Q1] | ~$0.20/month at ~11 GB derivatives [asl Q1, Q2] | $0.0184/GB-month (verify in calculator) [asl Q1, Gaps] |
-| Azure Blob Storage | `private` container, Cool tier — master storage; 30-day minimum-stay charge applies to early deletes | none [asl Q2] | ~$0.60–$0.75/month at ~60–75 GB masters [asl Q2] | $0.010/GB-month; a master deleted within 30 days is billed for the full 30-day period [asl Q2] |
-| Azure Blob Storage | write operations — staging PUTs and confirm copies, ~125,000/year | none [asl Q6] | ~$0.10/month amortized at 5,000 images/year [asl Q1, Q6] | $0.065/10,000 (Hot); $0.13/10,000 (Cool) [asl Q1] |
-| Azure Blob Storage | read operations — origin pulls on edge cache misses | none | ~$0.00 at low-thousands of page views (edge cache serves the vast majority) [R-01, R-04] | verify in pricing calculator [asl Gaps] |
-| Azure Blob Storage | internet egress from Blob to Cloudflare edge | first 100 GB/month free [asl Q2] | $0.00 — edge cache keeps origin egress well under 100 GB at expected traffic [asl Q2] | billed per GB above 100 GB; verify rate in calculator [asl Gaps] |
+| Cloudflare R2 | storage: `public` derivatives (Standard) and `private` masters (Infrequent Access after 30 days) | 10 GB-month Standard [st Q1] | ~$0.60–$0.80/month: ~11 GB derivatives, of which 1 GB is above the free 10 GB at $0.015/GB-month, plus ~60–75 GB masters at $0.01/GB-month [st Q1] | billed per GB-month; Infrequent Access has a 30-day minimum and a retrieval fee, which apply only to masters [st Q1] |
+| Cloudflare R2 | Class A operations — staging PUTs and confirm copies, ~125,000/year | 1 million/month [st Q1, Q5] | $0.00 | $4.50/million [st Q1] |
+| Cloudflare R2 | Class B operations — origin pulls on edge cache misses, validation reads | 10 million/month [st Q1] | $0.00 at low-thousands of page views | $0.36/million [st Q1] |
+| Cloudflare R2 | egress | free on all storage classes [st Q1] | $0.00 | n/a — no egress charge [st Q1] |
 | Application Insights | data ingestion | 5 GB/month free; 150 MB daily cap configured [asl Q8, Q9] | $0.00 at ~100 MB/month (~2% of free allowance) [asl Q9] | ingestion stops for the rest of the day when the daily cap is hit; ~$2.30/GB above 5 GB/month [asl Q8] |
 | Application Insights | data retention | 90 days included free [asl Q8] | $0.00 at 30-day retention policy [asl Q8] | billed per GB-day above 90 days; not applicable at 30-day retention |
 | MongoDB Atlas | storage, connections, ops/s, transfer — Free tier | 0.5 GB storage, 500 connections, 100 ops/s, 10 GB/7 days [st Q7] | $0.00 at ~15 MB and minimal ops/s [R-03] | upgrade to paid cluster required; no partial overage on Free tier [st Q7] |
 | Cloudflare | edge cache, URL purge (800 URLs/s, 100 per call), Tiered Cache, Early Hints | all included on Free plan [cf Q1–Q5] | $0.00 | n/a — Free plan features [cf Q1] |
-| Cloudflare | Cloud Connector (image routing to Blob) and Worker fallback (100k requests/day) | Cloud Connector free on all plans; Worker 100k requests/day on Free [cf Q7, asl Q4] | $0.00 at low-thousands of page views [R-04] | paid Worker plan if traffic exceeds 100k requests/day; Cloud Connector is beta — Worker fallback applies if withdrawn [R-04] |
 | Cloudflare | Origin CA certificate, 15-year | free [cf Q5] | $0.00 | n/a — free; non-renewable before the 15-year term |
 | TOTAL fixed | — | — | ~$13/month (App Service B1 only; verify for region) [az Q1, Gaps] | — |
 | TOTAL metered | — | — | $1.00/month at 5,000 images, 50 galleries, low-thousands of page views [R-02] | alert at $7 (decisions #6); cap at $10 (Constitution VIII.1) |
@@ -797,7 +795,10 @@ scale changes.
 150 MB, which keeps monthly ingestion under the 5 GB free allowance (Constitution VIII.4;
 decisions #4; research R-09). The Azure subscription budget notifies at $7/month and again at
 $10/month (Constitution VIII.1; decisions #6). An Azure budget sends alerts and does not stop
-resources, so the $10 cap is a governance limit: exceeding it requires an amendment.
+resources, so the $10 cap is a governance limit: exceeding it requires an amendment. Since
+constitution 4.0.0, R2 is billed by Cloudflare and the Azure budget does not see it; R2 offers no
+hard spending limit, so VIII.4 adds nothing. The projected R2 cost is under $1/month, and the
+owner checks it on the Cloudflare billing page until hosting is decided.
 
 Prices labelled "verify" come from JavaScript-rendered pricing pages and must be confirmed in the
 Azure Pricing Calculator before provisioning ([asl Gaps]).
@@ -827,9 +828,9 @@ Azure Pricing Calculator before provisioning ([asl Gaps]).
 
 ### R-04: Unlisted is not secret — private derivative addresses are reachable
 
-**Failure**: Anyone holding a derivative address of a library-only or private-gallery image can view it; anonymous read must be enabled on the `public` container for the Cloudflare edge to fetch, so the raw `blob.core.windows.net` URL is also publicly readable (spec Assumptions; FR-012; research R-04).
+**Failure**: Anyone holding a derivative address of a library-only or private-gallery image can view it on `img.<domain>`, because the `public` bucket serves every object it holds (spec Assumptions; FR-012; D-19).
 **Detection**: No server-side record of direct URL access exists; exposure of a derivative address cannot be detected retroactively.
-**Recovery**: No recovery path within the system; derivative names are unguessable content hashes (decisions #9) and the app never emits raw blob URLs (research R-04).
+**Recovery**: No recovery path within the system; derivative names are unguessable content hashes (decisions #9). Since constitution 4.0.0 there is no second address: the r2.dev URL is disabled and the R2 S3 endpoint needs a credential (III.9), so the only way in is `img.<domain>`, which the zone's security rules cover.
 **Reversal cost**: High after launch — derivative addresses are content-hash URLs embedded in the edge cache and in any previously shared links; changing the addressing scheme requires re-generating all derivatives with new names (decisions #9).
 
 ### R-05: 30-day log retention — audit events and timing evidence expire
@@ -839,12 +840,12 @@ Azure Pricing Calculator before provisioning ([asl Gaps]).
 **Recovery**: No recovery of expired or dropped logs; the 150 MB daily cap and 5 GB monthly free allowance keep normal-traffic days from hitting the cap, so drops are rare (research R-09; decisions #4).
 **Reversal cost**: Low — retention can be extended up to 90 days at no extra cost; the daily cap can be raised; the exporter can be switched to a longer-retention service at any time (decisions #4).
 
-### R-06: Cloud Connector is beta — image delivery may require Worker fallback
+### R-06: Stored R2 credential — masters readable if it leaks
 
-**Failure**: If Cloudflare changes or withdraws Cloud Connector, image delivery via `img.<domain>` fails until the Worker fallback is activated (spec Assumptions; research R-04).
-**Detection**: Image requests to `img.<domain>` return errors; the Cloudflare dashboard shows the Cloud Connector route as inactive or unavailable (research R-04).
-**Recovery**: The Worker fallback is about 20 lines of code and is free up to 100,000 requests per day; it is pre-designed as the alternative route and does not change image URLs (decisions #5; research R-04).
-**Reversal cost**: Low — switching to the Worker fallback requires a single zone configuration change and no URL changes (decisions #5).
+**Failure**: The app holds an R2 token with Object Read and Write on both buckets. Anyone who obtains it can read every master and staged upload, and can overwrite or delete objects, until the token is rotated (Constitution 4.0.0, III.9; decisions #34).
+**Detection**: Unexpected Class B operations or storage changes on the Cloudflare R2 metrics page; masters or derivatives missing or altered.
+**Recovery**: Roll the token in the Cloudflare dashboard and update the app's configuration; derivatives can be regenerated from masters only by re-uploading. The token cannot reach account settings, the zone, or other buckets (III.9).
+**Reversal cost**: Low — R2 temporary credentials or a Worker binding can replace the stored token later without changing object keys or URLs.
 
 ### R-07: client-generated derivatives — metadata leak if admin page has a bug
 
@@ -861,15 +862,12 @@ decision. If one turns out differently than assumed, the dependent decision is u
 (Constitution VII.2).
 
 - **Provisioning, infrastructure-as-code, and deployment**: decided as D-24 (OpenTofu) and D-25
-  (GitHub Actions). Applying them is owned by the walking-skeleton feature in `docs/roadmap.md`.
+  (GitHub Actions), both on hold while hosting is under review (constitution 4.0.0). Applying them
+  is owned by the hosting feature in `docs/roadmap.md`.
 - **Application scaffolding**: `dotnet new` solution and projects, `dotnet add package` for the
   packages justified in research.md (Constitution VI, V.2). Depends on D-01 and D-10.
-- **Verify unit prices**: B1 for the chosen region, Blob Hot and Cool storage and operations, and
-  Application Insights ingestion, in the Azure Pricing Calculator. The pricing pages render with
+- **Verify unit prices**: B1 for the chosen region and Application Insights ingestion, in the Azure Pricing Calculator. The pricing pages render with
   JavaScript, so section 8 figures are indicative. Depends on D-18.
-- **Confirm Cloud Connector on the zone**: check Rules → Cloud Connector in the Cloudflare
-  dashboard. If it is absent, use the approved Worker fallback, which must use the Cache API.
-  Depends on D-16 and D-19.
 - **Choose the Atlas region**: pick the Free-eligible Azure region nearest the App Service region
   from the Atlas region table. Depends on D-05.
 - **Measure real sizes**: the ThumbHash data-URI bytes, which must stay at or under about 1 KB, and
@@ -905,9 +903,8 @@ URLs below are the fetched pages, grouped by note.
 
 ### st: research-notes/storage-datastore.md
 
-The R2 entries (st Q1 to Q6) record the storage option that was replaced by Azure Blob in
-constitution 3.0.0. They are kept as part of the evidence trail. The Atlas entries (st Q7 to Q10)
-are current.
+The R2 entries (st Q1 to Q6, Q11, Q12) are current again since constitution 4.0.0 moved image
+storage back to R2. The Atlas entries (st Q7 to Q10) are current.
 
 - [st] https://developers.cloudflare.com/r2/pricing/
 - [st] https://developers.cloudflare.com/r2/buckets/public-buckets/
@@ -918,6 +915,8 @@ are current.
 - [st] https://www.mongodb.com/docs/atlas/reference/microsoft-azure/
 - [st] https://www.mongodb.com/docs/atlas/backup/cloud-backup/free-cluster-backup/
 - [st] https://developers.cloudflare.com/r2/buckets/cors/
+- [st] https://developers.cloudflare.com/r2/api/tokens/
+- [st] https://developers.cloudflare.com/cache/interaction-cloudflare-products/r2/
 
 ### br: research-notes/browser-encoding.md
 

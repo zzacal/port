@@ -6,7 +6,7 @@ Constitution Check and update this document in the same feature. No application 
 files, or infrastructure changes are produced here; those belong to the first build feature
 (FR-001, FR-022).
 
-**Stack at a glance** (Platform Constraints v3.0.0):
+**Stack at a glance** (Platform Constraints v4.0.0):
 
 - **Application**: .NET 10 minimal APIs, server-rendered HTML; htmx and web components for admin
   interactivity.
@@ -15,14 +15,13 @@ files, or infrastructure changes are produced here; those belong to the first bu
 - **Identity**: Google OIDC, with a cookie session that has a 7-day sliding expiry renewed while
   it is in use.
 - **Data**: MongoDB Atlas free tier, same region as the app.
-- **Image storage**: Azure Blob Storage (general-purpose v2, LRS, same region as the app) behind
-  a storage abstraction. Two containers: public Hot derivatives for anonymous read via the edge;
-  private Cool masters kept permanently. The app uses managed identity; uploads use short-lived
-  SAS tokens.
-- **Image delivery**: derivatives are served on a custom image hostname through Cloudflare Cloud
-  Connector to the public container. If Cloud Connector is unavailable on the zone, a Cloudflare
-  Worker on the free plan fetches from the container instead. Browsers never fetch directly from
-  the Blob endpoint.
+- **Image storage**: Cloudflare R2 behind a storage abstraction. Two buckets: a public bucket of
+  derivatives reachable only through the image hostname, and a private bucket of staged uploads and
+  masters kept permanently. The app uses a bucket-scoped credential; uploads use short-lived
+  presigned URLs (Constitution 4.0.0, III.9).
+- **Image delivery**: derivatives are served on a custom image hostname attached to the public
+  bucket as an R2 custom domain, through the Cloudflare cache. Browsers never fetch from the R2 S3
+  endpoint or an r2.dev URL.
 - **Observability**: workspace-based Azure Application Insights with 30-day retention and a daily
   ingestion cap that keeps it inside the free monthly allowance (VIII.4).
 - **Forwarded headers**: the app honors `CF-Connecting-IP` and the forwarded scheme from
