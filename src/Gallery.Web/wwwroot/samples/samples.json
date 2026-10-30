@@ -1,0 +1,423 @@
+{
+  "photos": [
+    {
+      "id": "7ca918b65578eab4",
+      "role": "landscape",
+      "title": "Mountain Lake",
+      "width": 2560,
+      "height": 1707,
+      "variants": [
+        {
+          "width": 320,
+          "avif": "/samples/8ac0cab296cf7acd.avif",
+          "webp": "/samples/b154861748269246.webp"
+        },
+        {
+          "width": 640,
+          "avif": "/samples/c5f65dc365113ccc.avif",
+          "webp": "/samples/86da57119be3e41c.webp"
+        },
+        {
+          "width": 960,
+          "avif": "/samples/a5aafa40ebc9285d.avif",
+          "webp": "/samples/9e31c575df3ab889.webp"
+        },
+        {
+          "width": 1280,
+          "avif": "/samples/1d6378a65db7cc73.avif",
+          "webp": "/samples/ce77954c8670ed7a.webp"
+        },
+        {
+          "width": 1920,
+          "avif": "/samples/7af0ada5eade9023.avif",
+          "webp": "/samples/f63ffc9816f25f9b.webp"
+        },
+        {
+          "width": 2560,
+          "avif": "/samples/576b38344afe1a63.avif",
+          "webp": "/samples/acefa5ab415a9497.webp"
+        }
+      ],
+      "placeholder": "data:image/webp;base64,UklGRpYAAABXRUJQVlA4IIoAAADwBACdASogABUAPu1ur1KppiQiqAgBMB2JZQDHMFbHjK6NDbiBFRGJ4ykg3Xrt0nYA/vlt1IkxvC2b3YprrfW9TbUDlrdMz6oQVa9xopzVasckzCEdAOTuyIYLoMME1HVTS4TsldJREXrWcUYI8g0HJPep4A4wIadGxWvRIyKcjU/Tp/IrSskwAAA=",
+      "dominantColor": "#6e716b",
+      "exif": {
+        "make": "FUJIFILM",
+        "model": "X-T5",
+        "lens": "XF33mmF1.4 R LM WR",
+        "focalLengthMm": 33,
+        "focalLength35Mm": 50,
+        "fNumber": 2.0,
+        "exposureSeconds": 0.004,
+        "iso": 400
+      },
+      "credit": {
+        "author": "Andrew Ridley",
+        "source": "https://unsplash.com/photos/Kt5hRENuotI",
+        "license": "Unsplash License"
+      }
+    },
+    {
+      "id": "ee791418f11be403",
+      "role": "landscape",
+      "title": "River Valley",
+      "width": 2560,
+      "height": 1707,
+      "variants": [
+        {
+          "width": 320,
+          "avif": "/samples/fab676369d6dbc11.avif",
+          "webp": "/samples/bd9641d8892c05b8.webp"
+        },
+        {
+          "width": 640,
+          "avif": "/samples/1351ffa0388c0c9e.avif",
+          "webp": "/samples/55367b5f4cedcbda.webp"
+        },
+        {
+          "width": 960,
+          "avif": "/samples/7b77769b1e1de430.avif",
+          "webp": "/samples/18538f48c7b196d9.webp"
+        },
+        {
+          "width": 1280,
+          "avif": "/samples/a762229e183c7af7.avif",
+          "webp": "/samples/5a6d2e3ef0d64f50.webp"
+        },
+        {
+          "width": 1920,
+          "avif": "/samples/9a8e102bad93deea.avif",
+          "webp": "/samples/c54f6469b801b2f1.webp"
+        },
+        {
+          "width": 2560,
+          "avif": "/samples/cd0ac9301e23d998.avif",
+          "webp": "/samples/ddf748a6898fe14a.webp"
+        }
+      ],
+      "placeholder": "data:image/webp;base64,UklGRvoAAABXRUJQVlA4IO4AAABwBQCdASogABUAPu1ip04ppaOiMBgMATAdiWwAnTKDMHAdU0n+o3V2nfoJa/HrxzaFHDgAAPyB7UJFPCSoTzFKUdPHuhZXmC9iH7YaAq2WZ0ZP1UiqrjsJ7HU269CqOeNu4EORvjl2ADcMCrv+MP2432Rov9kuszHMAPMMS2wvyIBOcLrKOTksnqqCakHFa0Mmw78902eeEIXrROEijX5xfiFisEyU2kJ+GgesODVpx/NROxfCOOmPrZ/aKilqNzgjwDiL3MTHk+AHPvTCu+cBnc4svUjylrNytH5qYgU5KQsj1oHVNMXU9bSyQAAA",
+      "dominantColor": "#5b8cb4",
+      "exif": {
+        "make": "FUJIFILM",
+        "model": "X-T5",
+        "lens": "XF33mmF1.4 R LM WR",
+        "focalLengthMm": 23,
+        "focalLength35Mm": 35,
+        "fNumber": 5.6,
+        "exposureSeconds": 0.002,
+        "iso": 200
+      },
+      "credit": {
+        "author": "Alexey Topolyanskiy",
+        "source": "https://unsplash.com/photos/-oWyJoSqBRM",
+        "license": "Unsplash License"
+      }
+    },
+    {
+      "id": "8254904fead0896e",
+      "role": "landscape",
+      "title": "Canyon Light",
+      "width": 2560,
+      "height": 1707,
+      "variants": [
+        {
+          "width": 320,
+          "avif": "/samples/0ace9167b8c864b6.avif",
+          "webp": "/samples/a26932cdc700ccfc.webp"
+        },
+        {
+          "width": 640,
+          "avif": "/samples/9fe36ca02032c671.avif",
+          "webp": "/samples/5d313c10c1cb9f36.webp"
+        },
+        {
+          "width": 960,
+          "avif": "/samples/2cbe13539d4a7d41.avif",
+          "webp": "/samples/7b1ddfab94ac97f2.webp"
+        },
+        {
+          "width": 1280,
+          "avif": "/samples/c1ec15a74afb2d33.avif",
+          "webp": "/samples/31873ddf732ac2dc.webp"
+        },
+        {
+          "width": 1920,
+          "avif": "/samples/bee640a90e3c526c.avif",
+          "webp": "/samples/867f6c1b80096bfc.webp"
+        },
+        {
+          "width": 2560,
+          "avif": "/samples/45f86fc20a1acacb.avif",
+          "webp": "/samples/8cc29c437a29a5fb.webp"
+        }
+      ],
+      "placeholder": "data:image/webp;base64,UklGRtYAAABXRUJQVlA4IMoAAABQBgCdASogABUAPu1qqU8ppiOiMBgIATAdiWoAnTKEhEf2tYAmYEMwVvmGsR6BBYo+/yshItSDyDncgAD+wEi0NNcdS0r7hDEtO4/6WaBJtNYF7Ih+wEjWxFEl1LgQ8Qfy9l1ylr+VRR1jSDAkdvIEiULqPfiO2FhPEqjJ7heQ8GMY9UsnlAP3QDYkakG+kGGphc80Vyz+LZWWupDla8BNMi2w8UNMgmkYmydCkSnrdeSY7QwyZ6Zk0UUrsIr8Xuw7aPrmvSLiAAAA",
+      "dominantColor": "#674024",
+      "exif": {
+        "make": "FUJIFILM",
+        "model": "X-T5",
+        "lens": "XF33mmF1.4 R LM WR",
+        "focalLengthMm": 56,
+        "focalLength35Mm": 84,
+        "fNumber": 8,
+        "exposureSeconds": 0.008,
+        "iso": 160
+      },
+      "credit": {
+        "author": "Philippe Wuyts",
+        "source": "https://unsplash.com/photos/_h7aBovKia4",
+        "license": "Unsplash License"
+      }
+    },
+    {
+      "id": "8df5ab5b5bd394f0",
+      "role": "landscape",
+      "title": "Harbour at Dusk",
+      "width": 2560,
+      "height": 1707,
+      "variants": [
+        {
+          "width": 320,
+          "avif": "/samples/6025bf2a42595a09.avif",
+          "webp": "/samples/cb62b7aa1b24bc17.webp"
+        },
+        {
+          "width": 640,
+          "avif": "/samples/23385c4daf817761.avif",
+          "webp": "/samples/798b589058877613.webp"
+        },
+        {
+          "width": 960,
+          "avif": "/samples/c48c396721c8da81.avif",
+          "webp": "/samples/b50885736dac13e9.webp"
+        },
+        {
+          "width": 1280,
+          "avif": "/samples/bf250ee688b8cf70.avif",
+          "webp": "/samples/9fae9cc078445d01.webp"
+        },
+        {
+          "width": 1920,
+          "avif": "/samples/b4e518c1eb4ef2dd.avif",
+          "webp": "/samples/74e721cbf6246fc2.webp"
+        },
+        {
+          "width": 2560,
+          "avif": "/samples/32cf713c9c4fb229.avif",
+          "webp": "/samples/0654ac10c5a0c090.webp"
+        }
+      ],
+      "placeholder": "data:image/webp;base64,UklGRtQAAABXRUJQVlA4IMgAAAAQBQCdASogABUAPu1irVAppSQisBgIATAdiWQAsOwvBC6WHAj8d4vd9HxXUSqITdIgAP7mbqfa2s9DU30XQKG1Mm8+hKTisGVEHbEeCHC2esP4IYhkHaRbLZn2chGFLswEdN5u2RzT5IIhSupcLVVVg6ocsKEsPLYAg8GN2/U/bFlsUX8ZE0OikhrjXSeBKCZwvR265VZ8iTnfk3eyxWHp3cc6LNlvgfMMd5nxPPMgHhhpe2YiKH1/pl2jbuEkzq2QP4S3QTgAAA==",
+      "dominantColor": "#635c4a",
+      "exif": {
+        "make": "FUJIFILM",
+        "model": "X-T5",
+        "lens": "XF33mmF1.4 R LM WR",
+        "focalLengthMm": 33,
+        "focalLength35Mm": 50,
+        "fNumber": 11,
+        "exposureSeconds": 1.5,
+        "iso": 100
+      },
+      "credit": {
+        "author": "Christian Joudrey",
+        "source": "https://unsplash.com/photos/mWRR1xj95hg",
+        "license": "Unsplash License"
+      }
+    },
+    {
+      "id": "780498a6d1557e59",
+      "role": "portrait",
+      "title": "Pug in a Blanket",
+      "width": 1920,
+      "height": 2880,
+      "variants": [
+        {
+          "width": 320,
+          "avif": "/samples/cd3d03ccd0a94108.avif",
+          "webp": "/samples/d020935390dd0114.webp"
+        },
+        {
+          "width": 640,
+          "avif": "/samples/9f0ffd9af206a36f.avif",
+          "webp": "/samples/69324be3b1788304.webp"
+        },
+        {
+          "width": 960,
+          "avif": "/samples/ecafdb00b53de676.avif",
+          "webp": "/samples/150b80c81451b5e1.webp"
+        },
+        {
+          "width": 1280,
+          "avif": "/samples/6424757db974345b.avif",
+          "webp": "/samples/b3e78a00f96de672.webp"
+        },
+        {
+          "width": 1920,
+          "avif": "/samples/3be85e8aa05380c9.avif",
+          "webp": "/samples/2aa5b72204957b71.webp"
+        }
+      ],
+      "placeholder": "data:image/webp;base64,UklGRuoAAABXRUJQVlA4IN4AAABQBgCdASoVACAAPu1orE+ppiQiMBgIATAdiWMAqSdkqQTIHzO6mqxr6CxVNv2SR6gYT0wrwxXRg7degAD+dfxKdttKrXLUfseYJMYaAz+c6BLNU6puNwDfoIBgHwnqn+HnqmuXitCr6vc7f8+Va0Ep7H52prNrdFl3rArA8h2oWXzq6T9AkqicTkCbpNDZxbUD5qKeFrlXj4BCovCsuuityMc3lcY3IsXDHzsq6tGkEVvKXgubALvyX+rU3MvjVCg+ehRN40fgQ9lANfQfp+e73Qm8pqCzTMM0CdvIgAA=",
+      "dominantColor": "#908b7e",
+      "exif": {
+        "make": "FUJIFILM",
+        "model": "X-T5",
+        "lens": "XF33mmF1.4 R LM WR",
+        "focalLengthMm": 56,
+        "focalLength35Mm": 84,
+        "fNumber": 1.4,
+        "exposureSeconds": 0.0125,
+        "iso": 800
+      },
+      "credit": {
+        "author": "Matthew Wiebe",
+        "source": "https://unsplash.com/photos/U5rMrSI7Pn4",
+        "license": "Unsplash License"
+      }
+    },
+    {
+      "id": "87f218c64d23730d",
+      "role": "portrait",
+      "title": "Woman in the Field",
+      "width": 1920,
+      "height": 2880,
+      "variants": [
+        {
+          "width": 320,
+          "avif": "/samples/c39d26debcd37ebb.avif",
+          "webp": "/samples/c7b70ca5001b9004.webp"
+        },
+        {
+          "width": 640,
+          "avif": "/samples/6184690b36d6166c.avif",
+          "webp": "/samples/00bcb3bdd5b8a2b6.webp"
+        },
+        {
+          "width": 960,
+          "avif": "/samples/a248bb344f407160.avif",
+          "webp": "/samples/a597208e6903a8dc.webp"
+        },
+        {
+          "width": 1280,
+          "avif": "/samples/a87f4fa0d416a888.avif",
+          "webp": "/samples/1833c76dc5064371.webp"
+        },
+        {
+          "width": 1920,
+          "avif": "/samples/19268774aecacc55.avif",
+          "webp": "/samples/1db7889fe102becf.webp"
+        }
+      ],
+      "placeholder": "data:image/webp;base64,UklGRpQAAABXRUJQVlA4IIgAAADQBACdASoVACAAPu1iqE2ppaOiMAgBMB2JZQDMHBuvQtgCF9p6iq7eQHbE7QjQAAD+cWnnnd4qGYZGINzzj1Q3zfmGqTi28CQKNm4ZQ9vOVjWUfNfLTAIJnD9KR7irVX9Ip4hEaibNgPYe5xtw4IGrBzWVp1CnIV2UlmZOzr72RYMR2T8NawgA",
+      "dominantColor": "#5a4e48",
+      "exif": {
+        "make": "Canon",
+        "model": "Canon EOS R5",
+        "iso": 800
+      },
+      "credit": {
+        "author": "Roksolana Zasiadko",
+        "source": "https://unsplash.com/photos/LyeduBb2Auk",
+        "license": "Unsplash License"
+      }
+    },
+    {
+      "id": "ec59843fe2d492bf",
+      "role": "square",
+      "title": "Still Water",
+      "width": 1920,
+      "height": 1920,
+      "variants": [
+        {
+          "width": 320,
+          "avif": "/samples/9aad1fdd1180bce4.avif",
+          "webp": "/samples/0ce12c0925e56fef.webp"
+        },
+        {
+          "width": 640,
+          "avif": "/samples/ee7ccf8f0e677258.avif",
+          "webp": "/samples/081e5a5e21f56448.webp"
+        },
+        {
+          "width": 960,
+          "avif": "/samples/83d2861605d10f8b.avif",
+          "webp": "/samples/3742ab5489af9b86.webp"
+        },
+        {
+          "width": 1280,
+          "avif": "/samples/38c4de2bde5b6d3c.avif",
+          "webp": "/samples/ce2b0714152e7ef2.webp"
+        },
+        {
+          "width": 1920,
+          "avif": "/samples/23ef0f3e8f36f543.avif",
+          "webp": "/samples/6a536138ae5c32f2.webp"
+        }
+      ],
+      "placeholder": "data:image/webp;base64,UklGRrIAAABXRUJQVlA4IKYAAADQBACdASogACAAPu1or1CppaQiqAqpMB2JQBYjepBMIj2qD3ymDdhZl5u976KZFAD+6R2pyngDaCHf/TdUQIuKSMUnBDdWsMOv5f1ul+dKxWzXhf+t0MFcNaH3qIOTrnnoMMnm2nkNsHq0BTEaJaOf9VO/2AB5a9zns14D3pbLlcYkb/aUU53T2Ynt7OU8yRqqwZF6Iq0NdXvZ/YqynvvF2tsiAAAA",
+      "dominantColor": "#365260",
+      "exif": {
+        "make": "FUJIFILM",
+        "model": "X-T5",
+        "lens": "XF33mmF1.4 R LM WR",
+        "focalLengthMm": 33,
+        "focalLength35Mm": 50,
+        "fNumber": 4,
+        "exposureSeconds": 0.01,
+        "iso": 320
+      },
+      "credit": {
+        "author": "Patrick Fore",
+        "source": "https://unsplash.com/photos/V6s1cmE39XM",
+        "license": "Unsplash License"
+      }
+    },
+    {
+      "id": "55a5969e906b6ad8",
+      "role": "panorama",
+      "title": "Long Ridge",
+      "width": 2560,
+      "height": 854,
+      "variants": [
+        {
+          "width": 320,
+          "avif": "/samples/724c71925cb1be75.avif",
+          "webp": "/samples/df6583343f11ae02.webp"
+        },
+        {
+          "width": 640,
+          "avif": "/samples/328266f9e4b36c23.avif",
+          "webp": "/samples/b3c6e2c0398e29eb.webp"
+        },
+        {
+          "width": 960,
+          "avif": "/samples/a9f041d253338067.avif",
+          "webp": "/samples/837d9afec5a40c7a.webp"
+        },
+        {
+          "width": 1280,
+          "avif": "/samples/488e6974c740dca5.avif",
+          "webp": "/samples/259794aa3fabc39d.webp"
+        },
+        {
+          "width": 1920,
+          "avif": "/samples/1785c20e80297fac.avif",
+          "webp": "/samples/9ebdbd8eb66d3edd.webp"
+        },
+        {
+          "width": 2560,
+          "avif": "/samples/6823ee8849a094d6.avif",
+          "webp": "/samples/88cd43e07a77438c.webp"
+        }
+      ],
+      "placeholder": "data:image/webp;base64,UklGRp4AAABXRUJQVlA4IJIAAADwAwCdASogAAsAPu1iqk2ppaQiMAgBMB2JZgAAQbqfiUGplXW2o3tmAP7cTOTcsmdWffEagtULNqNXgXUMckb5QG1u+tCCao5P59omNMkbTeTpc+XEgCfjYDDnyLQbJ7UPORqAzkjnXXw6kZwK2hrkwGnvxmWJJhegFnVPJHIdJwngMlzu/7CnZRwrchn24wAAAA==",
+      "dominantColor": "#445530",
+      "exif": null,
+      "credit": {
+        "author": "Andrew Coelho",
+        "source": "https://unsplash.com/photos/VB-w_3dnyvI",
+        "license": "Unsplash License"
+      }
+    }
+  ]
+}
