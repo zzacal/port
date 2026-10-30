@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Gallery.Core/Gallery.Core.csproj" />
+    <Project Path="src/Gallery.Web/Gallery.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Gallery.Core.Tests/Gallery.Core.Tests.csproj" />
+    <Project Path="tests/Gallery.Web.Tests/Gallery.Web.Tests.csproj" />
+  </Folder>
+</Solution>
