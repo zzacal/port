@@ -10,8 +10,8 @@ No persisted data. These are view-input shapes only.
   until the batch is confirmed.
 - **Admin grid item**: an ImageView plus admin flags passed as Tile parameters (Overlay controls,
   CssClass `is-selected` / `is-private` / `is-dragging` / `is-lifted`, Caption).
-- **UiLevel** gains AdminAtoms, AdminMolecules, AdminOrganisms and AdminTemplates. The index
-  renders each level's display name ("Admin atoms", etc.) through one switch.
+- **UiLevel** is unchanged (Tokens, Atoms, Molecules, Organisms, Templates). New components join
+  the existing levels (owner correction, decisions #23).
 
 Sample text for the specimens (FR-008):
 

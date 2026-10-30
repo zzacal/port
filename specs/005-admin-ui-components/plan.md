@@ -14,7 +14,7 @@ This feature builds the D-23 admin component set as static, server-rendered Razo
 - 1 template
 - the admin use of ContactSheet
 
-Each component has `/ui/admin/...` pages showing every state, including the states that had no
+Each component has a `/ui/` page under its ordinary atomic level showing every state, including the states that had no
 public reference, which are designed here (contracts/admin-components.md).
 
 Tile and ContactSheet gain optional admin parameters, and the public output is unchanged. Three
@@ -80,9 +80,9 @@ src/Gallery.Web/Components/Admin/Atoms/{Button,Input,Switch,SelectMark}.razor(.c
 src/Gallery.Web/Components/Admin/Molecules/{BatchItem,CoverMarker,DragHandle,SelectionBar,DangerConfirm,VisibilityToggle}.razor(.css)
 src/Gallery.Web/Components/Admin/Organisms/{OwnerBar,SidePanel,UploadDropzone,BatchFooter,GalleryBuilder,SignInCard}.razor(.css)
 src/Gallery.Web/Components/Admin/Templates/AdminLayout.razor(.css)
-src/Gallery.Web/Ui/UiCatalog.cs                     (+4 levels, +18 entries)
+src/Gallery.Web/Ui/UiCatalog.cs                     (+17 entries in the existing levels)
 src/Gallery.Web/Ui/Pages/Index.razor                (level display names)
-src/Gallery.Web/Ui/Pages/Admin/*Page.razor(.css)    (18 pages)
+src/Gallery.Web/Ui/Pages/*Page.razor(.css)          (17 new pages; ContactSheetPage extended)
 tests/Gallery.Web.Tests/Admin*Tests.cs              (new)
 tests/Gallery.Web.Tests/PublicOutputUnchangedTests.cs (new byte-identity guard)
 ```

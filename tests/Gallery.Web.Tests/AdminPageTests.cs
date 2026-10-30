@@ -1,4 +1,4 @@
-using Gallery.Web.Ui.Pages.Admin;
+using Gallery.Web.Ui.Pages;
 
 namespace Gallery.Web.Tests;
 

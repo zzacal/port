@@ -1,5 +1,5 @@
 using System.Text.RegularExpressions;
-using Gallery.Web.Ui.Pages.Admin;
+using Gallery.Web.Ui.Pages;
 
 namespace Gallery.Web.Tests;
 
@@ -17,7 +17,6 @@ public class AdminOrganismPageTests
         { typeof(BatchFooterPage), ["In progress (12 of 40)", "Ready (40)", "Blocked (38 ready, 2 failed)", "Discard confirmation"] },
         { typeof(GalleryBuilderPage), ["At rest (cover pinned on photo 3)", "Dragging photo 2 to position 5", "Photo 3 lifted for keyboard moving", "Publish warning", "Empty gallery"] },
         { typeof(SignInCardPage), ["Sign in", "Claim an unclaimed site", "Refused (not the owner)", "No cover photo"] },
-        { typeof(AdminContactSheetPage), ["Library, 3 selected", "Gallery list (home order), 2 private", "Upload batch"] },
     };
 
     [Theory]
@@ -31,11 +30,13 @@ public class AdminOrganismPageTests
     }
 
     [Fact]
-    public async Task Admin_contact_sheet_keeps_public_column_counts()
+    public async Task ContactSheet_page_admin_usages_keep_public_column_counts()
     {
-        var html = await Render.Html<AdminContactSheetPage>();
-        Assert.Equal(2, Guards.Count(html, "cs cs-l4 cs-m3 cs-s1"));
-        Assert.Equal(1, Guards.Count(html, "cs cs-l3 cs-m3 cs-s1"));
+        var html = await Render.Html<ContactSheetPage>();
+        var headings = Regex.Matches(html, "<h2 class=\"specimen-label\"[^>]*>([^<]*)</h2>").Select(m => m.Groups[1].Value).ToList();
+        Assert.Equal(["Admin library, 3 selected", "Admin gallery list, 2 private", "Admin upload batch"], headings.Skip(3));
+        Assert.Equal(4, Guards.Count(html, "cs cs-l4 cs-m3 cs-s1"));   // 2 public + library + batch
+        Assert.Equal(2, Guards.Count(html, "cs cs-l3 cs-m3 cs-s1"));   // home + gallery list
         Assert.Equal(3, Regex.Matches(html, "class=\"tile is-selected\"").Count);
         Assert.Equal(2, Regex.Matches(html, "class=\"tile is-private\"").Count);
     }

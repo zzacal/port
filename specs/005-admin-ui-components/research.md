@@ -1,17 +1,17 @@
 # Research: Admin UI Components (005)
 
-## R-01: Build on the feature 003 /ui infrastructure, unchanged in kind
+## R-01: Build on the feature 003 /ui infrastructure, one list
 
-**Decision**: Add admin entries to `UiCatalog` under four new levels (AdminAtoms, AdminMolecules,
-AdminOrganisms, AdminTemplates) with slugs `admin/{atoms,molecules,organisms,templates}/<name>`.
-Pages reuse `UiLayout` and `Specimen`. `AllPagesTests` covers every new page automatically
-because it iterates the catalogue.
+**Decision**: Add the new components to `UiCatalog` under the existing five levels, at the existing
+`{atoms,molecules,organisms,templates}/<name>` slugs. Pages reuse `UiLayout` and `Specimen`.
+`AllPagesTests` covers every new page automatically because it iterates the catalogue.
 **Rationale**: FR-007 and FR-009. The routes, noindex, Development-only mapping and request timing
-already work (feature 003, evidence/verify-output.txt), so the admin pages inherit FR-009 and
-FR-011 with no new code path.
-**Alternatives**: a separate `/ui/admin/` index was rejected: it means two catalogues and two
-index tests (spec US1 wants one index). Putting admin entries under the existing levels was
-rejected because public and admin would mix (spec FR-007 asks for grouping).
+already work (feature 003), so the new pages inherit them with no new code path.
+**Superseded choice**: the first implementation added four "Admin …" levels under `/ui/admin/`. The
+owner rejected that: components are treated the same, and only usage on the real site differs.
+Admin uses of ContactSheet became extra states on its page (decisions #23).
+**Alternatives**: a separate `/ui/admin/` index was rejected (two catalogues), and so was the admin
+grouping above.
 
 ## R-02: Probe: boolean attribute rendering (run 2026-10-30)
 

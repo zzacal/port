@@ -176,6 +176,17 @@ report a blocker. Do not invent.
   asserting every state label from the contract appears. `AllPagesTests` already covers no-style
   and no-script for every catalogue entry.
 
+## Owner correction (after T033)
+
+- [X] T034 Remove the admin split from `/ui` (decisions #23):
+  - drop the four Admin levels; list the 17 components under the existing levels
+  - move the pages from `Ui/Pages/Admin/` to `Ui/Pages/`
+  - fold AdminContactSheetPage into ContactSheetPage as three "Admin …" specimens
+  - update IndexTests to 31 entries and 5 headings
+  - change the snapshot guard to per-specimen comparison, shown to still fail on a changed
+    public specimen
+  - update verify.sh, the spec (US1, FR-007, SC-001) and contracts/http.md
+
 ## Phase 7: Polish and verification (high tier)
 
 - [X] T030 Amend D-21 in `specs/001-architecture-stack-design/draft/02d-decisions-delivery.md`:

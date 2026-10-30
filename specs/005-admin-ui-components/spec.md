@@ -23,25 +23,31 @@
   organisms, the way the admin uses the shared contact sheet, and the admin page template.
 - Q: How far? → A: Straight through specify, plan, tasks and implement, with a decisions log
   reviewed at the end.
+- Owner correction after implementation: `/ui` must not separate admin components. "They should
+  all be treated the same, and only usage in the actual site differs." The admin components are
+  listed under the ordinary atom, molecule, organism and template headings with ordinary paths.
+  The admin uses of ContactSheet are extra states on the ContactSheet page, not a separate
+  entry. (Supersedes the admin grouping in US1, FR-007 and SC-001 below, which are updated.)
 
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Browse the admin components next to the public ones (Priority: P1)
 
-The owner opens `/ui/` and sees the admin components listed under their own headings, after the
-public ones and grouped by atomic level. Every entry links to its own page.
+The owner opens `/ui/` and sees the admin components listed alongside the existing ones under
+the same atomic-level headings, with no separate admin grouping. Every entry links to its own
+page.
 
 **Why this priority**: This is the entry point the owner asked for. It extends the index from
 feature 003.
 
-**Independent Test**: Open `/ui/`, check that every admin component listed in FR-001 appears once
-under the right admin level, and follow every link.
+**Independent Test**: Open `/ui/`, check that every component listed in FR-001 appears once under
+its atomic level, and follow every link.
 
 **Acceptance Scenarios**:
 
-1. **Given** the app is running locally, **When** the owner opens `/ui/`, **Then** the public
-   entries are unchanged, and the admin entries follow them under "Admin atoms", "Admin molecules",
-   "Admin organisms" and "Admin templates".
+1. **Given** the app is running locally, **When** the owner opens `/ui/`, **Then** the existing
+   entries are unchanged, and the new components appear under the same five headings (Tokens,
+   Atoms, Molecules, Organisms, Templates), with no admin-only heading or path.
 2. **Given** the index, **When** the owner follows any admin link, **Then** that component's page
    loads.
 
@@ -166,8 +172,9 @@ on small screens.
   - ContactSheet (admin): library with selection, gallery list with private galleries dimmed,
     upload batch.
   - AdminLayout: the owner bar, an empty main area, and a side panel.
-- **FR-007**: `/ui/` MUST list the admin components after the public ones, grouped by admin
-  level, each linked to its own page. The existing public entries MUST keep their order and
+- **FR-007**: `/ui/` MUST list the new components under the existing atomic-level headings, with
+  no separate admin grouping or path, each linked to its own page. The admin uses of ContactSheet
+  are additional states on the ContactSheet page. The existing entries MUST keep their order and
   addresses.
 - **FR-008**: Admin specimens MUST use the existing sample photos. Sample text (titles, file names,
   counts, refusal reasons) MUST be realistic for this site: JPEG only, 20 MB per file, titles up to
@@ -202,12 +209,14 @@ on small screens.
 
 ### Measurable Outcomes
 
-- **SC-001**: From `/ui/`, the owner reaches any of the 18 admin component pages in one click.
+- **SC-001**: From `/ui/`, the owner reaches any of the 17 new component pages in one click, under
+  the same five headings as before.
 - **SC-002**: 100% of the states listed in FR-006 are visible and labelled on their pages.
 - **SC-003**: Zero inline style attributes and zero scripts appear on any `/ui/` page, public or
   admin.
 - **SC-004**: The public component pages from feature 003 are unchanged. Their existing tests pass
-  without modification, apart from the index entry count, which grows with this feature.
+  without modification, apart from the index entry count, which grows with this feature, and the ContactSheet page
+  assertions, which are scoped to its public specimens now that admin-usage states follow them.
 - **SC-005**: Every bar and panel specimen shows at most one filled button, and every destructive
   control has no solid fill.
 - **SC-006**: Tabbing through any admin page reaches every control, and each one shows a visible

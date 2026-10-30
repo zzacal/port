@@ -35,10 +35,8 @@ index=$(curl -s "$BASE/ui/")
 slugs=$(echo "$index" | grep -oE 'href="/ui/[^"]+"' | sed -E 's#href="/ui/(.*)"#\1#')
 n=$(echo "$slugs" | grep -c .)
 na=$(echo "$slugs" | grep -c '^admin/')
-[ "$n" = 32 ] && [ "$na" = 18 ] && pass SC-001 "index lists 32 pages, 18 admin" || fail SC-001 "index lists $n pages, $na admin"
-for h in "Admin atoms" "Admin molecules" "Admin organisms" "Admin templates"; do
-  echo "$index" | grep -q ">$h</h2>" || fail FR-007 "missing heading $h"
-done
+nh=$(echo "$index" | grep -o '<h2[^>]*>' | grep -c .)
+[ "$n" = 31 ] && [ "$na" = 0 ] && [ "$nh" = 5 ] && pass SC-001 "index lists 31 pages under 5 level headings, no admin split" || fail SC-001 "index lists $n pages, $na under admin/, $nh headings"
 
 bad=""
 for s in "" $slugs; do
@@ -52,16 +50,16 @@ for s in "" $slugs; do
   grep -qiE '<meta name="robots" content="noindex"' /tmp/ui-body.html || bad="$bad /ui/$s(no-robots-meta)"
   grep -qiE '<link[^>]+rel="stylesheet"' /tmp/ui-body.html && bad="$bad /ui/$s(external-css)"
 done
-[ -z "$bad" ] && pass FR-009/SC-003 "33 pages: 200, noindex header+meta, Server-Timing, no script, no inline style, no external CSS" || fail FR-009/SC-003 "$bad"
+[ -z "$bad" ] && pass FR-009/SC-003 "32 pages: 200, noindex header+meta, Server-Timing, no script, no inline style, no external CSS" || fail FR-009/SC-003 "$bad"
 
-code=$(curl -s -o /dev/null -w '%{http_code}' "$BASE/ui/admin/nope")
-[ "$code" = 404 ] && pass contract "unknown /ui/admin path -> 404" || fail contract "unknown /ui/admin path -> $code"
+code=$(curl -s -o /dev/null -w '%{http_code}' "$BASE/ui/admin/atoms/button")
+[ "$code" = 404 ] && pass contract "old /ui/admin/... path -> 404 (no admin split)" || fail contract "old /ui/admin path -> $code"
 code=$(curl -s -o /dev/null -w '%{http_code}' "$BASE/admin/library")
 [ "$code" = 404 ] && pass scope "no /admin route mapped -> 404" || fail scope "/admin/library -> $code"
 
 # 3. SC-008 one request event per request
 before=$(grep -c '"http.request ' "$EV/dev-run.log")
-for _ in $(seq 1 20); do curl -s -o /dev/null "$BASE/ui/admin/organisms/gallery-builder"; done
+for _ in $(seq 1 20); do curl -s -o /dev/null "$BASE/ui/organisms/gallery-builder"; done
 sleep 1
 after=$(grep -c '"http.request ' "$EV/dev-run.log")
 [ $((after - before)) = 20 ] && pass SC-008 "20 requests -> 20 http.request events" || fail SC-008 "20 requests -> $((after - before)) events"
@@ -72,7 +70,7 @@ ASPNETCORE_ENVIRONMENT=Production dotnet run --project src/Gallery.Web --no-buil
 APP_PID=$!
 wait_up "http://localhost:5083/" || { fail start "prod app did not start"; exit 1; }
 codes=""
-for s in "" admin/atoms/button admin/organisms/gallery-builder admin/templates/admin-layout; do codes="$codes $(curl -s -o /dev/null -w '%{http_code}' "http://localhost:5083/ui/$s")"; done
+for s in "" atoms/button organisms/gallery-builder templates/admin-layout; do codes="$codes $(curl -s -o /dev/null -w '%{http_code}' "http://localhost:5083/ui/$s")"; done
 [ "$(echo $codes | tr ' ' '\n' | sort -u)" = 404 ] && pass FR-009 "Production /ui ->$codes" || fail FR-009 "Production /ui ->$codes"
 stop_app
 

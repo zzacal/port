@@ -4,20 +4,20 @@ These are additions to feature 003's contracts/http.md. All routes are Developme
 through the same `/ui` group, so they get the same noindex header and meta tag, Server-Timing,
 and one request log event per request.
 
+**Owner decision (2026-10-30):** `/ui` is organised by atomic level only. Components are not
+split into "public" and "admin". Where a component is used differs only on the real site. Admin
+pages therefore sit under the existing level paths.
+
 | Route | Page |
 |---|---|
-| `GET /ui/admin/atoms/{button,input,switch,select-mark}` | one per admin atom |
-| `GET /ui/admin/molecules/{batch-item,cover-marker,drag-handle,selection-bar,danger-confirm,visibility-toggle}` | one per admin molecule |
-| `GET /ui/admin/organisms/{owner-bar,side-panel,upload-dropzone,batch-footer,gallery-builder,sign-in-card,contact-sheet}` | one per admin organism |
-| `GET /ui/admin/templates/admin-layout` | rendered *with* AdminLayout itself |
+| `GET /ui/atoms/{button,input,switch,select-mark}` | one per atom |
+| `GET /ui/molecules/{batch-item,cover-marker,drag-handle,selection-bar,danger-confirm,visibility-toggle}` | one per molecule |
+| `GET /ui/organisms/{owner-bar,side-panel,upload-dropzone,batch-footer,gallery-builder,sign-in-card}` | one per organism |
+| `GET /ui/organisms/contact-sheet` | existing page, now also showing the library, gallery-list and upload-batch usages as extra states |
+| `GET /ui/templates/admin-layout` | rendered *with* AdminLayout itself |
 
-The `/ui/` index lists 14 public plus 18 admin entries, 32 in total.
-
-Each new page:
-- returns 200
-- contains no `<script`
-- has no `style=` attribute
-- has no external stylesheet
+The `/ui/` index lists 31 entries under the 5 existing headings (Tokens, Atoms, Molecules,
+Organisms, Templates). There is no `/ui/admin/` path.
 
 No `/admin/*` route is mapped by this feature. Components link to `/admin/...` addresses only as
 sample hrefs.
