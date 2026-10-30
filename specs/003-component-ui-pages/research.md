@@ -63,6 +63,12 @@ project or by running the tool. No NEEDS CLARIFICATION items remain.
   - `<style>` elements inside the body: non-conforming HTML.
   - CSS `attr()` with a URL: browsers don't support it.
 
+- **Amended during implementation (decision #28)**: grid stacking was replaced. Only the main
+  `<picture>` is in normal flow, and the placeholder and thumbnail are `position:absolute` behind
+  it. In contain mode the placeholder is inset 2%. With grid stacking, a decoded 32 px
+  placeholder's own aspect ratio overrode its attributes and stretched the box. See
+  evidence/browser.md.
+
 ## R-04: Sample photos and their derivatives
 
 - **Decision**: An authored script, `scripts/build-samples.sh`, does this:
@@ -90,6 +96,9 @@ project or by running the tool. No NEEDS CLARIFICATION items remain.
   - The AVIF's stored size can differ from the encoder's padded frame (1280×854 stored vs
     1280×856 encoded), which is why dimensions are read back with `sips` after encoding.
   - A 3000×2000 source gives about 100 KB per format at 1280 px.
+- **Amended during implementation (decision #28)**: the metadata check parses the container
+  structure (`scripts/check-metadata.sh`) instead of grepping bytes. A grep for `GPS` matched
+  compressed pixel data in a clean WebP.
 - **Tools**: ffmpeg (already installed), `cwebp` (`brew install webp`, approved by the owner, dev
   machine only), and `sips` and `curl` (built into macOS). None of these is a dependency of the
   app. The generated files are committed, so building or running the app never needs the tools.

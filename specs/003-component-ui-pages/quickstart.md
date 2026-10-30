@@ -36,7 +36,7 @@ open http://localhost:5080/ui/
 | 8 | `ASPNETCORE_ENVIRONMENT=Production dotnet run --project src/Gallery.Web --no-launch-profile`, then `curl -o /dev/null -w '%{http_code}' localhost:5080/ui/` | `404` | SC-006 |
 | 9 | 20 requests, then count `"http.request"` lines in the log | exactly 20 | SC-007 |
 | 10 | `curl -sI localhost:5080/ui/` | `Server-Timing: app;dur=…`, `X-Robots-Tag: noindex` | FR-009, FR-011 |
-| 11 | `grep -c -a -E 'Exif\|xmpmeta\|GPS' src/Gallery.Web/wwwroot/samples/*.{avif,webp}` | every count 0 | FR-008, III.3 |
+| 11 | `bash scripts/check-metadata.sh src/Gallery.Web/wwwroot/samples/*.{avif,webp}` | exit 0 (no EXIF/XMP chunks or items) | FR-008, III.3 |
 
 Checks 8–11 are scripted in `specs/003-component-ui-pages/evidence/verify.sh`. The readings for
 checks 5–7 are taken in a real browser and saved to `evidence/browser.md`.
