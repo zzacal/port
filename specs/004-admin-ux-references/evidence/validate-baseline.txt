@@ -1,0 +1,11 @@
+PASS C1
+FAIL C2: under 3 figures: PG-signin=0 PG-batch=0 PG-library=0 PG-galleries=0 PG-builder=0
+FAIL C3: under 2 figures: CP-button=0 CP-input=0 CP-dropzone=0 CP-batchitem=0 CP-batchsummary=0 CP-selectgrid=0 CP-reorder=0 CP-visibility=0 CP-cover=0 CP-confirm=0 CP-shell=0
+FAIL C4: missing: CP-button:primary CP-button:secondary CP-button:danger CP-button:disabled CP-button:busy CP-input:empty CP-input:filled CP-input:too-long CP-input:saving CP-input:saved CP-dropzone:idle CP-dropzone:drag-over CP-dropzone:refused CP-batchitem:queued CP-batchitem:processing CP-batchitem:uploading CP-batchitem:succeeded CP-batchitem:failed CP-batchitem:interrupted CP-batchsummary:in-progress CP-batchsummary:ready CP-batchsummary:blocked CP-batchsummary:discard CP-selectgrid:none CP-selectgrid:one CP-selectgrid:many CP-reorder:rest CP-reorder:dragging CP-reorder:keyboard CP-visibility:public CP-visibility:private CP-visibility:publish-warning CP-cover:pinned CP-cover:unpinned CP-confirm:delete-image CP-confirm:delete-gallery CP-shell:signed-in CP-shell:public-link
+FAIL C5: 0 distinct products
+FAIL C6:  no-figures
+FAIL C7: figures=0 captions=0 with-Fit=0
+FAIL C8:  directions=0 recommended=0
+PASS C9
+FAIL C10: 0 rows
+FAILED 8
