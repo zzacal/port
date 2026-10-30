@@ -1,0 +1,24 @@
+.selection-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--color-surface);
+    border-radius: 6px;
+    position: sticky;
+    bottom: var(--space-s);
+}
+
+.count {
+    font-size: var(--type-body);
+}
+
+.spacer {
+    flex: 1;
+}
+
+.selection-bar:focus-visible {
+    outline: 2px solid var(--color-text);
+    outline-offset: 2px;
+}

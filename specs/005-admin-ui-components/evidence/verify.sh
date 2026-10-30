@@ -4,26 +4,31 @@
 set -uo pipefail
 export DOTNET_NOLOGO=1
 EV="specs/005-admin-ui-components/evidence"
-BASE="http://localhost:5080"
+# The owner keeps `dotnet watch run` on :5080. This script never touches it: it builds into
+# ./artifacts (separate bin/obj), runs its own instances on :5082/:5083, and stops only the PIDs
+# it started. dotnet watch also injects a browser-refresh <script> into HTML served to browsers,
+# so :5080 is not a clean target for the no-script check.
+ART="artifacts"
+BASE="http://localhost:5082"
 fails=0
 pass() { echo "PASS $1 $2"; }
 fail() { echo "FAIL $1 $2"; fails=$((fails+1)); }
-stop_app() { pkill -f "Gallery.Web.dll" 2>/dev/null; pkill -f "src/Gallery.Web" 2>/dev/null; sleep 1; }
+APP_PID=""
+stop_app() { [ -n "$APP_PID" ] && { pkill -P "$APP_PID" 2>/dev/null; kill "$APP_PID" 2>/dev/null; wait "$APP_PID" 2>/dev/null; }; APP_PID=""; sleep 1; }
 wait_up() { for _ in $(seq 1 40); do curl -s -o /dev/null "$1" && return 0; sleep 0.5; done; return 1; }
 
-stop_app
-
 # 1. gates
-out=$(dotnet build Gallery.slnx -warnaserror 2>&1)
+out=$(dotnet build Gallery.slnx -warnaserror --artifacts-path "$ART" 2>&1)
 echo "$out" | grep -qE '^ +0 Warning\(s\)' && echo "$out" | grep -qE '^ +0 Error\(s\)' \
   && pass gate "build: 0 warnings, 0 errors" || fail gate "build"
-out=$(dotnet test --no-build 2>&1)
+out=$(dotnet test Gallery.slnx --no-build --artifacts-path "$ART" 2>&1)
 [ "$(echo "$out" | grep -c '^Passed!')" = 2 ] && ! echo "$out" | grep -q '^Failed!' \
   && pass gate "tests: $(echo "$out" | grep -oE 'Passed: +[0-9]+' | awk '{s+=$2} END{print s}') passed in 2 assemblies" \
   || fail gate "tests: $(echo "$out" | grep -E 'Passed!|Failed!' | tr '\n' ' ')"
 
 # 2. Development run
-dotnet run --project src/Gallery.Web --no-build > "$EV/dev-run.log" 2>&1 &
+ASPNETCORE_ENVIRONMENT=Development dotnet run --project src/Gallery.Web --no-build --no-launch-profile --artifacts-path "$ART" --urls "$BASE" > "$EV/dev-run.log" 2>&1 &
+APP_PID=$!
 wait_up "$BASE/" || { fail start "dev app did not start"; exit 1; }
 
 index=$(curl -s "$BASE/ui/")
@@ -63,10 +68,11 @@ after=$(grep -c '"http.request ' "$EV/dev-run.log")
 stop_app
 
 # 4. Production: /ui (including admin pages) not mapped
-ASPNETCORE_ENVIRONMENT=Production dotnet run --project src/Gallery.Web --no-build --no-launch-profile --urls http://localhost:5081 > "$EV/prod-run.log" 2>&1 &
-wait_up "http://localhost:5081/" || { fail start "prod app did not start"; exit 1; }
+ASPNETCORE_ENVIRONMENT=Production dotnet run --project src/Gallery.Web --no-build --no-launch-profile --artifacts-path "$ART" --urls http://localhost:5083 > "$EV/prod-run.log" 2>&1 &
+APP_PID=$!
+wait_up "http://localhost:5083/" || { fail start "prod app did not start"; exit 1; }
 codes=""
-for s in "" admin/atoms/button admin/organisms/gallery-builder admin/templates/admin-layout; do codes="$codes $(curl -s -o /dev/null -w '%{http_code}' "http://localhost:5081/ui/$s")"; done
+for s in "" admin/atoms/button admin/organisms/gallery-builder admin/templates/admin-layout; do codes="$codes $(curl -s -o /dev/null -w '%{http_code}' "http://localhost:5083/ui/$s")"; done
 [ "$(echo $codes | tr ' ' '\n' | sort -u)" = 404 ] && pass FR-009 "Production /ui ->$codes" || fail FR-009 "Production /ui ->$codes"
 stop_app
 

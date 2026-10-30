@@ -7,6 +7,13 @@ report a blocker. Do not invent.
 
 ## Rules for every executor
 
+- **The owner runs `dotnet watch run` on :5080 in their own window.** Never kill or restart it,
+  never `pkill` dotnet or Gallery.Web, and never bind :5080. Build and test into a separate
+  output so you don't fight its file locks:
+  `dotnet build Gallery.slnx -warnaserror --artifacts-path artifacts` and
+  `dotnet test Gallery.slnx --no-build --artifacts-path artifacts`. If you need a live server, use
+  `--no-launch-profile --artifacts-path artifacts --urls http://localhost:5082`, and stop only the
+  PID you started.
 - Read `contracts/admin-components.md` (the global rules G1–G8 plus your components) and the
   existing public components named in your task. Copy their style: the `@code` block at the
   bottom, `[Parameter, EditorRequired]` on required parameters, and a one-line `@*` comment at the
@@ -94,19 +101,19 @@ report a blocker. Do not invent.
 
 ## Phase 4: US2 molecules (P1)
 
-- [ ] T010 [P] [US2] BatchItem, in `Components/Admin/Molecules/BatchItem.razor` and `.razor.css`
+- [X] T010 [P] [US2] BatchItem, in `Components/Admin/Molecules/BatchItem.razor` and `.razor.css`
   (contract table for status per state).
-- [ ] T011 [P] [US2] CoverMarker, in `Components/Admin/Molecules/CoverMarker.razor` and
+- [X] T011 [P] [US2] CoverMarker, in `Components/Admin/Molecules/CoverMarker.razor` and
   `.razor.css`.
-- [ ] T012 [P] [US2] DragHandle, in `Components/Admin/Molecules/DragHandle.razor` and
+- [X] T012 [P] [US2] DragHandle, in `Components/Admin/Molecules/DragHandle.razor` and
   `.razor.css`.
-- [ ] T013 [P] [US2] SelectionBar, in `Components/Admin/Molecules/SelectionBar.razor` and
+- [X] T013 [P] [US2] SelectionBar, in `Components/Admin/Molecules/SelectionBar.razor` and
   `.razor.css`.
-- [ ] T014 [P] [US2] DangerConfirm, in `Components/Admin/Molecules/DangerConfirm.razor` and
+- [X] T014 [P] [US2] DangerConfirm, in `Components/Admin/Molecules/DangerConfirm.razor` and
   `.razor.css`.
-- [ ] T015 [P] [US2] VisibilityToggle, in `Components/Admin/Molecules/VisibilityToggle.razor` and
+- [X] T015 [P] [US2] VisibilityToggle, in `Components/Admin/Molecules/VisibilityToggle.razor` and
   `.razor.css`.
-- [ ] T016 [US2] Add tests in `tests/Gallery.Web.Tests/AdminMoleculeTests.cs`:
+- [X] T016 [US2] Add tests in `tests/Gallery.Web.Tests/AdminMoleculeTests.cs`:
   - BatchItem: one test per state asserting the status text from the contract table; Restart and
     Delete appear ONLY for Failed and Interrupted (assert their absence for the other 4);
     Uploading renders `<progress` with `value="64"`; Processing renders `<progress` with no
@@ -121,13 +128,13 @@ report a blocker. Do not invent.
 
 ## Phase 5: US2/US3 organisms and template
 
-- [ ] T017 [P] [US2] OwnerBar, in `Components/Admin/Organisms/OwnerBar.razor` and `.razor.css`.
-- [ ] T018 [P] [US2] SidePanel, in `Components/Admin/Organisms/SidePanel.razor` and `.razor.css`.
-- [ ] T019 [P] [US2] UploadDropzone, in `Components/Admin/Organisms/UploadDropzone.razor` and
+- [X] T017 [P] [US2] OwnerBar, in `Components/Admin/Organisms/OwnerBar.razor` and `.razor.css`.
+- [X] T018 [P] [US2] SidePanel, in `Components/Admin/Organisms/SidePanel.razor` and `.razor.css`.
+- [X] T019 [P] [US2] UploadDropzone, in `Components/Admin/Organisms/UploadDropzone.razor` and
   `.razor.css`.
 - [ ] T020 [P] [US2] BatchFooter, in `Components/Admin/Organisms/BatchFooter.razor` and
   `.razor.css`.
-- [ ] T021 [P] [US3] SignInCard, in `Components/Admin/Organisms/SignInCard.razor` and `.razor.css`.
+- [X] T021 [P] [US3] SignInCard, in `Components/Admin/Organisms/SignInCard.razor` and `.razor.css`.
 - [ ] T022 [US3] GalleryBuilder, in `Components/Admin/Organisms/GalleryBuilder.razor` and
   `.razor.css`. Depends on T004, T011, T012, T015 and T018.
 - [ ] T023 [US3] AdminLayout, in `Components/Admin/Templates/AdminLayout.razor` and `.razor.css`.

@@ -1,0 +1,38 @@
+.publish-warning {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    margin-top: 8px;
+    border: 1px solid var(--color-danger);
+    border-radius: 4px;
+}
+
+.publish-warning p {
+    margin: 0;
+    font-size: var(--type-body);
+}
+
+.bang {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: #000;
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    border-radius: 50%;
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.publish-warning:focus-visible {
+    outline: 2px solid var(--color-text);
+    outline-offset: 2px;
+}

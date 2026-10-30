@@ -1,0 +1,64 @@
+@* Admin batch-item molecule (feature 005): one queued/in-progress/completed/failed upload row. *@
+@using Gallery.Web.Components.Admin
+<div class="batch-item state-@StateClass">
+    <div class="bcell">
+        @if (Preview != null)
+        {
+            <Picture Image="@Preview" Sizes="(min-width:1200px) 25vw, (min-width:600px) 33vw, 100vw" Fit="PictureFit.Contain" />
+        }
+        else
+        {
+            <span class="fname-ph">@FileName</span>
+        }
+        <div class="status">
+            @if (State == BatchItemState.Queued)
+            {
+                <span class="muted">Waiting</span>
+            }
+            else if (State == BatchItemState.Processing)
+            {
+                <span>Preparing sizes</span>
+                <progress class="bar"></progress>
+            }
+            else if (State == BatchItemState.Uploading)
+            {
+                <span>Uploading @Percent%</span>
+                <progress class="bar" value="@Percent" max="100"></progress>
+            }
+            else if (State == BatchItemState.Succeeded)
+            {
+                <span class="success">&#x2713; Ready</span>
+            }
+            else if (State == BatchItemState.Failed)
+            {
+                <span class="danger">@Reason</span>
+                <Button Variant="ButtonVariant.Secondary" Type="submit" Name="action" Value="restart" FormId="@FormId" AriaLabel="@($"Restart {FileName}")">Restart</Button>
+                <Button Variant="ButtonVariant.Danger" Type="submit" Name="action" Value="delete" FormId="@FormId" AriaLabel="@($"Delete {FileName}")">Delete</Button>
+            }
+            else if (State == BatchItemState.Interrupted)
+            {
+                <span class="danger">Stopped before finishing</span>
+                <Button Variant="ButtonVariant.Secondary" Type="submit" Name="action" Value="restart" FormId="@FormId" AriaLabel="@($"Restart {FileName}")">Restart</Button>
+                <Button Variant="ButtonVariant.Danger" Type="submit" Name="action" Value="delete" FormId="@FormId" AriaLabel="@($"Delete {FileName}")">Delete</Button>
+            }
+        </div>
+    </div>
+    <p class="meta"><span class="fname" title="@FileName">@FileName</span><span class="size">@SizeFormatted</span></p>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string FileName { get; set; } = "";
+    [Parameter] public long SizeBytes { get; set; }
+    [Parameter] public BatchItemState State { get; set; }
+    [Parameter] public int Percent { get; set; }
+    [Parameter] public string? Reason { get; set; }
+    [Parameter] public ImageView? Preview { get; set; }
+    [Parameter] public string ItemId { get; set; } = "";
+    [Parameter] public string? FormId { get; set; }
+
+    private string StateClass => State.ToString().ToLowerInvariant();
+
+    private string SizeFormatted => SizeBytes >= 1_048_576
+        ? $"{SizeBytes / 1_048_576.0:F1} MB"
+        : $"{SizeBytes / 1024.0:F0} KB";
+}

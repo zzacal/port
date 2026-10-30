@@ -1,0 +1,23 @@
+@* Admin cover-marker molecule (feature 005): pinned/automatic/unpinned cover tag with action. *@
+@using Gallery.Web.Components.Admin
+<div class="cover-marker">
+    @if (State == CoverState.Pinned)
+    {
+        <span class="cover-tag">Cover</span>
+        <Button Variant="ButtonVariant.Quiet" Type="button" AriaLabel="Unpin cover" FormId="@FormId">Unpin</Button>
+    }
+    else if (State == CoverState.Automatic)
+    {
+        <span class="cover-tag auto" title="First photo is the cover until you pin one">Cover · first photo</span>
+    }
+    else
+    {
+        <Button Variant="ButtonVariant.Quiet" Type="button" AriaLabel="@($"Make {ImageTitle} the cover")" FormId="@FormId">Make cover</Button>
+    }
+</div>
+
+@code {
+    [Parameter] public CoverState State { get; set; }
+    [Parameter] public string ImageTitle { get; set; } = "";
+    [Parameter] public string? FormId { get; set; }
+}

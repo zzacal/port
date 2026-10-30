@@ -1,0 +1,22 @@
+@* Admin owner bar organism (feature 005): brand link, nav with current page, view link, primary action. *@
+<header class="owner-bar">
+    <a class="ob-brand" href="/admin">Gallery <span>admin</span></a>
+    <nav aria-label="Admin">
+        <ul>
+            <li><a href="/admin/upload" aria-current="@(Current == AdminPage.Upload ? "page" : null)">Upload</a></li>
+            <li><a href="/admin/library" aria-current="@(Current == AdminPage.Library ? "page" : null)">Library</a></li>
+            <li><a href="/admin/galleries" aria-current="@(Current == AdminPage.Galleries ? "page" : null)">Galleries</a></li>
+        </ul>
+    </nav>
+    <div class="ob-actions">
+        <Button Element="ButtonElement.Link" Variant="ButtonVariant.Quiet" Href="@ViewHref">@ViewLabel ↗</Button>
+        @PrimaryAction
+    </div>
+</header>
+
+@code {
+    [Parameter] public AdminPage? Current { get; set; }
+    [Parameter] public string ViewHref { get; set; } = "/";
+    [Parameter] public string ViewLabel { get; set; } = "View site";
+    [Parameter] public RenderFragment? PrimaryAction { get; set; }
+}

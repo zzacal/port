@@ -1,0 +1,44 @@
+.side-panel {
+    background: var(--color-surface);
+    padding: var(--space-s);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.side-panel h2 {
+    font-size: var(--type-brand);
+    font-weight: 600;
+    margin: 0;
+}
+
+.sp-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sp-save {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sp-status {
+    color: var(--color-success);
+    font-size: var(--type-body);
+}
+
+.sp-danger {
+    border-top: 1px solid var(--color-rule);
+    padding-top: 16px;
+}
+
+.sp-danger h3 {
+    font-size: var(--type-caption);
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    margin: 0 0 8px;
+}

@@ -1,0 +1,26 @@
+@* Admin side panel organism (feature 005): heading, fields slot, save state, optional danger slot. *@
+@using Gallery.Web.Components.Admin
+<aside class="side-panel" aria-label="@Heading">
+    <h2>@Heading</h2>
+    <div class="sp-fields">@ChildContent</div>
+    <div class="sp-save">
+        <Button Variant="ButtonVariant.Primary" Busy="@(State == SaveState.Saving)" FormId="@FormId">@(State == SaveState.Saving ? "Saving" : SaveLabel)</Button>
+        <span class="sp-status">@(State == SaveState.Saved ? "Saved" : "")</span>
+    </div>
+    @if (Danger is not null)
+    {
+        <div class="sp-danger">
+            <h3>Delete</h3>
+            @Danger
+        </div>
+    }
+</aside>
+
+@code {
+    [Parameter, EditorRequired] public string Heading { get; set; } = "";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public SaveState State { get; set; } = SaveState.Idle;
+    [Parameter] public string SaveLabel { get; set; } = "Save";
+    [Parameter] public RenderFragment? Danger { get; set; }
+    [Parameter] public string? FormId { get; set; }
+}
