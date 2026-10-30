@@ -1,0 +1,20 @@
+@* Admin switch atom (feature 005): a checkbox styled as a toggle, with label, hint, and role="switch". *@
+<label class="switch">
+    <input type="checkbox" role="switch" name="@Name" checked="@Checked" disabled="@Disabled" aria-describedby="@(Hint != null ? HintId : null)" />
+    <span class="track" aria-hidden="true"></span>
+    <span class="text">@Label</span>
+</label>
+@if (Hint != null)
+{
+    <p class="hint" id="@HintId">@Hint</p>
+}
+
+@code {
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+    [Parameter, EditorRequired] public string Name { get; set; } = "";
+    [Parameter] public bool Checked { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public string? Hint { get; set; }
+
+    private string HintId => "hint-" + Name;
+}

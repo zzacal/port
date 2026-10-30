@@ -1,0 +1,53 @@
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.field label {
+    font-size: var(--type-caption);
+    font-weight: 600;
+}
+
+.field input,
+.field textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--color-rule);
+    border-radius: 4px;
+    padding: 8px;
+    font: inherit;
+}
+
+.field input {
+    height: 32px;
+}
+
+.field input:focus-visible,
+.field textarea:focus-visible {
+    outline: 2px solid var(--color-text);
+    outline-offset: 2px;
+}
+
+.field-foot {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--type-caption);
+    margin-top: 4px;
+}
+
+.msg-saving {
+    color: var(--color-muted);
+}
+
+.msg-saved {
+    color: var(--color-success);
+}
+
+.msg-invalid {
+    color: var(--color-danger);
+}
+
+.count-over {
+    color: var(--color-danger);
+}

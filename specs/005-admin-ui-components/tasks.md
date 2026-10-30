@@ -75,13 +75,13 @@ report a blocker. Do not invent.
 
 ## Phase 3: US1 + US2 atoms (P1)
 
-- [ ] T005 [P] [US2] Button: `src/Gallery.Web/Components/Admin/Atoms/Button.razor` and `.razor.css`,
+- [X] T005 [P] [US2] Button: `src/Gallery.Web/Components/Admin/Atoms/Button.razor` and `.razor.css`,
   per the contract.
-- [ ] T006 [P] [US2] Input: `src/Gallery.Web/Components/Admin/Atoms/Input.razor` and `.razor.css`.
-- [ ] T007 [P] [US2] Switch: `src/Gallery.Web/Components/Admin/Atoms/Switch.razor` and `.razor.css`.
-- [ ] T008 [P] [US2] SelectMark: `src/Gallery.Web/Components/Admin/Atoms/SelectMark.razor` and
+- [X] T006 [P] [US2] Input: `src/Gallery.Web/Components/Admin/Atoms/Input.razor` and `.razor.css`.
+- [X] T007 [P] [US2] Switch: `src/Gallery.Web/Components/Admin/Atoms/Switch.razor` and `.razor.css`.
+- [X] T008 [P] [US2] SelectMark: `src/Gallery.Web/Components/Admin/Atoms/SelectMark.razor` and
   `.razor.css`.
-- [ ] T009 [US2] Add tests for T005–T008 in `tests/Gallery.Web.Tests/AdminAtomTests.cs`. They render
+- [X] T009 [US2] Add tests for T005–T008 in `tests/Gallery.Web.Tests/AdminAtomTests.cs`. They render
   each component directly with `Render.Html<T>` and cover:
   - Button: each variant class; Link renders `<a class="btn`; Summary renders `<summary class="btn`;
     Busy renders `aria-busy="true"`, `disabled` and `class="spinner"`; non-busy has no `aria-busy`

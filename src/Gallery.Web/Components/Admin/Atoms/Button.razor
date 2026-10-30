@@ -1,0 +1,44 @@
+@* Admin button atom (feature 005): primary/secondary/quiet/danger; button/link/summary element; busy state. *@
+@if (Element == ButtonElement.Link)
+{
+    <a class="@CssClass" href="@Href" aria-label="@AriaLabel">@ChildContent</a>
+}
+else if (Element == ButtonElement.Summary)
+{
+    <summary class="@CssClass">@ChildContent</summary>
+}
+else
+{
+    <button class="@CssClass" type="@Type" disabled="@(Disabled || Busy)" aria-busy="@(Busy ? "true" : null)" form="@FormId" name="@Name" value="@Value" aria-label="@AriaLabel">
+        @if (Busy)
+        {
+            <span class="spinner" aria-hidden="true"></span>
+        }
+        @ChildContent
+    </button>
+}
+
+@code {
+    [Parameter] public ButtonVariant Variant { get; set; } = ButtonVariant.Secondary;
+    [Parameter] public ButtonElement Element { get; set; } = ButtonElement.Button;
+    [Parameter] public string Type { get; set; } = "submit";
+    [Parameter] public string? Href { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public bool Busy { get; set; }
+    [Parameter] public string? FormId { get; set; }
+    [Parameter] public string? Name { get; set; }
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public string? AriaLabel { get; set; }
+    [Parameter, EditorRequired] public RenderFragment ChildContent { get; set; } = default!;
+
+    private string VariantClass => Variant switch
+    {
+        ButtonVariant.Primary => "btn btn-primary",
+        ButtonVariant.Secondary => "btn btn-secondary",
+        ButtonVariant.Quiet => "btn btn-quiet",
+        ButtonVariant.Danger => "btn btn-danger",
+        _ => "btn btn-secondary"
+    };
+
+    private string CssClass => Busy ? VariantClass + " is-busy" : VariantClass;
+}
