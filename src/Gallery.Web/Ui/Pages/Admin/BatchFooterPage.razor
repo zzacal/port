@@ -1,0 +1,7 @@
+@namespace Gallery.Web.Ui.Pages.Admin
+<UiLayout Title="BatchFooter">
+    <Specimen Label="In progress (12 of 40)"><BatchFooter State="BatchState.InProgress" Total="40" Ready="12" /></Specimen>
+    <Specimen Label="Ready (40)"><BatchFooter State="BatchState.Ready" Total="40" Ready="40" /></Specimen>
+    <Specimen Label="Blocked (38 ready, 2 failed)"><BatchFooter State="BatchState.Blocked" Total="40" Ready="38" Failed="2" /></Specimen>
+    <Specimen Label="Discard confirmation"><BatchFooter State="BatchState.ConfirmDiscard" Total="40" Ready="12" /></Specimen>
+</UiLayout>

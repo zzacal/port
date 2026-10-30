@@ -4,7 +4,7 @@
     <h2>@Heading</h2>
     <div class="sp-fields">@ChildContent</div>
     <div class="sp-save">
-        <Button Variant="ButtonVariant.Primary" Busy="@(State == SaveState.Saving)" FormId="@FormId">@(State == SaveState.Saving ? "Saving" : SaveLabel)</Button>
+        <Button Variant="@SaveVariant" Busy="@(State == SaveState.Saving)" FormId="@FormId">@(State == SaveState.Saving ? "Saving" : SaveLabel)</Button>
         <span class="sp-status">@(State == SaveState.Saved ? "Saved" : "")</span>
     </div>
     @if (Danger is not null)
@@ -21,6 +21,9 @@
     [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public SaveState State { get; set; } = SaveState.Idle;
     [Parameter] public string SaveLabel { get; set; } = "Save";
+
+    /// <summary>Demoted to Secondary when another control in the panel holds the one filled action (P1).</summary>
+    [Parameter] public ButtonVariant SaveVariant { get; set; } = ButtonVariant.Primary;
     [Parameter] public RenderFragment? Danger { get; set; }
     [Parameter] public string? FormId { get; set; }
 }

@@ -1,0 +1,50 @@
+@* Admin batch footer organism (feature 005): upload batch progress summary and actions. *@
+<footer class="batch-footer">
+    <div class="bf-summary">
+        @if (State == BatchState.InProgress || State == BatchState.ConfirmDiscard)
+        {
+            <span>@Ready of @Total ready</span>
+            <progress value="@Ready" max="@Total"></progress>
+        }
+        else if (State == BatchState.Ready)
+        {
+            <span>All @Total photos ready</span>
+        }
+        else if (State == BatchState.Blocked)
+        {
+            <span>@Ready ready · <span class="bf-failed">@Failed failed</span></span>
+        }
+    </div>
+    <div class="bf-actions">
+        @if (State == BatchState.Ready)
+        {
+            <Button Variant="ButtonVariant.Primary" Type="submit" FormId="@FormId">Add @Total photos to library</Button>
+        }
+        else
+        {
+            <Button Variant="ButtonVariant.Primary" Type="submit" FormId="@FormId" Disabled="true">Add @Total photos to library</Button>
+            @if (State == BatchState.Blocked)
+            {
+                <span class="bf-reason">Restart or delete the @Failed failed photos to continue</span>
+            }
+            else
+            {
+                <span class="bf-reason">Available when every photo is ready</span>
+            }
+        }
+        <DangerConfirm Action="Discard batch"
+                        Target="this batch"
+                        Consequence="@($"All {Total} uploaded files are deleted. Nothing is added to your library.")"
+                        ConfirmLabel="Discard batch"
+                        Open="@(State == BatchState.ConfirmDiscard)"
+                        FormId="@FormId" />
+    </div>
+</footer>
+
+@code {
+    [Parameter] public BatchState State { get; set; }
+    [Parameter] public int Total { get; set; }
+    [Parameter] public int Ready { get; set; }
+    [Parameter] public int Failed { get; set; }
+    [Parameter] public string? FormId { get; set; }
+}

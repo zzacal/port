@@ -1,0 +1,13 @@
+@namespace Gallery.Web.Ui.Pages.Admin
+@inject SampleCatalog Samples
+<UiLayout Title="Switch">
+    <Specimen Label="Off">
+        <Switch Label="Public" Name="switch-off" Checked="false" />
+    </Specimen>
+    <Specimen Label="On">
+        <Switch Label="Public" Name="switch-on" Checked="true" />
+    </Specimen>
+    <Specimen Label="Disabled">
+        <Switch Label="Public" Name="switch-disabled" Checked="false" Disabled="true" />
+    </Specimen>
+</UiLayout>

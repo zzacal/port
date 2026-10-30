@@ -1,0 +1,8 @@
+@namespace Gallery.Web.Ui.Pages.Admin
+@inject SampleCatalog Samples
+<UiLayout Title="SignInCard">
+    <Specimen Label="Sign in"><SignInCard Cover="Samples.Landscape[0]" /></Specimen>
+    <Specimen Label="Claim an unclaimed site"><SignInCard State="SignInState.Claim" Cover="Samples.Landscape[0]" /></Specimen>
+    <Specimen Label="Refused (not the owner)"><SignInCard State="SignInState.Refused" Cover="Samples.Landscape[0]" /></Specimen>
+    <Specimen Label="No cover photo"><SignInCard /></Specimen>
+</UiLayout>

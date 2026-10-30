@@ -17,6 +17,7 @@
     border-radius: 4px;
     padding: 8px;
     font: inherit;
+    font-size: var(--type-body);
 }
 
 .field input {

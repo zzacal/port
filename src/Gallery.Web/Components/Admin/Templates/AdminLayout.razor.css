@@ -1,0 +1,44 @@
+body.admin {
+    font-family: var(--font);
+    font-size: var(--type-body);
+    color: var(--color-text);
+    background: var(--color-bg);
+    margin: 0;
+}
+
+.admin-body {
+    padding: var(--space-s);
+}
+
+@media (min-width: 600px) {
+    .admin-body {
+        padding: var(--space-m);
+    }
+}
+
+@media (min-width: 1200px) {
+    .admin-body {
+        padding: var(--space-l);
+    }
+}
+
+.with-aside {
+    display: grid;
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 1200px) {
+    .with-aside {
+        grid-template-columns: minmax(0, 1fr) 320px;
+        gap: var(--space-m);
+        align-items: start;
+    }
+}
+
+.admin-main {
+    min-width: 0;
+}
+
+.admin-aside {
+    min-width: 0;
+}

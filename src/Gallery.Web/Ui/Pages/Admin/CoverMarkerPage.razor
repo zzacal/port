@@ -1,0 +1,19 @@
+@namespace Gallery.Web.Ui.Pages.Admin
+@inject SampleCatalog Samples
+<UiLayout Title="CoverMarker">
+    <Specimen Label="Pinned" Width="w-240">
+        <Tile Image="Samples.Landscape[0]" Sizes="240px">
+            <Caption><div class="row"><CoverMarker State="CoverState.Pinned" ImageTitle="@Samples.Landscape[0].Title" /></div></Caption>
+        </Tile>
+    </Specimen>
+    <Specimen Label="Automatic (first photo, nothing pinned)" Width="w-240">
+        <Tile Image="Samples.Landscape[1]" Sizes="240px">
+            <Caption><div class="row"><CoverMarker State="CoverState.Automatic" ImageTitle="@Samples.Landscape[1].Title" /></div></Caption>
+        </Tile>
+    </Specimen>
+    <Specimen Label="Unpinned" Width="w-240">
+        <Tile Image="Samples.Landscape[2]" Sizes="240px">
+            <Caption><div class="row"><CoverMarker State="CoverState.Unpinned" ImageTitle="@Samples.Landscape[2].Title" /></div></Caption>
+        </Tile>
+    </Specimen>
+</UiLayout>

@@ -1,0 +1,15 @@
+@namespace Gallery.Web.Ui.Pages.Admin
+<UiLayout Title="UploadDropzone">
+    <Specimen Label="Idle" Width="w-480"><UploadDropzone /></Specimen>
+    <Specimen Label="Drag-over" Width="w-480"><UploadDropzone State="DropzoneState.DragOver" /></Specimen>
+    <Specimen Label="Files refused" Width="w-480"><UploadDropzone State="DropzoneState.Refused" Refusals="_refusals" /></Specimen>
+</UiLayout>
+
+@code {
+    private static readonly IReadOnlyList<Refusal> _refusals =
+    [
+        new("IMG_2201.HEIC", "not a JPEG"),
+        new("DSC_0400.jpg", "24.6 MB, over the 20 MB limit"),
+        new("2024-07-14_Coastal-walk_from-the-north-headland-towards-the-lighthouse.png", "not a JPEG"),
+    ];
+}

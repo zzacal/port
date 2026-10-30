@@ -1,0 +1,19 @@
+@namespace Gallery.Web.Ui.Pages.Admin
+<UiLayout Title="OwnerBar">
+    <Specimen Label="Upload current, with primary action">
+        <OwnerBar Current="AdminPage.Upload">
+            <PrimaryAction><Button Variant="ButtonVariant.Primary">Add 40 photos to library</Button></PrimaryAction>
+        </OwnerBar>
+    </Specimen>
+    <Specimen Label="Library current">
+        <OwnerBar Current="AdminPage.Library" />
+    </Specimen>
+    <Specimen Label="Galleries current, viewing a gallery">
+        <OwnerBar Current="AdminPage.Galleries" ViewHref="/g/abc/coast" ViewLabel="View gallery" />
+    </Specimen>
+    <Specimen Label="Phone width" Note="Constrained to 390 px to show wrapping." Width="w-390">
+        <OwnerBar Current="AdminPage.Upload">
+            <PrimaryAction><Button Variant="ButtonVariant.Primary">Add 40 photos to library</Button></PrimaryAction>
+        </OwnerBar>
+    </Specimen>
+</UiLayout>

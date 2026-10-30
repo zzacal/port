@@ -1,5 +1,7 @@
 using Gallery.Web.Components.Admin;
 using Gallery.Web.Components.Admin.Organisms;
+using Gallery.Web.Components.Admin.Templates;
+using Gallery.Core.Images;
 using Microsoft.AspNetCore.Components;
 using System.Text.RegularExpressions;
 
@@ -177,5 +179,120 @@ public class AdminOrganismTests
         var cover = Render.Samples.Landscape[0];
         var html = await Render.Html<SignInCard>(new { Cover = cover });
         Assert.Contains("has-cover", html);
+    }
+
+    // ── BatchFooter ───────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task BatchFooter_inprogress_primary_is_disabled()
+    {
+        var html = await Render.Html<BatchFooter>(new { State = BatchState.InProgress, Total = 40, Ready = 12, Failed = 0 });
+        Assert.Contains("disabled", html);
+    }
+
+    [Fact]
+    public async Task BatchFooter_inprogress_shows_reason_text()
+    {
+        var html = await Render.Html<BatchFooter>(new { State = BatchState.InProgress, Total = 40, Ready = 12, Failed = 0 });
+        Assert.Contains("Available when every photo is ready", html);
+    }
+
+    [Fact]
+    public async Task BatchFooter_blocked_primary_is_disabled()
+    {
+        var html = await Render.Html<BatchFooter>(new { State = BatchState.Blocked, Total = 40, Ready = 38, Failed = 2 });
+        Assert.Contains("disabled", html);
+    }
+
+    [Fact]
+    public async Task BatchFooter_blocked_shows_reason_text()
+    {
+        var html = await Render.Html<BatchFooter>(new { State = BatchState.Blocked, Total = 40, Ready = 38, Failed = 2 });
+        Assert.Contains("Restart or delete the", html);
+        Assert.Contains("failed photos to continue", html);
+    }
+
+    [Fact]
+    public async Task BatchFooter_ready_primary_has_no_disabled()
+    {
+        var html = await Render.Html<BatchFooter>(new { State = BatchState.Ready, Total = 40, Ready = 40, Failed = 0 });
+        Assert.DoesNotContain("disabled", html);
+    }
+
+    // ── GalleryBuilder ────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task GalleryBuilder_dragging_renders_exactly_one_drop_slot()
+    {
+        var items = Render.Samples.Landscape.Take(4).ToList();
+        var html = await Render.Html<GalleryBuilder>(new
+        {
+            Title = "Test",
+            Items = (IReadOnlyList<ImageView>)items,
+            State = BuilderState.Dragging,
+            ActiveIndex = 1,
+            DropIndex = 3
+        });
+        var matches = Regex.Matches(html, @"class=""drop-slot""[^>]*");
+        Assert.Single(matches);
+    }
+
+    [Fact]
+    public async Task GalleryBuilder_empty_renders_library_link_and_no_contact_sheet()
+    {
+        var html = await Render.Html<GalleryBuilder>(new
+        {
+            Title = "Test",
+            Items = (IReadOnlyList<ImageView>)new List<ImageView>(),
+            State = BuilderState.Empty
+        });
+        Assert.Contains("/admin/library", html);
+        Assert.DoesNotContain("class=\"cs", html);
+    }
+
+    [Fact]
+    public async Task GalleryBuilder_at_rest_has_exactly_one_cover_pinned_tag()
+    {
+        var items = Render.Samples.Landscape.Take(4).ToList();
+        var html = await Render.Html<GalleryBuilder>(new
+        {
+            Title = "Test",
+            Items = (IReadOnlyList<ImageView>)items,
+            State = BuilderState.Rest,
+            PinnedIndex = (int?)2
+        });
+        var pinnedMatches = Regex.Matches(html, @"class=""cover-tag""[^>]*>Cover<");
+        Assert.Single(pinnedMatches);
+    }
+
+    // ── AdminLayout ───────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task AdminLayout_has_exactly_one_style_element()
+    {
+        var html = await Render.Html<AdminLayout>(new { Title = "Test" });
+        var matches = Regex.Matches(html, "<style");
+        Assert.Single(matches);
+    }
+
+    [Fact]
+    public async Task AdminLayout_has_no_script_element()
+    {
+        var html = await Render.Html<AdminLayout>(new { Title = "Test" });
+        Assert.DoesNotContain("<script", html);
+    }
+
+    [Fact]
+    public async Task AdminLayout_always_has_noindex_meta()
+    {
+        var html = await Render.Html<AdminLayout>(new { Title = "Test" });
+        Assert.Contains("noindex", html);
+    }
+
+    [Fact]
+    public async Task AdminLayout_has_owner_bar_class()
+    {
+        var html = await Render.Html<AdminLayout>(new { Title = "Test" });
+        Assert.Matches(@"class=""owner-bar""", html);
     }
 }

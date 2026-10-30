@@ -1,0 +1,10 @@
+PASS gate build: 0 warnings, 0 errors
+PASS gate tests: 227 passed in 2 assemblies
+PASS SC-001 index lists 32 pages, 18 admin
+PASS FR-009/SC-003 33 pages: 200, noindex header+meta, Server-Timing, no script, no inline style, no external CSS
+PASS contract unknown /ui/admin path -> 404
+PASS scope no /admin route mapped -> 404
+PASS SC-008 20 requests -> 20 http.request events
+PASS FR-009 Production /ui -> 404 404 404 404
+---
+ALL PASS

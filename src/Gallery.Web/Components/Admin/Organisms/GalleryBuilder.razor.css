@@ -1,0 +1,58 @@
+.builder {
+    display: grid;
+    gap: var(--space-m);
+}
+
+@media (min-width: 1200px) {
+    .builder {
+        grid-template-columns: minmax(0, 1fr) 320px;
+        align-items: start;
+    }
+}
+
+.b-empty {
+    font-size: var(--type-body);
+    color: var(--color-muted);
+}
+
+/* Drop slot: placeholder shown while dragging */
+.drop-slot {
+    aspect-ratio: var(--cell-ratio);
+    border: 2px dashed var(--color-text);
+    background: var(--color-surface);
+    border-radius: 4px;
+}
+
+/* Per-tile control row under the title (authored here, so no ::deep). */
+.b-ctl {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    margin-top: 4px;
+    min-height: 28px;
+}
+
+.b-view {
+    margin: 0;
+}
+
+/* Dragging state: dim the active tile */
+.builder ::deep .is-dragging .cell {
+    opacity: 0.35;
+}
+
+/* Keyboard lifted state: outline the active tile */
+.builder ::deep .is-lifted .cell {
+    outline: 2px solid var(--color-text);
+    outline-offset: 4px;
+}
+
+.b-grid {
+    min-width: 0;
+}
+
+.b-empty a {
+    color: var(--color-text);
+}

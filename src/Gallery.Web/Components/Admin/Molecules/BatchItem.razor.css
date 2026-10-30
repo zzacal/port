@@ -8,7 +8,8 @@
     position: relative;
     aspect-ratio: var(--cell-ratio);
     overflow: hidden;
-    background: var(--color-rule);
+    background: var(--color-surface);
+    margin-bottom: 8px;
 }
 
 .fname-ph {
@@ -24,17 +25,19 @@
     word-break: break-all;
 }
 
+/* Status sits below the cell (not over the photo) so a long reason never covers a small
+   letterboxed photo, and the grid row heights stay equal across states (browser review T032). */
 .status {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
     display: flex;
     flex-direction: column;
     gap: 6px;
-    padding: 8px;
-    background: rgba(255, 255, 255, .92);
+    min-height: 16px;
     font-size: var(--type-caption);
+}
+
+.acts {
+    display: flex;
+    gap: 8px;
 }
 
 .bar {

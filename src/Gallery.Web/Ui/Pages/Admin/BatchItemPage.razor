@@ -1,0 +1,25 @@
+@namespace Gallery.Web.Ui.Pages.Admin
+@inject SampleCatalog Samples
+<UiLayout Title="BatchItem">
+    <Specimen Label="Queued, no preview yet" Width="w-240">
+        <BatchItem FileName="DSC_0412.jpg" SizeBytes="2516582" State="BatchItemState.Queued" />
+    </Specimen>
+    <Specimen Label="Processing" Width="w-240">
+        <BatchItem FileName="DSC_0413.jpg" SizeBytes="3145728" State="BatchItemState.Processing" Preview="Samples.Landscape[0]" />
+    </Specimen>
+    <Specimen Label="Uploading 64%" Width="w-240">
+        <BatchItem FileName="DSC_0415.jpg" SizeBytes="4194304" State="BatchItemState.Uploading" Percent="64" Preview="Samples.Landscape[1]" />
+    </Specimen>
+    <Specimen Label="Succeeded" Width="w-240">
+        <BatchItem FileName="DSC_0418.jpg" SizeBytes="2516582" State="BatchItemState.Succeeded" Preview="Samples.Portrait[0]" />
+    </Specimen>
+    <Specimen Label="Failed" Width="w-240">
+        <BatchItem FileName="DSC_0420.jpg" SizeBytes="2516582" State="BatchItemState.Failed" Reason="Server rejected a size: metadata found in the 1280 px WebP" Preview="Samples.Portrait[1]" />
+    </Specimen>
+    <Specimen Label="Interrupted" Width="w-240">
+        <BatchItem FileName="DSC_0421.jpg" SizeBytes="2516582" State="BatchItemState.Interrupted" Preview="Samples.Landscape[2]" />
+    </Specimen>
+    <Specimen Label="Long file name" Width="w-240">
+        <BatchItem FileName="2024-07-14_Coastal-walk_from-the-north-headland-towards-the-lighthouse_v3-final.jpg" SizeBytes="2516582" State="BatchItemState.Queued" />
+    </Specimen>
+</UiLayout>

@@ -1,0 +1,22 @@
+@namespace Gallery.Web.Ui.Pages.Admin
+<UiLayout Title="SidePanel">
+    <Specimen Label="At rest" Width="w-320">
+        <SidePanel Heading="Photo"><Fields /></SidePanel>
+    </Specimen>
+    <Specimen Label="Saving" Width="w-320">
+        <SidePanel Heading="Photo" State="SaveState.Saving"><Fields /></SidePanel>
+    </Specimen>
+    <Specimen Label="Saved" Width="w-320">
+        <SidePanel Heading="Photo" State="SaveState.Saved"><Fields /></SidePanel>
+    </Specimen>
+    <Specimen Label="With danger area" Width="w-320">
+        <SidePanel Heading="Photo">
+            <ChildContent><Fields /></ChildContent>
+            <Danger>
+                <DangerConfirm Action="Delete image" Target="Mountain Lake"
+                               Consequence="This removes it from every gallery and deletes the original file. It can't be undone."
+                               ConfirmLabel="Delete image permanently" />
+            </Danger>
+        </SidePanel>
+    </Specimen>
+</UiLayout>

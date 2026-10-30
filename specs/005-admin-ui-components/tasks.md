@@ -132,14 +132,14 @@ report a blocker. Do not invent.
 - [X] T018 [P] [US2] SidePanel, in `Components/Admin/Organisms/SidePanel.razor` and `.razor.css`.
 - [X] T019 [P] [US2] UploadDropzone, in `Components/Admin/Organisms/UploadDropzone.razor` and
   `.razor.css`.
-- [ ] T020 [P] [US2] BatchFooter, in `Components/Admin/Organisms/BatchFooter.razor` and
+- [X] T020 [P] [US2] BatchFooter, in `Components/Admin/Organisms/BatchFooter.razor` and
   `.razor.css`.
 - [X] T021 [P] [US3] SignInCard, in `Components/Admin/Organisms/SignInCard.razor` and `.razor.css`.
-- [ ] T022 [US3] GalleryBuilder, in `Components/Admin/Organisms/GalleryBuilder.razor` and
+- [X] T022 [US3] GalleryBuilder, in `Components/Admin/Organisms/GalleryBuilder.razor` and
   `.razor.css`. Depends on T004, T011, T012, T015 and T018.
-- [ ] T023 [US3] AdminLayout, in `Components/Admin/Templates/AdminLayout.razor` and `.razor.css`.
+- [X] T023 [US3] AdminLayout, in `Components/Admin/Templates/AdminLayout.razor` and `.razor.css`.
   Modelled on `Components/Templates/PublicLayout.razor`; depends on T017.
-- [ ] T024 [US3] Add tests in `tests/Gallery.Web.Tests/AdminOrganismTests.cs`:
+- [X] T024 [US3] Add tests in `tests/Gallery.Web.Tests/AdminOrganismTests.cs`:
   - OwnerBar: current page gets `aria-current="page"` (exactly 1)
   - SidePanel: Saving makes the primary busy; Saved shows "Saved"
   - UploadDropzone: `accept="image/jpeg"`, "up to 20 MB"; Refused lists both reasons
@@ -152,45 +152,45 @@ report a blocker. Do not invent.
 
 ## Phase 6: US1 + US2 + US3 /ui pages
 
-- [ ] T025 [US1] Extend `src/Gallery.Web/Ui/UiCatalog.cs`:
+- [X] T025 [US1] Extend `src/Gallery.Web/Ui/UiCatalog.cs`:
   - add `AdminAtoms, AdminMolecules, AdminOrganisms, AdminTemplates` to `UiLevel` after
     Templates
   - append the 18 entries in contract order, with slugs per `contracts/http.md`
   - in `src/Gallery.Web/Ui/Pages/Index.razor`, render the group heading through a display-name
     switch ("Admin atoms", "Admin molecules", "Admin organisms", "Admin templates"; public levels
     unchanged)
-- [ ] T026 [US1] Update the expected count in `tests/Gallery.Web.Tests/IndexTests.cs` from 14 to
+- [X] T026 [US1] Update the expected count in `tests/Gallery.Web.Tests/IndexTests.cs` from 14 to
   32, and add the four admin headings to the heading loop. This is the ONE permitted edit to an
   existing test: a requirement change, stated in SC-004.
-- [ ] T027 [P] [US2] Admin atom and molecule pages in `src/Gallery.Web/Ui/Pages/Admin/` (10 pages:
+- [X] T027 [P] [US2] Admin atom and molecule pages in `src/Gallery.Web/Ui/Pages/Admin/` (10 pages:
   ButtonPage, InputPage, SwitchPage, SelectMarkPage, BatchItemPage, CoverMarkerPage,
   DragHandlePage, SelectionBarPage, DangerConfirmPage, VisibilityTogglePage). Each uses UiLayout
   and Specimen and shows exactly the labelled states listed for it in the contract. Use
   `Render.Samples`-equivalent injection (`@inject SampleCatalog Samples`) and the sample text in
   data-model.md. Page-only CSS (rows, overlay placement in specimens) goes in `<Page>.razor.css`.
-- [ ] T028 [P] [US3] Admin organism and template pages in `src/Gallery.Web/Ui/Pages/Admin/`
+- [X] T028 [P] [US3] Admin organism and template pages in `src/Gallery.Web/Ui/Pages/Admin/`
   (8 pages: OwnerBarPage, SidePanelPage, UploadDropzonePage, BatchFooterPage, GalleryBuilderPage,
   SignInCardPage, AdminContactSheetPage, AdminLayoutPage). AdminLayoutPage renders AdminLayout
   itself, like PublicLayoutPage. AdminContactSheetPage shows the three contract states.
-- [ ] T029 [US2] Add tests in `tests/Gallery.Web.Tests/AdminPageTests.cs`: one test per admin page
+- [X] T029 [US2] Add tests in `tests/Gallery.Web.Tests/AdminPageTests.cs`: one test per admin page
   asserting every state label from the contract appears. `AllPagesTests` already covers no-style
   and no-script for every catalogue entry.
 
 ## Phase 7: Polish and verification (high tier)
 
-- [ ] T030 Amend D-21 in `specs/001-architecture-stack-design/draft/02d-decisions-delivery.md`:
+- [X] T030 Amend D-21 in `specs/001-architecture-stack-design/draft/02d-decisions-delivery.md`:
   - admin atoms become Button, Input, Switch, SelectMark (TagChip removed)
   - admin molecules and organisms per this feature; TagEditor removed
   - AdminLayout scripts arrive with the first behaviour feature
 
   Then reassemble with `assemble.sh`, run the design `validate.sh` (0 failures), and add a
   decisions.md row in feature 001.
-- [ ] T031 Write `specs/005-admin-ui-components/evidence/verify.sh`, adapted from 003's, with the
+- [X] T031 Write `specs/005-admin-ui-components/evidence/verify.sh`, adapted from 003's, with the
   index at 32, all 33 pages, a 404 check, SC-008 (20 requests to an admin page give 20 events),
   and Production 404 for admin pages. Run it and tee to `verify-output.txt`.
-- [ ] T032 Browser review per quickstart §3 at 1440/1024/390. Record the measurements in
+- [X] T032 Browser review per quickstart §3 at 1440/1024/390. Record the measurements in
   `evidence/browser.md` and the shots in `evidence/shots/`, and fix defects.
-- [ ] T033 Write `specs/005-admin-ui-components/decisions.md`: every gap-state design choice, every
+- [X] T033 Write `specs/005-admin-ui-components/decisions.md`: every gap-state design choice, every
   default, and every executor decision. Then commit.
 
 ## Dependencies

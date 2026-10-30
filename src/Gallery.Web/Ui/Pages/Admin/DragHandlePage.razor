@@ -1,0 +1,13 @@
+@namespace Gallery.Web.Ui.Pages.Admin
+@inject SampleCatalog Samples
+<UiLayout Title="DragHandle">
+    <Specimen Label="At rest">
+        <DragHandle Label="Move Mountain Lake" State="HandleState.Rest" Position="1" Total="8" />
+    </Specimen>
+    <Specimen Label="Focused">
+        <DragHandle Label="Move Mountain Lake" State="HandleState.Focused" Position="1" Total="8" />
+    </Specimen>
+    <Specimen Label="Lifted for keyboard moving (3 of 12)">
+        <DragHandle Label="Move Mountain Lake" State="HandleState.Lifted" Position="3" Total="12" />
+    </Specimen>
+</UiLayout>

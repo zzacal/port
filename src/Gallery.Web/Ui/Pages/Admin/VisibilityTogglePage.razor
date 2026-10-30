@@ -1,0 +1,13 @@
+@namespace Gallery.Web.Ui.Pages.Admin
+@inject SampleCatalog Samples
+<UiLayout Title="VisibilityToggle">
+    <Specimen Label="Private">
+        <VisibilityToggle Public="false" GalleryTitle="Coast, winter" PhotoCount="24" Warning="false" />
+    </Specimen>
+    <Specimen Label="Public">
+        <VisibilityToggle Public="true" GalleryTitle="Coast, winter" PhotoCount="24" Warning="false" />
+    </Specimen>
+    <Specimen Label="Publish warning">
+        <VisibilityToggle Public="false" GalleryTitle="Coast, winter" PhotoCount="24" Warning="true" />
+    </Specimen>
+</UiLayout>
