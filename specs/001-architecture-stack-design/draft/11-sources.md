@@ -23,9 +23,8 @@ URLs below are the fetched pages, grouped by note.
 
 ### st: research-notes/storage-datastore.md
 
-The R2 entries (st Q1 to Q6) record the storage option that was replaced by Azure Blob in
-constitution 3.0.0. They are kept as part of the evidence trail. The Atlas entries (st Q7 to Q10)
-are current.
+The R2 entries (st Q1 to Q6, Q11, Q12) are current again since constitution 4.0.0 moved image
+storage back to R2. The Atlas entries (st Q7 to Q10) are current.
 
 - [st] https://developers.cloudflare.com/r2/pricing/
 - [st] https://developers.cloudflare.com/r2/buckets/public-buckets/
@@ -36,6 +35,8 @@ are current.
 - [st] https://www.mongodb.com/docs/atlas/reference/microsoft-azure/
 - [st] https://www.mongodb.com/docs/atlas/backup/cloud-backup/free-cluster-backup/
 - [st] https://developers.cloudflare.com/r2/buckets/cors/
+- [st] https://developers.cloudflare.com/r2/api/tokens/
+- [st] https://developers.cloudflare.com/cache/interaction-cloudflare-products/r2/
 
 ### br: research-notes/browser-encoding.md
 

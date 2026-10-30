@@ -23,9 +23,9 @@
 
 ### R-04: Unlisted is not secret — private derivative addresses are reachable
 
-**Failure**: Anyone holding a derivative address of a library-only or private-gallery image can view it; anonymous read must be enabled on the `public` container for the Cloudflare edge to fetch, so the raw `blob.core.windows.net` URL is also publicly readable (spec Assumptions; FR-012; research R-04).
+**Failure**: Anyone holding a derivative address of a library-only or private-gallery image can view it on `img.<domain>`, because the `public` bucket serves every object it holds (spec Assumptions; FR-012; D-19).
 **Detection**: No server-side record of direct URL access exists; exposure of a derivative address cannot be detected retroactively.
-**Recovery**: No recovery path within the system; derivative names are unguessable content hashes (decisions #9) and the app never emits raw blob URLs (research R-04).
+**Recovery**: No recovery path within the system; derivative names are unguessable content hashes (decisions #9). Since constitution 4.0.0 there is no second address: the r2.dev URL is disabled and the R2 S3 endpoint needs a credential (III.9), so the only way in is `img.<domain>`, which the zone's security rules cover.
 **Reversal cost**: High after launch — derivative addresses are content-hash URLs embedded in the edge cache and in any previously shared links; changing the addressing scheme requires re-generating all derivatives with new names (decisions #9).
 
 ### R-05: 30-day log retention — audit events and timing evidence expire
@@ -35,12 +35,12 @@
 **Recovery**: No recovery of expired or dropped logs; the 150 MB daily cap and 5 GB monthly free allowance keep normal-traffic days from hitting the cap, so drops are rare (research R-09; decisions #4).
 **Reversal cost**: Low — retention can be extended up to 90 days at no extra cost; the daily cap can be raised; the exporter can be switched to a longer-retention service at any time (decisions #4).
 
-### R-06: Cloud Connector is beta — image delivery may require Worker fallback
+### R-06: Stored R2 credential — masters readable if it leaks
 
-**Failure**: If Cloudflare changes or withdraws Cloud Connector, image delivery via `img.<domain>` fails until the Worker fallback is activated (spec Assumptions; research R-04).
-**Detection**: Image requests to `img.<domain>` return errors; the Cloudflare dashboard shows the Cloud Connector route as inactive or unavailable (research R-04).
-**Recovery**: The Worker fallback is about 20 lines of code and is free up to 100,000 requests per day; it is pre-designed as the alternative route and does not change image URLs (decisions #5; research R-04).
-**Reversal cost**: Low — switching to the Worker fallback requires a single zone configuration change and no URL changes (decisions #5).
+**Failure**: The app holds an R2 token with Object Read and Write on both buckets. Anyone who obtains it can read every master and staged upload, and can overwrite or delete objects, until the token is rotated (Constitution 4.0.0, III.9; decisions #34).
+**Detection**: Unexpected Class B operations or storage changes on the Cloudflare R2 metrics page; masters or derivatives missing or altered.
+**Recovery**: Roll the token in the Cloudflare dashboard and update the app's configuration; derivatives can be regenerated from masters only by re-uploading. The token cannot reach account settings, the zone, or other buckets (III.9).
+**Reversal cost**: Low — R2 temporary credentials or a Worker binding can replace the stored token later without changing object keys or URLs.
 
 ### R-07: client-generated derivatives — metadata leak if admin page has a bug
 

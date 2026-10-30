@@ -149,3 +149,27 @@ _Covers Cloudflare R2 and MongoDB Atlas Free (formerly M0) tier facts for a sing
 2. **Q9 — Multi-document transaction size/time limits on Free clusters**: The limits page does not call out transaction-specific caps for Free clusters, but Free clusters do have a 100 ops/second throttle and 32 MB sort memory limit which may indirectly constrain large transactions. No explicit documentation found confirming or denying a max transaction lifetime setting on Free clusters (M10+ allows configuring this).
 
 3. **Q3 — CORS configuration syntax**: The CORS page was identified but not fully extracted. The structure of the CORS JSON (`AllowedOrigins`, `AllowedMethods`, `AllowedHeaders`, `MaxAgeSeconds`) follows AWS S3 convention; confirm via https://developers.cloudflare.com/r2/buckets/cors/ for exact R2-specific fields.
+
+---
+
+## Q11: R2 API token scope (added for constitution 4.0.0)
+
+**Answer:** An R2 API token with Object Read & Write or Object Read permission can be scoped to a set of buckets. It yields an S3 Access Key ID and Secret Access Key. Admin permissions cover bucket configuration and are not bucket-scoped.
+
+**Source:** https://developers.cloudflare.com/r2/api/tokens/
+
+**Quote:** "(Optional) If you select the **Object Read and Write** or **Object Read** permissions, you can scope your token to a set of buckets." and "Object Read & Write | Allows the ability to read, write, and list objects in specific buckets."
+
+**Fetch: OK** (2026-10-30)
+
+---
+
+## Q12: R2 custom domain, r2.dev, and the cache (added for constitution 4.0.0)
+
+**Answer:** R2 buckets are private by default. A custom domain on a zone in the same account makes the bucket public through Cloudflare's cache; Smart Tiered Cache puts the upper tier next to the bucket. The r2.dev URL is independent of the custom domain and can be disabled. Custom-domain access does not require r2.dev.
+
+**Source:** https://developers.cloudflare.com/r2/buckets/public-buckets/ and https://developers.cloudflare.com/cache/interaction-cloudflare-products/r2/
+
+**Quote:** "Enabling custom domains does not require enabling `r2.dev` access." and "Disabling public development URL access removes your bucket's exposure through the `r2.dev` subdomain." and "By default, R2 buckets are private. To serve R2 objects through Cloudflare's cache, you need to attach a domain name you control — called a Custom Domain — to the bucket."
+
+**Fetch: OK** (2026-10-30)

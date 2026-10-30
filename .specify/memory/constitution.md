@@ -1,27 +1,33 @@
 <!--
 Sync Impact Report
-- Version change: 2.0.0 → 3.0.0 (MAJOR)
-- Rationale: The owner's hosting interview (feature 001) replaced R2 with Azure Blob Storage, kept
-  masters permanently, and moved logs to Application Insights. Withdrawn guarantee, verbatim from
-  VIII.1: "Every other component MUST use a free tier or free offering unless an amendment raises
-  the ceiling." The site may now incur metered spend beyond the B1 plan. The replacement control is
-  a hard monthly cap ($10) with a budget alert ($7) and a per-item cost table (VIII.1, VIII.4).
+- Version change: 3.0.0 → 4.0.0 (MAJOR)
+- Rationale: The owner moved image storage from Azure Blob Storage to Cloudflare R2 and chose to
+  build locally until hosting is decided (2026-10-30). Withdrawn guarantee, verbatim from Platform
+  Constraints: "The app reaches storage by managed identity (no account keys)." The app now holds a
+  stored R2 credential; if it leaks, the private masters can be read until it is rotated. The
+  replacement controls are the new rule III.9 (bucket-scoped credential, never in source control
+  or the browser, single-object presigned uploads of 15 minutes or less, no public path to the
+  private bucket, no r2.dev URL). III.9 is now the entire protection for the masters at rest.
   Per Governance, a withdrawn guarantee is MAJOR.
-- Modified principles:
-  VIII. Fixed Cost Ceiling → VIII. Cost Ceiling (rule 1 redefined; rule 3 reworded; rule 4 added)
+- Modified principles: III. Published Images Leak Nothing (rule 9 added).
 - Modified sections:
-  Platform Constraints (Identity session lifetime; image storage = Azure Blob via Cloudflare Cloud
-  Connector; new Observability bullet)
-  Development Workflow (integration tests use an Azure Blob emulator instead of S3-compatible storage)
+  Platform Constraints (Image storage = Cloudflare R2, two buckets; Image delivery = R2 custom
+  domain through the Cloudflare cache; the Cloud Connector and Worker fallback are removed)
+  Development Workflow (integration tests use an S3-compatible storage emulator instead of Azurite)
+- Unchanged on purpose: Hosting (App Service B1), Data (Atlas), Observability (Application
+  Insights), and VIII.1's Azure budget alert. Hosting is under review; local development does not
+  conflict with them. Known gap until hosting is decided: R2 spend is billed by Cloudflare, so
+  the Azure budget alert in VIII.1 does not see it.
 - Added sections: none
 - Removed sections: none
 - Templates requiring updates: none (templates read the constitution at runtime).
-- Prior specs swept: specs/001-architecture-stack-design/spec.md, where the logging clarification,
-  FR-020, US4, SC-004, and Assumptions are annotated or updated in place.
+- Prior specs swept: specs/001-architecture-stack-design/spec.md (storage clarifications and the
+  Cloud Connector assumption) and research.md (R-02, R-04, R-05, dependency table) are annotated
+  in place.
 - Deferred TODOs: none
-- History: 1.0.0 initial ratification, I–VIII. 1.1.0 expanded IV (perceived performance) and made
-  II "private = unlisted". 2.0.0 (MAJOR) redefined III.2 for client-generated derivatives plus
-  server validation III.5–III.8. All dated 2026-10-27.
+- History: 1.0.0 initial ratification. 1.1.0 perceived performance, private = unlisted. 2.0.0
+  client-generated derivatives with server validation. 3.0.0 Azure Blob replaced R2, masters kept,
+  $10 metered cap. All dated 2026-10-27.
 -->
 
 # Gallery Constitution
@@ -89,12 +95,19 @@ kept because they are what make links survive renames.
    reported by the client MUST NOT be used.
 8. The origin server MUST NOT decode or encode image pixels. It parses only headers and metadata
    structures, which keeps image work off the fixed-cost host (Principle VIII).
+9. Masters and staged uploads MUST be stored only in a private bucket with no public access of any
+   kind. The application's storage credential MUST be limited to object read and write on the
+   image buckets (never account or admin scope), MUST come from configuration outside source
+   control, and MUST NOT reach the browser. The browser receives only presigned URLs, each for one
+   object and one method (PUT), expiring in 15 minutes or less. The public bucket MUST be
+   reachable only through the image hostname; its development URL (r2.dev) MUST be disabled.
 
 Rationale: photo exports routinely carry home location and serial numbers; an allowlist is the
 only approach that stays safe as camera vendors add fields. Since 2.0.0 derivatives are made in
 the owner's browser, so rules 5–7 are the entire remaining protection against leaking metadata.
 They are blocking acceptance criteria, never follow-up work. A test MUST prove that a derivative
-with embedded GPS is rejected.
+with embedded GPS is rejected. Since 4.0.0 the masters are protected by a stored credential
+rather than a managed identity, so rule 9 is the entire protection for them at rest.
 
 ### IV. Performance: Measured and Perceived
 
@@ -221,15 +234,14 @@ These are binding inputs to every plan:
 - Identity: Google OIDC, with a cookie session that has a 7-day sliding expiry (renewed while it
   is in use).
 - Data: MongoDB (Atlas free tier, same region as the app).
-- Image storage: Azure Blob Storage (general-purpose v2, LRS, same region as the app) behind a
-  storage abstraction. It has two containers. The public derivatives container is in the Hot tier
-  and is anonymous read only through the edge. The private masters container is in the Cool tier,
-  and masters are kept permanently. The app reaches storage by managed identity (no account keys).
-  Uploads use short-lived SAS tokens.
-- Image delivery: derivatives are served on a custom image hostname through Cloudflare Cloud
-  Connector to the public container. If Cloud Connector is unavailable on the zone, a Cloudflare
-  Worker on the free plan fetches from the container instead. Browsers never fetch directly from
-  the Blob endpoint.
+- Image storage: Cloudflare R2, in the same Cloudflare account as the zone, behind a storage
+  abstraction. It has two buckets. The public bucket holds derivatives and is reachable only through
+  the image hostname. The private bucket holds staged uploads and masters, and masters are kept
+  permanently. The app reaches R2 with a bucket-scoped credential (III.9). Uploads use short-lived
+  presigned URLs.
+- Image delivery: derivatives are served on a custom image hostname attached to the public bucket
+  as an R2 custom domain, through the Cloudflare cache. Browsers never fetch from the R2 S3
+  endpoint or an r2.dev URL.
 - Observability: workspace-based Azure Application Insights, with 30-day retention and a daily
   ingestion cap that keeps it inside the free monthly allowance (VIII.4).
 - The app MUST honor forwarded headers from Cloudflare (scheme, client IP via
@@ -244,9 +256,8 @@ These are binding inputs to every plan:
   lower-cost executor; design decisions are escalated, never made by executors.
 - Build and test gates are run independently before work is accepted; existing tests MUST pass
   unmodified unless a requirement change is stated.
-- Integration tests run against real Mongo and an Azure Blob Storage emulator (Azurite) in
-  containers, and every
-  feature ends with a live-server walkthrough.
+- Integration tests run against real Mongo and an S3-compatible storage emulator in containers,
+  and every feature ends with a live-server walkthrough.
 - Each feature keeps a `decisions.md` log (decision, rationale, pivot cost).
 
 ## Governance
@@ -260,4 +271,4 @@ These are binding inputs to every plan:
   place, not silently edited.
 - Every plan and analyze pass verifies compliance and cites principles by number.
 
-**Version**: 3.0.0 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-10-27
+**Version**: 4.0.0 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-10-30

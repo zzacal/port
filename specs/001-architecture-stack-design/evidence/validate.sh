@@ -140,7 +140,7 @@ else fail C7 "header=$okh fixed=$fixed metered=${mval:-none} services_missing=${
 # ---------- C8 risks ----------
 nR=$(cnt '^### R-[0-9][0-9]: ')
 bad=""
-for kw in "claim token" "backups" "log retention" "unlisted" "browser cache" "client-generated" "Cloud Connector"; do
+for kw in "claim token" "backups" "log retention" "unlisted" "browser cache" "client-generated" "credential"; do
   grep -E '^### R-[0-9][0-9]: ' "$DOC" | grep -qiF "$kw" || bad="$bad [$kw]"
 done
 detail="R=$nR"; okf=1

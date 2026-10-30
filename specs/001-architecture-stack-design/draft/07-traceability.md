@@ -18,7 +18,8 @@ can only be checked once the resource exists.
 | II.3 | D-14, D-07: 128-bit base32 ids; content-hash derivative names | integration test: ids are 26-char base32 and differ across titles | designed |
 | II.4 | D-14: `/g/{id}/{slug}`, stale slug 301s to current | integration test: renamed gallery old URL returns 301 to new URL | designed |
 | II.5 | D-14, D-13: galleries default private; upload and edit never change visibility | integration test: new gallery and confirmed batch leave visibility private | designed |
-| III.1 | D-07: masters in the `private` Cool container, no anonymous access, no route serves them | config check: `private` container access level is off; route inventory has no master route | designed |
+| III.1 | D-07: masters in the `private` R2 bucket, no public access, no route serves them | config check: `private` bucket has no custom domain and no r2.dev URL; route inventory has no master route | designed |
+| III.9 | D-07, D-08, D-19: private bucket, bucket-scoped Object Read and Write token from configuration, presigned PUT per object for 15 minutes or less, r2.dev disabled | integration test: a presigned URL allows only PUT on its own key and expires; config check: token scope and bucket public-access settings; markup assertion that no credential or S3 endpoint appears in served HTML or script | designed |
 | III.2 | D-09, D-10: visitors receive only client-generated, server-validated derivatives | integration test: only validated derivatives are copied to `public` on confirm | designed |
 | III.3 | D-10: camera allowlist extracted at upload; derivatives carry no metadata | integration test: rendered camera fields equal the allowlist subset | designed |
 | III.4 | D-09: `createImageBitmap` applies orientation before encoding | browser measurement: rotated-EXIF fixture produces upright derivatives | designed |
@@ -64,7 +65,7 @@ can only be checked once the resource exists.
 | PC.3 | D-02: Cloudflare proxy, cache, Full (strict) TLS | config check: zone SSL mode is Full (strict) | deferred:first-build-feature |
 | PC.4 | D-04: Google OIDC, `__Host-` cookie with 7-day sliding expiry | integration test: session cookie attributes and expiry | designed |
 | PC.5 | D-05: Atlas Free in a Free-eligible Azure region next to the app | config check: cluster tier and region | deferred:first-build-feature |
-| PC.6 | D-07, D-08: GPv2 LRS, `public` Hot and `private` Cool, managed identity, SAS uploads | config check: container tiers and access levels; no account key in app settings | deferred:first-build-feature |
-| PC.7 | D-16, D-19: `img.<domain>` through Cloud Connector, Worker fallback | config check: image hostname route; markup assertion that no raw Blob URL is emitted | deferred:first-build-feature |
+| PC.6 | D-07, D-08: R2 `public` and `private` buckets, bucket-scoped credential, presigned uploads | config check: bucket access settings and token scope | deferred:first-build-feature |
+| PC.7 | D-16, D-19: `img.<domain>` as the R2 custom domain through the Cloudflare cache | config check: custom domain attached and r2.dev disabled; markup assertion that no R2 endpoint URL is emitted | deferred:first-build-feature |
 | PC.8 | D-12: workspace-based Application Insights, 30-day retention, daily cap | config check: retention and daily cap settings | deferred:first-build-feature |
 | PC.9 | D-03: forwarded headers from `CF-Connecting-IP`, Cloudflare ranges as known networks | integration test: logged client IP equals `CF-Connecting-IP` | designed |

@@ -6,7 +6,7 @@
 **Choice**: Azure App Service Linux B1 with Always On enabled, running .NET 10 minimal APIs.
 **Rationale**: Platform Constraints (v3.0.0) fix the hosting tier to Azure App Service Linux B1 and the runtime to .NET 10 minimal APIs; Constitution VIII.1 bounds the fixed recurring cost to one B1 plan; Always On prevents the Atlas cluster from pausing after 30 days of zero connections (research R-08; research R-03).
 **Alternatives**: None; the hosting tier and runtime are binding Platform Constraints (v3.0.0) with no alternative configurations evaluated in this design.
-**Pivot cost**: high: changing the hosting tier or runtime requires a constitution amendment, re-provisioning the managed identity and access restrictions, and re-validating all cost projections.
+**Pivot cost**: high: changing the hosting tier or runtime requires a constitution amendment, re-provisioning the access restrictions, and re-validating all cost projections.
 
 ### D-02: Cloudflare Free in Full (Strict) TLS Mode with Origin CA
 **Area**: edge-dns-tls
@@ -38,7 +38,7 @@
 **Choice**: One MongoDB Atlas Free cluster in a Free-eligible Azure region co-located with the App Service; Always On keeps a persistent connection open so the cluster never pauses after 30 days of inactivity (research R-03; [st Q7], [st Q10]).
 **Rationale**: Platform Constraints (v3.0.0) specify MongoDB Atlas free tier in the same Azure region as the app; Constitution VIII.1 requires free tiers wherever one covers the need. The Free cluster supports transactions and unique indexes; at 5,000 images the document store occupies about 15 MB, which is 3% of the 0.5 GB quota; the 100 ops/s limit and 10 GB per 7 days of transfer are comfortable at the stated scale (research R-03; [st Q7], [st Q10]).
 **Alternatives**: None; MongoDB Atlas Free is a binding Platform Constraint (v3.0.0) with no alternative datastores evaluated in this design.
-**Pivot cost**: medium: migrating to a different datastore requires updating the data-access layer, rewriting all queries, and performing a live data migration, though image files in Blob Storage are unaffected.
+**Pivot cost**: medium: migrating to a different datastore requires updating the data-access layer, rewriting all queries, and performing a live data migration, though image files in R2 are unaffected.
 
 ### D-06: Built-In Antiforgery for Forms and Header Token for JSON Endpoints
 **Area**: csrf

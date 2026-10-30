@@ -108,35 +108,35 @@ stateDiagram-v2
     open --> discarded : always allowed — all staged keys are deleted (FR-029)
 ```
 
-On confirm, each item's derivatives and master are copied out of staging (see the Blob Layout
+On confirm, each item's derivatives and master are copied out of staging (see the Storage Layout
 section below), its Image document is created, and the batch is marked confirmed. A confirm that
 crashes partway through can be re-run (D-11).
 
-### Blob Layout
+### Storage Layout
 
-There is one storage account with two containers (D-07). Only `public` allows anonymous read and is
-served to visitors as `img.<domain>` through Cloud Connector.
+There are two R2 buckets (D-07). Only `public` is reachable from outside, and only as
+`img.<domain>` (D-19). Keys below are `bucket/key`.
 
 ```
-private/staging/{batchId}/{itemId}/{attemptId}/master.jpg         Cool; replaced on confirm by:
-private/masters/{imageId}.jpg                                     Cool; kept permanently
-private/staging/{batchId}/{itemId}/{attemptId}/{w}.{avif|webp}    Hot; deleted after confirm
-public/{sha256-16hex}.{avif|webp}                                 Hot; immutable (IV.21)
+private/staging/{batchId}/{itemId}/{attemptId}/master.jpg         replaced on confirm by:
+private/masters/{imageId}.jpg                                     kept permanently; Infrequent Access after 30 days
+private/staging/{batchId}/{itemId}/{attemptId}/{w}.{avif|webp}    deleted after confirm
+public/{sha256-16hex}.{avif|webp}                                 immutable (IV.21)
 ```
 
 Derivative names are content hashes, so their addresses are unguessable and content-addressed
-(II.3, FR-011). They are uploaded with blob property
+(II.3, FR-011). They are stored with object metadata
 `Cache-Control: public, max-age=31536000, immutable`, which the edge respects.
 
 On confirm, for each item:
 
-1. Copy the staged derivatives into `public/`.
+1. Copy the staged derivatives into the `public` bucket.
 2. Copy the master into `private/masters/`.
-3. Delete the staged blobs.
+3. Delete the staged objects.
 
-These are same-account server-side copies. The confirm step is idempotent per item.
+These are server-side copies inside R2. The confirm step is idempotent per item.
 
-A lifecycle policy deletes `private/staging/` blobs 7 days after creation. This is the backstop
+A lifecycle rule deletes `private/staging/` objects 7 days after creation. This is the backstop
 sweep for orphaned files (FR-030).
 
 Deleting an image (FR-013) deletes `private/masters/{imageId}.jpg` and every `public/` derivative,

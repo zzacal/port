@@ -29,12 +29,12 @@
 - Q: What is the upload size limit? → A: 20 MB per JPEG.
 - Q: Where are derivatives produced? → A: On the owner's side, not on the server. The admin page's browser decodes, orients, resizes, and encodes the full derivative ladder and the placeholder, then uploads them with the master. A local native worker on the owner's machine was the alternative; it is rejected as the default (see FR-023). The image library is the plan's choice, and it only has to do the job. (This drove the constitution amendment to 2.0.0: III.2 was redefined and III.5–III.8 added.)
 - Q: What happens to unfinished or interrupted image processing? → A: Every image that fails or is interrupted gets two explicit buttons, Restart and Delete, so the next step is never ambiguous. The owner cannot confirm an upload batch until every image in it has succeeded or the failed ones have been deleted.
-- Q: Where do the public derivatives live? → A: Azure Blob Storage (hosting interview; this replaces the constitution's earlier R2 default).
-- Q: Where do the original JPEGs live? → A: In the same Azure Blob Storage account, private, kept permanently. A small monthly bill is accepted.
+- Q: Where do the public derivatives live? → A: ~~Azure Blob Storage (hosting interview; this replaces the constitution's earlier R2 default).~~ **AMENDED by constitution 4.0.0 (2026-10-30)**: images moved to Cloudflare R2; see D-07, D-08, D-19.
+- Q: Where do the original JPEGs live? → A: ~~In the same Azure Blob Storage account,~~ private, kept permanently. A small monthly bill is accepted. **AMENDED by constitution 4.0.0 (2026-10-30)**: images moved to Cloudflare R2; see D-07, D-08, D-19.
 - Q: How does the owner sign in? → A: Google sign-in, with a session that lasts 7 days and is extended while in use.
 - Q: Where do the logs go, and for how long? → A: Azure Application Insights, kept for 30 days.
-- Q: How do visitors' image requests reach Blob Storage? → A: Through Cloudflare Cloud Connector. If it is not available on the zone, a Cloudflare Worker is the fallback.
-- Q: Which storage tier do the originals use? → A: Cool.
+- Q: How do visitors' image requests reach Blob Storage? → A: ~~Through Cloudflare Cloud Connector. If it is not available on the zone, a Cloudflare Worker is the fallback.~~ **AMENDED by constitution 4.0.0 (2026-10-30)**: images moved to Cloudflare R2; see D-07, D-08, D-19.
+- Q: Which storage tier do the originals use? → A: ~~Cool.~~ **AMENDED by constitution 4.0.0 (2026-10-30)**: R2 Infrequent Access after 30 days (D-07).
 - Q: What monthly cap applies to metered spend beyond the B1 plan? → A: $10 a month, with a budget alert at $7. This drove the constitution amendment to 3.0.0 (VIII.1 redefined).
 
 ## User Scenarios & Testing *(mandatory)*
@@ -218,7 +218,7 @@ These entities are designed by this feature, not implemented.
 - Accepted risk, deletion is not instant everywhere: a deleted image's derivatives can persist in visitors' browser caches for up to the immutable-cache lifetime. Hard delete has no undo; recovery is re-uploading from local exports.
 - Accepted risk, unlisted is not secret: anyone holding a derivative address of a library-only or private-gallery image can view it (FR-012).
 - Accepted risk, 30-day log retention: timing evidence and audit events older than 30 days are gone, and the claim event in particular must be checked within that window. When the daily ingestion cap is hit, logs stop being ingested for the rest of that day.
-- Accepted risk, Cloud Connector is beta: if Cloudflare changes or withdraws it, image delivery falls back to a Worker, which is about 20 lines of code and free up to 100,000 requests a day.
+- ~~Accepted risk, Cloud Connector is beta: if Cloudflare changes or withdraws it, image delivery falls back to a Worker, which is about 20 lines of code and free up to 100,000 requests a day.~~ **AMENDED by constitution 4.0.0 (2026-10-30)**: Cloud Connector is no longer used; this risk is replaced by the stored-credential risk (design R-06).
 - The assumed scale for cost projections is a personal site: about 5,000 library images, about 50 galleries, and low thousands of visitor page views a month. The design states this explicitly so the cost table can be checked against it.
 - In-browser processing, planning input only: the browser uses its own decoding and resizing where it can. AVIF is a modern image format that is about 30–50% smaller than JPEG at the same quality and is supported by all current browsers; no browser can encode it natively, so AVIF (and WebP on browsers that can't encode WebP) needs a WebAssembly encoder library, chosen and justified in the plan (Constitution V.2). The admin page may require JavaScript (Constitution V.3).
 - Default: uploading is supported from current desktop browsers. Mobile browsers may refuse large images because of their canvas size limits; that is acceptable and is reported per file (edge cases).
