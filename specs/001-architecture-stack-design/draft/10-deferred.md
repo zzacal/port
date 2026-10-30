@@ -1,17 +1,12 @@
 ## 10. Deferred to Later Features
 
-This design decides *what* and *why*. The items below are owned by the first build feature
-(FR-022) or are facts that can only be confirmed at provisioning time. None of them reopens a
+This design decides *what* and *why*. The items below are owned by build features (FR-022; order and
+ownership in `docs/roadmap.md`) or are facts that can only be confirmed at provisioning time. None of them reopens a
 decision. If one turns out differently than assumed, the dependent decision is updated here first
 (Constitution VII.2).
 
-- **Provisioning**: creating the App Service plan, the storage account and containers, the
-  Application Insights resource, the Atlas cluster, and the Cloudflare zone settings. Depends on
-  D-01, D-02, D-05, D-07, and D-12.
-- **Deployment and CI/CD**: build, test, and release pipeline, and how the app reaches App
-  Service. Depends on D-01.
-- **Infrastructure-as-code**: whether and how resources are scripted. Scaffolding uses the official
-  CLIs (`az`, `wrangler`, `dotnet new`) per Constitution VI. Depends on D-01, D-07, and D-16.
+- **Provisioning, infrastructure-as-code, and deployment**: decided as D-24 (OpenTofu) and D-25
+  (GitHub Actions). Applying them is owned by the walking-skeleton feature in `docs/roadmap.md`.
 - **Application scaffolding**: `dotnet new` solution and projects, `dotnet add package` for the
   packages justified in research.md (Constitution VI, V.2). Depends on D-01 and D-10.
 - **Verify unit prices**: B1 for the chosen region, Blob Hot and Cool storage and operations, and

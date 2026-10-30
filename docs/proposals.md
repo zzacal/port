@@ -71,7 +71,7 @@ Rejected:
 
 ## P-02: Infrastructure as code
 
-**Status**: proposed (2026-10-27)
+**Status**: accepted (2026-10-30): now D-24 in docs/design.md, option A with OpenTofu; state moved to its own storage account
 **Resolves**: design.md section 10, "Provisioning" and "Infrastructure-as-code"
 
 ### Resources to provision
@@ -166,7 +166,7 @@ credentials stay on the owner's machine and never reach the app.
 
 ## P-03: Deployment pipeline
 
-**Status**: proposed (2026-10-27)
+**Status**: accepted (2026-10-30): now D-25 in docs/design.md
 **Resolves**: design.md section 10, "Deployment and CI/CD"
 
 The pipeline is GitHub Actions. It signs in to Azure with OIDC federation, so no stored
