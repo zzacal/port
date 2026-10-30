@@ -31,12 +31,12 @@
 
 ## Notes
 
-- Deliberate exceptions to "no implementation details": FR-002 names the .NET SDK and FR-003 the
-  official CLIs, because the owner asked for both explicitly and Constitution VI binds them. FR-005
-  names the macOS port-5000 conflict as a concrete constraint. All other stack choices (Mongo,
-  Azurite, Docker Compose, Testcontainers, xUnit, global.json) are in Assumptions as planning inputs.
-- Blocking prerequisite found during specify: installed SDK 10.0.103 is older than the latest
-  released SDK 10.0.403. .NET 11 is RC only and excluded. The SDK update must happen before
-  implementation.
-- Scope decision: this feature accepts proposal P-01 only. P-02 and P-03 stay proposed.
-- Validation passed on the first iteration; zero clarification markers used.
+- Deliberate exceptions to "no implementation details": FR-003 names the .NET SDK and FR-004 the
+  official CLIs, because the owner asked for both explicitly and Constitution VI binds them.
+- Scope cut (owner correction, 2026-10-27): projects only, no added dependencies. 14 FRs became 6,
+  6 SCs became 4, 3 user stories became 2, and Key Entities were removed. Removed: local services,
+  configuration, health address, request timing and Server-Timing, the integration-test harness,
+  and the README section. data-model.md and contracts/ were deleted.
+- Carry-forward: the first feature with a real endpoint owns the IV.1–IV.3 instrumentation (plan,
+  Constitution Check).
+- Validation re-run after the cut: all items pass, with no clarification markers.
