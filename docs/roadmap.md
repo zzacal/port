@@ -101,6 +101,13 @@ ingestion and saved queries, edge HTML caching and page purge (D-16 edge side), 
 window on first deploy (R-01). It can start at any point. 007 is the latest sensible point,
 because R-01 only exists once `/admin` is public.
 
+The app stays .NET (owner, 2026-10-30), so the host must run a .NET container or runtime.
+Candidates to compare with real numbers then: Azure App Service in a subscription only the owner
+controls; Cloudflare Containers (same account as R2 and DNS, origin unreachable except through a
+Worker, $5/month Workers Paid plus usage, but it sleeps when idle and .NET cold starts cost
+seconds); Fly.io; and a VPS behind Cloudflare Tunnel. Workers and Pages alone are ruled out
+because they don't run .NET.
+
 ## Not a feature
 
 - **Cost cap (D-18, E-19)**: configuration owned by the hosting feature. Until then, the only
