@@ -1,0 +1,15 @@
+sdk: 10.0.403
+PASS SC-001 build: 0 warnings, 0 errors
+PASS SC-002 both test assemblies passed
+PASS FR-005 src/Gallery.Web/Gallery.Web.csproj has 0 PackageReference
+PASS FR-005 src/Gallery.Core/Gallery.Core.csproj has 0 PackageReference
+PASS FR-005 tests/Gallery.Core.Tests/Gallery.Core.Tests.csproj template packages only
+PASS FR-005 tests/Gallery.Web.Tests/Gallery.Web.Tests.csproj template packages only
+PASS FR-002 Gallery.Core has no project references
+PASS SC-003 older/missing SDK rejected, names 10.0.404
+PASS SC-001 fresh scaffold re-run builds: 0 warnings, 0 errors
+---
+failures: 0
+
+T012 / SC-004 (run separately, live server): GET http://localhost:5080/ returned 'Hello World!'. App log: Now listening on: http://localhost:5080
+T010: template chose http://localhost:5080, not 5000, so launchSettings.json was not edited.

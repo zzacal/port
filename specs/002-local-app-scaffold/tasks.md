@@ -23,10 +23,10 @@ do NOT edit template output, except for the single port value in T010 and only i
 
 **Purpose**: Confirm the SDK, pin it, and create the repository-level generated files.
 
-- [ ] T001 Verify `dotnet --list-sdks` includes `10.0.403`. If it doesn't, stop and report; do not install anything.
-- [ ] T002 Create `global.json` at the repo root with `dotnet new globaljson --sdk-version 10.0.403 --roll-forward latestPatch`, then confirm `dotnet --version` prints `10.0.403` (research R-01).
-- [ ] T003 Regenerate `.gitignore` at the repo root, keeping the existing entry: `cp .gitignore /tmp/gallery.gitignore.bak && dotnet new gitignore --force && cat /tmp/gallery.gitignore.bak >> .gitignore`. Then confirm `.gitignore` still contains `.specify/feature.json` and now contains `[Bb]in/` and `[Oo]bj/` (research R-03).
-- [ ] T004 Create `Gallery.slnx` at the repo root with `dotnet new sln --format slnx -n Gallery`.
+- [X] T001 Verify `dotnet --list-sdks` includes `10.0.403`. If it doesn't, stop and report; do not install anything.
+- [X] T002 Create `global.json` at the repo root with `dotnet new globaljson --sdk-version 10.0.403 --roll-forward latestPatch`, then confirm `dotnet --version` prints `10.0.403` (research R-01).
+- [X] T003 Regenerate `.gitignore` at the repo root, keeping the existing entry: `cp .gitignore /tmp/gallery.gitignore.bak && dotnet new gitignore --force && cat /tmp/gallery.gitignore.bak >> .gitignore`. Then confirm `.gitignore` still contains `.specify/feature.json` and now contains `[Bb]in/` and `[Oo]bj/` (research R-03).
+- [X] T004 Create `Gallery.slnx` at the repo root with `dotnet new sln --format slnx -n Gallery`.
 
 ---
 
@@ -34,7 +34,7 @@ do NOT edit template output, except for the single port value in T010 and only i
 
 **Purpose**: Create the class library, which both stories reference.
 
-- [ ] T005 Create `src/Gallery.Core/Gallery.Core.csproj` with `dotnet new classlib -o src/Gallery.Core -n Gallery.Core`. Leave the generated `Class1.cs` in place.
+- [X] T005 Create `src/Gallery.Core/Gallery.Core.csproj` with `dotnet new classlib -o src/Gallery.Core -n Gallery.Core`. Leave the generated `Class1.cs` in place.
 
 **Checkpoint**: The solution and Core exist. US1 and US2 can proceed.
 
@@ -46,13 +46,13 @@ do NOT edit template output, except for the single port value in T010 and only i
 
 **Independent Test**: `dotnet build Gallery.slnx -warnaserror` gives 0 errors and 0 warnings; `dotnet run --project src/Gallery.Web` serves "Hello World!" at the printed address.
 
-- [ ] T006 [US1] Create `src/Gallery.Web/Gallery.Web.csproj` with `dotnet new web -o src/Gallery.Web -n Gallery.Web --no-https`.
-- [ ] T007 [US1] Add both src projects to the solution under a `src` folder: `dotnet sln Gallery.slnx add --solution-folder src src/Gallery.Web src/Gallery.Core`.
-- [ ] T008 [US1] Add the Web → Core reference: `dotnet add src/Gallery.Web reference src/Gallery.Core`.
-- [ ] T009 [US1] Confirm Core references no project: `dotnet list src/Gallery.Core reference` prints "There are no Project to Project references" (FR-002).
-- [ ] T010 [US1] Read `applicationUrl` in `src/Gallery.Web/Properties/launchSettings.json`. If its port is 5000, change only that port number to 5090. Otherwise make no edit, and record the port the template chose.
-- [ ] T011 [US1] Run `dotnet build Gallery.slnx -warnaserror` and require 0 errors and 0 warnings (SC-001).
-- [ ] T012 [US1] Run the app in the background (`dotnet run --project src/Gallery.Web`), request the address from T010 with `curl -s`, and require the body `Hello World!` (SC-004). Stop the process afterwards.
+- [X] T006 [US1] Create `src/Gallery.Web/Gallery.Web.csproj` with `dotnet new web -o src/Gallery.Web -n Gallery.Web --no-https`.
+- [X] T007 [US1] Add both src projects to the solution under a `src` folder: `dotnet sln Gallery.slnx add --solution-folder src src/Gallery.Web src/Gallery.Core`.
+- [X] T008 [US1] Add the Web → Core reference: `dotnet add src/Gallery.Web reference src/Gallery.Core`.
+- [X] T009 [US1] Confirm Core references no project: `dotnet list src/Gallery.Core reference` prints "There are no Project to Project references" (FR-002).
+- [X] T010 [US1] Read `applicationUrl` in `src/Gallery.Web/Properties/launchSettings.json`. If its port is 5000, change only that port number to 5090. Otherwise make no edit, and record the port the template chose.
+- [X] T011 [US1] Run `dotnet build Gallery.slnx -warnaserror` and require 0 errors and 0 warnings (SC-001).
+- [X] T012 [US1] Run the app in the background (`dotnet run --project src/Gallery.Web`), request the address from T010 with `curl -s`, and require the body `Hello World!` (SC-004). Stop the process afterwards.
 
 **Checkpoint**: US1 is done and the app runs.
 
@@ -64,11 +64,11 @@ do NOT edit template output, except for the single port value in T010 and only i
 
 **Independent Test**: `dotnet test` at the repo root reports both test assemblies, all passing.
 
-- [ ] T013 [P] [US2] Create `tests/Gallery.Core.Tests/Gallery.Core.Tests.csproj` with `dotnet new xunit -o tests/Gallery.Core.Tests -n Gallery.Core.Tests`.
-- [ ] T014 [P] [US2] Create `tests/Gallery.Web.Tests/Gallery.Web.Tests.csproj` with `dotnet new xunit -o tests/Gallery.Web.Tests -n Gallery.Web.Tests`.
-- [ ] T015 [US2] Add both test projects to the solution under a `tests` folder: `dotnet sln Gallery.slnx add --solution-folder tests tests/Gallery.Core.Tests tests/Gallery.Web.Tests` (depends on T013, T014).
-- [ ] T016 [US2] Add references: `dotnet add tests/Gallery.Core.Tests reference src/Gallery.Core`, then `dotnet add tests/Gallery.Web.Tests reference src/Gallery.Web src/Gallery.Core` (depends on T006, T015).
-- [ ] T017 [US2] Run `dotnet test` at the repo root and require both `Gallery.Core.Tests` and `Gallery.Web.Tests` to be reported with all tests passing (SC-002).
+- [X] T013 [P] [US2] Create `tests/Gallery.Core.Tests/Gallery.Core.Tests.csproj` with `dotnet new xunit -o tests/Gallery.Core.Tests -n Gallery.Core.Tests`.
+- [X] T014 [P] [US2] Create `tests/Gallery.Web.Tests/Gallery.Web.Tests.csproj` with `dotnet new xunit -o tests/Gallery.Web.Tests -n Gallery.Web.Tests`.
+- [X] T015 [US2] Add both test projects to the solution under a `tests` folder: `dotnet sln Gallery.slnx add --solution-folder tests tests/Gallery.Core.Tests tests/Gallery.Web.Tests` (depends on T013, T014).
+- [X] T016 [US2] Add references: `dotnet add tests/Gallery.Core.Tests reference src/Gallery.Core`, then `dotnet add tests/Gallery.Web.Tests reference src/Gallery.Web src/Gallery.Core` (depends on T006, T015).
+- [X] T017 [US2] Run `dotnet test` at the repo root and require both `Gallery.Core.Tests` and `Gallery.Web.Tests` to be reported with all tests passing (SC-002).
 
 **Checkpoint**: US2 is done.
 
@@ -78,11 +78,11 @@ do NOT edit template output, except for the single port value in T010 and only i
 
 **Purpose**: Prove the success criteria and that nothing beyond scope was added.
 
-- [ ] T018 Verify no packages were added: in `src/Gallery.Web/Gallery.Web.csproj` and `src/Gallery.Core/Gallery.Core.csproj`, `grep -c PackageReference` must be 0. In both test `.csproj` files, the only `PackageReference` entries must be the four template ones (coverlet.collector, Microsoft.NET.Test.Sdk, xunit, xunit.runner.visualstudio), per research R-02 (FR-005).
-- [ ] T019 Verify SC-003: copy the repo to a temp directory (excluding `bin/` and `obj/`), set `global.json` `version` to `10.0.404` with `dotnet new globaljson --sdk-version 10.0.404 --roll-forward latestPatch --force`, run `dotnet build`, and require it to fail with text containing `Requested SDK version: 10.0.404`. Delete the temp copy.
-- [ ] T020 Verify SC-001: re-run the quickstart.md scaffolding commands in an empty temp directory, then run `dotnet build Gallery.slnx -warnaserror` there and require 0 errors and 0 warnings. Delete the temp directory.
-- [ ] T021 Record the evidence: write the outputs of T011, T012, T017, T019 and T020 to `specs/002-local-app-scaffold/evidence/verify-output.txt`.
-- [ ] T022 Commit the scaffold, then `git status --short` must show no `bin/` or `obj/` paths. Push the branch `002-local-app-scaffold`.
+- [X] T018 Verify no packages were added: in `src/Gallery.Web/Gallery.Web.csproj` and `src/Gallery.Core/Gallery.Core.csproj`, `grep -c PackageReference` must be 0. In both test `.csproj` files, the only `PackageReference` entries must be the four template ones (coverlet.collector, Microsoft.NET.Test.Sdk, xunit, xunit.runner.visualstudio), per research R-02 (FR-005).
+- [X] T019 Verify SC-003: copy the repo to a temp directory (excluding `bin/` and `obj/`), set `global.json` `version` to `10.0.404` with `dotnet new globaljson --sdk-version 10.0.404 --roll-forward latestPatch --force`, run `dotnet build`, and require it to fail with text containing `Requested SDK version: 10.0.404`. Delete the temp copy.
+- [X] T020 Verify SC-001: re-run the quickstart.md scaffolding commands in an empty temp directory, then run `dotnet build Gallery.slnx -warnaserror` there and require 0 errors and 0 warnings. Delete the temp directory.
+- [X] T021 Record the evidence: write the outputs of T011, T012, T017, T019 and T020 to `specs/002-local-app-scaffold/evidence/verify-output.txt`.
+- [X] T022 Commit the scaffold, then `git status --short` must show no `bin/` or `obj/` paths. Push the branch `002-local-app-scaffold`.
 
 ---
 
