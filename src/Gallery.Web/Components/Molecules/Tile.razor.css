@@ -1,0 +1,19 @@
+.tile {
+    display: block;
+    min-width: 0;
+    color: inherit;
+    text-decoration: none;
+    text-align: center;
+}
+
+.cell {
+    aspect-ratio: var(--cell-ratio);
+    width: 100%;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+/* Title is a child component; reach it with ::deep so it can be centred. */
+.tile ::deep .title {
+    text-align: center;
+}

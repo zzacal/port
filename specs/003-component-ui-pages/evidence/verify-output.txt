@@ -1,0 +1,12 @@
+PASS gate build: 0 warnings, 0 errors
+PASS gate tests: 96 passed in 2 assemblies
+PASS SC-001 index lists 14 pages
+PASS FR-009/011 15 pages: 200, noindex header+meta, Server-Timing, no script, no external CSS
+PASS contract unknown /ui path -> 404
+PASS IV.21 sample /samples/8ac0cab296cf7acd.avif: Cache-Control: public, max-age=31536000, immutable
+PASS SC-007 20 requests -> 20 http.request events
+PASS IV.2 startup op.timing events logged
+PASS SC-006 Production /ui -> 404 404 404 404
+PASS FR-008 90 derivatives, no EXIF/XMP
+---
+failures: 0

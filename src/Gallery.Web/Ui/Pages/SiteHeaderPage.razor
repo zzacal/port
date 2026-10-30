@@ -1,0 +1,7 @@
+<UiLayout Title="SiteHeader">
+    <Specimen Label="Default"><SiteHeader SiteName="Gallery" NavItems="Items" /></Specimen>
+</UiLayout>
+
+@code {
+    private static readonly IReadOnlyList<NavItem> Items = [new("Galleries", "/")];
+}

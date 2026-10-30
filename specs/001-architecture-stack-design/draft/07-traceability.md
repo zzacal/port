@@ -32,7 +32,7 @@ can only be checked once the resource exists.
 | IV.4 | D-12: sampling off; saved KQL query per time-bound criterion | log query: saved queries reproduce each time-bound criterion | designed |
 | IV.5 | Section 7: each perceived-performance rule has a verification method | markup/header assertion: this matrix lists one for IV.11 to IV.22 | designed |
 | IV.6 | D-09, D-15: 320 to 2560 ladder, AVIF and WebP, `<picture>` with `srcset` and `sizes`, no upscaling | markup/header assertion: `<picture>` has AVIF and WebP sources with `srcset` and `sizes` | designed |
-| IV.7 | D-09, D-13: ThumbHash data URI and dominant color stored and inlined as CSS background | markup/header assertion: image slots carry the inlined placeholder, no extra request | designed |
+| IV.7 | D-09, D-13: ThumbHash data URI and dominant color stored; the data URI is inlined as a stacked image layer (feature 003 R-03) | markup/header assertion: image slots carry the inlined placeholder, no extra request | designed |
 | IV.8 | D-13, D-15: width and height stored and emitted | markup/header assertion: every `<img>` has width and height attributes | designed |
 | IV.9 | D-13: denormalized `homeCards` on the site document | markup/header assertion: home page issues one datastore read (`op.timing` count) | designed |
 | IV.10 | D-16: purge then warm on publish or edit; Tiered Cache on | log query: purge and warm events follow each public change | designed |

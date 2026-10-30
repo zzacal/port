@@ -1,0 +1,4 @@
+/* The grid brings its own page margins; cancel the /ui page padding so it renders at true width. */
+.bleed { margin: 0 calc(-1 * var(--space-s)); }
+@media (min-width: 600px) { .bleed { margin: 0 calc(-1 * var(--space-m)); } }
+@media (min-width: 1200px) { .bleed { margin: 0 calc(-1 * var(--space-l)); } }

@@ -1,0 +1,9 @@
+@inject SampleCatalog Samples
+<UiLayout Title="SoloViewer">
+    <Specimen Label="Landscape, full metadata">
+        <div class="bleed"><SoloViewer Image="Samples.Landscape[0]" PrevHref="#" NextHref="#" /></div>
+    </Specimen>
+    <Specimen Label="Portrait, partial metadata" Note="Last image: no Next link.">
+        <div class="bleed"><SoloViewer Image="Samples.PartialExifPortrait" PrevHref="#" /></div>
+    </Specimen>
+</UiLayout>

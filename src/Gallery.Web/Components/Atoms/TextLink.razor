@@ -1,0 +1,7 @@
+<a class="text-link" href="@Href" rel="@Rel">@ChildContent</a>
+
+@code {
+    [Parameter, EditorRequired] public string Href { get; set; } = "";
+    [Parameter, EditorRequired] public RenderFragment ChildContent { get; set; } = default!;
+    [Parameter] public string? Rel { get; set; }
+}

@@ -1,0 +1,31 @@
+@* The only way an image is rendered (D-21). Layers share one grid cell and identical
+   width/height + fit, so the placeholder covers exactly the photo area (research R-03). *@
+<div class="pic @FitClass">
+    <img class="layer ph" src="@Image.PlaceholderDataUri" width="@Image.Width" height="@Image.Height" alt="" aria-hidden="true">
+    @if (ShowThumbLayer)
+    {
+        <img class="layer thumb" src="@Image.ThumbVariant.WebpUrl" width="@Image.Width" height="@Image.Height" alt="" aria-hidden="true" decoding="async">
+    }
+    <picture class="layer main">
+        <source type="image/avif" srcset="@SrcSet.Avif(Image)" sizes="@Sizes">
+        <source type="image/webp" srcset="@SrcSet.Webp(Image)" sizes="@Sizes">
+        @if (Priority == PicturePriority.High)
+        {
+            <img src="@SrcSet.FallbackWebp(Image)" width="@Image.Width" height="@Image.Height" alt="@Image.Title" fetchpriority="high" loading="eager">
+        }
+        else
+        {
+            <img src="@SrcSet.FallbackWebp(Image)" width="@Image.Width" height="@Image.Height" alt="@Image.Title" loading="lazy" decoding="async">
+        }
+    </picture>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public ImageView Image { get; set; } = default!;
+    [Parameter, EditorRequired] public string Sizes { get; set; } = "";
+    [Parameter] public PictureFit Fit { get; set; } = PictureFit.Natural;
+    [Parameter] public PicturePriority Priority { get; set; } = PicturePriority.Lazy;
+    [Parameter] public bool ShowThumbLayer { get; set; }
+
+    private string FitClass => Fit == PictureFit.Contain ? "fit-contain" : "fit-natural";
+}

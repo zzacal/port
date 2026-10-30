@@ -1,0 +1,29 @@
+@* Shared grid for home (gallery cards) and gallery (thumbnails), D-20. Column counts per
+   viewport class become modifier classes; the same counts produce every Tile's sizes. *@
+<div class="cs cs-l@(Large) cs-m@(Medium) cs-s@(Small)">
+    @for (var i = 0; i < Items.Count; i++)
+    {
+        var item = Items[i];
+        <Tile Image="item.Image" Href="@item.Href" Sizes="@_sizes"
+              Priority="@(i < EffectivePriorityCount ? PicturePriority.High : PicturePriority.Lazy)" />
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<ContactSheetItem> Items { get; set; } = [];
+    [Parameter] public int Large { get; set; } = 3;
+    [Parameter] public int Medium { get; set; } = 3;
+    [Parameter] public int Small { get; set; } = 1;
+
+    /// <summary>How many leading tiles load at high priority. Defaults to one large-screen row.</summary>
+    [Parameter] public int? PriorityCount { get; set; }
+
+    private string _sizes = "";
+    private int EffectivePriorityCount => PriorityCount ?? Large;
+
+    protected override void OnParametersSet()
+    {
+        // Sizes.ForGrid validates 1–6 and throws ArgumentOutOfRangeException otherwise.
+        _sizes = Gallery.Core.Images.Sizes.ForGrid(Large, Medium, Small);
+    }
+}

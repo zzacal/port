@@ -1,0 +1,70 @@
+/* The main <picture> is the only layer in normal flow, so it alone sets the box size.
+   Placeholder and thumbnail are positioned behind it and can never resize the box.
+   (Grid stacking was dropped: a decoded 32 px placeholder's own rounded aspect ratio
+   overrode its width/height attributes and stretched the shared row. Feature 003, decision #28.) */
+.pic {
+    position: relative;
+    display: block;
+    width: 100%;
+}
+
+.main {
+    position: relative;
+    z-index: 1;
+    display: block;
+}
+
+.main img,
+img.layer {
+    display: block;
+}
+
+.ph,
+.thumb {
+    position: absolute;
+    z-index: 0;
+}
+
+/* Natural: the box takes the photo's own aspect ratio; the placeholder fills exactly that box. */
+.fit-natural .main img {
+    width: 100%;
+    height: auto;
+}
+
+.fit-natural .ph,
+.fit-natural .thumb {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+}
+
+/* Contain: fill the parent's fixed box, letterbox the photo, centre it. */
+.fit-contain {
+    height: 100%;
+}
+
+.fit-contain .main,
+.fit-contain .main img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+}
+
+/* The thumbnail is the same photo (ratio within 0.5%), shown at full size (IV.15). */
+.fit-contain .thumb {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* The placeholder's rounded ratio can differ from the photo's by a few percent. Inset by 2%
+   so its letterboxed content always sits inside the photo's, never as a visible sliver. */
+.fit-contain .ph {
+    inset: 2%;
+    width: 96%;
+    height: 96%;
+    object-fit: contain;
+}

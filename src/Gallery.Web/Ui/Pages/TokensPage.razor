@@ -1,0 +1,26 @@
+<UiLayout Title="Tokens">
+    @foreach (var group in Tokens.All().GroupBy(t => t.Group))
+    {
+        <Specimen Label="@group.Key">
+            <dl class="tokens">
+                @foreach (var t in group)
+                {
+                    <div class="token">
+                        <dt>@t.Name</dt>
+                        <dd>
+                            @if (group.Key == "Color")
+                            {
+                                <span class="swatch swatch-@t.Name"></span>
+                            }
+                            else if (group.Key == "Spacing")
+                            {
+                                <span class="ruler ruler-@t.Name"></span>
+                            }
+                            <code>@t.Value</code>
+                        </dd>
+                    </div>
+                }
+            </dl>
+        </Specimen>
+    }
+</UiLayout>

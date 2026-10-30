@@ -1,0 +1,21 @@
+<nav class="nav" aria-label="Site">
+    <ul>
+        @foreach (var item in Items)
+        {
+            <li>
+                @if (item.Current)
+                {
+                    <a href="@item.Href" aria-current="page">@item.Text</a>
+                }
+                else
+                {
+                    <a href="@item.Href">@item.Text</a>
+                }
+            </li>
+        }
+    </ul>
+</nav>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<NavItem> Items { get; set; } = [];
+}

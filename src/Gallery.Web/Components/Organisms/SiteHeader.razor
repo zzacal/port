@@ -1,0 +1,9 @@
+<header class="site-header">
+    <Brand Name="@SiteName" />
+    <Nav Items="NavItems" />
+</header>
+
+@code {
+    [Parameter, EditorRequired] public string SiteName { get; set; } = "";
+    [Parameter, EditorRequired] public IReadOnlyList<NavItem> NavItems { get; set; } = [];
+}

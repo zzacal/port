@@ -1,0 +1,13 @@
+.tokens { margin: 0; display: grid; gap: 8px; }
+.token { display: grid; grid-template-columns: 160px 1fr; align-items: center; gap: var(--space-s); }
+.token dt { font-size: var(--type-caption); font-weight: 600; }
+.token dd { margin: 0; display: flex; align-items: center; gap: 8px; font-size: var(--type-caption); }
+.swatch { display: inline-block; width: 24px; height: 24px; border: 1px solid var(--color-rule); }
+.swatch-ColorBg { background: var(--color-bg); }
+.swatch-ColorText { background: var(--color-text); }
+.swatch-ColorMuted { background: var(--color-muted); }
+.swatch-ColorRule { background: var(--color-rule); }
+.ruler { display: inline-block; height: 8px; background: var(--color-text); }
+.ruler-SpaceL { width: var(--space-l); }
+.ruler-SpaceM { width: var(--space-m); }
+.ruler-SpaceS { width: var(--space-s); }

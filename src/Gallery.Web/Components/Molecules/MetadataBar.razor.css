@@ -1,0 +1,10 @@
+.metadata-bar {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: var(--type-caption);
+    line-height: 1.6;
+}
+
+.sep {
+    color: var(--color-rule);
+}

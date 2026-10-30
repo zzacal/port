@@ -1,0 +1,27 @@
+.solo {
+    padding: 0 var(--space-s);
+}
+
+.stage {
+    height: 80vh;
+}
+
+.caption {
+    display: grid;
+    gap: 4px;
+    max-width: 960px;
+    margin: var(--space-s) auto 0;
+    text-align: center;
+}
+
+.caption ::deep .pager {
+    margin-top: 8px;
+}
+
+@media (min-width: 600px) {
+    .solo { padding: 0 var(--space-m); }
+}
+
+@media (min-width: 1200px) {
+    .solo { padding: 0 var(--space-l); }
+}

@@ -1,0 +1,37 @@
+@* Fixed order: camera, lens, focal length, aperture, shutter, ISO. Separators only between
+   present fields; nothing at all when every field is empty. *@
+@if (_fields.Count > 0)
+{
+    <p class="metadata-bar">
+        @for (var i = 0; i < _fields.Count; i++)
+        {
+            if (i > 0)
+            {
+                <span class="sep" aria-hidden="true"> · </span>
+            }
+            <ExifField Label="@_fields[i].Label" Value="@_fields[i].Value" />
+        }
+    </p>
+}
+
+@code {
+    [Parameter] public Exif? Exif { get; set; }
+
+    private List<(string Label, string Value)> _fields = [];
+
+    protected override void OnParametersSet()
+    {
+        _fields = new (string Label, string? Value)[]
+            {
+                ("Camera", ExifFormat.Camera(Exif)),
+                ("Lens", ExifFormat.Lens(Exif)),
+                ("Focal length", ExifFormat.FocalLength(Exif)),
+                ("Aperture", ExifFormat.Aperture(Exif)),
+                ("Shutter speed", ExifFormat.Shutter(Exif)),
+                ("ISO", ExifFormat.Iso(Exif)),
+            }
+            .Where(f => !string.IsNullOrEmpty(f.Value))
+            .Select(f => (f.Label, f.Value!))
+            .ToList();
+    }
+}
