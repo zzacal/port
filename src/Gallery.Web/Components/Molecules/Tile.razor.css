@@ -7,10 +7,23 @@
 }
 
 .cell {
+    position: relative;
     aspect-ratio: var(--cell-ratio);
     width: 100%;
     overflow: hidden;
     margin-bottom: 8px;
+}
+
+/* Admin overlay (feature 005): sits over the photo; only its children take pointer events. */
+.overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.overlay ::deep > * {
+    pointer-events: auto;
 }
 
 /* Title is a child component; reach it with ::deep so it can be centred. */

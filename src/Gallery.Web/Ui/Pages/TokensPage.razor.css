@@ -7,6 +7,9 @@
 .swatch-ColorText { background: var(--color-text); }
 .swatch-ColorMuted { background: var(--color-muted); }
 .swatch-ColorRule { background: var(--color-rule); }
+.swatch-ColorDanger { background: var(--color-danger); }
+.swatch-ColorSuccess { background: var(--color-success); }
+.swatch-ColorSurface { background: var(--color-surface); }
 .ruler { display: inline-block; height: 8px; background: var(--color-text); }
 .ruler-SpaceL { width: var(--space-l); }
 .ruler-SpaceM { width: var(--space-m); }

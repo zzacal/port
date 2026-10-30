@@ -1,15 +1,50 @@
 @* One contact-sheet cell (D-20): the whole photo letterboxed and centred in a fixed 4:3
-   cell, title only below. The Tile owns the link; there is no separate picture-link. *@
-<a class="tile" href="@Href">
+   cell, title only below. The Tile owns the link; there is no separate picture-link.
+   Admin additions (feature 005, all optional; public output byte-identical when unset): Overlay
+   controls over the cell, an extra root class, a caption under the title, and no link.
+   Branch bodies are deliberately unindented: Razor emits their whitespace verbatim, and
+   PublicOutputUnchangedTests pins the public markup byte-for-byte. *@
+@if (!string.IsNullOrEmpty(Href))
+{
+<a class="@RootClass" href="@Href">
     <div class="cell">
         <Picture Image="Image" Sizes="@Sizes" Fit="PictureFit.Contain" Priority="Priority" />
+@if (Overlay is not null)
+{
+        <div class="overlay">@Overlay</div>
+}
     </div>
-    <Title Text="@Image.Title" />
+    <Title Text="@Image.Title" />@Caption
 </a>
+}
+else
+{
+<div class="@RootClass">
+    <div class="cell">
+        <Picture Image="Image" Sizes="@Sizes" Fit="PictureFit.Contain" Priority="Priority" />
+@if (Overlay is not null)
+{
+        <div class="overlay">@Overlay</div>
+}
+    </div>
+    <Title Text="@Image.Title" />@Caption
+</div>
+}
 
 @code {
     [Parameter, EditorRequired] public ImageView Image { get; set; } = default!;
-    [Parameter, EditorRequired] public string Href { get; set; } = "";
+    [Parameter] public string? Href { get; set; }
     [Parameter, EditorRequired] public string Sizes { get; set; } = "";
     [Parameter] public PicturePriority Priority { get; set; } = PicturePriority.Lazy;
+
+    /// <summary>Admin controls drawn over the cell (feature 005).</summary>
+    [Parameter] public RenderFragment? Overlay { get; set; }
+
+    /// <summary>Extra class on the root, e.g. is-selected / is-private (feature 005).</summary>
+    [Parameter] public string? CssClass { get; set; }
+
+    /// <summary>Content after the title, e.g. "Private" (feature 005).</summary>
+    [Parameter] public RenderFragment? Caption { get; set; }
+
+    private string RootClass => string.IsNullOrEmpty(CssClass) ? "tile" : "tile " + CssClass;
 }
