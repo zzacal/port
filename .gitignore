@@ -481,3 +481,6 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 .DS_Store
+
+# Local credentials (never commit)
+.r2-keys*
