@@ -252,7 +252,9 @@ hover on a photo starts loading the destination image, and repeat with scripts d
   committed file or served response.
 - **FR-021**: The credential MUST be limited to reading and writing objects in the two image
   buckets. The feature MUST include an automated check, run against the real dev storage, that the
-  credential cannot reach anything else and that the public bucket has no development address.
+  credential cannot reach anything else. That the public bucket has no development address is an
+  owner-verified dashboard check recorded with the feature (plan research R-03: the scoped
+  credential cannot read that setting, by design).
 - **FR-022**: Storage behaviour MUST be tested against a local storage emulator on every test run,
   and the same tests MUST be runnable on demand against the real dev image storage when its
   credential is present. Storage changes are not accepted until the on-demand run passes.
