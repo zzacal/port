@@ -22,10 +22,12 @@ must pass **unmodified**. A failure there means the change is wrong, not the tes
   inlined stylesheet, which the baseline test strips (005 note).
 - The new `.solo-caption` rule goes in `SoloViewer.razor.css`: `max-width: 60ch; margin: 0 auto;
   color: var(--color-text);`.
-- New `/ui/` specimens, appended after existing ones (allowed by the per-specimen baseline rule):
-  - Tile "Empty gallery card"
-  - SoloViewer "With caption"
-  - PublicLayout specimens are unchanged (`Enhance` off).
+- **No `/ui/` page changes in this feature.** Appending specimens would break existing page tests
+  that count elements per page: `MoleculePageTests` counts `<div class="cell"` = 3 on the Tile page,
+  and `OrganismPageTests` counts thumb layers and `fetchpriority` = 2 on the SoloViewer page. Those
+  tests must stay unmodified. The new states (empty card, caption, transition ids, preload
+  attributes) are covered by component tests in `ComponentAdditionsTests.cs` instead, and the
+  `/ui/` output stays identical (SC-010).
 
 ## New page components (`src/Gallery.Web/Site/Pages/`)
 

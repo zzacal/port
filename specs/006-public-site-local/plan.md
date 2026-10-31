@@ -144,8 +144,7 @@ src/Gallery.Web/
 ├── Components/Atoms/Picture.razor           # + TransitionId (optional)
 ├── Components/Molecules/Tile.razor          # + TransitionId, Preload*, EmptyTitle (optional)
 ├── Components/Organisms/ContactSheet.razor  ContactSheetItem.cs  SoloViewer.razor(.css)
-├── Components/Templates/PublicLayout.razor(.css)   # + Enhance, HeadExtra; @view-transition
-└── Ui/Pages/{TilePage,SoloViewerPage}.razor # appended specimens only
+└── Components/Templates/PublicLayout.razor(.css)   # + Enhance, HeadExtra; @view-transition
 tests/Gallery.Core.Tests/{OpaqueIdTests,SlugTests,GalleryNavTests}.cs
 tests/Gallery.Web.Tests/
 ├── Fixtures/{MongoFixture,S3ProxyFixture}.cs   # one container per assembly
