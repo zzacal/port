@@ -49,6 +49,13 @@ place, so both targets exercise the same code.
 
 ### 006 Walking skeleton: public site, local
 
+**Status: done, pending owner review (2026-10-31).** Evidence: `specs/006-public-site-local/evidence/`
+(verify.sh 21/21 PASS, p95.sh SC-003/SC-004 PASS, browser.md, seed-run.txt, r2-tests.txt).
+Changed in clarify: the seed uses the owner's photos from `dev-pictures/` through a committed
+manifest rather than the 003 sample set. Not delivered: the forwarded-headers setup (PC.9). The
+006 spec never picked it up, and it has no effect without a proxy in front of the app, so it moves
+to the hosting feature (006 decisions row 30).
+
 What a visitor sees on localhost: the home grid, a gallery page, and the solo view, served from
 local Mongo with images from the dev R2 bucket through the dev image hostname. A seed command
 writes the 003 sample set to Mongo and uploads its derivatives to R2. No admin routes exist yet.
@@ -140,6 +147,6 @@ because they don't run .NET.
 | R-06 | 006 (token scope and storage), rotation runbook with hosting |
 | R-07 | 008 |
 | III.9 | 006 (credential, buckets), 008 (presigned uploads) |
-| PC.9 | 006 |
+| PC.9 | hosting (moved from 006: no effect without a proxy; 006 decisions row 30) |
 | PC.4 | 007 |
 | PC.1, PC.2, PC.3, PC.5, PC.6, PC.7, PC.8 | hosting |

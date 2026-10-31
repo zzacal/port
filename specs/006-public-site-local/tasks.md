@@ -491,7 +491,7 @@ output for metadata.
 
 ## Phase 8: Polish and evidence
 
-- [ ] T035 Create `specs/006-public-site-local/evidence/verify.sh`, modelled on
+- [X] T035 Create `specs/006-public-site-local/evidence/verify.sh`, modelled on
   `specs/005-admin-ui-components/evidence/verify.sh`: build and test gates, its own :5090 server
   with log at `evidence/dev-run.log`, `pass`/`fail` lines. It checks:
   - SC-002: no private titles on `/`, and `noindex` on every private page found from the manifest
@@ -518,7 +518,7 @@ output for metadata.
   - a second seed run shows `uploaded 0` (SC-006)
 
   Output goes to `evidence/verify-output.txt`. All PASS is required.
-- [ ] T036 Create `specs/006-public-site-local/evidence/p95.sh` (FR-031). It starts :5090 with
+- [X] T036 Create `specs/006-public-site-local/evidence/p95.sh` (FR-031). It starts :5090 with
   `Site__OutputCache=false`, logging to `evidence/perf-run.log`, then warms up with 10 requests per
   route and sends 100 requests each to `/`, one public gallery page and one photo page. From the
   log alone (`"http.request ` lines; fields `duration_ms` and `db_reads` read from the JSON
@@ -527,7 +527,7 @@ output for metadata.
   - PASS SC-004: home `db_reads=1` on 100%, and the others ≤ 2 on 100%
 
   Output goes to `evidence/p95-output.txt`. Add the logs with `git add -f` (`*.log` is ignored).
-- [ ] T037 Clean rebuild (`dotnet clean` then `dotnet build -warnaserror`), run the full test
+- [X] T037 Clean rebuild (`dotnet clean` then `dotnet build -warnaserror`), run the full test
   suite, confirm the test counts went up from 69/156 and that no pre-existing test file shows in
   `git diff --stat main -- 'tests/**/*.cs'` other than added files (the test `.csproj` changes by
   `dotnet add package` in T001; that is expected). Update `docs/roadmap.md` 006 as
