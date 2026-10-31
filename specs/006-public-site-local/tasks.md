@@ -39,17 +39,17 @@ contradictory, stop and report a blocker. Do not invent.
 
 ## Phase 1: Setup (high tier, done before dispatch)
 
-- [ ] T001 Add packages with the CLI exactly as in quickstart Part A:
+- [X] T001 Add packages with the CLI exactly as in quickstart Part A:
   - MongoDB.Driver 3.13.0, AWSSDK.S3 4.0.104.8 and MetadataExtractor 2.9.3 to `src/Gallery.Web`
   - Testcontainers 4.16.0 and Testcontainers.MongoDb 4.16.0 to `tests/Gallery.Web.Tests`
 
   Run `dotnet user-secrets init --project src/Gallery.Web`. Add `/.dev-prepared/` to
   `.gitignore` if absent. Build and test green.
-- [ ] T002 Create `scripts/dev-mongo.sh`. It is idempotent: it starts the `gallery-mongo`
+- [X] T002 Create `scripts/dev-mongo.sh`. It is idempotent: it starts the `gallery-mongo`
   container if it's stopped, and otherwise runs `docker run -d --name gallery-mongo -p
   27017:27017 -v gallery-mongo:/data/db mongo:8`. It then waits until `docker exec gallery-mongo
   mongosh --quiet --eval 'db.runCommand({ping:1}).ok'` prints 1, giving up after 30 s.
-- [ ] T003 Create `scripts/r2-keys-to-user-secrets.sh` (research R-10). It reads `.r2-keys-copy`
+- [X] T003 Create `scripts/r2-keys-to-user-secrets.sh` (research R-10). It reads `.r2-keys-copy`
   with the same parsing as the plan's probe: the value on the first non-blank line after "Access
   Key ID" and after "Secret Access Key", and the endpoint matched by
   `https://[a-f0-9]{32}\.r2\.cloudflarestorage\.com`. It runs `dotnet user-secrets set --project
@@ -58,12 +58,12 @@ contradictory, stop and report a blocker. Do not invent.
   .r2-keys-copy when done`. It exits 1 with a message if the file or a value is missing. The high
   tier runs it once and confirms `dotnet user-secrets list --project src/Gallery.Web | cut -d= -f1`
   shows the three keys.
-- [ ] T004 Add the non-secret settings to `src/Gallery.Web/appsettings.Development.json`, keeping
+- [X] T004 Add the non-secret settings to `src/Gallery.Web/appsettings.Development.json`, keeping
   the existing `Logging` block. `Mongo`: `ConnectionString` `mongodb://localhost:27017`,
   `Database` `gallery_dev`. `Storage`: `PublicBucket` `gallery-dev-public`, `PrivateBucket`
   `gallery-dev-private`, `ImageBaseUrl` `https://img-dev.zacal.me`. `Site`: `OutputCache` `true`.
 
-- [ ] T005 Capture the `/ui/` baseline BEFORE any component change (SC-010). Render every page in
+- [X] T005 Capture the `/ui/` baseline BEFORE any component change (SC-010). Render every page in
   `UiCatalog.Entries` plus the `/ui/` index with `Render.Html` into
   `specs/006-public-site-local/evidence/ui-baseline/{slug}.html`, with the inlined `<style …>…</style>`
   removed. Use the same `StripStyle` regex as `PublicOutputUnchangedTests`, moved to a shared
