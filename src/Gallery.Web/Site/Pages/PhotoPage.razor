@@ -1,4 +1,4 @@
-<PublicLayout Title="@($"{Image.Title} — {GalleryTitle}")" NoIndex="@NoIndex" HeadExtra="_transitions">
+<PublicLayout Title="@($"{Image.Title} — {GalleryTitle}")" NoIndex="@NoIndex" Enhance="true" HeadExtra="_transitions">
     <SoloViewer Image="Image" Caption="@Caption" PrevHref="@PrevHref" NextHref="@NextHref"
                 TransitionId="@Image.Id" PrefetchUrls="@PrefetchUrls" />
 </PublicLayout>

@@ -471,7 +471,7 @@ output for metadata.
   - options `--manifest` (default `seed/manifest.json`) and `--prepared` (default
     `.dev-prepared`), paths relative to the repo root found by walking up to `Gallery.slnx`
   - the last summary line reminds the owner to restart a running app to clear the output cache
-- [ ] T033 [US4] High tier, live: run `bash scripts/dev-mongo.sh`, `bash
+- [X] T033 [US4] High tier, live: run `bash scripts/dev-mongo.sh`, `bash
   scripts/prepare-photos.sh`, review `seed/manifest.json` (T027), then `dotnet run --project
   src/Gallery.Web --artifacts-path artifacts -- seed` twice. Save both summaries to
   `specs/006-public-site-local/evidence/seed-run.txt`. The second must show `uploaded 0` and
@@ -479,7 +479,7 @@ output for metadata.
 
 ## Phase 7: User Story 5, the site feels instant (P2)
 
-- [ ] T034 [US5] Browser verification on the high tier's own :5090 instance after the seed. Record
+- [X] T034 [US5] Browser verification on the high tier's own :5090 instance after the seed. Record
   in `specs/006-public-site-local/evidence/browser.md` with screenshots in `evidence/shots/`:
   - CLS = 0 (PerformanceObserver `layout-shift`) on home, a gallery and a photo at 1440, 1024 and
     390 widths

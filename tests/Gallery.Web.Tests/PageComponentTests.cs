@@ -110,6 +110,39 @@ public class PageComponentTests
 
     // ── PhotoPage ─────────────────────────────────────────────────────────────
 
+    /// <summary>
+    /// The photo page owns the prefetch of its neighbours (IV.11), which only the Enhance loader
+    /// performs. Found missing in the live browser check: the page rendered data-prefetch with no
+    /// script to act on it. Every public page type carries the same two scripts.
+    /// </summary>
+    [Fact]
+    public async Task Every_public_page_type_carries_the_enhancement_scripts()
+    {
+        var pages = new[]
+        {
+            await Render.Html<HomePage>(new { Cards = (IReadOnlyList<ContactSheetItem>)[] }),
+            await Render.Html<GalleryPage>(new { Title = "G", NoIndex = false, Items = (IReadOnlyList<ContactSheetItem>)[] }),
+            await Render.Html<PhotoPage>(new { Image = MakeImage(), GalleryTitle = "G", NoIndex = false }),
+        };
+        foreach (var html in pages)
+        {
+            Assert.Equal(2, Guards.Count(html, "<script"));
+            Assert.Contains("speculationrules", html);
+            Assert.Contains("rel: 'prefetch'", html);
+        }
+    }
+
+    [Fact]
+    public async Task Predictive_loader_is_under_30_lines()
+    {
+        var html = await Render.Html<HomePage>(new { Cards = (IReadOnlyList<ContactSheetItem>)[] });
+        var start = html.IndexOf("<script type=\"module\"", StringComparison.Ordinal); // scoped CSS may add b-xxxx
+        var end = html.IndexOf("</script>", start, StringComparison.Ordinal);
+        Assert.True(start >= 0 && end > start);
+        var lines = html[start..end].Split('\n').Length;
+        Assert.True(lines < 30, $"loader is {lines} lines (contract: under 30)");
+    }
+
     [Fact]
     public async Task PhotoPage_title_is_photo_dash_gallery()
     {

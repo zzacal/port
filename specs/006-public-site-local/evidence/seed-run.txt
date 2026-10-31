@@ -1,0 +1,35 @@
+# T033 live seed, 2026-10-31T19:29:25Z: bash scripts/dev-mongo.sh; prepare-photos.sh (93 prepared, 0 rejected; rerun: skipped-unchanged 93); dotnet run -- seed twice.
+
+## prepare (first run, last line)
+prepared 93, skipped-unchanged 0, rejected 0
+
+## seed run 1
+galleries upserted: 11
+galleries deleted: 0
+images upserted: 93
+images deleted: 0
+uploaded: 1116
+skipped-unchanged: 0
+unmatched manifest: 0
+unmatched prepared: 0
+rejected: 0
+Restart the running app to clear the output cache.
+op.timing events: 2232, outcome=error: 0
+
+## seed run 2
+galleries upserted: 11
+galleries deleted: 0
+images upserted: 93
+images deleted: 0
+uploaded: 0
+skipped-unchanged: 1116
+unmatched manifest: 0
+unmatched prepared: 0
+rejected: 0
+Restart the running app to clear the output cache.
+
+## SC-006: dump of site/galleries/images without updatedAt, before vs after run 2
+equal (105 documents)
+
+## SC-011 key scan
+field names matching gps|latitude|longitude|altitude in images: 0
