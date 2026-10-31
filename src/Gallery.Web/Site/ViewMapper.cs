@@ -1,0 +1,91 @@
+using Gallery.Core.Images;
+using Gallery.Web.Components.Organisms;
+using Gallery.Web.Data;
+
+namespace Gallery.Web.Site;
+
+/// <summary>
+/// Maps Mongo documents to the component model (data-model.md §Mapping).
+/// </summary>
+public static class ViewMapper
+{
+    /// <summary>Maps an <see cref="ImageDoc"/> to <see cref="ImageView"/>.</summary>
+    /// <param name="doc">The image document from Mongo.</param>
+    /// <param name="url">Function that converts an object key to a fully-qualified URL.</param>
+    public static ImageView ToView(ImageDoc doc, Func<string, string> url)
+    {
+        var variants = doc.Derivatives
+            .Select(d => new Variant(d.W, url(d.Avif), url(d.Webp)))
+            .ToList();
+
+        Exif? exif = null;
+        if (doc.Camera is { } cam)
+        {
+            exif = new Exif(
+                Make: cam.Make,
+                Model: cam.Model,
+                Lens: cam.Lens,
+                FocalLengthMm: cam.FocalMm,
+                FocalLength35Mm: cam.Focal35Mm,
+                FNumber: cam.FNumber,
+                ExposureSeconds: cam.Exposure,
+                Iso: cam.Iso
+            );
+            // Return null when every field is absent.
+            if (exif is { Make: null, Model: null, Lens: null, FocalLengthMm: null,
+                          FocalLength35Mm: null, FNumber: null, ExposureSeconds: null, Iso: null })
+                exif = null;
+        }
+
+        return new ImageView(
+            Id: doc.Id,
+            Title: doc.Title,
+            Width: doc.Width,
+            Height: doc.Height,
+            Variants: variants,
+            PlaceholderDataUri: doc.Placeholder.Preview,
+            DominantColor: doc.Placeholder.Color,
+            Exif: exif
+        );
+    }
+
+    /// <summary>
+    /// Maps a <see cref="GalleryCardDoc"/> to a <see cref="ContactSheetItem"/>.
+    /// Returns <c>null</c> when the gallery has no cover (empty gallery); callers must handle null.
+    /// </summary>
+    public static ContactSheetItem? ToCard(GalleryCardDoc card, Func<string, string> url)
+    {
+        if (card.Cover is null)
+            return null;
+
+        var cover = card.Cover;
+        var variants = cover.Derivatives
+            .Select(d => new Variant(d.W, url(d.Avif), url(d.Webp)))
+            .ToList();
+
+        var image = new ImageView(
+            Id: cover.ImageId,
+            Title: string.Empty,
+            Width: cover.Width,
+            Height: cover.Height,
+            Variants: variants,
+            PlaceholderDataUri: cover.Placeholder.Preview,
+            DominantColor: cover.Placeholder.Color,
+            Exif: null
+        );
+
+        var href = $"/g/{card.GalleryId}/{card.Slug}";
+        return new ContactSheetItem(image, href);
+    }
+
+    /// <summary>
+    /// Builds the <c>Link</c> response header value for the primary image preload
+    /// (contracts/http.md §Headers on 200 public pages).
+    /// </summary>
+    public static string PreloadLink(ImageView image, string sizes)
+    {
+        var fallback = SrcSet.FallbackWebp(image);
+        var srcset   = SrcSet.Webp(image);
+        return $"<{fallback}>; rel=preload; as=image; imagesrcset=\"{srcset}\"; imagesizes=\"{sizes}\"; fetchpriority=high";
+    }
+}

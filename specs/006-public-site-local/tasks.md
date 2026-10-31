@@ -76,7 +76,7 @@ contradictory, stop and report a blocker. Do not invent.
 
 ## Phase 2: Foundational (blocks every user story)
 
-- [ ] T006 [P] Create `src/Gallery.Core/Ids/OpaqueId.cs`:
+- [X] T006 [P] Create `src/Gallery.Core/Ids/OpaqueId.cs`:
   - `NewId()` returns 16 bytes from `RandomNumberGenerator`, encoded as RFC 4648 base32 in
     lowercase with no padding (26 chars)
   - `IsValid(string?)` checks exactly 26 chars of `[a-z2-7]`
@@ -84,7 +84,7 @@ contradictory, stop and report a blocker. Do not invent.
   Tests in `tests/Gallery.Core.Tests/OpaqueIdTests.cs`:
   - 1,000 ids are all valid and distinct
   - IsValid rejects null, 25 or 27 chars, uppercase, and the characters `0`, `1`, `8`, `9`
-- [ ] T007 [P] Create `src/Gallery.Core/Text/Slug.cs` with `From(string title)`:
+- [X] T007 [P] Create `src/Gallery.Core/Text/Slug.cs` with `From(string title)`:
   - lowercase; map each char to ASCII by removing diacritics (`NormalizationForm.FormD`, drop
     `NonSpacingMark`)
   - collapse runs of chars outside `[a-z0-9]` to one `-`, then trim `-`
@@ -94,12 +94,12 @@ contradictory, stop and report a blocker. Do not invent.
   Tests in `tests/Gallery.Core.Tests/SlugTests.cs`: `"September 5"` → `september-5`;
   `"Café — Noir!"` → `cafe-noir`; `"!!!"` → `gallery`; a 100-char title gives at most 60 chars
   with no trailing `-`.
-- [ ] T008 [P] Create `src/Gallery.Core/Content/GalleryNav.cs` with
+- [X] T008 [P] Create `src/Gallery.Core/Content/GalleryNav.cs` with
   `static (string? Prev, string? Next) Neighbours(IReadOnlyList<string> items, string current)`.
   It returns nulls at the ends and throws `ArgumentException` when `current` is not in `items`.
   Tests in `tests/Gallery.Core.Tests/GalleryNavTests.cs` cover first, middle, last, a single item,
   and an item that isn't present.
-- [ ] T009 Create `src/Gallery.Web/Observability/OpTimer.cs` and extend
+- [X] T009 Create `src/Gallery.Web/Observability/OpTimer.cs` and extend
   `src/Gallery.Web/Observability/RequestTimingMiddleware.cs` (research R-09).
   - OpTimer is a scoped service:
     - `Task<T> Time<T>(string op, Func<Task<T>> body, bool isDbRead = false)` logs `op.timing`
@@ -116,7 +116,7 @@ contradictory, stop and report a blocker. Do not invent.
     - two db reads give `DbReads == 2` and two `db;dur=` entries
 
   Existing 003/005 verify scripts grep `"http.request "`, which still matches.
-- [ ] T010 Create `src/Gallery.Web/Storage/StorageOptions.cs` (`ServiceUrl`, `AccessKeyId`,
+- [X] T010 Create `src/Gallery.Web/Storage/StorageOptions.cs` (`ServiceUrl`, `AccessKeyId`,
   `SecretAccessKey`, `PublicBucket`, `PrivateBucket`, `ImageBaseUrl`) and
   `src/Gallery.Web/Storage/S3ClientFactory.cs`. It is the ONLY place an `AmazonS3Client` is
   built, using the research R-02 settings verbatim:
@@ -125,7 +125,7 @@ contradictory, stop and report a blocker. Do not invent.
   - `public bool IsHttps` from the ServiceUrl scheme
 
   `Validate()` returns the names of missing settings, never values.
-- [ ] T011 Create `src/Gallery.Web/Storage/ImageStore.cs` over the factory's client:
+- [X] T011 Create `src/Gallery.Web/Storage/ImageStore.cs` over the factory's client:
   - `Task<bool> ExistsAsync(bucket, key)` (HEAD; false on 404)
   - `PutAsync(bucket, key, Stream, contentType, cacheControl)` with `DisableDefaultChecksumValidation
     = true` and `DisablePayloadSigning = IsHttps`
@@ -142,7 +142,7 @@ contradictory, stop and report a blocker. Do not invent.
   `s3.copy`, `s3.delete` and `s3.presign`. ImageStore is a singleton, so it takes an
   `ILogger<ImageStore>` and logs `op.timing` itself through a static helper shared with OpTimer
   (`OpTiming.Log(logger, op, ms, outcome)` in `OpTimer.cs`). It does not take the scoped OpTimer.
-- [ ] T012 Create the test fixtures in `tests/Gallery.Web.Tests/Fixtures/`:
+- [X] T012 Create the test fixtures in `tests/Gallery.Web.Tests/Fixtures/`:
   - `MongoFixture.cs`: Testcontainers `MongoDbBuilder().WithImage("mongo:8")`, one per test
     collection `"mongo"`, with `NewDatabase()` returning a fresh `gallery_test_<guid>` database.
   - `S3ProxyFixture.cs`: `ContainerBuilder()`, image
@@ -158,7 +158,7 @@ contradictory, stop and report a blocker. Do not invent.
     dynamic skip, so each R2 test method starts with `if (!fixture.Enabled) return;`. Its method
     name ends in `_R2`, so a vacuous pass is visible in the test list. The high tier runs them
     for real with `GALLERY_R2_TESTS=1` (T013).
-- [ ] T013 [SAFETY] Create `tests/Gallery.Web.Tests/StorageTests.cs` as an abstract base with two
+- [X] T013 [SAFETY] Create `tests/Gallery.Web.Tests/StorageTests.cs` as an abstract base with two
   subclasses, `EmulatorStorageTests` (S3ProxyFixture) and `R2StorageTests` (R2Fixture,
   Category=R2, keys under `test/{guid}/`, deleted in cleanup). The same test methods run on both
   targets (FR-022):
@@ -175,7 +175,7 @@ contradictory, stop and report a blocker. Do not invent.
   runs it; it needs the owner's secrets) and save the output to
   `specs/006-public-site-local/evidence/r2-tests.txt`. Run it through `sed -E
   's/[A-Za-z0-9]{32,}/<redacted>/g'` first.
-- [ ] T014 [SAFETY] Create `tests/Gallery.Web.Tests/R2ScopeTests.cs` (Category=R2, FR-021). It
+- [X] T014 [SAFETY] Create `tests/Gallery.Web.Tests/R2ScopeTests.cs` (Category=R2, FR-021). It
   uses the R2 credential through the factory:
   - `ListBucketsAsync` throws an AmazonS3Exception with status 403
   - `ListObjectsV2` on bucket `gallery-scope-probe-other` throws AmazonS3Exception with status
@@ -185,7 +185,7 @@ contradictory, stop and report a blocker. Do not invent.
   - ListObjectsV2 on both dev buckets succeeds
 
   Output is appended to `evidence/r2-tests.txt`.
-- [ ] T015 Create `src/Gallery.Web/Data/MongoOptions.cs`, `src/Gallery.Web/Data/Documents.cs` and
+- [X] T015 Create `src/Gallery.Web/Data/MongoOptions.cs`, `src/Gallery.Web/Data/Documents.cs` and
   `src/Gallery.Web/Data/ContentReader.cs`.
   - `Documents.cs` has the BSON-mapped classes for `site`, `galleries` and `images`, with
     GalleryCard and CoverImage exactly as in data-model.md. Use explicit `[BsonElement]` camelCase
@@ -201,7 +201,7 @@ contradictory, stop and report a blocker. Do not invent.
 
   Register `IMongoClient` as a singleton with `ServerSelectionTimeout = 2s` and the database from
   options in `AppBuilder.cs` (T016). Startup MUST NOT ping Mongo; the app boots without it.
-- [ ] T016 Move the body of `src/Gallery.Web/Program.cs` into a new
+- [X] T016 Move the body of `src/Gallery.Web/Program.cs` into a new
   `src/Gallery.Web/AppBuilder.cs`: `public static class AppBuilder { public static WebApplication
   Build(string[] args, IDictionary<string,string?>? overrides = null) }`.
   - It does everything Program.cs does today, plus the T009, T010, T011 and T015 registrations.
@@ -210,7 +210,7 @@ contradictory, stop and report a blocker. Do not invent.
   - `Program.cs` becomes: if `args` starts with `seed`, run the seed command (wired in T032; until
     then `return 1`); otherwise `AppBuilder.Build(args).Run();`.
   - Acceptance: all existing tests pass unmodified, and `/ui/` still serves in Development.
-- [ ] T017 Create `src/Gallery.Web/Site/ViewMapper.cs`:
+- [X] T017 Create `src/Gallery.Web/Site/ViewMapper.cs`:
   - `ImageView ToView(ImageDoc, Func<string,string> url)` maps derivatives to `Variant(w,
     url(avif), url(webp))`, the placeholder preview to `PlaceholderDataUri`, the color to
     `DominantColor`, and camera to the Core `Exif` (Make, Model, Lens, FocalLengthMm,
@@ -346,7 +346,7 @@ on the gallery and photo pages.
 **Independent test**: prepare and seed on empty storage, run both again with no change, scan the
 output for metadata.
 
-- [ ] T026 [P] [SAFETY] [US4] Create `scripts/prepare-photos.sh` exactly per contracts/seed.md
+- [X] T026 [P] [SAFETY] [US4] Create `scripts/prepare-photos.sh` exactly per contracts/seed.md
   "scripts/prepare-photos.sh" and research R-04.
   - Encoder flags must match `scripts/build-samples.sh`.
   - The intermediate step is `ffmpeg -i src -vf "scale='min(2560,iw)':-2" -frames:v 1
@@ -372,7 +372,7 @@ output for metadata.
     script must honour these env overrides). Assert the largest WebP is portrait (height >
     width) and that `check-metadata.sh` passes.
   - Record the commands and results in `specs/006-public-site-local/evidence/prepare-check.txt`.
-- [ ] T027 [P] [US4] Create `scripts/seed-manifest.sh` exactly per contracts/seed.md
+- [X] T027 [P] [US4] Create `scripts/seed-manifest.sh` exactly per contracts/seed.md
   "scripts/seed-manifest.sh" (refuses to overwrite; groups by `mdls`
   `kMDItemContentCreationDate`; adds unlisted, coming-soon, a shared photo, a caption). The high
   tier runs it once against `dev-pictures/` and commits `seed/manifest.json`.

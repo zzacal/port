@@ -19,6 +19,15 @@ public sealed class RequestTimingMiddleware(RequestDelegate next, ILoggerFactory
         {
             var ms = Stopwatch.GetElapsedTime(start).TotalMilliseconds;
             context.Response.Headers.Append("Server-Timing", ServerTiming.Format("app", ms));
+
+            // Append one db;dur= entry per datastore read resolved from the scoped OpTimer.
+            var opTimer = context.RequestServices.GetService<OpTimer>();
+            if (opTimer is not null)
+            {
+                foreach (var entry in opTimer.ServerTimingDb())
+                    context.Response.Headers.Append("Server-Timing", entry);
+            }
+
             return Task.CompletedTask;
         });
 
@@ -32,12 +41,14 @@ public sealed class RequestTimingMiddleware(RequestDelegate next, ILoggerFactory
             var route = (context.GetEndpoint() as RouteEndpoint)?.RoutePattern.RawText
                         ?? context.Request.Path.Value
                         ?? "/";
+            var dbReads = context.RequestServices.GetService<OpTimer>()?.DbReads ?? 0;
             _log.LogInformation(
-                "http.request {method} {route} {status} {duration_ms}",
+                "http.request {method} {route} {status} {duration_ms} {db_reads}",
                 context.Request.Method,
                 route,
                 context.Response.StatusCode,
-                Math.Round(ms, 2));
+                Math.Round(ms, 2),
+                dbReads);
         }
     }
 }
