@@ -699,7 +699,7 @@ slug is cosmetic—a stale slug triggers a 301 redirect to the current one (D-14
 
 ## 7. Traceability Matrix
 
-One row per numbered rule in constitution v3.0.0, plus one per Platform Constraints bullet (`PC.n`,
+One row per numbered rule in constitution v4.1.0, plus one per Platform Constraints bullet (`PC.n`,
 in order). A rule with no numbered list (VI) counts as one rule. Status `deferred:first-build-feature`
 marks rules whose mechanism is designed here but whose compliance is a provisioning setting that
 can only be checked once the resource exists.
@@ -719,6 +719,7 @@ can only be checked once the resource exists.
 | II.5 | D-14, D-13: galleries default private; upload and edit never change visibility | integration test: new gallery and confirmed batch leave visibility private | designed |
 | III.1 | D-07: masters in the `private` R2 bucket, no public access, no route serves them | config check: `private` bucket has no custom domain and no r2.dev URL; route inventory has no master route | designed |
 | III.9 | D-07, D-08, D-19: private bucket, bucket-scoped Object Read and Write token from configuration, presigned PUT per object for 15 minutes or less, r2.dev disabled | integration test: a presigned URL allows only PUT on its own key and expires; config check: token scope and bucket public-access settings; markup assertion that no credential or S3 endpoint appears in served HTML or script | designed |
+| III.10 | Feature 006 seed: dev-machine preparation, then the seed validates every derivative with the structure parser and MetadataExtractor before upload, reads the allowlist with the server extractor, and refuses non-development targets | integration test: a derivative with an Exif chunk or wrong dimensions is rejected and not uploaded; seed exits non-zero unless the environment is Development, the public bucket name starts with `gallery-dev-`, and the database name ends with `_dev` | designed |
 | III.2 | D-09, D-10: visitors receive only client-generated, server-validated derivatives | integration test: only validated derivatives are copied to `public` on confirm | designed |
 | III.3 | D-10: camera allowlist extracted at upload; derivatives carry no metadata | integration test: rendered camera fields equal the allowlist subset | designed |
 | III.4 | D-09: `createImageBitmap` applies orientation before encoding | browser measurement: rotated-EXIF fixture produces upright derivatives | designed |

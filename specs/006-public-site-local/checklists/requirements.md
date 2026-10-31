@@ -50,3 +50,8 @@
   006 seeding from already-prepared files.
 - Still defaults, not asked: SC-003's 50 ms bound on the dev machine, photo pages from private
   galleries being do-not-index (FR-007).
+- Analyze remediation 2026-10-31 (owner-approved):
+  - constitution 4.0.0 → 4.1.0 (III.10 seeded-content rule; IV.19 clarified)
+  - FR-032 added (seed target guard); FR-006, FR-012, FR-029, SC-008, SC-010 and SC-011 reworded
+  - tasks 35 → 37 (`/ui` baseline, DerivativeValidator); [SAFETY] tasks 8 → 12
+  - requirements remain free of implementation detail

@@ -61,14 +61,14 @@ public routes, 1 seed command, 4 scripts.
 
 | Principle | Status | How |
 |---|---|---|
-| I.1–I.6 Owner, claim, CSRF | PASS (justified N/A) | No sign-in or writes over HTTP. `site.claimedSubject` is created null; 007 owns the claim. |
+| I.1–I.6 Owner, claim, CSRF | PASS | No sign-in or writes over HTTP. `site.claimedSubject` is created null with `$setOnInsert`. A reseed never writes the claim fields (I.4), and a test proves an existing claim survives a reseed. |
 | II.1 Anonymous viewing | PASS | Public routes need no cookie. No `Set-Cookie` is sent (checked in verify.sh). |
 | II.2 Private = unlisted | PASS | Absent from `homeCards`; `noindex` meta and header on the gallery and its photo pages (contracts/http.md). |
 | II.3 Opaque ids | PASS | 128-bit random base32, never from titles or file names. Derivative keys are content hashes (R-06). |
 | II.4 Renames keep links | PASS | `/g/{id}/{slug}` with a 301 on slug mismatch. |
 | II.5 Nothing public by side effect | PASS | The manifest default is private. The generator writes explicit visibility. |
 | III.1 Masters private, never served | PASS | Originals are never stored anywhere (FR-019). No route serves a file from `dev-pictures/`. |
-| III.2, III.5–III.7 Validated derivatives | PASS (justified deviation, recorded) | The owner's machine prepares the derivatives with dev tools, and the structural check from 003 must pass for every file, or preparation fails. There is no upload path here, so the server-side validation (D-10) arrives with 008. The R-05 camera extractor is the first piece of it. |
+| III.2, III.5–III.7, III.10 Validated derivatives, seeded content | PASS (constitution 4.1.0, III.10) | The owner's machine prepares the derivatives. The structural check from 003 must pass at preparation. Then the seed validates every file again with MetadataExtractor before upload: format, no metadata directory, width and height (`DerivativeValidator`, probe in `evidence/probe-metadataextractor.txt`). That is two independent readers. A failing photo stores nothing. The allowlist is read by the server extractor (R-05). The seed refuses any non-dev target (FR-032). |
 | III.3 Allowlist camera fields | PASS | MetadataExtractor reads only the allowlisted tag ids; GPS is never read (R-05). A test proves it with a GPS fixture. |
 | III.4 Orientation before strip | PASS | ffmpeg applies EXIF orientation in the intermediate; cwebp encodes only from it. Probed (R-04). |
 | III.8 No pixel work on the server | PASS | Preparation is a dev-machine script. The seed reads only EXIF segments. |
@@ -79,7 +79,7 @@ public routes, 1 seed command, 4 scripts.
 | IV.10 Warm on publish; tiered cache | PASS (justified N/A) | No publish action, and no edge locally. Owned by 009 and hosting. |
 | IV.11–IV.14 Predictive loading, Save-Data | PASS | Speculation Rules plus a loader of under 30 lines (R-08). |
 | IV.15–IV.17 Thumb-first, view transitions, priority | PASS | SoloViewer thumb layer; `#p-{id}` transition rules; first row and solo image at high priority. |
-| IV.18–IV.20 Edge-cacheable, early hints, bfcache | PASS (origin side) | `Cache-Control` with `s-maxage`, a preload `Link`, no `no-store` or `unload`. Edge behaviour is proven by hosting. |
+| IV.18–IV.20 Edge-cacheable, early hints, bfcache | PASS (origin side) | `Cache-Control` with `s-maxage`, a preload `Link` for the primary image (IV.19 as clarified in 4.1.0: inlined CSS needs no hint), no `no-store` or `unload`. Edge behaviour is proven by hosting. |
 | IV.21 Immutable assets; origin output cache | PASS | Objects stored with `immutable` (probed through img-dev: HIT); `AddOutputCache` 60 s. Always On is a hosting setting. |
 | IV.22 No framework, inlined CSS, system fonts | PASS | Unchanged from 003. |
 | V.1 Scope | PASS | Pages, seed, preparation. The severable seams are listed in the spec checklist. |
@@ -89,7 +89,8 @@ public routes, 1 seed command, 4 scripts.
 | VII.2 Design stays current | PASS | D-15 and D-17 amended in this feature (Design updates below). |
 | VIII. Cost | PASS | R2 dev use is about 75 MB, inside the free 10 GB. There is no other metered service locally. |
 
-No unjustified violations. Complexity Tracking records the one justified deviation (III.2/III.5).
+No violations. Constitution 4.1.0 (III.10, IV.19 clarification) was amended before this
+re-check, on 2026-10-31, after `/speckit-analyze` finding C1.
 
 **Post-design re-check**: unchanged, all PASS. Phase 1 added `seedKey` (not in the design content
 model) and the TransitionId mechanism. Neither weakens a principle.
@@ -138,7 +139,8 @@ src/Gallery.Web/
 ├── Observability/RequestTimingMiddleware.cs # + db_reads field (existing file, additive)
 ├── Storage/StorageOptions.cs  Storage/S3ClientFactory.cs  Storage/ImageStore.cs   # R-02 settings in one place
 ├── Data/MongoOptions.cs  Data/Documents.cs  Data/ContentReader.cs                 # read shapes (data-model)
-├── Seed/Manifest.cs  Seed/CameraFields.cs  Seed/Seeder.cs  Seed/SeedCommand.cs
+├── AppBuilder.cs                            # shared host setup; tests host the real app with config overrides
+├── Seed/Manifest.cs  Seed/CameraFields.cs  Seed/DerivativeValidator.cs  Seed/Seeder.cs  Seed/SeedCommand.cs
 ├── Site/PublicEndpoints.cs  Site/PublicCache.cs  Site/ViewMapper.cs
 ├── Site/Pages/{HomePage,GalleryPage,PhotoPage,NotFoundPage}.razor (+ GalleryPage.razor.css)
 ├── Components/Atoms/Picture.razor           # + TransitionId (optional)
@@ -146,13 +148,16 @@ src/Gallery.Web/
 ├── Components/Organisms/ContactSheet.razor  ContactSheetItem.cs  SoloViewer.razor(.css)
 └── Components/Templates/PublicLayout.razor(.css)   # + Enhance, HeadExtra; @view-transition
 tests/Gallery.Core.Tests/{OpaqueIdTests,SlugTests,GalleryNavTests}.cs
+tests/fixtures/{orientation-6,gps-camera,not-a-jpeg}.jpg   # tiny committed fixtures (scripts/fixtures/make-exif-fixtures.py)
 tests/Gallery.Web.Tests/
-├── Fixtures/{MongoFixture,S3ProxyFixture}.cs   # one container per assembly
+├── Fixtures/{MongoFixture,S3ProxyFixture,R2Fixture}.cs   # one container per collection
+├── UiPagesUnchangedTests.cs                 # all /ui/ pages vs pre-006 baseline (SC-010)
+├── OpTimerTests.cs  ViewMapperTests.cs  ManifestTests.cs  DerivativeValidatorTests.cs
+├── PublicRoutesTests.cs                     # live host: routes, headers, read counts, visibility, redirects
 ├── StorageTests.cs                          # emulator always; [Trait("Category","R2")] variants on demand
 ├── R2ScopeTests.cs                          # Category=R2: 403 outside scope (FR-021)
 ├── CameraFieldsTests.cs                     # GPS fixture → no location (SC-011)
-├── SeederTests.cs                           # idempotency, reconcile, cards (SC-006)
-├── ContentReaderTests.cs                    # read counts, projections (SC-004)
+├── SeederTests.cs                           # idempotency, reconcile, cards, claim preserved, target guard (SC-006)
 ├── PageComponentTests.cs                    # pages, noindex, empty card, caption, no style=, script contents
 └── ComponentAdditionsTests.cs               # new optional params; unset = unchanged
 ```
@@ -165,6 +170,5 @@ duplication.
 
 ## Complexity Tracking
 
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|---|---|---|
-| III.2/III.5: derivatives come from a dev script, not the admin client with server validation | Upload (008) does not exist yet. The owner wants their own photos on the site now. | Waiting for 008 blocks seeing real content for three features. Server-side validation is replaced for seed only by the same structural check run at preparation. Real uploads keep the full III.5 path. |
+No entries. The earlier III.2/III.5 deviation is resolved by constitution 4.1.0 rule III.10:
+seeded content passes the same two-reader validation as uploads.

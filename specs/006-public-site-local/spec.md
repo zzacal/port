@@ -200,8 +200,10 @@ hover on a photo starts loading the destination image, and repeat with scripts d
   pages MUST each need at most two datastore reads, regardless of how many photos the gallery has.
 - **FR-005**: Every image on every page MUST be addressed on the image hostname. No page may contain
   an address of the storage service itself (III.9, D-19).
-- **FR-006**: Pages MUST render the components built in 003 unchanged. The `/ui/` pages MUST keep
-  rendering exactly as they do now.
+- **FR-006**: Pages MUST render the components built in 003. Any parameters this feature adds to
+  them MUST be optional, and with them unset each component's output MUST be unchanged. The
+  `/ui/` pages MUST keep rendering the same markup as before this feature; only the shared inlined
+  stylesheet may grow.
 
 **Visibility and addresses**
 
@@ -223,7 +225,10 @@ hover on a photo starts loading the destination image, and repeat with scripts d
   It MUST skip non-JPEG files and files over 20 MB, naming each with the reason (D-08).
 - **FR-012**: Every prepared file MUST carry no embedded metadata of any kind, and the preparation
   step MUST fail if an automated structural check finds any (III.3, III.5). Prepared files are
-  named by a hash of their content (II.3).
+  named by a hash of their content (II.3). Before storing any file, the seed command MUST validate
+  it again with an independent reader, checking for no metadata of any kind, an allowed format,
+  and dimensions matching the declared width. It MUST NOT store a photo any of whose files fails;
+  it reports the photo by name and seeds the rest (III.5, III.6, III.10).
 - **FR-013**: Camera fields shown to visitors MUST come only from the allowlist (camera, lens, focal
   length, aperture, shutter speed, ISO), read from the original, never by passing original
   metadata through (III.3, III.7). Location data MUST NOT reach any stored record or file.
@@ -278,8 +283,8 @@ hover on a photo starts loading the destination image, and repeat with scripts d
 
 - **FR-028**: Public page responses MUST be cacheable with a bounded lifetime (IV.18), MUST NOT
   forbid back/forward caching, and pages MUST NOT register unload handlers (IV.20).
-- **FR-029**: Public page responses MUST carry preload hints for the critical stylesheet and the
-  primary image (IV.19).
+- **FR-029**: Public page responses MUST carry a preload hint for the primary image (IV.19). The
+  critical stylesheet is inlined, so it needs no hint.
 
 **Instrumentation (Constitution IV.1–4)**
 
@@ -288,6 +293,11 @@ hover on a photo starts loading the destination image, and repeat with scripts d
   duration and outcome. Public pages MUST tell the browser how long the server spent.
 - **FR-031**: The feature MUST include a committed script that computes each time-bound success
   criterion from the captured local log alone.
+**Seed safety (Constitution III.10)**
+
+- **FR-032**: The seed command MUST refuse to run unless it targets development storage and a
+  development datastore. That means the app environment is Development, the public bucket is a
+  dev bucket, and the database is a dev database (III.10).
 
 ### Key Entities
 
@@ -327,13 +337,16 @@ hover on a photo starts loading the destination image, and repeat with scripts d
   re-prepares 0 photos and uploads 0 files.
 - **SC-007**: 100% of image files referenced by seeded pages load from the image hostname with
   one-year immutable caching.
-- **SC-008**: 0 occurrences of a credential, key, or storage-service address in served pages and
-  committed files, checked by an automated scan.
+- **SC-008**: 0 occurrences of the configured storage credential or the storage account address in
+  committed files, and 0 occurrences of any storage-service address in served pages, checked by an
+  automated scan.
 - **SC-009**: With scripts disabled, home → gallery → photo → next → back works on every seeded
   gallery.
-- **SC-010**: Every `/ui/` page renders byte-identical output before and after this feature.
-- **SC-011**: 0 prepared files contain embedded metadata, and 0 stored records contain location
-  data, including for the photos whose originals carry GPS, checked by an automated scan.
+- **SC-010**: Every `/ui/` page renders byte-identical markup before and after this feature,
+  apart from the shared inlined stylesheet.
+- **SC-011**: 0 prepared or stored files contain embedded metadata, and 0 stored records contain
+  location data, including for the photos whose originals carry GPS, checked by two independent
+  automated scans.
 - **SC-012**: Every photo in the local folder that meets the upload limits appears on at least one
   gallery page after seeding with the generated manifest, unless the owner removed it from the
   manifest.

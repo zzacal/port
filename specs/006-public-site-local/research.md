@@ -100,6 +100,16 @@ Probed with the owner's dev token using `curl --aws-sigv4`. Output is in `eviden
   photo was 804 KB, which is under the 2.2 MB design estimate.
 - **Metadata**: `scripts/check-metadata.sh` (003) passed on the probe's 12 files. Preparation fails
   if any prepared file fails the check (FR-012).
+- **Second reader at seed time** (analyze C1, constitution III.10): MetadataExtractor 2.9.3 was
+  probed on a clean AVIF, a clean WebP, and a WebP deliberately encoded with `cwebp -metadata all`
+  from a GPS-tagged original (`evidence/probe-metadataextractor.txt`).
+  - The clean files report only file-type, dimension (`HEIC Primary Item Properties` / `WebP`) and
+    `File` directories.
+  - The tainted WebP reports `Exif IFD0`, `Exif SubIFD`, `GPS`, `Exif Thumbnail`, `XMP` and
+    `ICC Profile`.
+  - So `DerivativeValidator` rejects any file with a directory outside {File Type, File, WebP,
+    HEIC Primary Item Properties, QuickTime File Type}, or with an ICC profile, since clean
+    encoder output carries none. It also checks the detected type and the dimensions.
 - **Location**: the camera allowlist is read from the original by the seed command with
   MetadataExtractor (R-05), so no GPS value is ever read into a variable. Prepared files have no
   metadata, so location can't travel with them.

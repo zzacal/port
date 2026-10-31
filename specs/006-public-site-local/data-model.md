@@ -11,10 +11,10 @@ not created here.
 | Field | Type | Rule |
 |---|---|---|
 | _id | string | Always `"site"`. |
-| claimedSubject, claimedAt, claimedIp | null | Present as `null`. Owned by 007; the seed never sets them. |
+| claimedSubject, claimedAt, claimedIp | null | Set to `null` only when the seed CREATES the document (`$setOnInsert`). The seed never writes them on an existing document, so a reseed never reopens a claim (I.4). Owned by 007. |
 | homeOrder | string[] | Every gallery id, public and private, in manifest order. |
 | homeCards | GalleryCard[] | Cards for the public galleries in `homeOrder` order. This is the only thing the home page reads (IV.9). |
-| updatedAt | datetime | Set by the seed. |
+| updatedAt | datetime | Set by the seed. The seed updates only `homeOrder`, `homeCards` and `updatedAt` (`$set`), never replacing the document. |
 
 ### `galleries`
 
@@ -40,7 +40,7 @@ not created here.
 | sourceHash | string | sha256-16 of the original's bytes. Reuses preparation across renames. Not secret, and reveals nothing beyond identity. |
 | title | string | 1–200 chars. Defaults to the file name without its extension (D-13). |
 | caption | string? | 0–2000 chars. |
-| width, height | int | Upright pixel size of the largest prepared width's source frame (IV.8). |
+| width, height | int | Pixel size of the largest prepared WebP, read back after encoding (IV.8). The design model says "source after orientation". Only the aspect ratio matters for layout, and the largest derivative has the same ratio up to rounding, so this follows 003's samples. |
 | placeholder | { color: `#rrggbb`, preview: data URI } | Preview is WebP, at most 32 px on the long edge (IV.7). |
 | camera | { make, model, lens, focalMm, focal35Mm, fNumber, exposure, iso }? | Allowlist only (R-05). Each field is optional. Null when no field is present. |
 | derivatives | { w, avif, webp, bytesAvif, bytesWebp }[] | `avif`/`webp` are object keys (`{sha256-16}.avif`), never URLs. URLs are built at render time from `Storage:ImageBaseUrl` (FR-005). |
@@ -89,5 +89,9 @@ responses log 1 read.
 
 ## State transitions
 
-None in this feature. Content changes only by reseeding, which is a full reconcile: upsert by
-`seedKey`, delete what's no longer in the manifest, then recompute every card and `homeCards`.
+None in this feature. Content changes only by reseeding, which is a full reconcile:
+
+1. Upsert by `seedKey`.
+2. Delete only documents that HAVE a `seedKey` not in the manifest. Documents without a
+   `seedKey`, such as ones created later through 009's UI, are never touched.
+3. Recompute every card and `homeCards`.

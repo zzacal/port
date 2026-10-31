@@ -60,5 +60,9 @@ s-maxage=300`.
   files uploaded, files skipped as already present, unmatched manifest entries, unmatched prepared
   photos.
 - It exits 2 when a required setting is missing, naming the key. It exits 3 on a manifest
-  validation error, naming the gallery key and the rule.
+  validation error, naming the gallery key and the rule. It exits 4 when the target guard fails
+  (contracts/seed.md step 0).
+- It always loads user-secrets, whatever the environment variable says, so the seed and the dev
+  app read the same credentials.
+- The summary includes `rejected N` (photos whose derivatives failed validation).
 - It logs `op.timing` for every S3 and Mongo call, like the web app does.

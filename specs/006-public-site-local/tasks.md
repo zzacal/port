@@ -32,8 +32,9 @@ contradictory, stop and report a blocker. Do not invent.
   or `min-width: 1200px`.
 - Logging uses the existing template exactly: `log.LogInformation("op.timing {op} {duration_ms}
   {outcome}", ...)`, with `duration_ms` rounded to 2 decimals and `outcome` `ok` or `error`.
-- Blocking, non-deferrable tasks are marked **[SAFETY]**. They implement Constitution III.3/III.9
-  or II.2 controls and may never be skipped, stubbed, or left as follow-ups.
+- Blocking, non-deferrable tasks are marked **[SAFETY]**. They implement Constitution I.4, II.2,
+  III.3, III.5–III.7, III.9 or III.10 controls (constitution 4.1.0) and may never be skipped,
+  stubbed, or left as follow-ups.
 - Escalate (stop and report) on any design question. Executors never change the contracts.
 
 ## Phase 1: Setup (high tier, done before dispatch)
@@ -62,9 +63,20 @@ contradictory, stop and report a blocker. Do not invent.
   `Database` `gallery_dev`. `Storage`: `PublicBucket` `gallery-dev-public`, `PrivateBucket`
   `gallery-dev-private`, `ImageBaseUrl` `https://img-dev.zacal.me`. `Site`: `OutputCache` `true`.
 
+- [ ] T005 Capture the `/ui/` baseline BEFORE any component change (SC-010). Render every page in
+  `UiCatalog.Entries` plus the `/ui/` index with `Render.Html` into
+  `specs/006-public-site-local/evidence/ui-baseline/{slug}.html`, with the inlined `<style …>…</style>`
+  removed. Use the same `StripStyle` regex as `PublicOutputUnchangedTests`, moved to a shared
+  `Guards.StripStyle` only by ADDING a copy (the existing test file is not edited).
+  - New test `tests/Gallery.Web.Tests/UiPagesUnchangedTests.cs`, one theory row per catalogue
+    slug: the current render with styles stripped equals the baseline file byte for byte.
+  - It must be green on the unchanged tree. Prove it isn't vacuous: change one character in one
+    baseline file, see the test fail, then restore the file.
+  - Done by the high tier before dispatch.
+
 ## Phase 2: Foundational (blocks every user story)
 
-- [ ] T005 [P] Create `src/Gallery.Core/Ids/OpaqueId.cs`:
+- [ ] T006 [P] Create `src/Gallery.Core/Ids/OpaqueId.cs`:
   - `NewId()` returns 16 bytes from `RandomNumberGenerator`, encoded as RFC 4648 base32 in
     lowercase with no padding (26 chars)
   - `IsValid(string?)` checks exactly 26 chars of `[a-z2-7]`
@@ -72,7 +84,7 @@ contradictory, stop and report a blocker. Do not invent.
   Tests in `tests/Gallery.Core.Tests/OpaqueIdTests.cs`:
   - 1,000 ids are all valid and distinct
   - IsValid rejects null, 25 or 27 chars, uppercase, and the characters `0`, `1`, `8`, `9`
-- [ ] T006 [P] Create `src/Gallery.Core/Text/Slug.cs` with `From(string title)`:
+- [ ] T007 [P] Create `src/Gallery.Core/Text/Slug.cs` with `From(string title)`:
   - lowercase; map each char to ASCII by removing diacritics (`NormalizationForm.FormD`, drop
     `NonSpacingMark`)
   - collapse runs of chars outside `[a-z0-9]` to one `-`, then trim `-`
@@ -82,12 +94,12 @@ contradictory, stop and report a blocker. Do not invent.
   Tests in `tests/Gallery.Core.Tests/SlugTests.cs`: `"September 5"` → `september-5`;
   `"Café — Noir!"` → `cafe-noir`; `"!!!"` → `gallery`; a 100-char title gives at most 60 chars
   with no trailing `-`.
-- [ ] T007 [P] Create `src/Gallery.Core/Content/GalleryNav.cs` with
+- [ ] T008 [P] Create `src/Gallery.Core/Content/GalleryNav.cs` with
   `static (string? Prev, string? Next) Neighbours(IReadOnlyList<string> items, string current)`.
   It returns nulls at the ends and throws `ArgumentException` when `current` is not in `items`.
   Tests in `tests/Gallery.Core.Tests/GalleryNavTests.cs` cover first, middle, last, a single item,
   and an item that isn't present.
-- [ ] T008 Create `src/Gallery.Web/Observability/OpTimer.cs` and extend
+- [ ] T009 Create `src/Gallery.Web/Observability/OpTimer.cs` and extend
   `src/Gallery.Web/Observability/RequestTimingMiddleware.cs` (research R-09).
   - OpTimer is a scoped service:
     - `Task<T> Time<T>(string op, Func<Task<T>> body, bool isDbRead = false)` logs `op.timing`
@@ -104,7 +116,7 @@ contradictory, stop and report a blocker. Do not invent.
     - two db reads give `DbReads == 2` and two `db;dur=` entries
 
   Existing 003/005 verify scripts grep `"http.request "`, which still matches.
-- [ ] T009 Create `src/Gallery.Web/Storage/StorageOptions.cs` (`ServiceUrl`, `AccessKeyId`,
+- [ ] T010 Create `src/Gallery.Web/Storage/StorageOptions.cs` (`ServiceUrl`, `AccessKeyId`,
   `SecretAccessKey`, `PublicBucket`, `PrivateBucket`, `ImageBaseUrl`) and
   `src/Gallery.Web/Storage/S3ClientFactory.cs`. It is the ONLY place an `AmazonS3Client` is
   built, using the research R-02 settings verbatim:
@@ -113,7 +125,7 @@ contradictory, stop and report a blocker. Do not invent.
   - `public bool IsHttps` from the ServiceUrl scheme
 
   `Validate()` returns the names of missing settings, never values.
-- [ ] T010 Create `src/Gallery.Web/Storage/ImageStore.cs` over the factory's client:
+- [ ] T011 Create `src/Gallery.Web/Storage/ImageStore.cs` over the factory's client:
   - `Task<bool> ExistsAsync(bucket, key)` (HEAD; false on 404)
   - `PutAsync(bucket, key, Stream, contentType, cacheControl)` with `DisableDefaultChecksumValidation
     = true` and `DisablePayloadSigning = IsHttps`
@@ -130,7 +142,7 @@ contradictory, stop and report a blocker. Do not invent.
   `s3.copy`, `s3.delete` and `s3.presign`. ImageStore is a singleton, so it takes an
   `ILogger<ImageStore>` and logs `op.timing` itself through a static helper shared with OpTimer
   (`OpTiming.Log(logger, op, ms, outcome)` in `OpTimer.cs`). It does not take the scoped OpTimer.
-- [ ] T011 Create the test fixtures in `tests/Gallery.Web.Tests/Fixtures/`:
+- [ ] T012 Create the test fixtures in `tests/Gallery.Web.Tests/Fixtures/`:
   - `MongoFixture.cs`: Testcontainers `MongoDbBuilder().WithImage("mongo:8")`, one per test
     collection `"mongo"`, with `NewDatabase()` returning a fresh `gallery_test_<guid>` database.
   - `S3ProxyFixture.cs`: `ContainerBuilder()`, image
@@ -145,8 +157,8 @@ contradictory, stop and report a blocker. Do not invent.
   - R2 tests carry `[Trait("Category","R2")]`. The xunit in the csproj is 2.9.3, which has no
     dynamic skip, so each R2 test method starts with `if (!fixture.Enabled) return;`. Its method
     name ends in `_R2`, so a vacuous pass is visible in the test list. The high tier runs them
-    for real with `GALLERY_R2_TESTS=1` (T012).
-- [ ] T012 [SAFETY] Create `tests/Gallery.Web.Tests/StorageTests.cs` as an abstract base with two
+    for real with `GALLERY_R2_TESTS=1` (T013).
+- [ ] T013 [SAFETY] Create `tests/Gallery.Web.Tests/StorageTests.cs` as an abstract base with two
   subclasses, `EmulatorStorageTests` (S3ProxyFixture) and `R2StorageTests` (R2Fixture,
   Category=R2, keys under `test/{guid}/`, deleted in cleanup). The same test methods run on both
   targets (FR-022):
@@ -163,7 +175,7 @@ contradictory, stop and report a blocker. Do not invent.
   runs it; it needs the owner's secrets) and save the output to
   `specs/006-public-site-local/evidence/r2-tests.txt`. Run it through `sed -E
   's/[A-Za-z0-9]{32,}/<redacted>/g'` first.
-- [ ] T013 [SAFETY] Create `tests/Gallery.Web.Tests/R2ScopeTests.cs` (Category=R2, FR-021). It
+- [ ] T014 [SAFETY] Create `tests/Gallery.Web.Tests/R2ScopeTests.cs` (Category=R2, FR-021). It
   uses the R2 credential through the factory:
   - `ListBucketsAsync` throws an AmazonS3Exception with status 403
   - `ListObjectsV2` on bucket `gallery-scope-probe-other` throws AmazonS3Exception with status
@@ -173,7 +185,7 @@ contradictory, stop and report a blocker. Do not invent.
   - ListObjectsV2 on both dev buckets succeeds
 
   Output is appended to `evidence/r2-tests.txt`.
-- [ ] T014 Create `src/Gallery.Web/Data/MongoOptions.cs`, `src/Gallery.Web/Data/Documents.cs` and
+- [ ] T015 Create `src/Gallery.Web/Data/MongoOptions.cs`, `src/Gallery.Web/Data/Documents.cs` and
   `src/Gallery.Web/Data/ContentReader.cs`.
   - `Documents.cs` has the BSON-mapped classes for `site`, `galleries` and `images`, with
     GalleryCard and CoverImage exactly as in data-model.md. Use explicit `[BsonElement]` camelCase
@@ -188,17 +200,17 @@ contradictory, stop and report a blocker. Do not invent.
       order of `ids`
 
   Register `IMongoClient` as a singleton with `ServerSelectionTimeout = 2s` and the database from
-  options in `AppBuilder.cs` (T015). Startup MUST NOT ping Mongo; the app boots without it.
-- [ ] T015 Move the body of `src/Gallery.Web/Program.cs` into a new
+  options in `AppBuilder.cs` (T016). Startup MUST NOT ping Mongo; the app boots without it.
+- [ ] T016 Move the body of `src/Gallery.Web/Program.cs` into a new
   `src/Gallery.Web/AppBuilder.cs`: `public static class AppBuilder { public static WebApplication
   Build(string[] args, IDictionary<string,string?>? overrides = null) }`.
-  - It does everything Program.cs does today, plus the T008, T009, T010 and T014 registrations.
+  - It does everything Program.cs does today, plus the T009, T010, T011 and T015 registrations.
   - It applies `overrides` with `builder.Configuration.AddInMemoryCollection(overrides)` LAST, so
     tests can set `Mongo:ConnectionString`, `Mongo:Database`, `Storage:*` and `Site:OutputCache`.
-  - `Program.cs` becomes: if `args` starts with `seed`, run the seed command (wired in T030; until
+  - `Program.cs` becomes: if `args` starts with `seed`, run the seed command (wired in T032; until
     then `return 1`); otherwise `AppBuilder.Build(args).Run();`.
   - Acceptance: all existing tests pass unmodified, and `/ui/` still serves in Development.
-- [ ] T016 Create `src/Gallery.Web/Site/ViewMapper.cs`:
+- [ ] T017 Create `src/Gallery.Web/Site/ViewMapper.cs`:
   - `ImageView ToView(ImageDoc, Func<string,string> url)` maps derivatives to `Variant(w,
     url(avif), url(webp))`, the placeholder preview to `PlaceholderDataUri`, the color to
     `DominantColor`, and camera to the Core `Exif` (Make, Model, Lens, FocalLengthMm,
@@ -216,7 +228,7 @@ contradictory, stop and report a blocker. Do not invent.
 **Independent test**: integration tests seed Mongo directly with documents, and the live walk works
 after the seed (US4).
 
-- [ ] T017 [US1] Apply contracts/components.md "Changes to existing components" to `Picture.razor`,
+- [ ] T018 [US1] Apply contracts/components.md "Changes to existing components" to `Picture.razor`,
   `Tile.razor`, `ContactSheet.razor`, `ContactSheetItem.cs` and `SoloViewer.razor` (+
   `SoloViewer.razor.css` `.solo-caption`).
   - Every new parameter is optional. When unset, the output is byte-identical.
@@ -232,9 +244,9 @@ after the seed (US4).
     - SoloViewer Caption renders `<p class="solo-caption">` between the h1 and the metadata, and
       none when null
     - SoloViewer PrefetchUrls gives `data-prefetch`
-  - Acceptance: `PublicOutputUnchangedTests`, `MoleculePageTests` and `OrganismPageTests` pass
-    unmodified. No `/ui/` page file is edited.
-- [ ] T018 [US1] Apply the PublicLayout changes from contracts/components.md:
+  - Acceptance: `PublicOutputUnchangedTests`, `MoleculePageTests`, `OrganismPageTests` and
+    `UiPagesUnchangedTests` (T005) pass unmodified. No `/ui/` page file is edited.
+- [ ] T019 [US1] Apply the PublicLayout changes from contracts/components.md:
   - `Enhance` (default false) and `HeadExtra` (rendered after `<style>`, nothing when null)
   - `@view-transition { navigation: auto; }` appended to `PublicLayout.razor.css` (probe-confirmed:
     the scoped bundler emits it unchanged)
@@ -249,7 +261,7 @@ after the seed (US4).
   - Enhance=true has exactly 2 `<script`, contains `speculationrules`, `"eagerness":"moderate"` and
     `saveData`, and does not contain `unload`
   - HeadExtra renders inside `<head>`
-- [ ] T019 [US1] Create the page components in `src/Gallery.Web/Site/Pages/`: `HomePage.razor`,
+- [ ] T020 [US1] Create the page components in `src/Gallery.Web/Site/Pages/`: `HomePage.razor`,
   `GalleryPage.razor` (+ `GalleryPage.razor.css`), `PhotoPage.razor` and `NotFoundPage.razor`,
   exactly as in contracts/components.md "New page components". Add `@using
   Gallery.Web.Components.*` through a new `src/Gallery.Web/Site/Pages/_Imports.razor` that copies
@@ -264,14 +276,14 @@ after the seed (US4).
     - PhotoPage title is `"{photo} — {gallery}"`
     - the view-transition style has one rule per image
     - every page passes `Guards.AssertNoInlineStyle`
-- [ ] T020 [US1] Create `src/Gallery.Web/Site/PublicCache.cs`:
+- [ ] T021 [US1] Create `src/Gallery.Web/Site/PublicCache.cs`:
   - `HtmlPolicy = "public, max-age=0, s-maxage=86400"` and `ShortPolicy = "public, max-age=0,
     s-maxage=300"`
   - output-cache policy name `"public-page"`, 60 s, varying by path
   - registered in Program.cs with `AddOutputCache`, and `UseOutputCache` placed after the timing
     middleware
   - applied to public routes only when `Site:OutputCache` is true
-- [ ] T021 [US1] Create `src/Gallery.Web/Site/PublicEndpoints.cs` with `MapPublic(this
+- [ ] T022 [US1] Create `src/Gallery.Web/Site/PublicEndpoints.cs` with `MapPublic(this
   WebApplication)` implementing contracts/http.md "Routes" for `/`, `/g/{id}`, `/g/{id}/{slug}` and
   `/g/{id}/{slug}/{imageId}`, GET and HEAD.
   - Malformed ids return 404 with no read (`OpaqueId.IsValid`).
@@ -287,7 +299,7 @@ after the seed (US4).
     wrong". The OpTimer error event is already logged.
   - Replace `app.MapGet("/", () => "Hello World!")` in `Program.cs` with `app.MapPublic()`.
     `/ui` mapping is unchanged.
-- [ ] T022 [US1] Integration tests in `tests/Gallery.Web.Tests/PublicRoutesTests.cs`
+- [ ] T023 [US1] Integration tests in `tests/Gallery.Web.Tests/PublicRoutesTests.cs`
   (MongoFixture). Host the real app with `AppBuilder.Build(["--urls", "http://127.0.0.1:0"],
   overrides)`, using overrides for the fixture's Mongo, a fresh database, `Storage:ImageBaseUrl`
   `https://img.test`, and `Site:OutputCache` `false`. Call `await app.StartAsync()` and take the
@@ -301,13 +313,16 @@ after the seed (US4).
   - the photo page has prev/next correct at both ends, the caption, and `data-prefetch`
   - every `<img>`/`<source>` URL starts with ImageBaseUrl
   - `Cache-Control` and `Link` headers are present, and there is no `Set-Cookie`
+  - datastore down (L4): a second host whose `Mongo:ConnectionString` points at an unused port
+    (`mongodb://127.0.0.1:1/?serverSelectionTimeoutMS=500`) answers a gallery request with 500 and
+    the body "Something went wrong", with no stack trace in the body
 
 ## Phase 4: User Story 2, only public galleries are listed (P1)
 
 **Independent test**: a private gallery is absent from `/`, renders by address, and is `noindex`
 on the gallery and photo pages.
 
-- [ ] T023 [SAFETY] [US2] Extend `PublicRoutesTests.cs` with a private gallery (II.2, FR-007,
+- [ ] T024 [SAFETY] [US2] Extend `PublicRoutesTests.cs` with a private gallery (II.2, FR-007,
   FR-008). Assert:
   - its id and title are absent from `/`
   - `/g/{id}/{slug}` gives 200 with `<meta name="robots" content="noindex">` and the
@@ -317,7 +332,7 @@ on the gallery and photo pages.
 
 ## Phase 5: User Story 3, links survive renames; bad addresses fail cleanly (P2)
 
-- [ ] T024 [US3] Extend `PublicRoutesTests.cs` (FR-009, FR-010):
+- [ ] T025 [US3] Extend `PublicRoutesTests.cs` (FR-009, FR-010):
   - `/g/{id}/wrong-slug` gives 301 with `Location` `/g/{id}/{slug}`
   - `/g/{id}` gives 301
   - `/g/{id}/wrong/{imageId}` gives 301 to the current slug with the same imageId
@@ -331,7 +346,7 @@ on the gallery and photo pages.
 **Independent test**: prepare and seed on empty storage, run both again with no change, scan the
 output for metadata.
 
-- [ ] T025 [P] [SAFETY] [US4] Create `scripts/prepare-photos.sh` exactly per contracts/seed.md
+- [ ] T026 [P] [SAFETY] [US4] Create `scripts/prepare-photos.sh` exactly per contracts/seed.md
   "scripts/prepare-photos.sh" and research R-04.
   - Encoder flags must match `scripts/build-samples.sh`.
   - The intermediate step is `ffmpeg -i src -vf "scale='min(2560,iw)':-2" -frames:v 1
@@ -341,47 +356,81 @@ output for metadata.
     - `tests/fixtures/orientation-6.jpg`: a 400×200 JPEG made first with `ffmpeg -f lavfi -i
       "color=c=red:s=400x200,drawbox=x=0:y=0:w=100:h=200:c=blue:t=fill" -frames:v 1`, with an APP1
       Exif inserted right after SOI. The big-endian TIFF has one IFD0 entry, `0x0112 SHORT 1 6`.
-    - `tests/fixtures/gps-camera.jpg`, used by T027: the same base image. Its IFD0 has Make
+    - `tests/fixtures/gps-camera.jpg`, used by T028: the same base image. Its IFD0 has Make
       `"TESTCAM"`, Model `"T1"` and a GPSInfo pointer (`0x8825`) to a GPS IFD with
       GPSLatitudeRef `N`, GPSLatitude `37/1 46/1 0/1`, GPSLongitudeRef `W` and GPSLongitude
       `122/1 25/1 0/1`.
+    - `tests/fixtures/not-a-jpeg.jpg`: 64 bytes of PNG signature plus padding (FR-011 skip by magic
+      bytes).
     - Verify each with `mdls -raw -name kMDItemOrientation` / `kMDItemLatitude` (non-null), and
       record the result in `evidence/prepare-check.txt`.
+  - Skip rules (M5): with `PHOTOS_DIR=tests/fixtures`, the run reports `not-a-jpeg.jpg` as
+    rejected for "not a JPEG". The 20 MB rule is checked with a sparse file made in a temp dir
+    (`mkfile -n 21m /tmp/prep-big/big.jpg`, after writing `FF D8 FF` to its first bytes with
+    `printf`); it is reported as "over 20 MB". Both lines go into `evidence/prepare-check.txt`.
   - Run `prepare-photos.sh` with `PHOTOS_DIR=tests/fixtures PREPARED_DIR=/tmp/prep-test` (the
     script must honour these env overrides). Assert the largest WebP is portrait (height >
     width) and that `check-metadata.sh` passes.
   - Record the commands and results in `specs/006-public-site-local/evidence/prepare-check.txt`.
-- [ ] T026 [P] [US4] Create `scripts/seed-manifest.sh` exactly per contracts/seed.md
+- [ ] T027 [P] [US4] Create `scripts/seed-manifest.sh` exactly per contracts/seed.md
   "scripts/seed-manifest.sh" (refuses to overwrite; groups by `mdls`
   `kMDItemContentCreationDate`; adds unlisted, coming-soon, a shared photo, a caption). The high
   tier runs it once against `dev-pictures/` and commits `seed/manifest.json`.
-- [ ] T027 [SAFETY] [US4] Create `src/Gallery.Web/Seed/CameraFields.cs` (research R-05):
+- [ ] T028 [SAFETY] [US4] Create `src/Gallery.Web/Seed/CameraFields.cs` (research R-05):
   - `static Exif? Read(Stream jpeg)` uses `ImageMetadataReader.ReadMetadata`
   - it reads ONLY ExifIfd0Directory Make/Model and ExifSubIfdDirectory LensModel, FocalLength,
     35mm, FNumber, ExposureTime and ISO
   - it never references `GpsDirectory`, and returns null if all fields are null
 
   Tests in `tests/Gallery.Web.Tests/CameraFieldsTests.cs` use the committed fixture
-  `tests/fixtures/gps-camera.jpg` (from T025's fixture script; T027 depends on that script). As a
+  `tests/fixtures/gps-camera.jpg` (from T026's fixture script; T028 depends on that script). As a
   precondition, assert that MetadataExtractor DOES see a GpsDirectory with a latitude in the
   fixture, so the test isn't vacuous. Then assert:
   - Make and Model are read
   - serializing the resulting `Exif` and the `ImageDoc` built from it to BSON/JSON contains no
     `gps`, `latitude`, `longitude` or `altitude` (case-insensitive)
   - a source grep test: `CameraFields.cs` does not contain `Gps`
-- [ ] T028 [P] [US4] Create `src/Gallery.Web/Seed/Manifest.cs`: load and validate per
+- [ ] T029 [P] [US4] Create `src/Gallery.Web/Seed/Manifest.cs`: load and validate per
   contracts/seed.md. It returns all errors at once (duplicate key, visibility, cover not in photos,
-  title, caption and description lengths). Tests in `tests/Gallery.Web.Tests/ManifestTests.cs`
+  a photo listed twice in one gallery, title, caption and description lengths). Tests in `tests/Gallery.Web.Tests/ManifestTests.cs`
   cover each rule plus the defaults: missing visibility gives private, and a null title gives the
   file name without its extension.
-- [ ] T029 [US4] Create `src/Gallery.Web/Seed/Seeder.cs` (contracts/seed.md "Seed command",
+- [ ] T030 [SAFETY] [US4] Create `src/Gallery.Web/Seed/DerivativeValidator.cs` (constitution
+  III.5–III.7, III.10; contracts/seed.md step 4; research R-04 "Second reader").
+  `static ValidationResult Validate(Stream file, string declaredExt, int declaredWidth, double
+  aspectRatio)` runs `ImageMetadataReader.ReadMetadata`. It fails, with a reason string, when:
+  - the detected file type isn't AVIF for `avif` or WebP for `webp`
+  - any directory name is outside {`File Type`, `File`, `WebP`, `HEIC Primary Item Properties`,
+    `QuickTime File Type`}
+  - the width (from `WebP`/`HEIC Primary Item Properties`) isn't `declaredWidth`
+  - the height differs from `declaredWidth / aspectRatio` by more than 2
+
+  Tests in `tests/Gallery.Web.Tests/DerivativeValidatorTests.cs` use fixtures generated in-test
+  by a small helper `Fixtures/EncodedFixtures.cs` (shared with T031):
+  - with ffmpeg from `tests/fixtures/orientation-6.jpg`: a clean 320 AVIF and a clean 320 WebP
+    pass
+  - a WebP made by `cwebp -metadata all -resize 320 0` from `tests/fixtures/gps-camera.jpg` fails,
+    with a reason naming `Exif` or `GPS`
+  - a WebP declared as avif fails
+  - a width of 320 declared as 640 fails
+
+  Tests needing ffmpeg/cwebp check `which` first and fail with a clear message if they're
+  missing (dev-machine tools, R-04). Depends on T026 for the fixtures.
+- [ ] T031 [US4] Create `src/Gallery.Web/Seed/Seeder.cs` (contracts/seed.md "Seed command",
   steps 2–6; data-model.md). Inputs: Manifest, the prepared root, the photos dir, ImageStore,
   IMongoDatabase, and a logger. It:
+  - validates every derivative of a photo with `DerivativeValidator` BEFORE uploading any of its
+    files. If any fails, nothing of that photo is uploaded or written; it is reported and counted
+    in `rejected`
   - creates the unique indexes on `seedKey`
   - upserts by `seedKey`, keeping `_id`/`createdAt`, with new ids from `OpaqueId.NewId()`
   - HEADs before every PUT, uploading with `Cache-Control: public, max-age=31536000, immutable` and
     `Content-Type` `image/avif`/`image/webp`
-  - deletes documents not in the manifest
+  - deletes ONLY documents that have a `seedKey` not in the manifest; documents without a
+    `seedKey` are never touched (M1)
+  - updates `site` with `$set` of `homeOrder`, `homeCards` and `updatedAt`, plus `$setOnInsert`
+    of null `claimedSubject`/`claimedAt`/`claimedIp`. It never uses `ReplaceOne` on `site`
+    (I.4)
   - recomputes `galleryIds`, every card (cover = pinned or `items[0]`, null if empty), `homeOrder`
     and `homeCards` (public only)
   - returns a `SeedSummary` record with every count in contracts/http.md
@@ -389,28 +438,48 @@ output for metadata.
   It never uploads originals and never touches the private bucket. Tests in
   `tests/Gallery.Web.Tests/SeederTests.cs` (MongoFixture + S3ProxyFixture), with a tiny
   `.dev-prepared` fixture generated in the test (2 photo.json files with fake small byte files):
-  - first run: counts and documents per data-model, with the private gallery absent from homeCards
+  - first run: counts and documents per data-model, with the private gallery absent from homeCards.
+    The fixture derivative files must be REAL tiny AVIF/WebP files made with ffmpeg/cwebp at the
+    declared widths (e.g. 320 px, from `tests/fixtures/orientation-6.jpg`), because the validator
+    checks format and dimensions
   - **second run**: `uploaded 0`, and a dump of the 3 collections without `updatedAt` is equal
     (SC-006)
   - a gallery removed from the manifest is deleted and its images' galleryIds are updated
   - unmatched names are reported both ways
   - cover fallback, and an empty gallery card with a null cover
-- [ ] T030 [US4] Create `src/Gallery.Web/Seed/SeedCommand.cs` and wire it in `Program.cs`:
-  - if `args[0] == "seed"`, build the services (no web server), validate StorageOptions and
-    MongoOptions (exit 2 naming the missing keys), load the manifest (exit 3 printing errors), run
-    the Seeder, print the summary lines, and exit 0
+  - **[SAFETY] claim preserved**: set `site.claimedSubject` = `"sub-1"` directly, reseed, and assert
+    it is still `"sub-1"` (I.4)
+  - a gallery inserted without `seedKey` survives a reseed
+  - **[SAFETY] validation gate**: one fixture photo's WebP is replaced by the tainted WebP from
+    T030's test helper (`cwebp -metadata all` from `tests/fixtures/gps-camera.jpg`, resized to
+    the declared width). That photo is reported `rejected`, NONE of its keys exist in the bucket,
+    and the other photo is seeded
+- [ ] T032 [US4] Create `src/Gallery.Web/Seed/SeedCommand.cs` and wire it in `Program.cs`:
+  - if `args[0] == "seed"`, build the services (no web server) and always add
+    `AddUserSecrets(typeof(AppBuilder).Assembly, optional: true)` (M3), then:
+    - validate StorageOptions and MongoOptions (exit 2 naming the missing keys)
+    - **[SAFETY] target guard** (FR-032, III.10): exit 4, naming the failed condition, unless the
+      environment is Development, `Storage:PublicBucket` starts with `gallery-dev-`, and
+      `Mongo:Database` ends with `_dev`
+    - load the manifest (exit 3 printing errors)
+    - run the Seeder, print the summary lines, and exit 0
+  - Tests in `tests/Gallery.Web.Tests/SeedCommandTests.cs` (L4): a missing
+    `Storage:AccessKeyId` gives exit 2 and output naming the key with no value printed; a bucket
+    `gallery-prod-public` gives exit 4; a database `gallery` gives exit 4. Call a
+    `SeedCommand.RunAsync(string[] args, IDictionary<string,string?> overrides, TextWriter out)`
+    entry point; `Program.cs` passes the real config.
   - options `--manifest` (default `seed/manifest.json`) and `--prepared` (default
     `.dev-prepared`), paths relative to the repo root found by walking up to `Gallery.slnx`
   - the last summary line reminds the owner to restart a running app to clear the output cache
-- [ ] T031 [US4] High tier, live: run `bash scripts/dev-mongo.sh`, `bash
-  scripts/prepare-photos.sh`, review `seed/manifest.json` (T026), then `dotnet run --project
+- [ ] T033 [US4] High tier, live: run `bash scripts/dev-mongo.sh`, `bash
+  scripts/prepare-photos.sh`, review `seed/manifest.json` (T027), then `dotnet run --project
   src/Gallery.Web --artifacts-path artifacts -- seed` twice. Save both summaries to
   `specs/006-public-site-local/evidence/seed-run.txt`. The second must show `uploaded 0` and
   `skipped-unchanged` for every photo in prepare's output.
 
 ## Phase 7: User Story 5, the site feels instant (P2)
 
-- [ ] T032 [US5] Browser verification on the high tier's own :5090 instance after the seed. Record
+- [ ] T034 [US5] Browser verification on the high tier's own :5090 instance after the seed. Record
   in `specs/006-public-site-local/evidence/browser.md` with screenshots in `evidence/shots/`:
   - CLS = 0 (PerformanceObserver `layout-shift`) on home, a gallery and a photo at 1440, 1024 and
     390 widths
@@ -422,20 +491,26 @@ output for metadata.
 
 ## Phase 8: Polish and evidence
 
-- [ ] T033 Create `specs/006-public-site-local/evidence/verify.sh`, modelled on
+- [ ] T035 Create `specs/006-public-site-local/evidence/verify.sh`, modelled on
   `specs/005-admin-ui-components/evidence/verify.sh`: build and test gates, its own :5090 server
   with log at `evidence/dev-run.log`, `pass`/`fail` lines. It checks:
   - SC-002: no private titles on `/`, and `noindex` on every private page found from the manifest
     keys via mongosh
   - SC-007: every img/source URL starts with `https://img-dev.zacal.me/`, and a sample of 5 HEADs
     shows `immutable`
-  - **SC-008 secret scan**: `git ls-files -z | xargs -0 grep -lE
-    'r2\.cloudflarestorage\.com|\.r2\.dev|[a-f0-9]{32}'` over committed text files, excluding
-    `*.avif`, `*.webp` and `*.json` under `wwwroot/samples`, and served HTML of 5 pages. It
-    prints file names only, never matches. It also checks `git check-ignore .r2-keys-copy
-    dev-pictures/x .dev-prepared/x`
-  - SC-011: `check-metadata.sh` over all of `.dev-prepared/*/*.{avif,webp}`, and a mongosh dump of
-    `images` grepped case-insensitively for `gps|latitude|longitude`
+  - **SC-008 secret scan** (H1). Shape-based patterns appear legitimately in the docs (the
+    constitution names `r2.dev`, and the pinned S3Proxy digest is 64 hex chars), so the committed
+    tree is scanned for the ACTUAL configured values:
+    - read `Storage:AccessKeyId`, `Storage:SecretAccessKey` and the account id inside
+      `Storage:ServiceUrl` from `dotnet user-secrets list` into shell variables, never echoed
+    - `git ls-files -z | xargs -0 grep -lF -e "$KEY" -e "$SECRET" -e "$ACCOUNT"` must print
+      nothing
+    - served HTML of 5 pages must not match `r2\.cloudflarestorage\.com|\.r2\.dev|blob\.core`
+    - it prints file names only, never matched text
+    - it also checks `git check-ignore .r2-keys-copy dev-pictures/x .dev-prepared/x`
+  - SC-011: `check-metadata.sh` over all of `.dev-prepared/*/*.{avif,webp}`, and the seed summary
+    shows `rejected 0` (the second reader, `DerivativeValidator`, ran on every file). A mongosh
+    dump of `images` grepped case-insensitively for `gps|latitude|longitude` must be empty
   - SC-012: every `images` id appears on at least one gallery page
   - redirects and 404s per contracts/http.md
   - no `Set-Cookie` on public routes
@@ -443,7 +518,7 @@ output for metadata.
   - a second seed run shows `uploaded 0` (SC-006)
 
   Output goes to `evidence/verify-output.txt`. All PASS is required.
-- [ ] T034 Create `specs/006-public-site-local/evidence/p95.sh` (FR-031). It starts :5090 with
+- [ ] T036 Create `specs/006-public-site-local/evidence/p95.sh` (FR-031). It starts :5090 with
   `Site__OutputCache=false`, logging to `evidence/perf-run.log`, then warms up with 10 requests per
   route and sends 100 requests each to `/`, one public gallery page and one photo page. From the
   log alone (`"http.request ` lines; fields `duration_ms` and `db_reads` read from the JSON
@@ -452,31 +527,33 @@ output for metadata.
   - PASS SC-004: home `db_reads=1` on 100%, and the others ≤ 2 on 100%
 
   Output goes to `evidence/p95-output.txt`. Add the logs with `git add -f` (`*.log` is ignored).
-- [ ] T035 Clean rebuild (`dotnet clean` then `dotnet build -warnaserror`), run the full test
+- [ ] T037 Clean rebuild (`dotnet clean` then `dotnet build -warnaserror`), run the full test
   suite, confirm the test counts went up from 69/156 and that no pre-existing test file shows in
-  `git diff --stat main -- tests/` other than added files. Update `docs/roadmap.md` 006 as
+  `git diff --stat main -- 'tests/**/*.cs'` other than added files (the test `.csproj` changes by
+  `dotnet add package` in T001; that is expected). Update `docs/roadmap.md` 006 as
   done-pending-review, and fold every executor `decisions_made` into `decisions.md` rows 16+.
 
 ## Dependencies & Execution Order
 
-- Phase 1 (T001–T004) runs on the high tier, before dispatch.
-- Phase 2: T005, T006 and T007 [P] are independent (Core). T008 → T009 → T010 → T011 → T012/T013.
-  T014 depends on T008. T015 depends on T014. T016 depends on T014.
-- US1: T017 → T018 → T019 → T020 → T021 → T022. Needs Phase 2.
-- US2 (T023) and US3 (T024) need T021 and can run in parallel with each other (same test file:
+- Phase 1 (T001–T005) runs on the high tier, before dispatch. T005 must land before T018.
+- Phase 2: T006, T007 and T008 [P] are independent (Core). T009 → T010 → T011 → T012 → T013/T014.
+  T015 (Mongo reader) depends on T009. T016 (AppBuilder) depends on T015. T017 (ViewMapper) depends
+  on T015.
+- US1: T018 → T019 → T020 → T021 → T022 → T023. Needs Phase 2.
+- US2 (T024) and US3 (T025) need T022 and can run in parallel with each other (same test file:
   run them sequentially or have one executor do both).
-- US4: T025, T026 and T028 [P with each other]; T027 needs T025 (fixture); T029 needs T010, T014, T027 and T028; T030
-  needs T029; T031 needs T025, T026, T030 and T021 (to view).
-- US5 (T032) needs T031.
-- Polish: T033 and T034 need T031. T035 is last.
+- US4: T026, T027 and T029 [P with each other]; T028 and T030 need T026 (fixtures); T031 needs T011, T015, T028, T029 and T030; T032
+  needs T031; T033 needs T026, T027, T032 and T022 (to view).
+- US5 (T034) needs T033.
+- Polish: T035 and T036 need T033. T037 is last.
 
 ## Parallel opportunities
 
-- Core helpers T005, T006 and T007 together.
+- Core helpers T006, T007 and T008 together.
 - Once Phase 2 is done: the US1 chain (components and pages) in parallel with the US4 scripts
-  T025 and T026 and the US4 code T028 (T027 follows T025, which makes its fixture). These touch
+  T026 and T027 and the US4 code T029 (T028 follows T026, which makes its fixture). These touch
   disjoint files.
-- T033 and T034 together.
+- T035 and T036 together.
 
 ## Implementation Strategy
 
@@ -485,6 +562,7 @@ output for metadata.
 2. Add US4 to see the owner's photos.
 3. Add US3 and US5, then the polish evidence.
 
-Executor tiering: the high tier does Phase 1, T012/T013 R2 runs, T026's manifest review, T031,
-T032 and T035. Cheap executors do T005–T011, T014–T025 and T027–T030, plus T033/T034 scripts with
+Executor tiering: the high tier does Phase 1, T013/T014 R2 runs, T027's manifest review, T033,
+T034 and T037. Cheap executors do T006–T012, T015–T026 and T028–T032 (T030 reviewed by the high tier: it is a
+III.10 control), plus T035/T036 scripts with
 high-tier review.
