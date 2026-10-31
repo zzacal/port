@@ -9,11 +9,52 @@
     {
         <meta name="robots" content="noindex">
     }
-    <style>@((MarkupString)Styles.Css)</style>
+    <style>@((MarkupString)Styles.Css)</style>@if (HeadExtra is not null){@HeadExtra}
 </head>
 <body class="public">
     <SiteHeader SiteName="Gallery" NavItems="_nav" />
-    <main class="public-main">@ChildContent</main>
+    <main class="public-main">@ChildContent</main>@if (Enhance)
+{
+    <script type="speculationrules">{"prerender":[{"where":{"href_matches":"/g/*"},"eagerness":"moderate"}]}</script>
+    <script type="module">(() => {
+if (navigator.connection?.saveData) return;
+document.addEventListener('pointerenter', e => {
+    const el = e.target.closest('[data-preload-srcset]');
+    if (!el || el._preloaded) return;
+    el._preloaded = true;
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.setAttribute('imagesrcset', el.dataset.preloadSrcset);
+    link.setAttribute('imagesizes', el.dataset.preloadSizes || '100vw');
+    link.fetchPriority = 'high';
+    document.head.appendChild(link);
+}, true);
+document.addEventListener('touchstart', e => {
+    const el = e.target.closest('[data-preload-srcset]');
+    if (!el || el._preloaded) return;
+    el._preloaded = true;
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.setAttribute('imagesrcset', el.dataset.preloadSrcset);
+    link.setAttribute('imagesizes', el.dataset.preloadSizes || '100vw');
+    link.fetchPriority = 'high';
+    document.head.appendChild(link);
+}, { passive: true });
+window.addEventListener('load', () => {
+    const solo = document.querySelector('article.solo[data-prefetch]');
+    if (!solo) return;
+    (solo.dataset.prefetch || '').split(' ').filter(Boolean).forEach(url => {
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.as = 'image';
+        link.href = url;
+        document.head.appendChild(link);
+    });
+});
+})();</script>
+}
 </body>
 </html>
 
@@ -21,6 +62,8 @@
     [Parameter, EditorRequired] public string Title { get; set; } = "";
     [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public bool NoIndex { get; set; }
+    [Parameter] public bool Enhance { get; set; }
+    [Parameter] public RenderFragment? HeadExtra { get; set; }
 
     private static readonly IReadOnlyList<NavItem> _nav = [new("Galleries", "/")];
 }

@@ -1,0 +1,20 @@
+<PublicLayout Title="@($"{Image.Title} — {GalleryTitle}")" NoIndex="@NoIndex" HeadExtra="_transitions">
+    <SoloViewer Image="Image" Caption="@Caption" PrevHref="@PrevHref" NextHref="@NextHref"
+                TransitionId="@Image.Id" PrefetchUrls="@PrefetchUrls" />
+</PublicLayout>
+
+@code {
+    [Parameter, EditorRequired] public ImageView Image { get; set; } = default!;
+    [Parameter] public string? Caption { get; set; }
+    [Parameter] public string? PrevHref { get; set; }
+    [Parameter] public string? NextHref { get; set; }
+    [Parameter] public string? PrefetchUrls { get; set; }
+    [Parameter] public bool NoIndex { get; set; }
+    [Parameter, EditorRequired] public string GalleryTitle { get; set; } = "";
+
+    private RenderFragment _transitions => b =>
+    {
+        var rule = $"#p-{Image.Id}{{view-transition-name:img-{Image.Id}}}";
+        b.AddMarkupContent(0, $"<style>{rule}</style>");
+    };
+}

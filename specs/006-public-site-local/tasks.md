@@ -228,7 +228,7 @@ contradictory, stop and report a blocker. Do not invent.
 **Independent test**: integration tests seed Mongo directly with documents, and the live walk works
 after the seed (US4).
 
-- [ ] T018 [US1] Apply contracts/components.md "Changes to existing components" to `Picture.razor`,
+- [X] T018 [US1] Apply contracts/components.md "Changes to existing components" to `Picture.razor`,
   `Tile.razor`, `ContactSheet.razor`, `ContactSheetItem.cs` and `SoloViewer.razor` (+
   `SoloViewer.razor.css` `.solo-caption`).
   - Every new parameter is optional. When unset, the output is byte-identical.
@@ -246,7 +246,7 @@ after the seed (US4).
     - SoloViewer PrefetchUrls gives `data-prefetch`
   - Acceptance: `PublicOutputUnchangedTests`, `MoleculePageTests`, `OrganismPageTests` and
     `UiPagesUnchangedTests` (T005) pass unmodified. No `/ui/` page file is edited.
-- [ ] T019 [US1] Apply the PublicLayout changes from contracts/components.md:
+- [X] T019 [US1] Apply the PublicLayout changes from contracts/components.md:
   - `Enhance` (default false) and `HeadExtra` (rendered after `<style>`, nothing when null)
   - `@view-transition { navigation: auto; }` appended to `PublicLayout.razor.css` (probe-confirmed:
     the scoped bundler emits it unchanged)
@@ -261,7 +261,7 @@ after the seed (US4).
   - Enhance=true has exactly 2 `<script`, contains `speculationrules`, `"eagerness":"moderate"` and
     `saveData`, and does not contain `unload`
   - HeadExtra renders inside `<head>`
-- [ ] T020 [US1] Create the page components in `src/Gallery.Web/Site/Pages/`: `HomePage.razor`,
+- [X] T020 [US1] Create the page components in `src/Gallery.Web/Site/Pages/`: `HomePage.razor`,
   `GalleryPage.razor` (+ `GalleryPage.razor.css`), `PhotoPage.razor` and `NotFoundPage.razor`,
   exactly as in contracts/components.md "New page components". Add `@using
   Gallery.Web.Components.*` through a new `src/Gallery.Web/Site/Pages/_Imports.razor` that copies
@@ -276,14 +276,14 @@ after the seed (US4).
     - PhotoPage title is `"{photo} — {gallery}"`
     - the view-transition style has one rule per image
     - every page passes `Guards.AssertNoInlineStyle`
-- [ ] T021 [US1] Create `src/Gallery.Web/Site/PublicCache.cs`:
+- [X] T021 [US1] Create `src/Gallery.Web/Site/PublicCache.cs`:
   - `HtmlPolicy = "public, max-age=0, s-maxage=86400"` and `ShortPolicy = "public, max-age=0,
     s-maxage=300"`
   - output-cache policy name `"public-page"`, 60 s, varying by path
   - registered in Program.cs with `AddOutputCache`, and `UseOutputCache` placed after the timing
     middleware
   - applied to public routes only when `Site:OutputCache` is true
-- [ ] T022 [US1] Create `src/Gallery.Web/Site/PublicEndpoints.cs` with `MapPublic(this
+- [X] T022 [US1] Create `src/Gallery.Web/Site/PublicEndpoints.cs` with `MapPublic(this
   WebApplication)` implementing contracts/http.md "Routes" for `/`, `/g/{id}`, `/g/{id}/{slug}` and
   `/g/{id}/{slug}/{imageId}`, GET and HEAD.
   - Malformed ids return 404 with no read (`OpaqueId.IsValid`).
@@ -299,7 +299,7 @@ after the seed (US4).
     wrong". The OpTimer error event is already logged.
   - Replace `app.MapGet("/", () => "Hello World!")` in `Program.cs` with `app.MapPublic()`.
     `/ui` mapping is unchanged.
-- [ ] T023 [US1] Integration tests in `tests/Gallery.Web.Tests/PublicRoutesTests.cs`
+- [X] T023 [US1] Integration tests in `tests/Gallery.Web.Tests/PublicRoutesTests.cs`
   (MongoFixture). Host the real app with `AppBuilder.Build(["--urls", "http://127.0.0.1:0"],
   overrides)`, using overrides for the fixture's Mongo, a fresh database, `Storage:ImageBaseUrl`
   `https://img.test`, and `Site:OutputCache` `false`. Call `await app.StartAsync()` and take the
@@ -322,7 +322,7 @@ after the seed (US4).
 **Independent test**: a private gallery is absent from `/`, renders by address, and is `noindex`
 on the gallery and photo pages.
 
-- [ ] T024 [SAFETY] [US2] Extend `PublicRoutesTests.cs` with a private gallery (II.2, FR-007,
+- [X] T024 [SAFETY] [US2] Extend `PublicRoutesTests.cs` with a private gallery (II.2, FR-007,
   FR-008). Assert:
   - its id and title are absent from `/`
   - `/g/{id}/{slug}` gives 200 with `<meta name="robots" content="noindex">` and the
@@ -332,7 +332,7 @@ on the gallery and photo pages.
 
 ## Phase 5: User Story 3, links survive renames; bad addresses fail cleanly (P2)
 
-- [ ] T025 [US3] Extend `PublicRoutesTests.cs` (FR-009, FR-010):
+- [X] T025 [US3] Extend `PublicRoutesTests.cs` (FR-009, FR-010):
   - `/g/{id}/wrong-slug` gives 301 with `Location` `/g/{id}/{slug}`
   - `/g/{id}` gives 301
   - `/g/{id}/wrong/{imageId}` gives 301 to the current slug with the same imageId
@@ -376,7 +376,7 @@ output for metadata.
   "scripts/seed-manifest.sh" (refuses to overwrite; groups by `mdls`
   `kMDItemContentCreationDate`; adds unlisted, coming-soon, a shared photo, a caption). The high
   tier runs it once against `dev-pictures/` and commits `seed/manifest.json`.
-- [ ] T028 [SAFETY] [US4] Create `src/Gallery.Web/Seed/CameraFields.cs` (research R-05):
+- [X] T028 [SAFETY] [US4] Create `src/Gallery.Web/Seed/CameraFields.cs` (research R-05):
   - `static Exif? Read(Stream jpeg)` uses `ImageMetadataReader.ReadMetadata`
   - it reads ONLY ExifIfd0Directory Make/Model and ExifSubIfdDirectory LensModel, FocalLength,
     35mm, FNumber, ExposureTime and ISO
@@ -390,12 +390,12 @@ output for metadata.
   - serializing the resulting `Exif` and the `ImageDoc` built from it to BSON/JSON contains no
     `gps`, `latitude`, `longitude` or `altitude` (case-insensitive)
   - a source grep test: `CameraFields.cs` does not contain `Gps`
-- [ ] T029 [P] [US4] Create `src/Gallery.Web/Seed/Manifest.cs`: load and validate per
+- [X] T029 [P] [US4] Create `src/Gallery.Web/Seed/Manifest.cs`: load and validate per
   contracts/seed.md. It returns all errors at once (duplicate key, visibility, cover not in photos,
   a photo listed twice in one gallery, title, caption and description lengths). Tests in `tests/Gallery.Web.Tests/ManifestTests.cs`
   cover each rule plus the defaults: missing visibility gives private, and a null title gives the
   file name without its extension.
-- [ ] T030 [SAFETY] [US4] Create `src/Gallery.Web/Seed/DerivativeValidator.cs` (constitution
+- [X] T030 [SAFETY] [US4] Create `src/Gallery.Web/Seed/DerivativeValidator.cs` (constitution
   III.5–III.7, III.10; contracts/seed.md step 4; research R-04 "Second reader").
   `static ValidationResult Validate(Stream file, string declaredExt, int declaredWidth, double
   aspectRatio)` runs `ImageMetadataReader.ReadMetadata`. It fails, with a reason string, when:
@@ -416,7 +416,7 @@ output for metadata.
 
   Tests needing ffmpeg/cwebp check `which` first and fail with a clear message if they're
   missing (dev-machine tools, R-04). Depends on T026 for the fixtures.
-- [ ] T031 [US4] Create `src/Gallery.Web/Seed/Seeder.cs` (contracts/seed.md "Seed command",
+- [X] T031 [US4] Create `src/Gallery.Web/Seed/Seeder.cs` (contracts/seed.md "Seed command",
   steps 2–6; data-model.md). Inputs: Manifest, the prepared root, the photos dir, ImageStore,
   IMongoDatabase, and a logger. It:
   - validates every derivative of a photo with `DerivativeValidator` BEFORE uploading any of its
@@ -454,7 +454,7 @@ output for metadata.
     T030's test helper (`cwebp -metadata all` from `tests/fixtures/gps-camera.jpg`, resized to
     the declared width). That photo is reported `rejected`, NONE of its keys exist in the bucket,
     and the other photo is seeded
-- [ ] T032 [US4] Create `src/Gallery.Web/Seed/SeedCommand.cs` and wire it in `Program.cs`:
+- [X] T032 [US4] Create `src/Gallery.Web/Seed/SeedCommand.cs` and wire it in `Program.cs`:
   - if `args[0] == "seed"`, build the services (no web server) and always add
     `AddUserSecrets(typeof(AppBuilder).Assembly, optional: true)` (M3), then:
     - validate StorageOptions and MongoOptions (exit 2 naming the missing keys)

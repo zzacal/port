@@ -26,4 +26,7 @@ public sealed class MongoFixture : IAsyncLifetime
         var dbName = $"gallery_test_{Guid.NewGuid():N}";
         return client.GetDatabase(dbName);
     }
+
+    /// <summary>The connection string for the running Mongo container.</summary>
+    public string ConnectionString => _container.GetConnectionString();
 }

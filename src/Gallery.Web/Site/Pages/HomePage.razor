@@ -1,0 +1,10 @@
+<PublicLayout Title="Gallery" Enhance="true">
+    @if (Cards.Count > 0)
+    {
+        <ContactSheet Items="Cards" Large="3" Medium="3" Small="1" />
+    }
+</PublicLayout>
+
+@code {
+    [Parameter] public IReadOnlyList<ContactSheetItem> Cards { get; set; } = [];
+}

@@ -1,5 +1,6 @@
 using Gallery.Web.Data;
 using Gallery.Web.Observability;
+using Gallery.Web.Site;
 using Gallery.Web.Storage;
 using Gallery.Web.Styles;
 using Gallery.Web.Ui;
@@ -62,11 +63,18 @@ public static class AppBuilder
 
         builder.Services.AddScoped<ContentReader>();
 
+        // ── Site options ─────────────────────────────────────────────────────
+        var siteOptions = builder.Configuration.GetSection("Site").Get<SiteOptions>() ?? new SiteOptions();
+        builder.Services.AddSingleton(siteOptions);
+
+        // ── Output cache ─────────────────────────────────────────────────────
+        builder.Services.AddPublicOutputCache();
         // ── Build ────────────────────────────────────────────────────────────
         var app = builder.Build();
 
         app.UseRouting();
         app.UseMiddleware<RequestTimingMiddleware>();
+        app.UseOutputCache();
 
         app.UseStaticFiles(new StaticFileOptions
         {
@@ -77,7 +85,7 @@ public static class AppBuilder
             },
         });
 
-        app.MapGet("/", () => "Hello World!");
+        app.MapPublic();
 
         if (app.Environment.IsDevelopment())
         {

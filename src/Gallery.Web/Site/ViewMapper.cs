@@ -51,12 +51,15 @@ public static class ViewMapper
 
     /// <summary>
     /// Maps a <see cref="GalleryCardDoc"/> to a <see cref="ContactSheetItem"/>.
-    /// Returns <c>null</c> when the gallery has no cover (empty gallery); callers must handle null.
+    /// Always returns a ContactSheetItem; Image is null for empty galleries (E-16),
+    /// Title carries the card title so the empty tile can render a "Coming soon"-style cell.
     /// </summary>
-    public static ContactSheetItem? ToCard(GalleryCardDoc card, Func<string, string> url)
+    public static ContactSheetItem ToCard(GalleryCardDoc card, Func<string, string> url)
     {
+        var href = $"/g/{card.GalleryId}/{card.Slug}";
+
         if (card.Cover is null)
-            return null;
+            return new ContactSheetItem(null, href, card.Title);
 
         var cover = card.Cover;
         var variants = cover.Derivatives
@@ -65,7 +68,7 @@ public static class ViewMapper
 
         var image = new ImageView(
             Id: cover.ImageId,
-            Title: string.Empty,
+            Title: card.Title,
             Width: cover.Width,
             Height: cover.Height,
             Variants: variants,
@@ -74,8 +77,7 @@ public static class ViewMapper
             Exif: null
         );
 
-        var href = $"/g/{card.GalleryId}/{card.Slug}";
-        return new ContactSheetItem(image, href);
+        return new ContactSheetItem(image, href, card.Title);
     }
 
     /// <summary>

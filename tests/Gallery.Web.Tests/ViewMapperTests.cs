@@ -98,7 +98,7 @@ public class ViewMapperTests
     // ── ToCard ───────────────────────────────────────────────────────────────
 
     [Fact]
-    public void ToCard_returns_null_when_cover_is_null()
+    public void ToCard_returns_item_with_null_image_when_cover_is_null()
     {
         var card = new GalleryCardDoc
         {
@@ -108,7 +108,11 @@ public class ViewMapperTests
             ImageCount = 0,
             Cover = null,
         };
-        Assert.Null(ViewMapper.ToCard(card, Url));
+        var item = ViewMapper.ToCard(card, Url);
+        Assert.NotNull(item);
+        Assert.Null(item.Image);
+        Assert.Equal("/g/gid/sept-5", item.Href);
+        Assert.Equal("September 5", item.Title);
     }
 
     [Fact]
@@ -135,6 +139,7 @@ public class ViewMapperTests
         Assert.Equal("/g/galleryid001/september-5", item.Href);
         Assert.NotNull(item.Image);
         Assert.Equal("https://img.test/coverhash.webp", item.Image.Variants[0].WebpUrl);
+        Assert.Equal("September 5", item.Title);
     }
 
     // ── PreloadLink ──────────────────────────────────────────────────────────

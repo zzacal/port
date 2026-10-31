@@ -10,8 +10,9 @@
         @for (var i = 0; i < Items.Count; i++)
         {
             var item = Items[i];
-            <Tile Image="item.Image" Href="@item.Href" Sizes="@_sizes"
-                  Priority="@(i < EffectivePriorityCount ? PicturePriority.High : PicturePriority.Lazy)" />
+            <Tile Image="item.Image" Href="@item.Href" Sizes="@_sizes" EmptyTitle="@item.Title"
+                  Priority="@(i < EffectivePriorityCount ? PicturePriority.High : PicturePriority.Lazy)"
+                  TransitionId="@item.TransitionId" PreloadSrcSet="@item.PreloadSrcSet" PreloadSizes="@item.PreloadSizes" />
         }
     }
 </div>

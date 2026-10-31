@@ -1,6 +1,6 @@
 @* The only way an image is rendered (D-21). Layers share one grid cell and identical
    width/height + fit, so the placeholder covers exactly the photo area (research R-03). *@
-<div class="pic @FitClass">
+<div class="pic @FitClass" id="@(TransitionId != null ? $"p-{TransitionId}" : (string?)null)">
     <img class="layer ph" src="@Image.PlaceholderDataUri" width="@Image.Width" height="@Image.Height" alt="" aria-hidden="true">
     @if (ShowThumbLayer)
     {
@@ -26,6 +26,7 @@
     [Parameter] public PictureFit Fit { get; set; } = PictureFit.Natural;
     [Parameter] public PicturePriority Priority { get; set; } = PicturePriority.Lazy;
     [Parameter] public bool ShowThumbLayer { get; set; }
+    [Parameter] public string? TransitionId { get; set; }
 
     private string FitClass => Fit == PictureFit.Contain ? "fit-contain" : "fit-natural";
 }
