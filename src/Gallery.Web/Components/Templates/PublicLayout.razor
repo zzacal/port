@@ -18,20 +18,25 @@
     <script type="speculationrules">{"prerender":[{"where":{"href_matches":"/g/*"},"eagerness":"moderate"}]}</script>
     <script type="module">(() => {
 if (navigator.connection?.saveData) return;
-const preload = e => {
+// Fetch through a detached <picture> with the destination's own AVIF <source> (same srcset and
+// sizes), so the browser picks, and caches, exactly the file the destination page then uses.
+const warm = (srcset, sizes, priority) => {
+    const pic = document.createElement('picture');
+    const img = Object.assign(document.createElement('img'), { fetchPriority: priority, decoding: 'async' });
+    pic.append(Object.assign(document.createElement('source'), { type: 'image/avif', srcset, sizes }), img);
+    img.src = 'data:,';
+};
+const onIntent = e => {
     const el = e.target.closest?.('[data-preload-srcset]');
     if (!el || el.dataset.preloaded) return;
     el.dataset.preloaded = '1';
-    const l = Object.assign(document.createElement('link'), { rel: 'preload', as: 'image', fetchPriority: 'high' });
-    l.setAttribute('imagesrcset', el.dataset.preloadSrcset);
-    l.setAttribute('imagesizes', el.dataset.preloadSizes || '100vw');
-    document.head.appendChild(l);
+    warm(el.dataset.preloadSrcset, el.dataset.preloadSizes || '100vw', 'high');
 };
-document.addEventListener('pointerenter', preload, true);
-document.addEventListener('touchstart', preload, { passive: true });
+document.addEventListener('pointerenter', onIntent, true);
+document.addEventListener('touchstart', onIntent, { passive: true });
 window.addEventListener('load', () => {
-    const urls = document.querySelector('article.solo[data-prefetch]')?.dataset.prefetch.split(' ').filter(Boolean) ?? [];
-    for (const href of urls) document.head.appendChild(Object.assign(document.createElement('link'), { rel: 'prefetch', as: 'image', href }));
+    const sets = document.querySelector('article.solo[data-prefetch]')?.dataset.prefetch.split('|').filter(Boolean) ?? [];
+    for (const srcset of sets) warm(srcset, '100vw', 'low');
 });
 })();</script>
 }

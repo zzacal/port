@@ -128,7 +128,7 @@ public class PageComponentTests
         {
             Assert.Equal(2, Guards.Count(html, "<script"));
             Assert.Contains("speculationrules", html);
-            Assert.Contains("rel: 'prefetch'", html);
+            Assert.Contains("article.solo[data-prefetch]", html); // the loader that consumes data-prefetch
         }
     }
 

@@ -94,7 +94,7 @@ public static class PublicEndpoints
                         Href: $"/g/{id}/{slug}/{img.Id}",
                         Title: view.Title,
                         TransitionId: img.Id,
-                        PreloadSrcSet: SrcSet.Webp(view),
+                        PreloadSrcSet: SrcSet.Avif(view),
                         PreloadSizes: "100vw"
                     );
                 }).ToList();
@@ -153,13 +153,16 @@ public static class PublicEndpoints
                 string? prevHref = prevId is not null ? $"/g/{id}/{slug}/{prevId}" : null;
                 string? nextHref = nextId is not null ? $"/g/{id}/{slug}/{nextId}" : null;
 
-                // PrefetchUrls: neighbour FallbackWebp URLs (space-separated, omit missing)
+                // PrefetchUrls: each neighbour's AVIF srcset, the candidates its photo page's first
+                // <source> offers at sizes=100vw, so the loader's preload is the exact file that page
+                // uses. Srcsets contain spaces and commas, hence the "|" separator. Missing neighbours
+                // are omitted.
                 var prefetchParts = new List<string>();
                 if (prevId is not null && imageIndex.TryGetValue(prevId, out var prevDoc))
-                    prefetchParts.Add(SrcSet.FallbackWebp(ViewMapper.ToView(prevDoc, url)));
+                    prefetchParts.Add(SrcSet.Avif(ViewMapper.ToView(prevDoc, url)));
                 if (nextId is not null && imageIndex.TryGetValue(nextId, out var nextDoc))
-                    prefetchParts.Add(SrcSet.FallbackWebp(ViewMapper.ToView(nextDoc, url)));
-                var prefetchUrls = prefetchParts.Count > 0 ? string.Join(" ", prefetchParts) : null;
+                    prefetchParts.Add(SrcSet.Avif(ViewMapper.ToView(nextDoc, url)));
+                var prefetchUrls = prefetchParts.Count > 0 ? string.Join("|", prefetchParts) : null;
 
                 IResult result = new RazorComponentResult<PhotoPage>(new Dictionary<string, object?>
                 {

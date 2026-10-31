@@ -84,10 +84,10 @@ public static class ViewMapper
     /// Builds the <c>Link</c> response header value for the primary image preload
     /// (contracts/http.md §Headers on 200 public pages).
     /// </summary>
+    /// The candidates and sizes are the ones the page's first <c>&lt;source&gt;</c> (AVIF) offers, so the
+    /// browser preloads exactly the file the &lt;picture&gt; then uses. <c>type</c> makes a browser without
+    /// AVIF skip the hint instead of downloading a file it cannot use; the empty target is the
+    /// documented form for an imagesrcset-only preload.
     public static string PreloadLink(ImageView image, string sizes)
-    {
-        var fallback = SrcSet.FallbackWebp(image);
-        var srcset   = SrcSet.Webp(image);
-        return $"<{fallback}>; rel=preload; as=image; imagesrcset=\"{srcset}\"; imagesizes=\"{sizes}\"; fetchpriority=high";
-    }
+        => $"<>; rel=preload; as=image; type=\"image/avif\"; imagesrcset=\"{SrcSet.Avif(image)}\"; imagesizes=\"{sizes}\"; fetchpriority=high";
 }

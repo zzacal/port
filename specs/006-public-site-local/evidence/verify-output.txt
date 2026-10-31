@@ -1,5 +1,5 @@
 PASS gate build: 0 warnings, 0 errors
-PASS gate tests: 382 passed in 2 assemblies
+PASS gate tests: 385 passed in 2 assemblies
 PASS SC-006 reseed: uploaded 0, 105 documents unchanged
 PASS SC-011 check-metadata.sh: 1116 prepared files clean
 PASS SC-011 seed second reader (DerivativeValidator): rejected 0

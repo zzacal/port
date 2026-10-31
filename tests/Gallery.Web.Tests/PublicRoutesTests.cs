@@ -480,4 +480,71 @@ public class PublicRoutesTests(MongoFixture mongo) : IAsyncLifetime
         while ((idx = s.IndexOf(needle, idx, StringComparison.Ordinal)) >= 0) { count++; idx++; }
         return count;
     }
+
+    // ── IV.12/IV.13/IV.17: every predictive fetch names what the destination will show ─────
+    // The browser picks from <picture> by its FIRST supported <source> (AVIF), using that source's
+    // srcset and sizes. A preload is reused only if it resolves to the same URL, so it must carry
+    // the same srcset, the same sizes, and the same type. The owner saw a hover preload fetch the
+    // WebP while the photo page loaded the AVIF: a second download on every click.
+
+    private static (string Srcset, string Sizes) FirstSource(string html, string imageId)
+    {
+        var at = html.IndexOf($"id=\"p-{imageId}\"", StringComparison.Ordinal);
+        Assert.True(at >= 0, $"picture p-{imageId} not found");
+        var m = System.Text.RegularExpressions.Regex.Match(html[at..],
+            "<source type=\"image/avif\" srcset=\"([^\"]+)\" sizes=\"([^\"]+)\"");
+        Assert.True(m.Success, "no AVIF <source> on the destination picture");
+        return (System.Net.WebUtility.HtmlDecode(m.Groups[1].Value), System.Net.WebUtility.HtmlDecode(m.Groups[2].Value));
+    }
+
+    private static string Attr(string html, string anchor, string name)
+    {
+        var at = html.IndexOf(anchor, StringComparison.Ordinal);
+        Assert.True(at >= 0, $"{anchor} not found");
+        var tagStart = html.LastIndexOf('<', at);
+        var tag = html[tagStart..html.IndexOf('>', at)];
+        var m = System.Text.RegularExpressions.Regex.Match(tag, $"{name}=\"([^\"]*)\"");
+        Assert.True(m.Success, $"{name} missing on {anchor}");
+        return System.Net.WebUtility.HtmlDecode(m.Groups[1].Value);
+    }
+
+    [Fact]
+    public async Task Hover_preload_names_the_same_candidates_the_photo_page_shows()
+    {
+        var gallery = await _client!.GetStringAsync($"/g/{GalleryPubId1}/autumn-walk");
+        var photo = await _client!.GetStringAsync($"/g/{GalleryPubId1}/autumn-walk/{ImgId2}");
+        var anchor = $"href=\"/g/{GalleryPubId1}/autumn-walk/{ImgId2}\"";
+
+        var (srcset, sizes) = FirstSource(photo, ImgId2);
+        Assert.Equal(srcset, Attr(gallery, anchor, "data-preload-srcset"));
+        Assert.Equal(sizes, Attr(gallery, anchor, "data-preload-sizes"));
+        Assert.Contains("type: 'image/avif'", gallery); // the loader's detached <source> is typed like the page's
+    }
+
+    [Fact]
+    public async Task Neighbour_prefetch_names_the_candidates_the_neighbour_pages_show()
+    {
+        var middle = await _client!.GetStringAsync($"/g/{GalleryPubId1}/autumn-walk/{ImgId2}");
+        var prev = await _client!.GetStringAsync($"/g/{GalleryPubId1}/autumn-walk/{ImgId1}");
+        var next = await _client!.GetStringAsync($"/g/{GalleryPubId1}/autumn-walk/{ImgId3}");
+
+        // One srcset per neighbour; srcsets contain spaces and commas, so they are joined with "|".
+        var expected = string.Join("|", FirstSource(prev, ImgId1).Srcset, FirstSource(next, ImgId3).Srcset);
+        Assert.Equal(expected, Attr(middle, "<article class=\"solo\"", "data-prefetch"));
+        Assert.Equal("100vw", FirstSource(prev, ImgId1).Sizes); // the loader preloads neighbours at 100vw
+    }
+
+    [Fact]
+    public async Task Link_header_preloads_the_primary_image_the_page_shows()
+    {
+        var resp = await _client!.GetAsync($"/g/{GalleryPubId1}/autumn-walk/{ImgId2}");
+        var html = await resp.Content.ReadAsStringAsync();
+        var link = string.Join(",", resp.Headers.GetValues("Link"));
+        var (srcset, sizes) = FirstSource(html, ImgId2);
+
+        Assert.Contains($"imagesrcset=\"{srcset}\"", link);
+        Assert.Contains($"imagesizes=\"{sizes}\"", link);
+        Assert.Contains("type=\"image/avif\"", link);
+        Assert.DoesNotContain(".webp", link);
+    }
 }

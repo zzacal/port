@@ -145,7 +145,7 @@ public class ViewMapperTests
     // ── PreloadLink ──────────────────────────────────────────────────────────
 
     [Fact]
-    public void PreloadLink_contains_fallback_webp_srcset_and_sizes()
+    public void PreloadLink_preloads_the_avif_candidates_the_picture_uses()
     {
         var view = ViewMapper.ToView(MakeImage(), Url);
         var link = ViewMapper.PreloadLink(view, "100vw");
@@ -153,9 +153,11 @@ public class ViewMapperTests
         Assert.Contains("rel=preload", link);
         Assert.Contains("as=image", link);
         Assert.Contains("fetchpriority=high", link);
-        Assert.Contains("imagesrcset=", link);
         Assert.Contains("imagesizes=\"100vw\"", link);
-        // FallbackWebp picks the last variant at or below 1280
-        Assert.StartsWith("<https://img.test/sha2.webp>", link);
+        // Requirement change (owner report): the page's <picture> picks AVIF from its first
+        // <source>, so a WebP preload was a wasted second download. Preload the same AVIF set, typed.
+        Assert.Contains($"imagesrcset=\"{SrcSet.Avif(view)}\"", link);
+        Assert.Contains("type=\"image/avif\"", link);
+        Assert.DoesNotContain(".webp", link);
     }
 }
