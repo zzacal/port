@@ -141,8 +141,15 @@ These are server-side copies inside R2. The confirm step is idempotent per item.
 A lifecycle rule deletes `private/staging/` objects 7 days after creation. This is the backstop
 sweep for orphaned files (FR-030).
 
-Deleting an image (FR-013) deletes `private/masters/{imageId}.jpg` and every `public/` derivative,
-then purges the image URLs at the edge.
+Deleting an image (FR-013) deletes `private/masters/{imageId}.jpg` and every `public/` derivative
+that no remaining image references, then purges the URLs of the files actually deleted at the edge.
+Derivative names are content hashes, so the same file uploaded twice shares its public names; a
+shared name stays until its last image is deleted (amended by feature 009, Clarification 3).
+
+Gallery membership is stored on the Gallery (`items`), which is authoritative. An Image's
+`galleryIds` is a derived index, rewritten for every affected image after each membership change,
+so a write interrupted between the two documents is repaired by repeating it (feature 009,
+research R-01).
 
 ### Cover Rule
 
