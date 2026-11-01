@@ -1,0 +1,36 @@
+# Probe 2026-10-31: throwaway app in /tmp/oidcprobe, .NET 10.0.14 runtime, SDK 10.0.403
+# Microsoft.AspNetCore.Authentication.OpenIdConnect 10.0.14 (IdentityModel 8.19.2), Authority accounts.google.com, fake client id
+
+## Part 1: challenge (GET /admin with RequireAuthorization; POST /admin/signin with prompt item)
+https: 302 -> accounts.google.com/o/oauth2/v2/auth?client_id=..&redirect_uri=https://localhost:5191/signin-oidc&response_type=code&scope=openid&code_challenge=..&code_challenge_method=S256&response_mode=form_post&nonce=..&prompt=select_account&state=..
+correlation + nonce cookies: path=/signin-oidc; secure; samesite=none; httponly
+http: same 302 with redirect_uri=http://localhost:5190/signin-oidc, cookies still 'secure' (browsers drop them on http)
+
+## Part 2: probe.sh output (cookie attributes, antiforgery on POSTs)
+# endpoints: bare = MapPost no binding; meta = MapPost + RequireAntiforgeryTokenAttribute(true) with UseAntiforgery(); manual = IAntiforgery.ValidateRequestAsync in handler
+== session cookie attributes
+set-cookie: __Host-gallery=<redacted>; path=/; secure; samesite=lax; httponly
+== bare POSTs, no token, with session
+bare    no-body: 200
+bare    form   : 200
+meta    no-body: 200
+meta    form   : 200
+manual  no-body: 400
+manual  form   : 400
+== with valid token (form field / header)
+meta    form-field: 200
+meta    header    : 200
+manual  form-field: 200
+manual  header    : 200
+== antiforgery cookie attributes
+domain=#HttpOnly_localhost secure=TRUE path=/
+
+## Part 2a: first run WITHOUT SecurePolicy=Always on the antiforgery cookie
+__Host-af set-cookie had no 'secure' attribute -> client refused to store it -> manual with valid token: 400 (form-field and header).
+
+## Part 3 (during /speckit-tasks): single registered scheme becomes the default automatically
+# app: AddAuthentication().AddCookie("owner") only (the no-Google-config shape), no DefaultScheme set,
+# UseAuthentication(); GET / returns User.Identity.IsAuthenticated; /fake signs in to "owner".
+public with cookie (no switch):                                 auth=True   <- public request read the owner cookie
+public with cookie (AppContext switch
+  Microsoft.AspNetCore.Authentication.SuppressAutoDefaultScheme=true): auth=False

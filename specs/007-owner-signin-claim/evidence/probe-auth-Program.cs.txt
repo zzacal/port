@@ -1,0 +1,58 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddAuthentication(o =>
+    {
+        o.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        o.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+    })
+    .AddCookie(o =>
+    {
+        o.Cookie.Name = "__Host-gallery";
+        o.Cookie.Path = "/";
+        o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        o.Cookie.SameSite = SameSiteMode.Lax;
+        o.Cookie.HttpOnly = true;
+        o.ExpireTimeSpan = TimeSpan.FromDays(7);
+        o.SlidingExpiration = true;
+        o.Cookie.MaxAge = null;
+    })
+    .AddOpenIdConnect(o =>
+    {
+        o.Authority = "https://accounts.google.com";
+        o.ClientId = "probe";
+        o.ClientSecret = "x";
+        o.ResponseType = "code";
+    });
+builder.Services.AddAuthorization();
+builder.Services.AddAntiforgery(o => { o.Cookie.Name = "__Host-af"; o.Cookie.SecurePolicy = CookieSecurePolicy.Always; o.HeaderName = "X-CSRF-TOKEN"; });
+var app = builder.Build();
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseAntiforgery();
+
+app.MapGet("/fake", async (HttpContext c) =>
+{
+    await c.SignInAsync(new ClaimsPrincipal(new ClaimsIdentity([new Claim("sub", "123")], "cookie")));
+    return "ok";
+});
+app.MapGet("/token", (IAntiforgery af, HttpContext c) =>
+{
+    var t = af.GetAndStoreTokens(c);
+    return $"{t.FormFieldName}|{t.RequestToken}";
+});
+// Bare POST, no form binding: does UseAntiforgery enforce it?
+app.MapPost("/bare", () => "acted-bare");
+// Explicit metadata
+app.MapPost("/meta", () => "acted-meta").WithMetadata(new RequireAntiforgeryTokenAttribute(true));
+// Manual validation
+app.MapPost("/manual", async (IAntiforgery af, HttpContext c) =>
+{
+    try { await af.ValidateRequestAsync(c); return Results.Text("acted-manual"); }
+    catch (AntiforgeryValidationException) { return Results.StatusCode(400); }
+});
+app.Run();

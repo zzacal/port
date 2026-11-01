@@ -77,6 +77,10 @@ OAuth client with a localhost redirect URI.
 
 - D-04, D-06, the D-23 sign-in page, E-01, E-02, and PC.4.
 - **Runbook first**: create the Google Cloud project and OAuth client (it has no API).
+  - [x] Project and Web OAuth client created, consent screen in Testing with two test users
+    (owner, 2026-10-31).
+  - [x] Redirect URIs `https://localhost:5081/signin-oidc` and `http://localhost:5080/signin-oidc`.
+  - [x] Client id and secret in user-secrets (`Authentication:Google:*`); dev certificate trusted.
 
 ### 008 Upload pipeline into the library
 
