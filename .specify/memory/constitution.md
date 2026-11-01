@@ -1,27 +1,21 @@
 <!--
 Sync Impact Report
-- Version change: 4.1.0 → 4.2.0 (MINOR)
-- Rationale: owner directive (2026-10-31, feature 006 review): "We should not show any empty
-  galleries. On the admin side, galleries should not be able to be made public unless they have
-  at least one image." II.6 added. II.2 previously said "Public galleries appear on the home
-  page" unconditionally; it now defers to II.6 for empty galleries. No protection is withdrawn:
-  private stays unlisted, and II.6 adds a guarantee for visitors and a publish precondition for
-  the owner. A public gallery that becomes empty is hidden rather than switched to private, so
-  visibility still changes only by the owner's action (II.5).
-- Modified principles: II. Anonymous Public Viewing, Owner-Controlled Visibility (rule 2 reworded,
-  rule 6 added, rationale extended).
+- Version change: 4.2.0 → 4.3.0 (MINOR)
+- Rationale: owner directive (2026-11-01): the canonical remote is git@github.com:zzacal/port.git.
+  Its name differs from the local folder ("gallery"), which twice raised the question of whether
+  pushes were going to the wrong project. Development Workflow gains a source-of-truth rule, so
+  the remote is settled and is not re-questioned before a push.
+- Modified principles: none. Modified sections: Development Workflow (one rule added).
 - Added sections: none. Removed sections: none.
 - Templates requiring updates: none (templates read the constitution at runtime).
-- Prior specs swept: specs/006-public-site-local (spec edge case, FR-016; data-model card note;
-  contracts/seed.md coming-soon; tasks T031/T034 text annotated). Design record: E-16, L-08, L-09,
-  L-11, homeCards (content model), traceability II.6.
-- Deferred TODOs: the publish refusal itself ships with the admin publish action (feature 009);
-  until then the seed manifest enforces it (a public gallery with no photos fails validation).
+- Prior specs swept: none needed (no spec names a remote).
+- Deferred TODOs: none.
 - History: 1.0.0 initial ratification. 1.1.0 perceived performance, private = unlisted. 2.0.0
   client-generated derivatives with server validation. 3.0.0 Azure Blob replaced R2, masters kept,
   $10 metered cap (2026-10-27). 4.0.0 images on Cloudflare R2, managed-identity guarantee
   withdrawn, III.9 added (2026-10-30). 4.1.0 III.10 seeded dev content under two-reader
-  validation; IV.19 clarified (2026-10-31).
+  validation; IV.19 clarified (2026-10-31). 4.2.0 II.6 no empty galleries shown; publish
+  requires an image (2026-10-31).
 -->
 
 # Gallery Constitution
@@ -270,6 +264,10 @@ These are binding inputs to every plan:
 - Integration tests run against real Mongo and an S3-compatible storage emulator in containers,
   and every feature ends with a live-server walkthrough.
 - Each feature keeps a `decisions.md` log (decision, rationale, pivot cost).
+- The canonical repository is `git@github.com:zzacal/port.git` (remote `origin`), even though its
+  name differs from the local folder. `main` there is the source of truth: features merge into it
+  and are pushed to it, and no other remote may receive this project's history. Changing the
+  canonical repository requires an amendment.
 
 ## Governance
 
@@ -282,4 +280,4 @@ These are binding inputs to every plan:
   place, not silently edited.
 - Every plan and analyze pass verifies compliance and cites principles by number.
 
-**Version**: 4.2.0 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-10-31
+**Version**: 4.3.0 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-11-01
