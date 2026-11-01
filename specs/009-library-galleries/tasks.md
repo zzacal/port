@@ -710,7 +710,7 @@ Runs in parallel with Batch G (disjoint files).
 
 ## Phase 8: Seed retirement and the stated test changes (high tier, parent, after Batches E and G)
 
-- [ ] T047 [US6] (high tier, parent ONLY) **Retire the seed** (FR-045, research R-11, decisions rows 26
+- [X] T047 [US6] (high tier, parent ONLY) **Retire the seed** (FR-045, research R-11, decisions rows 26
   and 27, orchestration "Removal/deletion features"). Step 0: re-run the inventory grep and
   compare it with the list below; any extra hit is a blocker until classified.
   `grep -rn -E "Seeder|SeedCommand|Manifest\b|PhotoJson|seed-manifest|prepare-photos|Gallery\.Web\.Seed|EnsureSeedKeyIndexesAsync|\"seed\"" src tests scripts .gitignore`
@@ -787,19 +787,19 @@ Runs in parallel with Batch G (disjoint files).
 `tests/Gallery.Web.Tests/LibraryBrowserTests.cs`. It does not edit `BrowserSiteFixture.cs`,
 `UploadBrowserFixture.cs` or `S3ProxyFixture.cs`.
 
-- [ ] T048 [US4] Write `src/Gallery.Web/wwwroot/admin-assets/reorder.js` exactly per
+- [X] T048 [US4] Write `src/Gallery.Web/wwwroot/admin-assets/reorder.js` exactly per
   contracts/components.md C4: `<reorder-grid data-form>`; pointer drag on `.handle` with the
   `.drop-slot` ghost; keyboard Space/Enter lift (`aria-pressed="true"`), arrows, Space/Enter drop,
   Escape restores and submits nothing; a polite live region "Position p of n"; on drop it rewrites
   the form's `order` inputs and submits. The form is resolved at use time, never cached in
   `connectedCallback`. No `innerHTML`.
-- [ ] T049 [US1] Write `src/Gallery.Web/wwwroot/admin-assets/library.js` exactly per
+- [X] T049 [US1] Write `src/Gallery.Web/wwwroot/admin-assets/library.js` exactly per
   contracts/components.md C4: selection count and bar `hidden`; Clear; "Select all on this page"
   ticks only this page's `ids` boxes; a tick that would exceed `data-limit` is refused at selection
   time (box stays unticked, a status line says the limit; UI-7); the picker dialog and the bulk
   delete confirm (ticked ids copied into `lib-delete`); a visibility switch change submits its
   form. Elements declared later are resolved at use time. No `innerHTML`.
-- [ ] T050 [US1] Create `tests/Gallery.Web.Tests/Fixtures/LibraryBrowserFixture.cs`
+- [X] T050 [US1] Create `tests/Gallery.Web.Tests/Fixtures/LibraryBrowserFixture.cs`
   (`[CollectionDefinition("library-browser")]`), modelled on `UploadBrowserFixture` and
   references/browser-verification.md: its own Mongo database and S3Proxy container; the real app
   via `AppBuilder.Build` with `--environment Development --contentRoot src/Gallery.Web
@@ -807,7 +807,7 @@ Runs in parallel with Batch G (disjoint files).
   and `LogLines`; an owner session cookie injected into the context; headless Chrome
   (`Channel="chrome"`). Fixture guard test: `/admin/library` has a non-trivial stylesheet, the grid's
   computed `display` is `grid`, and `library.js` loaded (the bar element is upgraded).
-- [ ] T051 [US3] Write `tests/Gallery.Web.Tests/LibraryBrowserTests.cs`
+- [X] T051 [US3] Write `tests/Gallery.Web.Tests/LibraryBrowserTests.cs`
   (`[Trait("Category","Browser")]`, `[Collection("library-browser")]`), asserting outcomes:
   - drag a builder tile to the front → while the pointer is down a `.drop-slot` is in the grid at
     the landing index, and after the drop the stored `items` order changed (FR-022); the same in
@@ -863,7 +863,7 @@ Runs in parallel with Batch G (disjoint files).
 
 **Parent**:
 
-- [ ] T056 Write `specs/009-library-galleries/evidence/p95.sh` (contracts/log-events.md). Input:
+- [X] T056 Write `specs/009-library-galleries/evidence/p95.sh` (contracts/log-events.md). Input:
   the plain message lines of a test log or the JSON console log (`jq -r '.Message'`). Per SC it
   prints n, p95 or max, and PASS/FAIL: SC-002 `http.request GET /admin/library 200` p95 ≤ 500;
   SC-003 `http.request POST` on every 009 route p95 ≤ 500 (one row per route); SC-005 `edge.lag`
