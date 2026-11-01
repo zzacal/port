@@ -356,7 +356,7 @@ recorder after every operation.
 `LibrarySetup.cs` (additive),
 `tests/Gallery.Web.Tests/{GalleryServiceTests,ImageServiceTests,ImageDeleteTests,LibraryStorageTests}.cs`.
 
-- [ ] T020 [US1] Create `tests/Gallery.Web.Tests/Fixtures/LibraryHost.cs`, a wrapper over
+- [X] T020 [US1] Create `tests/Gallery.Web.Tests/Fixtures/LibraryHost.cs`, a wrapper over
   `AdminHost.CreateAsync(mongo, fakeGoogle, overrides, configure)` (research R-12):
   - storage overrides from `S3ProxyFixture.StorageOptions`; `Site:OutputCache=false` unless the
     caller overrides it;
@@ -369,7 +369,7 @@ recorder after every operation.
     `Scope()` for services, `Db`, `ListAsync(bucket)`, `LogLines`.
   Prove it once in `GalleryServiceTests.cs`: GET `/admin` → 200, the token is non-empty, and
   `IEdgeProvider` resolves to the recorder.
-- [ ] T021 [US1] Create `src/Gallery.Web/Library/OperationResult.cs` (data-model "Value objects")
+- [X] T021 [US1] Create `src/Gallery.Web/Library/OperationResult.cs` (data-model "Value objects")
   and, in the same file, `OperationScope`: it collects the BEFORE and AFTER `GallerySnapshot` of
   every gallery an operation touches, the deleted public keys and the counts; one scope per
   request; `CompleteAsync()` runs card rebuilds, `SiteProjector.ProjectAsync`, eviction and ONE
@@ -389,7 +389,7 @@ recorder after every operation.
   - `RemoveAsync(gid, iid)` (clears the pin when it matched; idempotent), `ReorderAsync(gid, ids)`
     (exact-set check, then a write filtered on the array read → otherwise `Stale`),
     `SetCoverAsync(gid, iid?)` (non-member → `Refused` 422; null unpins).
-- [ ] T022 [US1] **[SAFETY]** `GalleryService` part 2 (II.5, II.6, FR-029–FR-033):
+- [X] T022 [US1] **[SAFETY]** `GalleryService` part 2 (II.5, II.6, FR-029–FR-033):
   - `PublishAsync(gid, confirmed)` in the contracts/http.md G4 order: load → `items` empty →
     `Refused(409, "Add a photo before making this gallery public")` FIRST, whatever else was sent
     → not confirmed → `NeedsConfirm` with no write → `updateOne({_id, "items.0":{$exists:true}},
@@ -404,7 +404,7 @@ recorder after every operation.
     `galleryIds`, deletes the document, projects, P-GDELETE, `owner.action gallery.delete`;
     a missing gallery → `NotFound` (the endpoint answers 303 `deleted=0`).
   - No method other than `PublishAsync` writes `visibility:"public"` (T049 scans for it).
-- [ ] T023 [US2] **[SAFETY]** Create `src/Gallery.Web/Library/ImageService.cs` (scoped):
+- [X] T023 [US2] **[SAFETY]** Create `src/Gallery.Web/Library/ImageService.cs` (scoped):
   - `UpdateTextAsync(iid, title?, caption?)`: null keeps the stored value; title trimmed, 1..
     `TitleMax`, whitespace-only → `Refused(422, reason)`; caption 0..`CaptionMax`, an empty caption
     stores null; the cards of galleries holding it are rebuilt; P-TEXT (FR-038).
@@ -413,7 +413,7 @@ recorder after every operation.
     applies `AddOneAsync` per id). Result: added, skipped, gallery title (FR-012, UI-6). Timed as
     `library.bulk.add`.
   It never writes `visibility` (II.5).
-- [ ] T024 [US5] **[SAFETY]** Create `src/Gallery.Web/Library/IObjectDeleter.cs` (`Task
+- [X] T024 [US5] **[SAFETY]** Create `src/Gallery.Web/Library/IObjectDeleter.cs` (`Task
   DeleteAsync(string bucket, string key)`, default implementation calls the existing
   `ImageStore.DeleteAsync`; registered scoped) and `src/Gallery.Web/Library/ImageDeleteService.cs`
   exactly per research R-02:
@@ -432,7 +432,7 @@ recorder after every operation.
   inside one `OperationScope` and enqueues ONE `EdgeWork` (timed `library.bulk.delete`). Test seam:
   optional constructor parameter `Func<string, Task>? afterGalleries` (default null) runs after
   step 2.
-- [ ] T025 [US1] Write `tests/Gallery.Web.Tests/GalleryServiceTests.cs` (`[Collection("s3")]` +
+- [X] T025 [US1] Write `tests/Gallery.Web.Tests/GalleryServiceTests.cs` (`[Collection("s3")]` +
   MongoFixture, `LibraryHost`). After every operation `InvariantChecker.AssertAsync` passes and the
   recorder's set EQUALS the contracts/edge.md set:
   - create: private, last in `homeOrder`, the stored BSON has no `seedKey` element, zero recorder
@@ -442,7 +442,7 @@ recorder after every operation.
   - remove the pinned cover → pin cleared, card cover = `items[0]`;
   - rename → new slug, both slugs' pages in the set; same-slug rename → one slug only;
   - delete gallery → images keep their other galleries and stay in `images`.
-- [ ] T026 [US5] **[SAFETY]** Write `tests/Gallery.Web.Tests/ImageDeleteTests.cs` (SC-008,
+- [X] T026 [US5] **[SAFETY]** Write `tests/Gallery.Web.Tests/ImageDeleteTests.cs` (SC-008,
   FR-014–FR-017):
   - `Shared_public_file_is_kept`: images X and Y share one derivative key; delete X → the shared
     key still exists, X's other keys and `masters/{X}.jpg` are gone, the P-DELETE file set is
@@ -457,7 +457,7 @@ recorder after every operation.
   - `Pinned_cover_of_a_public_gallery_and_member_of_a_private_one`: both galleries lose it, the
     public pin falls back, `homeCards` shows the new cover, the set covers both galleries' pages
     and `/`.
-- [ ] T027 [US2] Write `tests/Gallery.Web.Tests/ImageServiceTests.cs`: title/caption saved and
+- [X] T027 [US2] Write `tests/Gallery.Web.Tests/ImageServiceTests.cs`: title/caption saved and
   trimmed; whitespace-only and 201-char titles and a 2001-char caption → 422 with the stored values
   unchanged; null fields keep values; P-TEXT set exact for an image in a public gallery (incl. `/`
   when it is the cover), and ZERO recorder calls for an image in no gallery with a page (US2 AS-4);

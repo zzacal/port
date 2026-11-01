@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection.Extensions;
+
 namespace Gallery.Web.Library;
 
 /// <summary>
@@ -14,6 +16,10 @@ public static class LibrarySetup
         s.AddSingleton(LibraryOptions.Load(c));
         s.AddScoped<SiteProjector>();
         s.AddScoped<MembershipRepair>();
+        s.AddScoped<GalleryService>();
+        s.AddScoped<ImageService>();
+        s.TryAddScoped<IObjectDeleter, ImageStoreObjectDeleter>(); // TryAdd: a test `configure` replacement wins
+        s.AddScoped<ImageDeleteService>();
         return s;
     }
 

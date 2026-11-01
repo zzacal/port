@@ -28,7 +28,11 @@ public static class InvariantChecker
     {
         var galleries = await db.GetCollection<GalleryDoc>("galleries").Find(FilterDefinition<GalleryDoc>.Empty).ToListAsync();
         var images = await db.GetCollection<ImageDoc>("images").Find(FilterDefinition<ImageDoc>.Empty).ToListAsync();
-        var site = await db.GetCollection<SiteDoc>("site").Find(s => s.Id == "site").FirstOrDefaultAsync();
+        // Only the projected fields: a claimed site also carries the owner claim, which SiteDoc does
+        // not map (deserialising the whole document throws on it).
+        var site = await db.GetCollection<SiteDoc>("site").Find(s => s.Id == "site")
+            .Project<SiteDoc>(Builders<SiteDoc>.Projection.Include(s => s.HomeOrder).Include(s => s.HomeCards).Include(s => s.UpdatedAt))
+            .FirstOrDefaultAsync();
 
         var imagesById = images.ToDictionary(i => i.Id, StringComparer.Ordinal);
         var violations = new List<string>();
