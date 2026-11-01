@@ -35,8 +35,11 @@ R2 setup needed before 006 (owner, in the Cloudflare dashboard):
   Leave r2.dev disabled on both buckets (III.9).
 - [x] Create one API token with Object Read & Write, scoped to the two dev buckets only (III.9).
   Keep its keys in .NET user-secrets on your machine, never in the repo.
-- CORS on `gallery-dev-private` comes with 008, which is the first feature that uploads from the
-  browser.
+- [x] CORS on `gallery-dev-private` (owner, 2026-10-31, verified by terminal preflight):
+  AllowedOrigins `https://localhost:5081` only, AllowedMethods `PUT` only, AllowedHeaders
+  `content-type` only, MaxAge 3600. Preflight PUT from `https://localhost:5081` answers 204; GET,
+  and any request from `http://localhost:5080`, answer 403. Presigned PUTs must sign no header
+  except content-type (008 FR-044).
 
 Storage tests run one suite against two targets. The emulator runs on every test run. The dev R2
 buckets run on demand when the R2 keys are present in the environment, and must pass before any
