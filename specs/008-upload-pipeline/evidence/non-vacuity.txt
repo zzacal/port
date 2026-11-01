@@ -1,0 +1,18 @@
+PASS (a) reader 1 accepts an AVIF Exif item -> red:   Failed Gallery.Web.Tests.ContainerParserTests.Reader1_alone_rejects_gps_avif |  Assert.Equal() Failure: Strings differ  ↓ (pos 5) 
+PASS (b) reader 1 ignores the VP8X EXIF flag and EXIF chunk -> red:   Failed Gallery.Web.Tests.ContainerParserTests.Reader1_alone_rejects_gps_webp |  Assert.Equal() Failure: Strings differ  ↓ (pos 0) 
+PASS (c) reader 2 verdict replaced by true -> red:   Failed Gallery.Web.Tests.UploadValidatorTests.Combined_rejects_gps_webp |  Assert.False() Failure Expected: False 
+PASS (d) rejection keeps the staged files -> red:   Failed Gallery.Web.Tests.UploadFlowTests.Rejects_gps_avif_stored_as_320_avif |  Assert.Empty() Failure: Collection was not empty Collection: ["staging/l2wisnw3daxpoefg3doyxcayau/tfpaakpfmkcvyjc"···, "staging/l2wisnw3daxpoefg3doyxcayau/tfpaakpfmkcvyjc"···, "staging/l2wisnw3daxpoefg3doyxcayau/tfpaakp
+PASS (e) presign signs an extra Cache-Control header -> red:   Failed Gallery.Web.Tests.EmulatorUploadStorageTests.Presign_signs_content_type_and_host_only_Emulator |  Assert.Equal() Failure: Strings differ  ↓ (pos 1) 
+PASS (f) upload page renders the storage secret -> red:   Failed Gallery.Web.Tests.UploadSecretScanTests.No_upload_response_or_admin_asset_contains_the_storage_secret |  GET /admin/upload contains the host Storage:SecretAccessKey 
+PASS (g) upload routes mapped outside the protected admin group -> red:   Failed Gallery.Web.Tests.UploadAccessTests.With_a_session_and_a_wrong_csrf_token_every_POST_is_400(name: "U7") |  Assert.Equal() Failure: Values differ Expected: BadRequest 
+PASS (h) confirm copies without if-match -> red:   Failed Gallery.Web.Tests.UploadConfirmTests.Reput_after_validation_publishes_nothing |  Assert.Equal() Failure: Values differ Expected: Conflict 
+PASS (h2) refused copy still creates the image -> red:   Failed Gallery.Web.Tests.UploadConfirmTests.Reput_after_validation_publishes_nothing |  Assert.Null() Failure: Value is not null Expected: null 
+PASS (i) confirm adds the photo to a public gallery -> red:   Failed Gallery.Web.Tests.UploadConfirmTests.Public_pages_byte_identical_around_confirm |  /g/dddddddddddddddddddddddd22/coming-soon answered 200 
+PASS (j) uploaded images carry seedKey "" -> red:   Failed Gallery.Web.Tests.UploadSeedCoexistenceTests.ImageDoc_without_seed_fields_serialises_no_seedKey |  Assert.False() Failure Expected: False 
+PASS (j2) seedKey index not partial (row 60) -> red:   Failed Gallery.Web.Tests.UploadConfirmTests.Confirm_after_a_seed_run_adds_both_images |  Assert.Equal() Failure: Values differ Expected: OK 
+PASS (k) complete trusts the page camera -> red:   Failed Gallery.Web.Tests.UploadFlowTests.Complete_ignores_page_camera_and_dimensions |  Assert.Equal() Failure: Strings differ  ↓ (pos 0) 
+PASS (l) storage PUT sends an extra x-amz header -> red:   Failed Gallery.Web.Tests.UploadBrowserTests.Storage_PUTs_carry_only_content_type |  http://localhost:65345/priv/staging/6t756hycdxyso6aa2dbzggij4m/vtdmfr46e5molb7atx3hedujpe/hicmlnzevzs2zlwocii3zrjtvy/master.jpg sent [x-amz-meta-a] 
+PASS (m) p95.sh finds non-zero n for SC-006/007/008/010 in specs/008-upload-pipeline/evidence/upload-timings.log
+restored: build clean
+
+ALL PASS

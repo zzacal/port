@@ -747,7 +747,7 @@ completes, with no browser.
   paths, and what is not delivered until the OWNER-ONLY section runs (SC-009, Safari/iOS, R2
   copy-if-match, the lifecycle rule). Then run `dotnet clean`, build with `-warnaserror` (0
   warnings) and the full suite green. Record the new test count in `evidence/baseline.txt`.
-- [ ] T054 **[SAFETY]** **Non-vacuity, final task** (high tier; plan item 9). Copy the
+- [X] T054 **[SAFETY]** **Non-vacuity, final task** (high tier; plan item 9). Copy the
   orchestration template to `specs/008-upload-pipeline/evidence/non-vacuity.sh`, add one `brk`
   line per guard below, run it on a clean committed tree, and tee the output to
   `evidence/non-vacuity.txt`. Every line must be `PASS` (red on an ASSERTION), and the restored
