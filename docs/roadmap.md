@@ -95,7 +95,7 @@ OAuth client with a localhost redirect URI.
 
 ### 008 Upload pipeline into the library
 
-**Status: implemented on branch `008-upload-pipeline`, not merged (2026-11-01, unattended run;
+**Status: merged to main 2026-11-01 (e5a7d6a); unattended run;
 defaults in `specs/008-upload-pipeline/decisions.md`).** Evidence:
 `specs/008-upload-pipeline/evidence/` (verify.sh live walkthrough ALL PASS, p95.sh SC-006/007/008/010
 PASS on the 40-photo log, non-vacuity.sh, browser tests for the worker path). Not delivered until
@@ -118,7 +118,7 @@ the upload batch page. Confirmed images land in the library.
 
 ### 009 Library and gallery management
 
-**Status: implemented on branch `009-library-galleries` (built on 008), not merged (2026-11-01,
+**Status: merged to main 2026-11-01 (9082469), with the owner review fixes (decisions rows 69-77);
 unattended run; defaults in `specs/009-library-galleries/decisions.md`).** Evidence:
 `specs/009-library-galleries/evidence/` (verify.sh ALL PASS, re-run after rebasing onto 008's
 owner-check commits; full suite 1008/1008; non-vacuity.sh 14/14). Not delivered until the owner's
