@@ -1,0 +1,60 @@
+# T026 Evidence: prepare-photos.sh checks
+# Generated during T026 implementation
+# All commands run on 2026-10-31
+
+## Fixture verification (mdls)
+
+$ mdls -raw -name kMDItemOrientation tests/fixtures/orientation-6.jpg
+1
+(non-null: EXIF Orientation tag present; ffmpeg applies rotation: 400×200 → 200×400)
+
+$ mdls -raw -name kMDItemLatitude tests/fixtures/gps-camera.jpg
+37.76666666666667
+(non-null: GPS data present in fixture)
+
+$ mdls -raw -name kMDItemLongitude tests/fixtures/gps-camera.jpg
+-122.4166666666667
+(non-null: GPS longitude present; represents approx 122°25'W)
+
+## Fixture orientation sanity (ffmpeg applies EXIF Orientation=6)
+
+$ ffmpeg -i tests/fixtures/orientation-6.jpg \
+    -vf "scale='min(2560,iw)':-2" -frames:v 1 -map_metadata -1 /tmp/test_intermediate.png
+$ sips -g pixelWidth -g pixelHeight /tmp/test_intermediate.png
+  pixelWidth: 200
+  pixelHeight: 400
+(400×200 JPEG with Orientation=6 → 200×400 upright PNG ✓)
+
+## Skip rule: not a JPEG
+
+$ PHOTOS_DIR=tests/fixtures PREPARED_DIR=/tmp/prep-test bash scripts/prepare-photos.sh
+PREPARED gps-camera.jpg
+REJECTED not-a-jpeg.jpg not a JPEG
+PREPARED orientation-6.jpg
+prepared 2, skipped-unchanged 0, rejected 1
+
+## Skip rule: over 20 MB
+
+$ mkdir -p /tmp/prep-big
+$ mkfile -n 21m /tmp/prep-big/big.jpg
+$ printf '\xff\xd8\xff' | dd of=/tmp/prep-big/big.jpg bs=3 count=1 conv=notrunc
+$ PHOTOS_DIR=/tmp/prep-big PREPARED_DIR=/tmp/prep-big-out bash scripts/prepare-photos.sh
+REJECTED big.jpg over 20 MB
+prepared 0, skipped-unchanged 0, rejected 1
+
+## Orientation + check-metadata.sh pass
+
+$ PHOTOS_DIR=tests/fixtures PREPARED_DIR=/tmp/prep-test bash scripts/prepare-photos.sh
+PREPARED gps-camera.jpg
+REJECTED not-a-jpeg.jpg not a JPEG
+PREPARED orientation-6.jpg
+prepared 2, skipped-unchanged 0, rejected 1
+
+orientation-6.jpg output: 200×400 (portrait: height 400 > width 200 ✓)
+gps-camera.jpg output:    320×160 (landscape, no orientation tag)
+
+$ bash scripts/check-metadata.sh /tmp/prep-test/9848c630339b4e68/*.avif /tmp/prep-test/9848c630339b4e68/*.webp
+(exit 0 — PASS)
+
+$ bash scripts/check-metadata.sh /tmp/prep-test/66a6e32c640eb29c/*.avif /tmp/prep-test/66a6e32c640eb29c/*.webp
+(exit 0 — PASS)

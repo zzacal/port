@@ -4,11 +4,17 @@
    controls over the cell, an extra root class, a caption under the title, and no link.
    Branch bodies are deliberately unindented: Razor emits their whitespace verbatim, and
    PublicOutputUnchangedTests pins the public markup byte-for-byte. *@
-@if (!string.IsNullOrEmpty(Href))
+@if (Image is null)
 {
-<a class="@RootClass" href="@Href">
+<a class="tile tile-empty" href="@Href">
+    <div class="cell"></div><Title Text="@EmptyTitle" />
+</a>
+}
+else if (!string.IsNullOrEmpty(Href))
+{
+<a class="@RootClass" href="@Href" data-preload-srcset="@PreloadSrcSet" data-preload-sizes="@PreloadSizes">
     <div class="cell">
-        <Picture Image="Image" Sizes="@Sizes" Fit="PictureFit.Contain" Priority="Priority" />
+        <Picture Image="Image" Sizes="@Sizes" Fit="PictureFit.Contain" Priority="Priority" TransitionId="@TransitionId" />
 @if (Overlay is not null)
 {
         <div class="overlay">@Overlay</div>
@@ -21,7 +27,7 @@ else
 {
 <div class="@RootClass">
     <div class="cell">
-        <Picture Image="Image" Sizes="@Sizes" Fit="PictureFit.Contain" Priority="Priority" />
+        <Picture Image="Image" Sizes="@Sizes" Fit="PictureFit.Contain" Priority="Priority" TransitionId="@TransitionId" />
 @if (Overlay is not null)
 {
         <div class="overlay">@Overlay</div>
@@ -32,7 +38,7 @@ else
 }
 
 @code {
-    [Parameter, EditorRequired] public ImageView Image { get; set; } = default!;
+    [Parameter] public ImageView? Image { get; set; }
     [Parameter] public string? Href { get; set; }
     [Parameter, EditorRequired] public string Sizes { get; set; } = "";
     [Parameter] public PicturePriority Priority { get; set; } = PicturePriority.Lazy;
@@ -45,6 +51,24 @@ else
 
     /// <summary>Content after the title, e.g. "Private" (feature 005).</summary>
     [Parameter] public RenderFragment? Caption { get; set; }
+
+    /// <summary>Title shown when Image is null (E-16); a null Image without EmptyTitle is an error.</summary>
+    [Parameter] public string? EmptyTitle { get; set; }
+
+    /// <summary>Passed to Picture.TransitionId (006).</summary>
+    [Parameter] public string? TransitionId { get; set; }
+
+    /// <summary>data-preload-srcset on the root anchor (006).</summary>
+    [Parameter] public string? PreloadSrcSet { get; set; }
+
+    /// <summary>data-preload-sizes on the root anchor (006).</summary>
+    [Parameter] public string? PreloadSizes { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Image is null && string.IsNullOrEmpty(EmptyTitle))
+            throw new ArgumentException("Image is required when EmptyTitle is not set.", nameof(Image));
+    }
 
     private string RootClass => string.IsNullOrEmpty(CssClass) ? "tile" : "tile " + CssClass;
 }

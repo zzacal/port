@@ -1,0 +1,18 @@
+# Hover/neighbour cache reuse, raw CDP network log (2026-10-31T23:53:54Z)
+# Command: uv run --with websocket-client python specs/006-public-site-local/evidence/hover-cache-check.py
+
+## Before the fix (code at e407441): FAIL
+tile 7: main=0289934565e91848.avif  fetched-on-hover=False  network-refetch-after-click=1
+tile 12: main=19cb69176bd8b5ed.avif  fetched-on-hover=False  network-refetch-after-click=1
+next: main=bc8d2e9bb58f4241.avif warmed-before-click=False network-refetch=1
+
+## After the fix
+tile 7: main=0289934565e91848.avif  fetched-on-hover=True  network-refetch-after-click=0
+   hover: [('0289934565e91848.avif', 'network', 'done')]
+   click: [('bccc5a63e0b15b0f.webp', 'network', 'done'), ('0289934565e91848.avif', 'cache', 'done'), ('bd998354afa1073f.avif', 'network', 'done'), ('99c10eee81ae3f3c.avif', 'network', 'done')]
+tile 12: main=19cb69176bd8b5ed.avif  fetched-on-hover=True  network-refetch-after-click=0
+   hover: [('19cb69176bd8b5ed.avif', 'network', 'done')]
+   click: [('4c0df42d2bf3ebe5.webp', 'network', 'done'), ('19cb69176bd8b5ed.avif', 'cache', 'done'), ('eafb08cc86f15e6f.avif', 'network', 'done'), ('bc8d2e9bb58f4241.avif', 'network', 'done')]
+next: main=bc8d2e9bb58f4241.avif warmed-before-click=True network-refetch=0
+   click: [('96064b53f449f13d.webp', 'network', 'done'), ('bc8d2e9bb58f4241.avif', 'cache', 'done'), ('19cb69176bd8b5ed.avif', 'cache', 'done'), ('593cf95e6be7918b.avif', 'network', 'done')]
+PASS hover/neighbour warm-ups are reused, no second download

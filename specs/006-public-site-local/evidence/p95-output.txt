@@ -1,0 +1,12 @@
+routes: / | /g/2dqrx7b3edfd4bivwd47al7tmu/october-18 | /g/2dqrx7b3edfd4bivwd47al7tmu/october-18/gi2tbs4odbjdhdq3fkgzgxdr3e (output cache off, 10 warm-up + 100 measured each)
+/g/{id}/{slug}  n=100  p50=2.23 ms  p95=2.40 ms  db_reads=2:100
+PASS SC-003 /g/{id}/{slug} p95 2.40 ms < 50 (n=100)
+PASS SC-004 /g/{id}/{slug} db_reads <= 2 on 100%
+/g/{id}/{slug}/{imageId}  n=100  p50=1.82 ms  p95=2.15 ms  db_reads=2:100
+PASS SC-003 /g/{id}/{slug}/{imageId} p95 2.15 ms < 50 (n=100)
+PASS SC-004 /g/{id}/{slug}/{imageId} db_reads <= 2 on 100%
+/  n=100  p50=1.38 ms  p95=1.53 ms  db_reads=1:100
+PASS SC-003 / p95 1.53 ms < 50 (n=100)
+PASS SC-004 / db_reads = 1 on 100%
+
+ALL PASS

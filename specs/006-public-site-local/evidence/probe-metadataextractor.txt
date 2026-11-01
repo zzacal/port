@@ -1,0 +1,21 @@
+# MetadataExtractor 2.9.3 probe, 2026-10-31 (analyze C1). GPS values redacted.
+== a320.avif
+  [QuickTime File Type] Major Brand=avif; Compatible Brands=avif, mif1, miaf, MA1B
+  [HEIC Primary Item Properties] Image Width=320; Image Height=214; Pixel Depth in Bits=8 8 8; Color Data Format=nclx; Primary Color Definitions=Unspecified; Optical Color Transfer Characteristic=Unspecified
+  [File Type] Detected File Type Name=AVIF; Detected File Type Long Name=AV1 Image File Format; Detected MIME Type=image/avif; Expected File Name Extension=avif
+  [File] File Name=a320.avif; File Size=4702 bytes; 
+== w320.webp
+  [WebP] Image Width=320; Image Height=214
+  [File Type] Detected File Type Name=WebP; Detected File Type Long Name=WebP; Detected MIME Type=image/webp; Expected File Name Extension=webp
+  [File] File Name=w320.webp; File Size=7140 bytes; 
+== gps.webp
+  [WebP] Image Width=320; Image Height=218; Has Alpha=false; Is Animation=false
+  [ICC Profile] Profile Size=596; CMM Type=lcms; Version=4.4.0; Class=Display Device; Color space=RGB ; Profile Connection Space=XYZ 
+  [WebP] Image Width=320; Image Height=218
+  [Exif IFD0] 
+  [Exif SubIFD] Image Width=5994 pixels; Image Height=4083 pixels; Bits Per Sample=16 bits/component/pixel; Make=FUJIFILM; Model=X100VI; Orientation=Top, left side (Horizontal / normal)
+  [GPS] GPS Version ID=<redacted>; GPS Latitude Ref=<redacted>; GPS Latitude=<redacted>; GPS Longitude Ref=<redacted>; GPS Longitude=<redacted>; GPS Altitude Ref=<redacted>
+  [Exif Thumbnail] Image Width=160 pixels; Image Height=160 pixels; Compression=JPEG; X Resolution=72/0 dots per inch; Y Resolution=72/0 dots per inch; Resolution Unit=Inch
+  [XMP] XMP Value Count=18
+  [File Type] Detected File Type Name=WebP; Detected File Type Long Name=WebP; Detected MIME Type=image/webp; Expected File Name Extension=webp
+  [File] File Name=gps.webp; File Size=21536 bytes; 

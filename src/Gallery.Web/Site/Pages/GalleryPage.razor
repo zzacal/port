@@ -1,0 +1,32 @@
+<PublicLayout Title="@Title" NoIndex="@NoIndex" Enhance="true" HeadExtra="_transitions">
+    <header class="gallery-head">
+        <Title Text="@Title" Element="h1" />
+        @if (!string.IsNullOrEmpty(Description))
+        {
+            <p class="gallery-desc">@Description</p>
+        }
+    </header>
+    @if (Items.Count > 0)
+    {
+        <ContactSheet Items="Items" Large="4" Medium="3" Small="1" />
+    }
+</PublicLayout>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    [Parameter] public string? Description { get; set; }
+    [Parameter] public bool NoIndex { get; set; }
+    [Parameter] public IReadOnlyList<ContactSheetItem> Items { get; set; } = [];
+
+    private RenderFragment _transitions => b =>
+    {
+        var sb = new System.Text.StringBuilder("<style>");
+        foreach (var item in Items)
+        {
+            if (item.TransitionId is not null)
+                sb.Append($"#p-{item.TransitionId}{{view-transition-name:img-{item.TransitionId}}}");
+        }
+        sb.Append("</style>");
+        b.AddMarkupContent(0, sb.ToString());
+    };
+}

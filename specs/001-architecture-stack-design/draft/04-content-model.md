@@ -12,7 +12,7 @@ this document after the claim (I.4).
 | claimedAt | datetime? | |
 | claimedIp | string? | Taken from CF-Connecting-IP (I.5, PC.9). |
 | homeOrder | id[] | Every gallery id, public and private, in the owner's manual order. Private galleries keep their position so publishing restores them in place. |
-| homeCards | GalleryCard[] | Denormalized cards for the public galleries in `homeOrder`, so the home page is one read (IV.9). |
+| homeCards | GalleryCard[] | Denormalized cards for the public galleries in `homeOrder` that hold at least one image (II.6), so the home page is one read (IV.9). |
 
 ### Image (collection `images`)
 
@@ -48,7 +48,8 @@ An Image exists only after its batch is confirmed. It has no state field (FR-017
 
 A GalleryCard is `{ galleryId, slug, title, coverImageId?, coverPlaceholder, coverWidth,
 coverHeight, coverDerivatives, imageCount }`. The cover is `pinnedCover` if set, otherwise
-`items[0]`. When the gallery has no items, the cover is null and the card renders empty.
+`items[0]`. When the gallery has no items, the cover is null and the card is kept out of
+`homeCards` (II.6, E-16).
 
 ### Upload Batch (collection `batches`, at most one with `state: open`)
 
@@ -147,7 +148,7 @@ then purges the image URLs at the edge.
 The gallery cover is the `pinnedCover` image if that field is set and the image is still a member
 of `items`. If `pinnedCover` is cleared—because the pinned image was removed from the gallery or
 deleted—or was never set, the cover falls back to `items[0]`. When the gallery has no items, the
-cover is null and the GalleryCard renders empty. The `card` field on Gallery is recomputed whenever
+cover is null and the GalleryCard is never listed (II.6, E-16). The `card` field on Gallery is recomputed whenever
 `items`, `pinnedCover`, or a member image changes (D-13).
 
 ### Visibility Rule

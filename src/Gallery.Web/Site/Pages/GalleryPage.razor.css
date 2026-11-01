@@ -1,0 +1,11 @@
+.gallery-head {
+    max-width: 960px;
+    margin: var(--space-m) auto var(--space-s);
+    padding: 0 var(--space-s);
+    text-align: center;
+}
+
+.gallery-desc {
+    max-width: 60ch;
+    margin: 8px auto 0;
+}

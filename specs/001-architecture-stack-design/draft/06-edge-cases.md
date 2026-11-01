@@ -61,8 +61,8 @@
 **Mechanism**: D-13 derives the cover from items[0] when pinnedCover is null (data-model Gallery). L-14 (Gallery reordered) recomputes the GalleryCard and triggers a D-16 purge of the home page and the gallery page.
 
 ### E-16: Gallery has no images
-**Outcome**: The home card renders empty (no cover, no dimensions) and the gallery page shows no images. Neither crashes nor leaves broken markup.
-**Mechanism**: D-13 specifies that when items is empty the cover is null and the GalleryCard's cover fields are null (data-model GalleryCard). D-15 server-renders the page with a null-safe cover path and no `<picture>` element when coverImageId is absent.
+**Outcome**: Visitors never see it (Constitution II.6, amended 4.2.0). An empty gallery is left out of the home page even when its visibility is public, and its page answers 404 "Not found" whatever its visibility. The owner cannot make an empty gallery public: the publish action refuses and says the gallery needs at least one image. A public gallery whose last image is removed or deleted stays public, is hidden until it holds an image again, and reappears in its `homeOrder` position without being republished.
+**Mechanism**: D-13 still computes the GalleryCard with a null cover and `imageCount` 0 for an empty gallery, but `site.homeCards` holds only public galleries with `imageCount` ≥ 1, so the home page stays one read (IV.9). The gallery route checks `items` after its one gallery read and returns the D-15 not-found page with `noindex`; the photo route already returns 404 for any image not in `items`. The publish precondition belongs to the L-11 action (feature 009); until then the seed manifest refuses a public gallery with no photos.
 
 ### E-17: Owner deletes an image by mistake
 **Outcome**: There is no trash and no undo through the site. The image is permanently gone. Recovery is re-uploading from local exports. Its gallery memberships, positions, title, and caption are lost.

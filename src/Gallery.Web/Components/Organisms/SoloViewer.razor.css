@@ -6,6 +6,12 @@
     height: 80vh;
 }
 
+.solo-caption {
+    max-width: 60ch;
+    margin: 0 auto;
+    color: var(--color-text);
+}
+
 .caption {
     display: grid;
     gap: 4px;

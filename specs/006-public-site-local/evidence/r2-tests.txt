@@ -1,0 +1,19 @@
+# T013/T014 R2 run, 2026-10-31T18:37:28Z. Command: GALLERY_R2_TESTS=1 dotnet test --filter Category=R2. Output passed through sed 's/[A-Za-z0-9]{32,}/<redacted>/g'.
+  Passed Gallery.Web.Tests.R2ScopeTests.List_buckets_is_forbidden_R2 [161 ms]
+  Passed Gallery.Web.Tests.R2ScopeTests.Other_bucket_is_unreachable_R2 [45 ms]
+ other bucket list -> 403
+  Passed Gallery.Web.Tests.R2ScopeTests.Dev_buckets_are_listable_R2(bucket: "gallery-dev-private") [78 ms]
+  Passed Gallery.Web.Tests.R2ScopeTests.Dev_buckets_are_listable_R2(bucket: "gallery-dev-public") [107 ms]
+  Passed Gallery.Web.Tests.R2ScopeTests.Create_bucket_is_forbidden_R2 [61 ms]
+  Passed Gallery.Web.Tests.R2StorageTests.Presign_put_only_R2 [751 ms]
+  Passed Gallery.Web.Tests.R2StorageTests.Delete_R2 [403 ms]
+  Passed Gallery.Web.Tests.R2StorageTests.Copy_replace_R2 [892 ms]
+  Passed Gallery.Web.Tests.R2StorageTests.Head_missing_R2 [82 ms]
+  Passed Gallery.Web.Tests.R2StorageTests.Presign_max_15_min_R2 [< 1 ms]
+  Passed Gallery.Web.Tests.R2StorageTests.Put_then_head_R2 [511 ms]
+  Passed Gallery.Web.Tests.R2StorageTests.Ranged_get_R2 [464 ms]
+Total tests: 12
+     Passed: 12
+ Total time: 3.4446 Seconds
+
+# Non-vacuity: ImageStore presign verb forced to GET -> EmulatorStorageTests.Presign_put_only FAILED (1/1); restored -> 7/7 pass.

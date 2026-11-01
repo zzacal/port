@@ -9,3 +9,7 @@ body.public {
 .public-main {
     padding-bottom: var(--space-l);
 }
+
+@view-transition {
+    navigation: auto;
+}

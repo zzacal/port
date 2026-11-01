@@ -1,33 +1,27 @@
 <!--
 Sync Impact Report
-- Version change: 3.0.0 → 4.0.0 (MAJOR)
-- Rationale: The owner moved image storage from Azure Blob Storage to Cloudflare R2 and chose to
-  build locally until hosting is decided (2026-10-30). Withdrawn guarantee, verbatim from Platform
-  Constraints: "The app reaches storage by managed identity (no account keys)." The app now holds a
-  stored R2 credential; if it leaks, the private masters can be read until it is rotated. The
-  replacement controls are the new rule III.9 (bucket-scoped credential, never in source control
-  or the browser, single-object presigned uploads of 15 minutes or less, no public path to the
-  private bucket, no r2.dev URL). III.9 is now the entire protection for the masters at rest.
-  Per Governance, a withdrawn guarantee is MAJOR.
-- Modified principles: III. Published Images Leak Nothing (rule 9 added).
-- Modified sections:
-  Platform Constraints (Image storage = Cloudflare R2, two buckets; Image delivery = R2 custom
-  domain through the Cloudflare cache; the Cloud Connector and Worker fallback are removed)
-  Development Workflow (integration tests use an S3-compatible storage emulator instead of Azurite)
-- Unchanged on purpose: Hosting (App Service B1), Data (Atlas), Observability (Application
-  Insights), and VIII.1's Azure budget alert. Hosting is under review; local development does not
-  conflict with them. Known gap until hosting is decided: R2 spend is billed by Cloudflare, so
-  the Azure budget alert in VIII.1 does not see it.
-- Added sections: none
-- Removed sections: none
+- Version change: 4.1.0 → 4.2.0 (MINOR)
+- Rationale: owner directive (2026-10-31, feature 006 review): "We should not show any empty
+  galleries. On the admin side, galleries should not be able to be made public unless they have
+  at least one image." II.6 added. II.2 previously said "Public galleries appear on the home
+  page" unconditionally; it now defers to II.6 for empty galleries. No protection is withdrawn:
+  private stays unlisted, and II.6 adds a guarantee for visitors and a publish precondition for
+  the owner. A public gallery that becomes empty is hidden rather than switched to private, so
+  visibility still changes only by the owner's action (II.5).
+- Modified principles: II. Anonymous Public Viewing, Owner-Controlled Visibility (rule 2 reworded,
+  rule 6 added, rationale extended).
+- Added sections: none. Removed sections: none.
 - Templates requiring updates: none (templates read the constitution at runtime).
-- Prior specs swept: specs/001-architecture-stack-design/spec.md (storage clarifications and the
-  Cloud Connector assumption) and research.md (R-02, R-04, R-05, dependency table) are annotated
-  in place.
-- Deferred TODOs: none
+- Prior specs swept: specs/006-public-site-local (spec edge case, FR-016; data-model card note;
+  contracts/seed.md coming-soon; tasks T031/T034 text annotated). Design record: E-16, L-08, L-09,
+  L-11, homeCards (content model), traceability II.6.
+- Deferred TODOs: the publish refusal itself ships with the admin publish action (feature 009);
+  until then the seed manifest enforces it (a public gallery with no photos fails validation).
 - History: 1.0.0 initial ratification. 1.1.0 perceived performance, private = unlisted. 2.0.0
   client-generated derivatives with server validation. 3.0.0 Azure Blob replaced R2, masters kept,
-  $10 metered cap. All dated 2026-10-27.
+  $10 metered cap (2026-10-27). 4.0.0 images on Cloudflare R2, managed-identity guarantee
+  withdrawn, III.9 added (2026-10-30). 4.1.0 III.10 seeded dev content under two-reader
+  validation; IV.19 clarified (2026-10-31).
 -->
 
 # Gallery Constitution
@@ -57,7 +51,8 @@ accepted, documented risk that design MAY close with an optional claim token.
 ### II. Anonymous Public Viewing, Owner-Controlled Visibility
 
 1. Visitors MUST NOT need an account, cookie consent, or sign-in to view anything public.
-2. Every gallery is either public or private. Public galleries appear on the home page.
+2. Every gallery is either public or private. Public galleries that hold at least one image
+   appear on the home page (rule 6).
    Private galleries MUST NOT appear on the home page, in any public listing, feed, or sitemap,
    and their pages MUST be marked non-indexable — but MUST remain reachable by direct link.
    A listing served from an edge cache MAY show a gallery for up to the cache lifetime after it
@@ -67,18 +62,26 @@ accepted, documented risk that design MAY close with an optional claim token.
 4. Changing a gallery's title MUST NOT break links already shared.
 5. Only the owner decides what is visible; nothing becomes public as a side effect of upload,
    tagging, or editing.
+6. Visitors MUST never be shown an empty gallery. A gallery MUST hold at least one image to be
+   made public; the owner's publish action MUST refuse otherwise, saying why. A public gallery that
+   becomes empty (its last image removed or deleted) stays public but MUST be left out of the home
+   page and every public listing until it holds an image again, and the page of any empty gallery,
+   public or private, MUST answer as not found. Its visibility is not changed on the owner's
+   behalf (rule 5).
 
-Rationale: private doubles as draft and as share-by-link. Private means unlisted, not secret:
-it is not access control, and nothing private-but-sensitive belongs on this site. Opaque ids are
-kept because they are what make links survive renames.
+Rationale: private doubles as draft and as share-by-link. An empty gallery is a draft by
+definition, so it is never listed or shown even when its visibility says public. Private means
+unlisted, not secret: it is not access control, and nothing private-but-sensitive belongs on this
+site. Opaque ids are kept because they are what make links survive renames.
 
 ### III. Published Images Leak Nothing
 
 1. Uploaded files are the owner's edited exports and are the master copies. Masters MUST be
    stored privately and MUST NOT be served to visitors by any route.
 2. Visitors MUST only receive derivatives that were generated by the owner's authenticated
-   admin client and accepted by server-side validation (rules 5–7). No uploaded file reaches a
-   public location without passing that validation.
+   admin client and accepted by server-side validation (rules 5–7), or seeded development content
+   under rule 10. No uploaded or seeded file reaches a public location without passing that
+   validation.
 3. Derivatives MUST have location (GPS) data and all other embedded metadata removed. Camera
    metadata shown to visitors (camera, lens, focal length, aperture, shutter speed, ISO) MUST
    come from an explicit allowlist extracted at upload, never from passing the file through.
@@ -101,6 +104,13 @@ kept because they are what make links survive renames.
    control, and MUST NOT reach the browser. The browser receives only presigned URLs, each for one
    object and one method (PUT), expiring in 15 minutes or less. The public bucket MUST be
    reachable only through the image hostname; its development URL (r2.dev) MUST be disabled.
+10. Development content MAY be seeded from the owner's own photos on the owner's machine, before
+    an upload path exists, only if: each derivative passes the server-side validation of rules
+    5–7 (structure parsed by two independent readers, no metadata of any kind, format allowed,
+    dimensions matching the declared width) before it is stored; the camera allowlist is read
+    from the original by the server-side extractor (rule 7); the source files meet the upload
+    limits; and the seed refuses to write to any storage or datastore not configured as
+    development. Seeded content is never a path into production.
 
 Rationale: photo exports routinely carry home location and serial numbers; an allowlist is the
 only approach that stays safe as camera vendors add fields. Since 2.0.0 derivatives are made in
@@ -132,9 +142,9 @@ Measurement
 Upload-time precomputation (nothing is resized, encoded, or analyzed at view time)
 
 6. Each image MUST get a width ladder of derivatives, produced at upload time in the owner's
-   admin client (Principle III.2): baseline widths 320, 640, 960, 1280, 1920, and 2560, never
-   upscaled past the source, encoded as AVIF with a WebP fallback, chosen via
-   `<picture>`, `srcset`, and `sizes` so every view gets the smallest sufficient file.
+   admin client (Principle III.2), or at seed time under III.10: baseline widths 320, 640, 960,
+   1280, 1920, and 2560, never upscaled past the source, encoded as AVIF with a WebP fallback,
+   chosen via `<picture>`, `srcset`, and `sizes` so every view gets the smallest sufficient file.
 7. Each image MUST get a placeholder computed at upload (dominant color and a tiny blurred
    preview) stored with the image record and inlined in the page, so every image slot paints a
    preview with no extra request and no JavaScript.
@@ -171,7 +181,8 @@ Delivery
 18. Anonymous HTML for public pages MUST be cacheable at the edge and MUST bypass the edge cache
     whenever the owner session is present. Content changes MUST purge affected pages; cached
     HTML MUST carry a bounded lifetime so a failed purge self-heals.
-19. The origin MUST send Early Hints (via the edge) for critical CSS and the primary image.
+19. The origin MUST send Early Hints (via the edge) for the primary image, and for critical CSS
+    whenever it is fetched rather than inlined.
 20. Public pages MUST be eligible for the back/forward cache: no `unload` handlers and no
     `no-store` on anonymous responses.
 21. Images and static assets MUST use content-addressed URLs served with one-year immutable
@@ -271,4 +282,4 @@ These are binding inputs to every plan:
   place, not silently edited.
 - Every plan and analyze pass verifies compliance and cites principles by number.
 
-**Version**: 4.0.0 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-10-30
+**Version**: 4.2.0 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-10-31

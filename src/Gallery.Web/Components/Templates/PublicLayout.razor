@@ -9,11 +9,37 @@
     {
         <meta name="robots" content="noindex">
     }
-    <style>@((MarkupString)Styles.Css)</style>
+    <style>@((MarkupString)Styles.Css)</style>@if (HeadExtra is not null){@HeadExtra}
 </head>
 <body class="public">
     <SiteHeader SiteName="Gallery" NavItems="_nav" />
-    <main class="public-main">@ChildContent</main>
+    <main class="public-main">@ChildContent</main>@if (Enhance)
+{
+    <script type="speculationrules">{"prerender":[{"where":{"href_matches":"/g/*"},"eagerness":"moderate"}]}</script>
+    <script type="module">(() => {
+if (navigator.connection?.saveData) return;
+// Fetch through a detached <picture> with the destination's own AVIF <source> (same srcset and
+// sizes), so the browser picks, and caches, exactly the file the destination page then uses.
+const warm = (srcset, sizes, priority) => {
+    const pic = document.createElement('picture');
+    const img = Object.assign(document.createElement('img'), { fetchPriority: priority, decoding: 'async' });
+    pic.append(Object.assign(document.createElement('source'), { type: 'image/avif', srcset, sizes }), img);
+    img.src = 'data:,';
+};
+const onIntent = e => {
+    const el = e.target.closest?.('[data-preload-srcset]');
+    if (!el || el.dataset.preloaded) return;
+    el.dataset.preloaded = '1';
+    warm(el.dataset.preloadSrcset, el.dataset.preloadSizes || '100vw', 'high');
+};
+document.addEventListener('pointerenter', onIntent, true);
+document.addEventListener('touchstart', onIntent, { passive: true });
+window.addEventListener('load', () => {
+    const sets = document.querySelector('article.solo[data-prefetch]')?.dataset.prefetch.split('|').filter(Boolean) ?? [];
+    for (const srcset of sets) warm(srcset, '100vw', 'low');
+});
+})();</script>
+}
 </body>
 </html>
 
@@ -21,6 +47,8 @@
     [Parameter, EditorRequired] public string Title { get; set; } = "";
     [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public bool NoIndex { get; set; }
+    [Parameter] public bool Enhance { get; set; }
+    [Parameter] public RenderFragment? HeadExtra { get; set; }
 
     private static readonly IReadOnlyList<NavItem> _nav = [new("Galleries", "/")];
 }

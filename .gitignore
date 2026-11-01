@@ -484,3 +484,9 @@ $RECYCLE.BIN/
 
 # Local credentials (never commit)
 .r2-keys*
+
+# Owner photos used as local seed input (never commit: originals carry EXIF/GPS)
+/dev-pictures/
+
+# Prepared derivatives of dev-pictures (local only; regenerate with scripts/prepare-photos.sh)
+/.dev-prepared/
