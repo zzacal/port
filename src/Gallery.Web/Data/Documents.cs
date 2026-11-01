@@ -40,8 +40,10 @@ public sealed class CameraDoc
 public sealed class ImageDoc
 {
     [BsonElement("_id")]         public string Id           { get; set; } = string.Empty;
-    [BsonElement("seedKey")]     public string SeedKey      { get; set; } = string.Empty;
-    [BsonElement("sourceHash")]  public string SourceHash   { get; set; } = string.Empty;
+    // 008 R-10 / FR-035 [SAFETY]: null (absent in BSON) for uploaded images, so the seeder's
+    // "seedKey exists and not in manifest" clean-up never matches them.
+    [BsonElement("seedKey")]     [BsonIgnoreIfNull] public string? SeedKey    { get; set; }
+    [BsonElement("sourceHash")]  [BsonIgnoreIfNull] public string? SourceHash { get; set; }
     [BsonElement("title")]       public string Title        { get; set; } = string.Empty;
     [BsonElement("caption")]     public string? Caption     { get; set; }
     [BsonElement("width")]       public int Width           { get; set; }

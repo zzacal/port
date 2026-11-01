@@ -11,6 +11,8 @@ public static class UploadSetup
 {
     public static IServiceCollection AddUpload(this IServiceCollection s, IConfiguration c)
     {
+        s.AddSingleton(UploadOptions.Load(c));
+        s.AddScoped<BatchStore>();
         return s;
     }
 

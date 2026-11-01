@@ -102,7 +102,7 @@ public sealed class AdminHost : IAsyncDisposable
         return new AdminHost(app, client, logLines, dbName);
     }
 
-    private async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request)
+    public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request)
     {
         // Add cookies from jar
         if (_cookieJar.Count > 0)

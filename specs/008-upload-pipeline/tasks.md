@@ -138,12 +138,12 @@ parallel.
 `tests/Gallery.Web.Tests/{UploadSeedCoexistenceTests,EffectiveStateTests,BatchStoreTests}.cs`,
 `tests/Gallery.Web.Tests/Fixtures/{UploadHost,MutableTimeProvider}.cs`.
 
-- [ ] T006 **[SAFETY]** In `src/Gallery.Web/Data/Documents.cs`, change `ImageDoc.SeedKey` and
+- [X] T006 **[SAFETY]** In `src/Gallery.Web/Data/Documents.cs`, change `ImageDoc.SeedKey` and
   `ImageDoc.SourceHash` to `string?` with NO initialiser (default null) and add
   `[BsonIgnoreIfNull]` to both (research R-10, decisions row 28, plan item 7). Do not touch
   `GalleryDoc.SeedKey` (decisions row 43). Every existing writer sets these explicitly, so existing
   tests stay green. Fix any nullable warning at the consumer with a null check, never with `!`.
-- [ ] T007 **[SAFETY]** Write `tests/Gallery.Web.Tests/UploadSeedCoexistenceTests.cs`
+- [X] T007 **[SAFETY]** Write `tests/Gallery.Web.Tests/UploadSeedCoexistenceTests.cs`
   (FR-035, plan item 7):
   - `ImageDoc_without_seed_fields_serialises_no_seedKey`: `new ImageDoc{…}.ToBsonDocument()` has
     no `seedKey` and no `sourceHash` element.
@@ -152,13 +152,13 @@ parallel.
     seed fields (as confirm will write it) into a fresh DB, run a real `Seeder.RunAsync`, then
     assert that the document still exists and that its `ToJson()` is identical to before. Do not
     copy seeder logic into the test. If the seeder cannot be driven this way, escalate.
-- [ ] T008 [P] Create `src/Gallery.Core/Images/Ladder.cs`: `public static class Ladder` with
+- [X] T008 [P] Create `src/Gallery.Core/Images/Ladder.cs`: `public static class Ladder` with
   `Widths = [320,640,960,1280,1920,2560]`, `IReadOnlyList<int> For(int uprightWidth)` and
   `int HeightFor(int w, int W, int H) => (int)Math.Round((double)w * H / W)` (data-model "Ladder
   rule"). Write `tests/Gallery.Core.Tests/LadderTests.cs` covering 200 → [200], 320 → [320],
   1000 → [320,640,960], 2560 → all six, 6000 → all six, 0 or a negative width → ArgumentOutOfRange,
   and HeightFor(640, 6000, 4000) = 427.
-- [ ] T009 Create `src/Gallery.Web/Upload/UploadOptions.cs`, config section `Upload`, with the keys
+- [X] T009 Create `src/Gallery.Web/Upload/UploadOptions.cs`, config section `Upload`, with the keys
   and defaults of data-model "Settings". Startup validation: `PresignMinutes` must be in 1..15 and
   every other value > 0, or startup throws with the key name. Create
   `src/Gallery.Web/Upload/StagingKeys.cs`:
@@ -166,14 +166,14 @@ parallel.
     `BatchPrefix(b)` per data-model "Staged keys". Every key is built from stored ids; all ids
     must pass `OpaqueId.IsValid`, or the method throws.
   Register `UploadOptions` in `AddUpload`. (The best-effort delete helper is Batch B's, T014.)
-- [ ] T010 Create `src/Gallery.Web/Data/BatchDocuments.cs` (`BatchDoc`, `BatchItemDoc`,
+- [X] T010 Create `src/Gallery.Web/Data/BatchDocuments.cs` (`BatchDoc`, `BatchItemDoc`,
   `MasterDoc`, `ValidatedDoc`, `ValidatedSizeDoc`, `PlaceholderDoc`) with the BSON names of
   data-model.md exactly. Create `src/Gallery.Web/Upload/EffectiveState.cs` with
   `static string Of(BatchItemDoc item, DateTimeOffset now, TimeSpan timeout)`: it returns
   `interrupted` per data-model "Effective state", otherwise the stored state. Write
   `tests/Gallery.Web.Tests/EffectiveStateTests.cs`: queued, processing and uploading at 119 s stay
   as stored and at 121 s become `interrupted`; succeeded and failed at 10 min stay as stored.
-- [ ] T011 Create `src/Gallery.Web/Upload/BatchStore.cs` (research R-08), scoped,
+- [X] T011 Create `src/Gallery.Web/Upload/BatchStore.cs` (research R-08), scoped,
   `(IMongoDatabase, OpTimer, TimeProvider, UploadOptions)`. Every Mongo call goes through
   `OpTimer.Time` with `db.batch.read` (isDbRead: true), `db.batch.create` or `db.batch.update`.
   - The lazy unique partial index `batches_open_unique` is created on first use, never at startup.
@@ -186,7 +186,7 @@ parallel.
   - `PullItemAsync`, `TryStartConfirmAsync`, `MarkConfirmedAsync(count)`, `MarkDiscardedAsync`,
     `GetByIdAsync`.
   Register it scoped in `AddUpload`.
-- [ ] T012 Write `tests/Gallery.Web.Tests/BatchStoreTests.cs` (`[Collection("mongo")]`, real
+- [X] T012 Write `tests/Gallery.Web.Tests/BatchStoreTests.cs` (`[Collection("mongo")]`, real
   Mongo):
   - 50 concurrent `GetOrCreateOpenAsync` calls on a fresh DB give exactly 1 document with
     `state:"open"`, and all 50 results share its `_id` (FR-007, US5 AS-3).
@@ -195,7 +195,7 @@ parallel.
   - `UpdateItemAsync` with a stale attemptId matches nothing and changes nothing.
   - `AppendAsync` after `TryStartConfirmAsync` refuses every item.
   - A second open insert throws DuplicateKey (the index exists after first use).
-- [ ] T013 Create `tests/Gallery.Web.Tests/Fixtures/MutableTimeProvider.cs` (a `TimeProvider`
+- [X] T013 Create `tests/Gallery.Web.Tests/Fixtures/MutableTimeProvider.cs` (a `TimeProvider`
   whose `GetUtcNow()` returns a settable value; no NuGet, decisions row 41). Create
   `tests/Gallery.Web.Tests/Fixtures/UploadHost.cs`, a wrapper over `AdminHost.CreateAsync(mongo,
   fakeGoogle, overrides, configure)`:
@@ -218,7 +218,7 @@ byte-unchanged), `tests/Gallery.Web.Tests/UploadStorageTests.cs`. `StorageTests.
 unmodified: the new facts go in a new file with the same abstract/emulator/R2 pattern
 (decisions row 37).
 
-- [ ] T014 Add to `src/Gallery.Web/Storage/ImageStore.cs`, each method logging `op.timing` like
+- [X] T014 Add to `src/Gallery.Web/Storage/ImageStore.cs`, each method logging `op.timing` like
   the existing ones:
   - `HeadAsync(bucket,key)` → `(bool exists, long length, string? etag)` (op `s3.head`);
   - `GetAsync(bucket,key, long maxBytes)` → `(byte[] bytes, string etag)` (op `s3.get`). It
@@ -233,7 +233,7 @@ unmodified: the new facts go in a new file with the same abstract/emulator/R2 pa
   - `DeletePrefixAsync(bucket,prefix, ILogger)`, which lists and then deletes each key through
     `TryDeleteAsync`, and never throws.
   `PresignPutAsync` is NOT changed (research R-03).
-- [ ] T015 **[SAFETY]** Write `tests/Gallery.Web.Tests/UploadStorageTests.cs`: an abstract
+- [X] T015 **[SAFETY]** Write `tests/Gallery.Web.Tests/UploadStorageTests.cs`: an abstract
   `UploadStorageTests` plus `EmulatorUploadStorageTests` (`[Collection("s3")]`) and
   `R2UploadStorageTests` (`[Trait("Category","R2")]`, `IClassFixture<R2Fixture>`, skipping
   exactly like `R2StorageTests`). Fact `Presign_signs_content_type_and_host_only` (FR-044, plan
@@ -242,13 +242,13 @@ unmodified: the new facts go in a new file with the same abstract/emulator/R2 pa
   - `X-Amz-Expires` ≤ 900;
   - no query key starts with `x-amz-checksum`, `x-amz-sdk-checksum` or `x-amz-meta-`.
   A PUT with only `Content-Type` answers 200.
-- [ ] T016 **[SAFETY]** In the same file (FR-042, SC-011), for both the emulator and R2:
+- [X] T016 **[SAFETY]** In the same file (FR-042, SC-011), for both the emulator and R2:
   - GET on the PUT URL → 403;
   - PUT of the same URL with the path changed to another key → 403;
   - PUT with a different content type → 403;
   - PUT 3 s after a 1-second expiry → 403;
   - after each refused attempt, `HeadAsync` shows the target key absent or unchanged.
-- [ ] T017 In the same file:
+- [X] T017 In the same file:
   - `CopyIfMatchAsync` with the current ETag copies and sets the destination
     `Cache-Control: public, max-age=31536000, immutable`;
   - after a re-PUT of the source, the same call returns `PreconditionFailed` and the destination
@@ -266,7 +266,7 @@ unmodified: the new facts go in a new file with the same abstract/emulator/R2 pa
 `tests/Gallery.Web.Tests/{ContainerParserTests,MasterCheckTests,UploadValidatorTests}.cs`.
 Runs in parallel with A and B.
 
-- [ ] T018 [US2] Create `tests/Gallery.Web.Tests/Fixtures/UploadFixtures.cs`:
+- [X] T018 [US2] Create `tests/Gallery.Web.Tests/Fixtures/UploadFixtures.cs`:
   - `Bytes(name)` loads `tests/fixtures/upload/*` and `tests/fixtures/*` via `Render.RepoRoot`;
   - a minimal ISO-BMFF box writer (`Box(type, payload)`, `FullBox`) and helpers that take the real
     `orient6-200.avif` and return mutated copies: an added second `infe(av01)`, an added `iref`,
@@ -274,7 +274,7 @@ Runs in parallel with A and B.
     to `avis`, an added `infe(mime)`, an unknown top-level box, and a truncated file;
   - a RIFF writer for WebP cases: an added `ICCP`, `EXIF` or `XMP ` chunk, VP8X flags set, `ANIM`,
     an unknown chunk, a wrong RIFF length.
-- [ ] T019 [US2] **[SAFETY]** Create `src/Gallery.Web/Upload/ContainerParser.cs` (reader 1;
+- [X] T019 [US2] **[SAFETY]** Create `src/Gallery.Web/Upload/ContainerParser.cs` (reader 1;
   research R-05, decisions row 29; plan item 1). It is static and pure, with
   `ParseResult Parse(ReadOnlySpan<byte> file)` → `(bool Ok, string? Format, int Width, int Height,
   string? Reason)`. It applies the AVIF and WebP allowlists EXACTLY as R-05 lists them, handles
@@ -282,7 +282,7 @@ Runs in parallel with A and B.
   (malformed input → `Ok=false`, reason `"malformed {box}"`). Reasons are fixed strings naming the
   box or chunk (e.g. `"AVIF item Exif"`, `"WebP EXIF chunk"`, `"VP8X EXIF flag"`), never a value
   read from the file.
-- [ ] T020 [US2] **[SAFETY]** Write `tests/Gallery.Web.Tests/ContainerParserTests.cs`:
+- [X] T020 [US2] **[SAFETY]** Write `tests/Gallery.Web.Tests/ContainerParserTests.cs`:
   - accepts `orient6-200.avif` (avif 200×400), `orient6-200.webp`, `gps-320.avif` and
     `gps-320.webp` (jSquash output, no metadata), and both placeholders;
   - `Reader1_alone_rejects_gps_avif` (`gps-sips.avif`, reason contains `Exif`) and
@@ -290,7 +290,7 @@ Runs in parallel with A and B.
   - one rejecting fact per T018 mutation, with its exact reason;
   - `icc.webp` rejected;
   - a fuzz loop: 2 000 random truncations or byte flips of the valid files never throw.
-- [ ] T021 [US2] Create `src/Gallery.Web/Upload/MasterCheck.cs` (research R-06). It is pure over
+- [X] T021 [US2] Create `src/Gallery.Web/Upload/MasterCheck.cs` (research R-06). It is pure over
   bytes: `MasterResult Check(byte[] prefix, long length, long maxBytes)` →
   `(Ok, UprightWidth, UprightHeight, Exif? Camera, NeedsMoreBytes, Reason)`:
   - File Type must be JPEG, or the reason is "not a JPEG";
@@ -301,7 +301,7 @@ Runs in parallel with A and B.
   - `CameraFields.Read` is CALLED inside try/catch, so a throw means `Camera=null`
     (decisions row 17).
   No pixel decode.
-- [ ] T022 [US2] Write `tests/Gallery.Web.Tests/MasterCheckTests.cs`:
+- [X] T022 [US2] Write `tests/Gallery.Web.Tests/MasterCheckTests.cs`:
   - `orientation-6.jpg` → 200×400;
   - `gps-camera.jpg` → 400×200 with camera fields, and no GPS value anywhere in the result's
     serialised JSON;
@@ -310,7 +310,7 @@ Runs in parallel with A and B.
   - a 200-byte prefix of `fixture-6000x4000.jpg` → `NeedsMoreBytes`;
   - the full prefix → 6000×4000;
   - length 20 971 521 → the over-limit reason.
-- [ ] T023 [US2] **[SAFETY]** Create `src/Gallery.Web/Upload/UploadValidator.cs` (research R-07,
+- [X] T023 [US2] **[SAFETY]** Create `src/Gallery.Web/Upload/UploadValidator.cs` (research R-07,
   plan item 1). `SizeVerdict ValidateSize(byte[] bytes, string storedName, int expectedWidth,
   int masterW, int masterH)` runs BOTH readers every time and returns
   `(Ok, Reader1Ok, Reader2Ok, Format, Width, Height, Sha256Hex16, Reason)`:
@@ -327,7 +327,7 @@ Runs in parallel with A and B.
   - reader 1 says WebP with 1 ≤ each side and long edge ≤ `PlaceholderMaxEdge`;
   - reader 2 is called with reader 1's width and aspect.
   No IO in this class.
-- [ ] T024 [US2] **[SAFETY]** Write `tests/Gallery.Web.Tests/UploadValidatorTests.cs` (FR-041,
+- [X] T024 [US2] **[SAFETY]** Write `tests/Gallery.Web.Tests/UploadValidatorTests.cs` (FR-041,
   SC-002):
   - `Reader2_alone_rejects_gps_avif` and `Reader2_alone_rejects_gps_webp` call
     `DerivativeValidator.Validate` directly;
