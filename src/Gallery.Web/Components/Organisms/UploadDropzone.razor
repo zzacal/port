@@ -10,7 +10,7 @@
         {
             <span class="dz-title">Drop JPEG photos here, or <u>choose files</u></span>
         }
-        <span class="dz-limits">JPEG only · up to @MaxMb MB each</span>
+        <span class="dz-limits">JPEG only · up to @MaxMb MB each@(PhotosMarkup)</span>
     </label>
     @if (Refusals.Count > 0)
     {
@@ -29,6 +29,14 @@
     [Parameter] public int MaxMb { get; set; } = 20;
     [Parameter] public string Name { get; set; } = "files";
     [Parameter] public string? FormId { get; set; }
+
+    /// <summary>008 C1: the batch limit shown on the limits line; null keeps the 005 output.</summary>
+    [Parameter] public int? MaxPhotos { get; set; }
+
+    // A RenderFragment rather than `MarkupString?`: a nullable struct binds to AddContent(object)
+    // and would be text-encoded (`·` → &#xB7;). Null renders nothing, so the default is unchanged.
+    private RenderFragment? PhotosMarkup => MaxPhotos is null ? null
+        : b => b.AddMarkupContent(0, $" · up to {MaxPhotos} photos per batch");
 
     private string StateName => State switch
     {

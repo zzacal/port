@@ -167,7 +167,7 @@ Unchanged fields, written once by confirm with `$setOnInsert`:
 | `derivatives` | `[{ w, avif: avifKey, webp: webpKey, bytesAvif, bytesWebp }]` ascending |
 | `galleryIds` | `[]` (FR-033) |
 | `createdAt` | confirm time |
-| `seedKey`, `sourceHash` | ABSENT. The type changes to `string?` + `[BsonIgnoreIfNull]` (research R-10, FR-035). |
+| `seedKey`, `sourceHash` | ABSENT. The type changes to `string?` + `[BsonIgnoreIfNull]` (research R-10, FR-035). AMENDED in implement (decisions row 60): the seed-created `seedKey_1` unique index becomes PARTIAL on `{seedKey: {$exists: true}}`, upgraded in place by the seeder and once per process by confirm, because a plain unique index treats every missing seedKey as null. |
 
 ## Public and master objects
 

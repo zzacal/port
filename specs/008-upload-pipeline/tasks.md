@@ -433,7 +433,7 @@ completes, with no browser.
 `src/Gallery.Web/Components/Molecules/BatchItem.razor`,
 `tests/Gallery.Web.Tests/{UploadConfirmTests,UploadComponentAdditionsTests,UploadPageTests}.cs`.
 
-- [ ] T030 [US1] **[SAFETY]** Create `src/Gallery.Web/Upload/ConfirmService.cs` and map U10
+- [X] T030 [US1] **[SAFETY]** Create `src/Gallery.Web/Upload/ConfirmService.cs` and map U10
   (research R-09, contracts/http.md U10, FR-030–FR-033, plan item 6):
   - Gate with `TryStartConfirmAsync`; otherwise 409 `not-ready` with `notReady` = the count of
     non-succeeded items (zero items → 409 as well).
@@ -455,7 +455,7 @@ completes, with no browser.
   - Crash seam for tests: `ConfirmService` takes an optional `Func<string, Task>? afterItem`
     (constructor parameter, default null; DI never sets it). It runs after each item's upsert. A
     test passes one that throws after the first item to simulate a crash.
-- [ ] T031 [US1] **[SAFETY]** Write `tests/Gallery.Web.Tests/UploadConfirmTests.cs`:
+- [X] T031 [US1] **[SAFETY]** Write `tests/Gallery.Web.Tests/UploadConfirmTests.cs`:
   - Confirm with one item still uploading, and with zero items → 409 `not-ready`, `notReady`
     exact.
   - Happy confirm of 2 items: 2 `images` documents with `_id` = itemId, the title from the file
@@ -481,7 +481,7 @@ completes, with no browser.
     bodies are byte-identical.
   - `Seed_run_after_confirm_leaves_uploaded_images` (FR-035): a real `Seeder.RunAsync` after
     confirm, with the `SeederWithS3Tests` setup → both images unchanged (`ToJson()` equal).
-- [ ] T032 [P] [US1] Component additions (contracts/components.md C1, C2):
+- [X] T032 [P] [US1] Component additions (contracts/components.md C1, C2):
   - `UploadDropzone.MaxPhotos` as an EXPRESSION (`@PhotosMarkup`) inside the existing span;
   - `BatchItem` root `@attributes="RootAttrs"`;
   - no new `@if` beside existing markup.
@@ -490,7 +490,7 @@ completes, with no browser.
   - the default renders byte-identical to `Render.Html<UploadDropzone>(new{})`;
   - `ItemId="abc"` renders `data-item="abc"`, and the default renders no `data-item`.
   Then run `UiPagesUnchangedTests` and `OrganismComponentTests` UNMODIFIED, and both must be green.
-- [ ] T033 [US1] Create `src/Gallery.Web/Upload/AdminAssets.cs` (a singleton computing
+- [X] T033 [US1] Create `src/Gallery.Web/Upload/AdminAssets.cs` (a singleton computing
   `sha256-8hex` of `upload.js` and `upload-worker.js` from the web root at startup; a missing file
   gives the version `dev`), `src/Gallery.Web/Upload/UploadPageModel.cs`, and
   `src/Gallery.Web/Admin/Pages/UploadPage.razor` exactly per contracts/components.md C3:
@@ -501,7 +501,7 @@ completes, with no browser.
   Map U1 `GET|HEAD /admin/upload` with `?confirmed=` (contracts/http.md U1) using one
   `db.batch.read`. `upload.js` and `upload-worker.js` may be empty placeholder files until
   Batch G; T033 creates them if absent.
-- [ ] T034 [US1] Write `tests/Gallery.Web.Tests/UploadPageTests.cs`:
+- [X] T034 [US1] Write `tests/Gallery.Web.Tests/UploadPageTests.cs`:
   - owner GET `/admin/upload` → 200 with `no-store`, the `JPEG only · up to 20 MB each · up to 100
     photos per batch` line, the noscript text, `upload-batch` carrying `hidden`, one
     `<script type="module" src="/admin-assets/upload.js?v=`, all 6 `data-tile` templates and 4
@@ -515,7 +515,7 @@ completes, with no browser.
     `/admin/library` link, while a random id shows the empty page;
   - `GET /admin-assets/upload.js?v=x` → `immutable`; without `v` → `no-cache`;
     `/admin-assets/vendor/jsquash-avif-2.1.1/avif_enc.wasm` → `application/wasm` + `immutable`.
-- [ ] T035 (high tier, parent) Requirement change, FR-001: in
+- [X] T035 (high tier, parent) Requirement change, FR-001: in
   `tests/Gallery.Web.Tests/AdminAccessTests.cs`, rename `Owner_GetAdminUpload_returns_404` to
   `Owner_GetAdminUpload_returns_200_and_library_still_404`. Assert 200 for `/admin/upload` and
   404 for `/admin/library`. Leave every other assertion in that file untouched. State this in the

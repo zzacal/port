@@ -3,16 +3,20 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Gallery.Core.Ids;
 using Gallery.Core.Images;
+using Gallery.Web.Admin.Pages;
+using Gallery.Web.Components;
 using Gallery.Web.Data;
 using Gallery.Web.Observability;
 using Gallery.Web.Storage;
+using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 
 namespace Gallery.Web.Upload;
 
 /// <summary>
-/// The 008 upload JSON endpoints on the protected <c>/admin</c> group (contracts/http.md U2–U5, U7).
+/// The 008 upload endpoints on the protected <c>/admin</c> group (contracts/http.md U1–U5, U7, U10).
 /// They inherit <c>RequireAuthorization("owner")</c> and <c>AdminAntiforgeryFilter</c> from the
 /// group. Shared rules: path ids must pass <see cref="OpaqueId.IsValid"/> (else 404); an item
 /// outside the OPEN batch is 404; <c>confirm-in-progress</c>, <c>stale-attempt</c> and
@@ -62,6 +66,11 @@ public static partial class UploadEndpoints
             .WithMetadata(new RequestSizeLimitAttribute(SmallBodyLimit));
         admin.MapPost("/upload/items/{itemId}/complete", Complete)
             .WithMetadata(new RequestSizeLimitAttribute(CompleteBodyLimit));
+
+        // U1 and U10 (Batch E).
+        admin.MapMethods("/upload", ["GET", "HEAD"], (Delegate)Page);
+        admin.MapPost("/upload/confirm", (Delegate)Confirm)
+            .WithMetadata(new RequestSizeLimitAttribute(SmallBodyLimit));
 
         return admin;
     }
@@ -475,6 +484,91 @@ public static partial class UploadEndpoints
         Exposure = e.ExposureSeconds,
         Iso = e.Iso,
     };
+
+    // ── U1 GET|HEAD /admin/upload ────────────────────────────────────────────
+
+    /// <summary>
+    /// The upload page (contracts/http.md U1). ONE <c>db.batch.read</c> fetches the open batch and,
+    /// when <c>?confirmed=</c> is a valid id, that batch if it is confirmed (SC-010). Any other
+    /// <c>confirmed</c> value is ignored.
+    /// </summary>
+    private static async Task<IResult> Page(HttpContext ctx, IAntiforgery antiforgery, IMongoDatabase db, AdminAssets assets)
+    {
+        var d = Deps.For(ctx);
+        var confirmedId = ctx.Request.Query["confirmed"].ToString();
+        var withConfirmed = OpaqueId.IsValid(confirmedId);
+
+        var f = Builders<BatchDoc>.Filter;
+        var filter = f.Eq(b => b.State, BatchStates.Open);
+        if (withConfirmed)
+            filter = f.Or(filter, f.And(f.Eq(b => b.Id, confirmedId), f.Eq(b => b.State, BatchStates.Confirmed)));
+
+        var col = db.GetCollection<BatchDoc>(BatchStore.CollectionName);
+        var found = await d.Timer.Time("db.batch.read",
+            async () => await col.Find(filter).Limit(2).ToListAsync(), isDbRead: true);
+
+        var open = found.FirstOrDefault(b => b.State == BatchStates.Open);
+        var confirmed = withConfirmed ? found.FirstOrDefault(b => b.Id == confirmedId && b.State == BatchStates.Confirmed) : null;
+
+        var tokens = antiforgery.GetAndStoreTokens(ctx);
+        var model = UploadPageModel.Create(open, confirmed?.ConfirmedCount, d.Options, assets,
+            tokens.RequestToken!, d.Clock.GetUtcNow());
+
+        return new RazorComponentResult<UploadPage>(new Dictionary<string, object?>
+        {
+            [nameof(UploadPage.Model)] = model,
+            [nameof(UploadPage.SignOut)] = new FormToken(tokens.FormFieldName, tokens.RequestToken!),
+        });
+    }
+
+    // ── U10 POST /admin/upload/confirm ───────────────────────────────────────
+
+    public sealed record BatchRequest(string? BatchId);
+
+    private static async Task<IResult> Confirm(HttpContext ctx, ConfirmService confirm)
+    {
+        var (body, bad) = await ReadAsync<BatchRequest>(ctx);
+        if (bad is not null) return bad;
+        if (!OpaqueId.IsValid(body!.BatchId)) return BatchNotFound();
+
+        var batchId = body.BatchId!;
+        var result = await confirm.ConfirmAsync(batchId);
+        return result.Status switch
+        {
+            ConfirmStatus.Confirmed => Results.Json(new
+            {
+                batchId,
+                count = result.Count,
+                redirect = $"/admin/upload?confirmed={batchId}",
+            }),
+            ConfirmStatus.NotReady => Results.Json(new
+            {
+                error = "not-ready",
+                message = NotReadyMessage(result.NotReadyCount),
+                notReady = result.NotReadyCount,
+            }, statusCode: 409),
+            ConfirmStatus.ChangedAfterValidation => Results.Json(new
+            {
+                error = "changed-after-validation",
+                message = result.Failed == 1
+                    ? "1 photo changed after it was checked. Restart or delete it."
+                    : $"{result.Failed} photos changed after they were checked. Restart or delete them.",
+                added = result.Added,
+                failed = result.Failed,
+            }, statusCode: 409),
+            _ => BatchNotFound(),
+        };
+    }
+
+    private static string NotReadyMessage(int n) => n switch
+    {
+        0 => "Add photos to the batch first.",
+        1 => "Restart or delete the 1 photo that isn't ready",
+        _ => $"Restart or delete the {n} photos that aren't ready",
+    };
+
+    private static IResult BatchNotFound() =>
+        Error(404, "not-found", "That batch isn't open.");
 
     // ── shared ───────────────────────────────────────────────────────────────
 

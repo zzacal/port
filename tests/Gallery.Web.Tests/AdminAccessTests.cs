@@ -158,16 +158,22 @@ public class AdminAccessTests(MongoFixture mongo) : IAsyncLifetime
         AssertNoindex(oidcResp);
     }
 
-    // ── Owner with session GET /admin/upload → 404 ────────────────────────────
+    // ── Owner with session GET /admin/upload → 200 (008 FR-001); library still 404 until 009 ──
+    // Requirement change (008 T035, decisions row 38): this test asserted 404 for /admin/upload
+    // while no upload page existed. 008 builds it, so the upload assertion flips to 200 and the
+    // "not built yet" guard moves to /admin/library. No other assertion in this file changed.
 
     [Fact]
-    public async Task Owner_GetAdminUpload_returns_404()
+    public async Task Owner_GetAdminUpload_returns_200_and_library_still_404()
     {
         var host = await CreateHostWithClaimedOwner();
         await using var _ = host;
 
         var resp = await host.GetAsync("/admin/upload");
-        Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+
+        var library = await host.GetAsync("/admin/library");
+        Assert.Equal(HttpStatusCode.NotFound, library.StatusCode);
     }
 
     // ── FR-022: LogLines has http.request entries with status and duration ────

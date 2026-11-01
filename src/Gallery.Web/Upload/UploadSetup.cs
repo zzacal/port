@@ -13,6 +13,8 @@ public static class UploadSetup
     {
         s.AddSingleton(UploadOptions.Load(c));
         s.AddScoped<BatchStore>();
+        s.AddScoped<ConfirmService>();
+        s.AddSingleton<AdminAssets>();
         return s;
     }
 

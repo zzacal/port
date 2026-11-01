@@ -88,6 +88,51 @@ public class UploadSeedCoexistenceTests : IClassFixture<MongoFixture>
         finally { if (Directory.Exists(tmpDir)) Directory.Delete(tmpDir, true); }
     }
 
+    /// <summary>
+    /// 008 decisions row 60: a dev database seeded before 008 has a plain unique <c>seedKey_1</c>
+    /// index, which treats every missing seedKey as null. With two uploaded images present the
+    /// seed run must replace it with the partial index and leave both images untouched.
+    /// </summary>
+    [Fact]
+    public async Task Seed_run_replaces_legacy_seedKey_index_and_keeps_two_uploads()
+    {
+        var db = _mongo.NewDatabase();
+        var images = db.GetCollection<BsonDocument>("images");
+        await images.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("seedKey"),
+            new CreateIndexOptions { Unique = true, Name = "seedKey_1" }));
+
+        var id1 = Gallery.Core.Ids.OpaqueId.NewId();
+        await db.GetCollection<ImageDoc>("images").InsertOneAsync(UploadedImage(id1));
+        // The legacy index refuses a second document with no seedKey.
+        await Assert.ThrowsAsync<MongoWriteException>(() =>
+            db.GetCollection<ImageDoc>("images").InsertOneAsync(UploadedImage(Gallery.Core.Ids.OpaqueId.NewId())));
+
+        var tmpDir = Path.Combine(Path.GetTempPath(), $"gallery-coexist-test-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tmpDir);
+        try
+        {
+            var manifest = new Manifest
+            {
+                Galleries = [new ManifestGallery { Key = "gallery-1", Title = "Gallery One", Visibility = "public", Photos = ["photo-a.jpg"] }],
+                Photos = new Dictionary<string, ManifestPhoto> { ["photo-a.jpg"] = new ManifestPhoto { Title = "Photo One" } },
+            };
+            var seeder = new Seeder(manifest, tmpDir, "/dev/null", NewStore(), db, NullLogger.Instance, _s3.StorageOptions.PublicBucket!);
+            await seeder.SeedAsync();
+
+            var idx = (await (await images.Indexes.ListAsync()).ToListAsync())
+                .Single(i => i["name"] == "seedKey_1");
+            Assert.True(idx["unique"].AsBoolean);
+            Assert.True(idx.Contains("partialFilterExpression"), $"seedKey_1 is not partial: {idx}");
+            Assert.Equal(new BsonDocument("seedKey", new BsonDocument("$exists", true)), idx["partialFilterExpression"].AsBsonDocument);
+
+            var id2 = Gallery.Core.Ids.OpaqueId.NewId();
+            await db.GetCollection<ImageDoc>("images").InsertOneAsync(UploadedImage(id2));
+            Assert.Equal(2, await images.CountDocumentsAsync(Builders<BsonDocument>.Filter.In("_id", new[] { id1, id2 })));
+        }
+        finally { if (Directory.Exists(tmpDir)) Directory.Delete(tmpDir, true); }
+    }
+
     private ImageStore NewStore() =>
         new(new Gallery.Web.Storage.S3ClientFactory(_s3.StorageOptions),
             Microsoft.Extensions.Logging.Abstractions.NullLogger<ImageStore>.Instance);
