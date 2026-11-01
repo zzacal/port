@@ -211,19 +211,35 @@ public class GalleryListTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         Assert.Contains("maxlength=\"60\"", title);
         Assert.Contains("pattern=\".*\\S.*\"", title);
 
-        // While a publish warning is shown, its "Make public" is the one primary and New gallery is Secondary.
-        var warn = await h.PostFormAsync($"/admin/galleries/{gid}/visibility", [F("public", "on"), F("from", "list")]);
-        Assert.Equal(HttpStatusCode.OK, warn.StatusCode);
-        var warnHtml = await LibraryHtml.BodyAsync(warn);
-        Assert.Equal(["Make public"], GalleryHtml.PrimaryButtons(warnHtml));
-        Assert.Matches("<button class=\"btn btn-secondary\"[^>]*>\\s*New gallery\\s*</button>", warnHtml);
-        Assert.Contains("Make “Coast” public? It will be listed on the home page with its 1 photos, and anyone can see them.", warnHtml);
-        // The warning sits in Coast's card, and its Make public posts gal-vis-{gid} with confirm=1.
-        var make = Regex.Match(GalleryHtml.CardOf(warnHtml, gid), "<button\\b[^>]*>\\s*Make public\\s*</button>").Value;
-        Assert.Matches($"form=\"gal-vis-{gid}\"", make);
-        Assert.Matches("name=\"confirm\"[^>]*value=\"1\"", make);
-        Assert.Equal("private", (await GalleryHtml.LoadAsync(h, gid)).Visibility);
+        // No confirmation step on the list (owner feedback): the card has no publish warning and no
+        // "Make public"; New gallery stays the one primary.
+        var card = GalleryHtml.CardOf(html, gid);
+        Assert.DoesNotContain("publish-warning", card);
+        Assert.DoesNotContain("Make public", html);
+        Assert.DoesNotContain("Keep private", html);
+        Assert.DoesNotContain("name=\"vis\"", card);
         Assert.Empty(await h.SettleAsync());
+    }
+
+    [Fact]
+    public async Task The_list_switch_publishes_at_once_with_no_confirmation_and_no_warning()
+    {
+        await using var h = await LibraryHost.CreateAsync(mongo, s3);
+        var ids = await GalleryHtml.ImageIdsAsync(h, 1);
+        var gid = await GalleryHtml.GalleryAsync(h, "Coast", ids);
+        await h.SettleAsync();
+
+        // The form the switch submits: CSRF token, from=list and the switch (public=on). No confirm.
+        var pub = await h.PostFormAsync($"/admin/galleries/{gid}/visibility", [F("public", "on"), F("from", "list")]);
+        Assert.Equal(HttpStatusCode.SeeOther, pub.StatusCode);
+        Assert.Equal("/admin/galleries?visibility=public", pub.Headers.Location?.ToString());
+        Assert.Equal("public", (await GalleryHtml.LoadAsync(h, gid)).Visibility);
+        GalleryHtml.SetEq([GalleryHtml.Pp(gid, "coast", ids[0]), GalleryHtml.Gp(gid, "coast"), GalleryHtml.Home], await h.SettleAsync());
+
+        var after = await GalleryHtml.GetOkAsync(h, "/admin/galleries?visibility=public");
+        Assert.Equal("The gallery is public", LibraryHtml.Status(after));
+        Assert.Equal(["New gallery"], GalleryHtml.PrimaryButtons(after));
+        Assert.DoesNotContain("publish-warning", after);
     }
 
     [Fact]
@@ -298,8 +314,8 @@ public class GalleryListTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         await h.SettleAsync();
         var orderBefore = await GalleryHtml.HomeOrderAsync(h);
 
-        // Publish from the list (confirmed) → 303 to the list with ?visibility=public, P-VIS.
-        var pub = await h.PostFormAsync($"/admin/galleries/{gid}/visibility", [F("public", "on"), F("confirm", "1"), F("from", "list")]);
+        // Publish from the list (the switch, no confirm) → 303 to the list with ?visibility=public, P-VIS.
+        var pub = await h.PostFormAsync($"/admin/galleries/{gid}/visibility", [F("public", "on"), F("from", "list")]);
         Assert.Equal(HttpStatusCode.SeeOther, pub.StatusCode);
         Assert.Equal("/admin/galleries?visibility=public", pub.Headers.Location?.ToString());
         Assert.Equal("public", (await GalleryHtml.LoadAsync(h, gid)).Visibility);

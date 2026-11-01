@@ -32,8 +32,10 @@
                 <span class="bf-reason">Available when every photo is ready</span>
             }
         }
-        <DangerConfirm Action="Discard batch"
+        <DangerConfirm Id="@(FormId is null ? $"bf-confirm-{State.ToString().ToLowerInvariant()}" : null)"
+                        Action="Discard batch"
                         Target="this batch"
+                        Title="Discard this batch?"
                         Consequence="@($"All {Total} uploaded files are deleted. Nothing is added to your library.")"
                         ConfirmLabel="Discard batch"
                         Open="@(State == BatchState.ConfirmDiscard)"

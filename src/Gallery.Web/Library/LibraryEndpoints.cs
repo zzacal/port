@@ -46,20 +46,18 @@ public sealed record GalleryRow(GalleryRef Gallery, ImageView? Cover)
 }
 
 /// <summary>What the gallery list (C2, G1) renders, built by <see cref="LibraryEndpoints"/>.</summary>
-/// <param name="WarningGid">The gallery whose publish warning is shown (G4 without confirm), or null.</param>
 public sealed record GalleriesPageModel(
     IReadOnlyList<GalleryRow> Rows,
     LibraryOptions Options,
     FormToken Csrf,
     string LibraryScriptUrl,
     string ReorderScriptUrl,
-    string? Status = null,
-    string? WarningGid = null);
+    string? Status = null);
 
 /// <summary>What the gallery builder (C3, B1) renders, built by <see cref="LibraryEndpoints"/>.</summary>
 /// <param name="Items">The member images in gallery order (as views).</param>
-/// <param name="Warning">The G4 publish warning is shown (no write yet).</param>
 /// <param name="EditTitle">The title input's value (the submitted one after a refused save, else stored).</param>
+/// <param name="EditPublic">The switch's submitted state after a refused save, or null for the stored one.</param>
 public sealed record GalleryPageModel(
     GalleryDoc Gallery,
     IReadOnlyList<ImageView> Items,
@@ -68,9 +66,9 @@ public sealed record GalleryPageModel(
     string LibraryScriptUrl,
     string ReorderScriptUrl,
     string? Status = null,
-    bool Warning = false,
     string? EditTitle = null,
-    string? EditDescription = null)
+    string? EditDescription = null,
+    bool? EditPublic = null)
 {
     public bool HasPhotos => Items.Count > 0;
 }
@@ -87,8 +85,8 @@ public sealed record GalleryPageModel(
 /// <item>success → 303 with the contracted status query; a refusal re-renders the page with the
 ///   contracted status code and the reason in <c>role="status"</c>, and nothing is stored.</item>
 /// </list>
-/// G1 and B1 render the gallery list (C2) and the builder (C3); G/B refusals and the publish warning
-/// re-render those pages with the contracted status code.
+/// G1 and B1 render the gallery list (C2) and the builder (C3); G/B refusals re-render those pages
+/// with the contracted status code.
 /// </summary>
 public static class LibraryEndpoints
 {
@@ -239,36 +237,37 @@ public static class LibraryEndpoints
 
     // ── G4 POST /admin/galleries/{gid}/visibility ────────────────────────────
 
+    /// <summary>
+    /// G4: the gallery list's switch (and any direct post). No confirmation step (owner feedback,
+    /// decisions log): <c>public=on</c> publishes at once through <see cref="GalleryService.PublishAsync"/>
+    /// (emptiness FIRST, then the conditional <c>items.0</c> write), anything else unpublishes.
+    /// </summary>
     private static async Task<IResult> Visibility(string gid, HttpContext ctx, GalleryService galleries, LibraryReader reader,
         IMongoDatabase db, OpTimer timer, StorageOptions storage, LibraryOptions options, IAntiforgery antiforgery, AdminAssets assets)
     {
         if (!OpaqueId.IsValid(gid)) return Results.NotFound();
         var form = await FormAsync(ctx);
         var wantPublic = form["public"] == "on";
-        var confirmed = form["confirm"] == "1";
         var fromList = form["from"] == "list";
         var back = fromList ? GalleriesPath : $"{GalleriesPath}/{gid}";
 
         var gallery = await galleries.LoadAsync(gid);
         if (gallery is null) return Results.NotFound();
 
-        // A refusal or the publish warning re-renders the page the request came from.
-        Task<IResult> Page(int status, string? reason, bool warning) => fromList
-            ? RenderGalleriesAsync(ctx, reader, db, timer, storage, options, antiforgery, assets, status, reason,
-                warning ? gid : null)
-            : RenderBuilderAsync(ctx, galleries, db, timer, storage, options, antiforgery, assets, gid, status, reason,
-                warning);
+        // A refusal re-renders the page the request came from.
+        Task<IResult> Page(int status, string? reason) => fromList
+            ? RenderGalleriesAsync(ctx, reader, db, timer, storage, options, antiforgery, assets, status, reason)
+            : RenderBuilderAsync(ctx, galleries, db, timer, storage, options, antiforgery, assets, gid, status, reason);
 
         if (wantPublic)
         {
-            // The service checks emptiness FIRST, then confirmation, then writes conditionally.
-            var r = await galleries.PublishAsync(gid, confirmed);
+            // The service checks emptiness FIRST, then writes conditionally on items.0.
+            var r = await galleries.PublishAsync(gid, confirmed: true, loaded: gallery);
             return r.Status switch
             {
                 OperationStatus.Ok => SeeOther($"{back}?visibility=public"),
                 OperationStatus.NotFound => Results.NotFound(),
-                OperationStatus.NeedsConfirm => await Page(200, null, warning: true),
-                _ => await Page(r.StatusCode, r.Reason, warning: false),
+                _ => await Page(r.StatusCode, r.Reason),
             };
         }
 
@@ -277,11 +276,11 @@ public static class LibraryEndpoints
             // Nothing to unpublish. An empty private gallery answers the empty refusal whatever was
             // sent (contracts/http.md G4, [SAFETY]); a non-empty one is already private (no write).
             return gallery.Items.Count == 0
-                ? await Page(409, GalleryService.EmptyPublishReason, warning: false)
+                ? await Page(409, GalleryService.EmptyPublishReason)
                 : SeeOther($"{back}?visibility=private");
         }
 
-        var u = await galleries.UnpublishAsync(gid);
+        var u = await galleries.UnpublishAsync(gid, loaded: gallery);
         return u.Status == OperationStatus.NotFound ? Results.NotFound() : SeeOther($"{back}?visibility=private");
     }
 
@@ -303,9 +302,18 @@ public static class LibraryEndpoints
         var form = await FormAsync(ctx);
         var title = Field(form, "title");
         var description = Field(form, "description");
-        var r = await galleries.UpdateTextAsync(gid, title, description);
+        // The switch is read only when the form carries the vis marker: an unchecked checkbox sends
+        // nothing, so without the marker a bare or partial POST could not be told from "turn it off".
+        bool? wantPublic = form["vis"] == "1" ? form["public"] == "on" : null;
+        var (r, nowPublic) = await galleries.SaveAsync(gid, title, description, wantPublic);
+        var ok = nowPublic switch
+        {
+            true => $"{GalleriesPath}/{gid}?saved=1&visibility=public",
+            false => $"{GalleriesPath}/{gid}?saved=1&visibility=private",
+            null => $"{GalleriesPath}/{gid}?saved=1",
+        };
         return await Builder(ctx, galleries, db, timer, storage, options, antiforgery, assets, gid, r,
-            $"{GalleriesPath}/{gid}?saved=1", title, description);
+            ok, title, description, wantPublic);
     }
 
     // ── B3 POST /admin/galleries/{gid}/order ─────────────────────────────────
@@ -393,8 +401,7 @@ public static class LibraryEndpoints
     /// </summary>
     private static async Task<IResult> RenderGalleriesAsync(
         HttpContext ctx, LibraryReader reader, IMongoDatabase db, OpTimer timer, StorageOptions storage,
-        LibraryOptions options, IAntiforgery antiforgery, AdminAssets assets, int statusCode, string? status,
-        string? warningGid = null)
+        LibraryOptions options, IAntiforgery antiforgery, AdminAssets assets, int statusCode, string? status)
     {
         var refs = await reader.GalleriesAsync();
         var cards = await timer.Time("db.galleries.list", () => db.GetCollection<GalleryDoc>("galleries")
@@ -415,7 +422,7 @@ public static class LibraryEndpoints
             rows, options, Token(ctx, antiforgery),
             assets.UrlFor(AdminAssets.LibraryScriptPath),
             assets.UrlFor(AdminAssets.ReorderScriptPath),
-            status, warningGid);
+            status);
 
         return new RazorComponentResult<GalleriesPage>(new Dictionary<string, object?>
         {
@@ -432,7 +439,7 @@ public static class LibraryEndpoints
     private static async Task<IResult> RenderBuilderAsync(
         HttpContext ctx, GalleryService galleries, IMongoDatabase db, OpTimer timer, StorageOptions storage,
         LibraryOptions options, IAntiforgery antiforgery, AdminAssets assets, string gid, int statusCode, string? status,
-        bool warning = false, string? editTitle = null, string? editDescription = null)
+        string? editTitle = null, string? editDescription = null, bool? editPublic = null)
     {
         var gallery = await galleries.LoadAsync(gid);
         if (gallery is null) return Results.NotFound();
@@ -453,9 +460,10 @@ public static class LibraryEndpoints
             gallery, items, options, Token(ctx, antiforgery),
             assets.UrlFor(AdminAssets.LibraryScriptPath),
             assets.UrlFor(AdminAssets.ReorderScriptPath),
-            status, warning,
+            status,
             editTitle ?? gallery.Title,
-            editDescription ?? gallery.Description);
+            editDescription ?? gallery.Description,
+            editPublic);
 
         return new RazorComponentResult<GalleryPage>(new Dictionary<string, object?>
         {
@@ -506,7 +514,8 @@ public static class LibraryEndpoints
     /// <summary>The builder's PRG status line (L3 new gallery, B2–B5, G4 redirects).</summary>
     public static string? BuilderStatusFromQuery(IQueryCollection q)
     {
-        if (q["saved"] == "1") return "Saved";
+        if (q["saved"] == "1")
+            return VisibilityStatus(q) is { } changed ? $"Saved. {changed}" : "Saved";
         if (q["ordered"] == "1") return "Order saved";
         if (int.TryParse(q["added"], out var added)) return $"{added} added";
         if (q["removed"] == "1") return "Removed from this gallery";
@@ -524,13 +533,13 @@ public static class LibraryEndpoints
     private static async Task<IResult> Builder(
         HttpContext ctx, GalleryService galleries, IMongoDatabase db, OpTimer timer, StorageOptions storage,
         LibraryOptions options, IAntiforgery antiforgery, AdminAssets assets, string gid, OperationResult r, string ok,
-        string? editTitle = null, string? editDescription = null) =>
+        string? editTitle = null, string? editDescription = null, bool? editPublic = null) =>
         r.Status switch
         {
             OperationStatus.Ok => SeeOther(ok),
             OperationStatus.NotFound => Results.NotFound(),
             _ => await RenderBuilderAsync(ctx, galleries, db, timer, storage, options, antiforgery, assets, gid,
-                r.StatusCode, r.Reason, editTitle: editTitle, editDescription: editDescription),
+                r.StatusCode, r.Reason, editTitle: editTitle, editDescription: editDescription, editPublic: editPublic),
         };
 
     // ── request helpers ──────────────────────────────────────────────────────

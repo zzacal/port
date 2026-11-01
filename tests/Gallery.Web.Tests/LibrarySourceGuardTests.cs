@@ -66,7 +66,7 @@ public partial class LibrarySourceGuardTests(S3ProxyFixture s3, MongoFixture mon
         var a = await h.InsertUploadedImageAsync(title: "Pier", files: false);
         var b = await h.InsertUploadedImageAsync(title: "Rocks", files: false);
 
-        // Built the way the owner builds it: L3 into a new gallery, then G4 confirmed.
+        // Built the way the owner builds it: L3 into a new gallery, then G4 (the list switch).
         var add = await h.PostFormAsync("/admin/library/add",
             [F("ids", a.Id), F("ids", b.Id), F("gallery", "new"), F("newTitle", "Coast"), F("page", "1")]);
         Assert.Equal(HttpStatusCode.SeeOther, add.StatusCode);
@@ -74,7 +74,7 @@ public partial class LibrarySourceGuardTests(S3ProxyFixture s3, MongoFixture mon
         Assert.Matches("^/admin/galleries/[0-9a-z]{26}\\?added=2$", loc);
         var gid = loc["/admin/galleries/".Length..loc.IndexOf('?')];
         var publish = await h.PostFormAsync($"/admin/galleries/{gid}/visibility",
-            [F("public", "on"), F("confirm", "1"), F("from", "builder")]);
+            [F("public", "on"), F("from", "builder")]);
         Assert.Equal(HttpStatusCode.SeeOther, publish.StatusCode);
         await h.SettleAsync();
 

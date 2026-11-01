@@ -22,7 +22,7 @@ public class LibraryFlowTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
     }
 
     [Fact]
-    public async Task Forty_photos_become_a_public_gallery_in_four_actions()
+    public async Task Forty_photos_become_a_public_gallery_in_three_actions()
     {
         await using var h = await LibraryHost.CreateAsync(mongo, s3);
         var t0 = new DateTime(2026, 2, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -58,21 +58,22 @@ public class LibraryFlowTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         Assert.Equal(order, (await h.Galleries.Find(g => g.Id == gid).FirstAsync()).Items);
         await StepDoneAsync(h);
 
-        // (3) G4 without confirm → 200 with the publish warning; still private.
-        var warn = await h.PostFormAsync($"/admin/galleries/{gid}/visibility", [F("public", "on"), F("from", "builder")]);
-        actions++;
-        Assert.Equal(HttpStatusCode.OK, warn.StatusCode);
-        Assert.Contains("Make “Coast” public? It will be listed on the home page with its 40 photos, and anyone can see them.",
-            WebUtility.HtmlDecode(await warn.Content.ReadAsStringAsync()));
+        // (3) B1: the builder's Save form carries the switch, with the Save-time warning (no buttons).
+        var builder = await h.GetAsync($"/admin/galleries/{gid}");
+        Assert.Equal(HttpStatusCode.OK, builder.StatusCode);
+        var builderHtml = WebUtility.HtmlDecode(await builder.Content.ReadAsStringAsync());
+        Assert.Contains("When you save, “Coast” becomes public: it will be listed on the home page with its 40 photos, and anyone can see them.",
+            builderHtml);
+        Assert.DoesNotContain("Make public", builderHtml);
         Assert.Equal("private", (await h.Galleries.Find(g => g.Id == gid).FirstAsync()).Visibility);
         await StepDoneAsync(h);
 
-        // (4) G4 confirmed → 303 back to the builder, public.
-        var publish = await h.PostFormAsync($"/admin/galleries/{gid}/visibility",
-            [F("public", "on"), F("confirm", "1"), F("from", "builder")]);
+        // (4) B2 Save with the switch on → 303 back to the builder, public.
+        var publish = await h.PostFormAsync($"/admin/galleries/{gid}",
+            [F("title", "Coast"), F("description", ""), F("vis", "1"), F("public", "on")]);
         actions++;
         Assert.Equal(HttpStatusCode.SeeOther, publish.StatusCode);
-        Assert.Equal($"/admin/galleries/{gid}?visibility=public", publish.Headers.Location?.ToString());
+        Assert.Equal($"/admin/galleries/{gid}?saved=1&visibility=public", publish.Headers.Location?.ToString());
         Assert.Equal("public", (await h.Galleries.Find(g => g.Id == gid).FirstAsync()).Visibility);
         await StepDoneAsync(h);
 

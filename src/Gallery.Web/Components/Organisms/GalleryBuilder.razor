@@ -4,7 +4,9 @@
    009 K6 (all optional; the /ui/ page passes none, so the default render is byte-identical): the
    b-ctl row gains the K4 cover controls, a Quiet Remove submit and a View link; the grid is wrapped
    in <reorder-grid data-form> for reorder.js; the inputs get the K2 required/pattern and the
-   LibraryOptions limits; the toggle gets K3. Every addition is an expression, never an @if. *@
+   LibraryOptions limits; the toggle gets K3. Every addition is an expression, never an @if.
+   With a FormId the Public switch is a field of that Save form (owner feedback): Save posts the
+   title, description and visibility together; the publish warning has no buttons. *@
 @using Gallery.Core.Images
 <div class="builder">
     <section class="b-grid" aria-label="Photos">@StatusLine@ReorderOpen
@@ -47,13 +49,12 @@
             </ContactSheet>
         }@ReorderClose
     </section>
-    <SidePanel Heading="Gallery" State="SaveState.Idle" FormId="@FormId"
-               SaveVariant="@(State == BuilderState.PublishWarning ? ButtonVariant.Secondary : ButtonVariant.Primary)">
+    <SidePanel Heading="Gallery" State="SaveState.Idle" FormId="@FormId" SaveVariant="ButtonVariant.Primary">
         <ChildContent>
             <Input Label="Title" Name="title" Value="@Title" MaxLength="@(TitleMax ?? 200)" Required="@(TitleMax is not null)" Pattern="@(TitleMax is null ? null : TitlePattern)" />
             <Input Label="Description" Name="description" Value="@Description" Multiline="true" MaxLength="@(DescriptionMax ?? 5000)" />
-            <VisibilityToggle Public="@Public" GalleryTitle="@Title" PhotoCount="@Items.Count" Warning="@(State == BuilderState.PublishWarning)" FormId="@(VisibilityFormId ?? FormId)" DisabledReason="@PublicDisabledReason" />
-            <p class="b-view"><Button Element="ButtonElement.Link" Variant="ButtonVariant.Quiet" Href="@ViewHref">@ViewLabel@ViewArrow</Button></p>
+            <VisibilityToggle Public="@Public" Checked="@PublicChecked" GalleryTitle="@Title" PhotoCount="@Items.Count" Warning="@(State == BuilderState.PublishWarning)" FormId="@FormId" PartOfSave="@(FormId is not null)" DisabledReason="@PublicDisabledReason" />
+            <p class="b-view"><Button Element="ButtonElement.Link" Variant="ButtonVariant.Quiet" Href="@ViewHref" Target="@(ViewExternal ? "_blank" : null)">@ViewLabel@ViewArrow</Button></p>
         </ChildContent>
         <Danger>
             <DangerConfirm Action="Delete gallery"
@@ -109,8 +110,12 @@
     /// <summary>The <c>role="status"</c> line above the grid (PRG result or refusal reason).</summary>
     [Parameter] public string? Status { get; set; }
 
-    /// <summary>Hidden G4 form the visibility toggle posts (defaults to <see cref="FormId"/>; decisions row: C3 names <c>b-vis</c>).</summary>
-    [Parameter] public string? VisibilityFormId { get; set; }
+    /// <summary>
+    /// The switch's state after a refused save (what the owner had set), or null for <see cref="Public"/>.
+    /// The switch is a field of the <see cref="FormId"/> Save form: Save posts it with the text
+    /// (owner feedback; it never submits on its own).
+    /// </summary>
+    [Parameter] public bool? PublicChecked { get; set; }
 
     /// <summary>Hidden B6 form the delete confirm posts (defaults to <see cref="FormId"/>; C3 names <c>b-delete</c>).</summary>
     [Parameter] public string? DeleteFormId { get; set; }
@@ -142,5 +147,5 @@
         : @<Button Variant="ButtonVariant.Quiet" FormId="@RemoveFormId" Name="image" Value="@id" AriaLabel="@($"Remove {title} from this gallery")">Remove</Button>;
 
     private RenderFragment? ViewFor(string id) => PhotoHrefBase is null ? null
-        : @<TextLink Href="@($"{PhotoHrefBase}/{id}")">View &#x2197;</TextLink>;
+        : @<TextLink Href="@($"{PhotoHrefBase}/{id}")" Target="_blank">View &#x2197;</TextLink>;
 }

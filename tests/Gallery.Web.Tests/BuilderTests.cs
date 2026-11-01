@@ -67,16 +67,20 @@ public class BuilderTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixture
             Assert.DoesNotContain("danger-confirm", row);
         }
         // Hidden forms: each per-item control posts an external form (no nesting).
-        foreach (var (id, action) in new[] { ("b-order", "/order"), ("b-cover", "/cover"), ("b-unpin", "/cover"), ("b-remove", "/remove"), ("b-vis", "/visibility"), ("b-delete", "/delete") })
+        foreach (var (id, action) in new[] { ("b-order", "/order"), ("b-cover", "/cover"), ("b-unpin", "/cover"), ("b-remove", "/remove"), ("b-delete", "/delete") })
             Assert.Matches($"<form id=\"{id}\" method=\"post\" action=\"/admin/galleries/{gid}{action}\" hidden[ >]", html);
         Assert.Matches($"<form id=\"b-panel\" method=\"post\" action=\"/admin/galleries/{gid}\"[ >]", html);
+        // The switch is a field of the Save form (owner feedback): no separate visibility form.
+        Assert.DoesNotContain("<form id=\"b-vis\"", html);
+        Assert.DoesNotContain("/visibility\"", html);
         Assert.Contains("<reorder-grid data-form=\"b-order\">", html);
         var order = Regex.Match(html, "<form id=\"b-order\"[^>]*>.*?</form>", RegexOptions.Singleline).Value;
         Assert.Equal(ids, Regex.Matches(order, "name=\"order\"[^>]*value=\"([^\"]+)\"").Select(m => m.Groups[1].Value).ToList());
 
         // UI-3: Save is the one primary. UI-4: Delete gallery… is outlined Danger on b-delete.
         Assert.Equal(["Save"], GalleryHtml.PrimaryButtons(html));
-        Assert.Matches("<summary class=\"btn btn-danger\"[^>]*>Delete gallery…</summary>", html);
+        Assert.Matches("<button [^>]*commandfor=\"b-delete-confirm\"[^>]*class=\"btn btn-danger danger-trigger\" type=\"button\"[^>]*>(Delete gallery…|Delete gallery&#x2026;)</button>", html);
+        Assert.Matches("<dialog id=\"b-delete-confirm\" class=\"danger-dialog\"", html);
         Assert.Matches("<button class=\"btn btn-danger\"[^>]*form=\"b-delete\"[^>]*>\\s*Delete gallery\\s*</button>", html);
         Assert.Contains("Its 2 photos stay in your library. This can't be undone.", html);
 
@@ -96,25 +100,158 @@ public class BuilderTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixture
         Assert.Equal(HttpStatusCode.NotFound, (await h.GetAsync("/admin/galleries/NOT-AN-ID")).StatusCode);
     }
 
+    /// <summary>The value of the builder's title input.</summary>
+    private static string TitleValue(string html) =>
+        System.Net.WebUtility.HtmlDecode(Regex.Match(Regex.Match(html, "<input[^>]*name=\"title\"[^>]*>").Value, "value=\"([^\"]*)\"").Groups[1].Value);
+
+    /// <summary>The text of the builder's description textarea.</summary>
+    private static string DescriptionValue(string html) =>
+        System.Net.WebUtility.HtmlDecode(Regex.Match(html, "<textarea[^>]*name=\"description\"[^>]*>(.*?)</textarea>", RegexOptions.Singleline).Groups[1].Value);
+
+    private static string Aside(string html) =>
+        Regex.Match(html, "<aside class=\"side-panel\".*?</aside>", RegexOptions.Singleline).Value;
+
     [Fact]
-    public async Task Publish_warning_demotes_Save_and_keeps_the_gallery_private()
+    public async Task The_switch_belongs_to_the_Save_form_and_the_warning_has_no_buttons()
     {
         await using var h = await LibraryHost.CreateAsync(mongo, s3);
         var ids = await GalleryHtml.ImageIdsAsync(h, 3);
         var gid = await GalleryHtml.GalleryAsync(h, "Coast", ids);
+        var pub = await GalleryHtml.GalleryAsync(h, "Shore", [ids[0]], publish: true);
         await h.SettleAsync();
 
-        var warn = await h.PostFormAsync($"/admin/galleries/{gid}/visibility", [F("public", "on"), F("from", "builder")]);
-        Assert.Equal(HttpStatusCode.OK, warn.StatusCode);
-        var html = await LibraryHtml.BodyAsync(warn);
-        Assert.Equal(["Make public"], GalleryHtml.PrimaryButtons(html));
-        Assert.Matches("<button class=\"btn btn-secondary\"[^>]*form=\"b-panel\"[^>]*>\\s*Save\\s*</button>", html);
-        Assert.Contains("Make “Coast” public? It will be listed on the home page with its 3 photos, and anyone can see them.", html);
-        var make = Regex.Match(html, "<button\\b[^>]*>\\s*Make public\\s*</button>").Value;
-        Assert.Matches("form=\"b-vis\"", make);
-        Assert.Matches("name=\"confirm\"[^>]*value=\"1\"", make);
-        Assert.Equal("private", (await GalleryHtml.LoadAsync(h, gid)).Visibility);
+        var html = await GalleryHtml.GetOkAsync(h, $"/admin/galleries/{gid}");
+        var aside = Aside(html);
+        var sw = GalleryHtml.SwitchOf(aside);
+        Assert.Matches("\\sform=\"b-panel\"", sw);
+        Assert.Matches("\\sname=\"public\"", sw);
+        Assert.Matches("\\svalue=\"on\"", sw);
+        Assert.False(GalleryHtml.HasAttr(sw, "checked"), sw);
+        // The vis marker tells B2 to read the switch (an unchecked box sends nothing).
+        Assert.Matches("<input type=\"hidden\" name=\"vis\" value=\"1\" form=\"b-panel\"", aside);
+
+        // The Save-time warning is rendered for the private gallery (CSS shows it while the switch is
+        // on) and holds no button; Save is the one primary.
+        var warning = LibraryHtml.Blocks(aside, "div", "publish-warning").Single();
+        Assert.Contains("on-save", warning);
+        Assert.Contains("When you save, “Coast” becomes public: it will be listed on the home page with its 3 photos, and anyone can see them.",
+            System.Net.WebUtility.HtmlDecode(warning));
+        Assert.DoesNotContain("<button", warning);
+        Assert.DoesNotContain("Make public", html);
+        Assert.DoesNotContain("Keep private", html);
+        Assert.DoesNotContain("name=\"confirm\"", html);
+        Assert.Equal(["Save"], GalleryHtml.PrimaryButtons(html));
+        Assert.Matches("<button class=\"btn btn-primary\"[^>]*form=\"b-panel\"[^>]*>\\s*Save\\s*</button>", html);
+
+        // A public gallery: switch on, no warning (turning it off needs none).
+        var pubHtml = await GalleryHtml.GetOkAsync(h, $"/admin/galleries/{pub}");
+        Assert.True(GalleryHtml.HasAttr(GalleryHtml.SwitchOf(Aside(pubHtml)), "checked"));
+        Assert.DoesNotContain("publish-warning", pubHtml);
         Assert.Empty(await h.SettleAsync());
+    }
+
+    [Fact]
+    public async Task B2_saves_title_description_and_public_in_one_request()
+    {
+        await using var h = await LibraryHost.CreateAsync(mongo, s3);
+        var ids = await GalleryHtml.ImageIdsAsync(h, 2);
+        var (a, b) = (ids[0], ids[1]);
+        var gid = await GalleryHtml.GalleryAsync(h, "Coast", ids);
+        await h.SettleAsync();
+
+        var save = await h.PostFormAsync($"/admin/galleries/{gid}",
+            [F("title", "Coastline"), F("description", "Winter walks."), F("vis", "1"), F("public", "on")]);
+        Assert.Equal(HttpStatusCode.SeeOther, save.StatusCode);
+        Assert.Equal($"/admin/galleries/{gid}?saved=1&visibility=public", save.Headers.Location?.ToString());
+        var g = await GalleryHtml.LoadAsync(h, gid);
+        Assert.Equal(("Coastline", "coastline", "Winter walks.", "public"), (g.Title, g.Slug, g.Description, g.Visibility));
+        // P-VIS ∪ P-RENAME in one flush (ONE edge call): every page under both slugs and "/".
+        await h.EdgeIdleAsync();
+        Assert.Single(h.Recorder.Purges);
+        GalleryHtml.SetEq(
+        [
+            Gp(gid, "coast"), Pp(gid, "coast", a), Pp(gid, "coast", b),
+            Gp(gid, "coastline"), Pp(gid, "coastline", a), Pp(gid, "coastline", b),
+            Home,
+        ], await h.SettleAsync());
+        Assert.Contains($"/g/{gid}/coastline", await GalleryHtml.HomeRawAsync(h));
+        Assert.Single(h.LogLines, l => l.StartsWith($"owner.action gallery.publish {gid} ", StringComparison.Ordinal));
+        Assert.Equal("Saved. The gallery is public",
+            LibraryHtml.Status(await GalleryHtml.GetOkAsync(h, $"/admin/galleries/{gid}?saved=1&visibility=public")));
+        h.Recorder.Clear();
+
+        // Save with the switch off (vis=1, no public field) and a new description: unpublished, P-VIS.
+        var off = await h.PostFormAsync($"/admin/galleries/{gid}",
+            [F("title", "Coastline"), F("description", "Spring walks."), F("vis", "1")]);
+        Assert.Equal(HttpStatusCode.SeeOther, off.StatusCode);
+        Assert.Equal($"/admin/galleries/{gid}?saved=1&visibility=private", off.Headers.Location?.ToString());
+        g = await GalleryHtml.LoadAsync(h, gid);
+        Assert.Equal(("Coastline", "Spring walks.", "private"), (g.Title, g.Description, g.Visibility));
+        GalleryHtml.SetEq([Gp(gid, "coastline"), Pp(gid, "coastline", a), Pp(gid, "coastline", b), Home], await h.SettleAsync());
+        Assert.DoesNotContain($"/g/{gid}/coastline", await GalleryHtml.HomeRawAsync(h));
+        Assert.Single(h.LogLines, l => l.StartsWith($"owner.action gallery.unpublish {gid} ", StringComparison.Ordinal));
+
+        // Save with the switch as stored (off) and text unchanged: nothing written, nothing purged.
+        var same = await h.PostFormAsync($"/admin/galleries/{gid}",
+            [F("title", "Coastline"), F("description", "Spring walks."), F("vis", "1")]);
+        Assert.Equal($"/admin/galleries/{gid}?saved=1", same.Headers.Location?.ToString());
+        Assert.Empty(await h.SettleAsync());
+    }
+
+    [Fact]
+    public async Task B2_with_a_too_long_title_and_public_on_rerenders_422_keeping_everything_typed()
+    {
+        await using var h = await LibraryHost.CreateAsync(mongo, s3, extraOverrides: new() { ["Library:TitleMax"] = "60" });
+        var ids = await GalleryHtml.ImageIdsAsync(h, 2);
+        var gid = await GalleryHtml.GalleryAsync(h, "Coast", ids);
+        await h.SettleAsync();
+        var home = await GalleryHtml.HomeRawAsync(h);
+
+        var longTitle = new string('t', 61);
+        var resp = await h.PostFormAsync($"/admin/galleries/{gid}",
+            [F("title", longTitle), F("description", "Typed notes."), F("vis", "1"), F("public", "on")]);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, resp.StatusCode);
+        var html = await LibraryHtml.BodyAsync(resp);
+        Assert.Equal("The title can be at most 60 characters.", LibraryHtml.Status(html));
+        Assert.Equal(longTitle, TitleValue(html));
+        Assert.Equal("Typed notes.", DescriptionValue(html));
+        var aside = Aside(html);
+        Assert.True(GalleryHtml.HasAttr(GalleryHtml.SwitchOf(aside), "checked"), "the switch keeps the owner's choice");
+        Assert.Contains("on-save", LibraryHtml.Blocks(aside, "div", "publish-warning").Single());
+
+        var g = await GalleryHtml.LoadAsync(h, gid);
+        Assert.Equal(("Coast", (string?)null, "private"), (g.Title, g.Description, g.Visibility));
+        Assert.Empty(await h.SettleAsync());
+        Assert.Equal(home, await GalleryHtml.HomeRawAsync(h));
+        Assert.DoesNotContain(h.LogLines, l => l.StartsWith($"owner.action gallery.publish {gid} ", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task B2_without_the_vis_marker_never_changes_visibility()
+    {
+        await using var h = await LibraryHost.CreateAsync(mongo, s3);
+        var ids = await GalleryHtml.ImageIdsAsync(h, 1);
+        var priv = await GalleryHtml.GalleryAsync(h, "Coast", ids);
+        var pub = await GalleryHtml.GalleryAsync(h, "Shore", ids, publish: true);
+        await h.SettleAsync();
+
+        // public=on without the marker: the text saves, the private gallery stays private.
+        var on = await h.PostFormAsync($"/admin/galleries/{priv}", [F("title", "Coast"), F("description", "Notes."), F("public", "on")]);
+        Assert.Equal($"/admin/galleries/{priv}?saved=1", on.Headers.Location?.ToString());
+        Assert.Equal(("Notes.", "private"), ((await GalleryHtml.LoadAsync(h, priv)).Description, (await GalleryHtml.LoadAsync(h, priv)).Visibility));
+
+        // No switch and no marker (e.g. an older form): the public gallery stays public.
+        var off = await h.PostFormAsync($"/admin/galleries/{pub}", [F("title", "Shore"), F("description", "More.")]);
+        Assert.Equal($"/admin/galleries/{pub}?saved=1", off.Headers.Location?.ToString());
+        Assert.Equal("public", (await GalleryHtml.LoadAsync(h, pub)).Visibility);
+
+        // A bodiless POST: nothing changes.
+        var bare = await h.PostBareAsync($"/admin/galleries/{pub}", csrfHeader: true);
+        Assert.Equal(HttpStatusCode.SeeOther, bare.StatusCode);
+        Assert.Equal("public", (await GalleryHtml.LoadAsync(h, pub)).Visibility);
+        await h.SettleAsync();
+        Assert.DoesNotContain(h.LogLines, l => l.Contains("owner.action gallery.publish " + priv, StringComparison.Ordinal));
+        Assert.DoesNotContain(h.LogLines, l => l.Contains("owner.action gallery.unpublish", StringComparison.Ordinal));
     }
 
     [Fact]

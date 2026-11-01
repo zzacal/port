@@ -1,9 +1,10 @@
 @* 009 gallery list (contracts/components.md C2, contracts/http.md G1). Server-rendered from the 005
-   components; library.js (Batch F) submits a card's visibility form when its switch changes and
+   components; library.js (Batch F) submits a card's visibility form when its switch changes, which
+   publishes or unpublishes at once (no confirmation step; DEFAULT decision, owner may overturn), and
    opens the New gallery dialog; reorder.js rewrites gal-order and submits it on drop.
    Owner UI rules: each card with photos links to its public page and every card to its builder
    (UI-1); status, handle, switch, View and Edit sit in .gal-row under the title (UI-2); "New gallery"
-   is the one primary, demoted while a publish warning holds its own (UI-3); the switch renders its
+   is the one primary (UI-3); the switch renders its
    stored state and an empty private gallery's switch is disabled with the reason (UI-5). *@
 @using Gallery.Web.Components
 @using Gallery.Web.Components.Atoms
@@ -68,11 +69,8 @@
 
     private static readonly string GridSizes = Gallery.Core.Images.Sizes.ForGrid(3, 3, 1);
 
-    /// <summary>One primary per state: while a publish warning shows its own "Make public", New gallery is Secondary.</summary>
-    private ButtonVariant NewVariant => Model.WarningGid is null ? ButtonVariant.Primary : ButtonVariant.Secondary;
-
     private RenderFragment NewGallery =>
-        @<Button Variant="@NewVariant" Type="button" Name="action" Value="new-gallery">New gallery</Button>;
+        @<Button Variant="ButtonVariant.Primary" Type="button" Name="action" Value="new-gallery">New gallery</Button>;
 
     private RenderFragment Token => @<input type="hidden" name="@Model.Csrf.FieldName" value="@Model.Csrf.Value">;
 
@@ -93,9 +91,9 @@
         row.Gallery.IsPublic ? "gal-tile tile-empty" : "gal-tile tile-empty is-private";
 
     private RenderFragment RowFor(GalleryRow row, int position) =>
-        @<div class="gal-row"><span class="gal-status">@row.Status</span><DragHandle Label="@($"Move {row.Gallery.Title}")" Position="@position" Total="@Model.Rows.Count" /><VisibilityToggle Public="@row.Gallery.IsPublic" FormId="@($"gal-vis-{row.Gallery.Id}")" GalleryTitle="@row.Gallery.Title" PhotoCount="@row.Gallery.PhotoCount" DisabledReason="@DisabledReasonFor(row.Gallery)" Warning="@(Model.WarningGid == row.Gallery.Id)" />@ViewFor(row)<TextLink Href="@($"/admin/galleries/{row.Gallery.Id}")">Edit</TextLink></div>;
+        @<div class="gal-row"><span class="gal-status">@row.Status</span><DragHandle Label="@($"Move {row.Gallery.Title}")" Position="@position" Total="@Model.Rows.Count" /><VisibilityToggle Public="@row.Gallery.IsPublic" FormId="@($"gal-vis-{row.Gallery.Id}")" GalleryTitle="@row.Gallery.Title" PhotoCount="@row.Gallery.PhotoCount" DisabledReason="@DisabledReasonFor(row.Gallery)" />@ViewFor(row)<TextLink Href="@($"/admin/galleries/{row.Gallery.Id}")">Edit</TextLink></div>;
 
     private static RenderFragment? ViewFor(GalleryRow row) => row.HasPhotos
-        ? @<TextLink Href="@($"/g/{row.Gallery.Id}/{row.Gallery.Slug}")">View &#x2197;</TextLink>
+        ? @<TextLink Href="@($"/g/{row.Gallery.Id}/{row.Gallery.Slug}")" Target="_blank">View &#x2197;</TextLink>
         : null;
 }

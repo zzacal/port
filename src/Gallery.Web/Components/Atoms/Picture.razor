@@ -1,5 +1,37 @@
-@* The only way an image is rendered (D-21). Layers share one grid cell and identical
-   width/height + fit, so the placeholder covers exactly the photo area (research R-03). *@
+@* The only way an image is rendered (D-21).
+   Natural: layers share the photo's own box; the placeholder covers exactly the photo area (R-03).
+   Contain: the photo is letterboxed in its parent's fixed box. An inline <svg> carrying the photo's
+   width:height (viewBox) sizes a .frame to the photo's letterboxed rectangle before any image has
+   loaded, and every layer fills that frame. So the placeholder and the main image always cover the
+   same rectangle (no second box when the placeholder's rounded ratio differs from the photo's), and
+   ChildContent (admin overlays) is positioned from the photo's own corners, not the cell's. *@
+@if (Fit == PictureFit.Contain)
+{
+<div class="pic fit-contain" id="@(TransitionId != null ? $"p-{TransitionId}" : (string?)null)">
+    <div class="frame">
+        <svg class="sizer" viewBox="@($"0 0 {Image.Width} {Image.Height}")" width="@Image.Width" height="@Image.Height" aria-hidden="true" focusable="false"></svg>
+        <img class="layer ph" src="@Image.PlaceholderDataUri" width="@Image.Width" height="@Image.Height" alt="" aria-hidden="true">
+        @if (ShowThumbLayer)
+        {
+            <img class="layer thumb" src="@Image.ThumbVariant.WebpUrl" width="@Image.Width" height="@Image.Height" alt="" aria-hidden="true" decoding="async">
+        }
+        <picture class="layer main">
+            <source type="image/avif" srcset="@SrcSet.Avif(Image)" sizes="@Sizes">
+            <source type="image/webp" srcset="@SrcSet.Webp(Image)" sizes="@Sizes">
+            @if (Priority == PicturePriority.High)
+            {
+                <img src="@SrcSet.FallbackWebp(Image)" width="@Image.Width" height="@Image.Height" alt="@Image.Title" fetchpriority="high" loading="eager">
+            }
+            else
+            {
+                <img src="@SrcSet.FallbackWebp(Image)" width="@Image.Width" height="@Image.Height" alt="@Image.Title" loading="lazy" decoding="async">
+            }
+        </picture>@ChildContent
+    </div>
+</div>
+}
+else
+{
 <div class="pic @FitClass" id="@(TransitionId != null ? $"p-{TransitionId}" : (string?)null)">
     <img class="layer ph" src="@Image.PlaceholderDataUri" width="@Image.Width" height="@Image.Height" alt="" aria-hidden="true">
     @if (ShowThumbLayer)
@@ -19,6 +51,7 @@
         }
     </picture>
 </div>
+}
 
 @code {
     [Parameter, EditorRequired] public ImageView Image { get; set; } = default!;
@@ -27,6 +60,9 @@
     [Parameter] public PicturePriority Priority { get; set; } = PicturePriority.Lazy;
     [Parameter] public bool ShowThumbLayer { get; set; }
     [Parameter] public string? TransitionId { get; set; }
+
+    /// <summary>Contain only: content drawn over the photo, inside its letterboxed rectangle (admin overlays).</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
 
     private string FitClass => Fit == PictureFit.Contain ? "fit-contain" : "fit-natural";
 }

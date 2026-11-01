@@ -1,10 +1,10 @@
 @* 009 gallery builder (contracts/components.md C3, contracts/http.md B1). The 005 GalleryBuilder
    with its K6 parameters: per-tile drag handle, cover pin/unpin, Remove and View ↗ in the row under
-   each title (UI-2); Save is the one primary, demoted while the publish warning holds "Make public"
-   (UI-3); Delete gallery… is outlined Danger and Remove is Quiet with no confirmation (UI-4,
+   each title (UI-2); Save is the one primary (UI-3) and posts title, description and the Public
+   switch together (B2, owner feedback: no separate publish confirm, the warning has no buttons); Delete gallery… is outlined Danger and Remove is Quiet with no confirmation (UI-4,
    FR-024); limits from LibraryOptions (UI-7); no validation nags (UI-8). Per-item controls post the
    hidden forms below through form="…" (no nested forms); the title and description inputs belong
-   to the b-panel form that wraps the builder. reorder.js drives the grid, library.js the switch. *@
+   to the b-panel form that wraps the builder, and so does the switch. reorder.js drives the grid. *@
 @using Gallery.Web.Components
 @using Gallery.Web.Components.Atoms
 @using Gallery.Web.Components.Molecules
@@ -21,15 +21,14 @@
         <form id="b-cover" method="post" action="@($"{Base}/cover")" hidden>@Token</form>
         <form id="b-unpin" method="post" action="@($"{Base}/cover")" hidden>@Token</form>
         <form id="b-remove" method="post" action="@($"{Base}/remove")" hidden>@Token</form>
-        <form id="b-vis" method="post" action="@($"{Base}/visibility")" hidden>@Token<input type="hidden" name="from" value="builder"></form>
         <form id="b-delete" method="post" action="@($"{Base}/delete")" hidden>@Token</form>
         <form id="b-panel" method="post" action="@Base">
             @Token
-            <GalleryBuilder Title="@(Model.EditTitle ?? G.Title)" Description="@Model.EditDescription" Public="@IsPublic"
+            <GalleryBuilder Title="@(Model.EditTitle ?? G.Title)" Description="@Model.EditDescription" Public="@IsPublic" PublicChecked="@Model.EditPublic"
                             Items="@Model.Items" ItemIds="@ItemIds" State="@State" PinnedIndex="@PinnedIndex"
                             ViewHref="@ViewHref" ViewLabel="@ViewLabel" ViewExternal="@Model.HasPhotos" FormId="b-panel"
                             RemoveFormId="b-remove" CoverFormId="b-cover" UnpinFormId="b-unpin" OrderFormId="b-order"
-                            VisibilityFormId="b-vis" DeleteFormId="b-delete"
+                            DeleteFormId="b-delete"
                             PhotoHrefBase="@PhotoHrefBase" PublicDisabledReason="@GalleriesPage.DisabledReasonFor(Ref)"
                             TitleMax="@Model.Options.TitleMax" DescriptionMax="@Model.Options.DescriptionMax" Status="@Model.Status" />
         </form>
@@ -66,9 +65,7 @@
     }
 
     private BuilderState State =>
-        !Model.HasPhotos ? BuilderState.Empty
-        : Model.Warning ? BuilderState.PublishWarning
-        : BuilderState.Rest;
+        !Model.HasPhotos ? BuilderState.Empty : BuilderState.Rest;
 
     private RenderFragment Token => @<input type="hidden" name="@Model.Csrf.FieldName" value="@Model.Csrf.Value">;
 }

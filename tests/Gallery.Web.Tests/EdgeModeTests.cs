@@ -127,12 +127,12 @@ public class EdgeModeTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixtur
         Assert.Equal($"/admin/galleries/{gid}",
             await Post303Async(h, "B4", $"/admin/galleries/{gid}/cover", []));
 
-        // G4 publish (confirmed): its edge.purge lines carry exactly P-VIS.
+        // G4 publish (no confirm step): its edge.purge lines carry exactly P-VIS.
         var g = await h.Galleries.Find(x => x.Id == gid).FirstAsync();
         Assert.Equal(items, g.Items);
         var before = PurgeLines(h).Count;
         Assert.Equal("/admin/galleries?visibility=public",
-            await Post303Async(h, "G4", $"/admin/galleries/{gid}/visibility", [F("public", "on"), F("confirm", "1"), F("from", "list")]));
+            await Post303Async(h, "G4", $"/admin/galleries/{gid}/visibility", [F("public", "on"), F("from", "list")]));
         var publishLines = PurgeLines(h).Skip(before).ToList();
         Assert.NotEmpty(publishLines);
         Assert.All(publishLines, l => Assert.Equal(("gallery.publish", "log-only", "skipped"), (l.Op, l.Mode, l.Outcome)));
@@ -219,7 +219,7 @@ public class EdgeModeTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixtur
         Assert.Matches("^/admin/galleries/[0-9a-z]{26}\\?added=2$", loc);
         var gid = loc["/admin/galleries/".Length..loc.IndexOf('?')];
         Assert.Equal($"/admin/galleries/{gid}?visibility=public",
-            await Gated303Async("G4", $"/admin/galleries/{gid}/visibility", [F("public", "on"), F("confirm", "1"), F("from", "builder")]));
+            await Gated303Async("G4", $"/admin/galleries/{gid}/visibility", [F("public", "on"), F("from", "builder")]));
         Assert.Equal("/admin/library?page=1&deleted=1&leftovers=0&failed=0",
             await Gated303Async("L4", "/admin/library/delete", [F("ids", c.Id), F("page", "1")]));
 

@@ -9,11 +9,13 @@
 //   - "Add to gallery…" opens the picker <dialog id="lib-picker">; Cancel closes it. The picker's
 //     newTitle input is `required` (K2) only while "New gallery" is the picked option, so picking an
 //     existing gallery can submit (decisions row 58).
-//   - "Delete…" shows the bulk confirm with the count; the ticked ids are copied into the hidden
-//     `lib-delete` form when it opens and again when it submits.
+//   - "Delete…" opens the bulk confirm modal (DangerConfirm #lib-bulk-confirm) titled "Delete {n}
+//     photos?"; the ticked ids are copied into the hidden `lib-delete` form when it opens, on every
+//     tick change while open, and again when it submits. Cancel/Esc close it; focus goes back.
 //   Gallery list (C2) and builder (C3):
-//   - A visibility switch (input[role=switch] with a form) submits its form when it changes.
-//   - "Keep private" in a publish warning goes back to the page the warning came from.
+//   - A gallery-list visibility switch (form="gal-vis-{gid}") submits its form when it changes
+//     (publish/unpublish at once, no confirm). The builder's switch belongs to its Save form and
+//     submits nothing on change (owner feedback: typed edits are never lost).
 //   - The owner bar's "New gallery" opens <dialog id="gal-new">; Cancel closes it.
 //
 // Elements are resolved when an event happens (event delegation on the document), never cached at
@@ -68,10 +70,10 @@ function refresh(root) {
   if (count) count.textContent = `${n} selected`;
   b.hidden = n === 0;
   for (const box of ids(root)) box.closest('.tile')?.classList.toggle('is-selected', box.checked);
-  const bulk = root.querySelector('.lib-bulk-delete');
-  if (bulk && !bulk.hidden) {
-    if (n === 0) closeBulkDelete(root);
-    else showBulkDelete(root);
+  const bulk = bulkDialog();
+  if (bulk?.open) {
+    if (n === 0) closeBulkDelete();
+    else syncBulkDelete(root);
   }
 }
 
@@ -95,24 +97,34 @@ function copyIdsToDelete(root) {
   }
 }
 
-function showBulkDelete(root) {
-  const bulk = root.querySelector('.lib-bulk-delete');
-  if (!bulk) return;
-  const n = ticked(root).length;
-  const heading = bulk.querySelector('.confirm-body strong');
-  if (heading) heading.textContent = `Delete \u201C${n} ${n === 1 ? 'photo' : 'photos'}\u201D?`;
-  copyIdsToDelete(root);
-  bulk.hidden = false;
-  const details = bulk.querySelector('details');
-  if (details) details.open = true;
+/** The bulk confirm: a DangerConfirm rendered without its own trigger (the bar's "Delete…" opens it). */
+function bulkDialog() {
+  return document.getElementById('lib-bulk-confirm');
 }
 
-function closeBulkDelete(root) {
-  const bulk = root.querySelector('.lib-bulk-delete');
-  if (!bulk) return;
-  bulk.hidden = true;
-  const details = bulk.querySelector('details');
-  if (details) details.open = false;
+/** Title and action name the count ("Delete 3 photos?" / "Delete 3 photos"); ids follow the ticks. */
+function syncBulkDelete(root) {
+  const dialog = bulkDialog();
+  if (!dialog) return;
+  const n = ticked(root).length;
+  const what = `${n} ${n === 1 ? 'photo' : 'photos'}`;
+  const title = dialog.querySelector('.danger-title');
+  if (title) title.textContent = `Delete ${what}?`;
+  const action = dialog.querySelector('.danger-actions button.btn-danger');
+  if (action) action.textContent = `Delete ${what}`;
+  copyIdsToDelete(root);
+}
+
+function showBulkDelete(root, opener) {
+  const dialog = bulkDialog();
+  if (!dialog) return;
+  syncBulkDelete(root);
+  openDialog(dialog, opener);
+}
+
+function closeBulkDelete() {
+  const dialog = bulkDialog();
+  if (dialog?.open) dialog.close();
 }
 
 // ── picker ────────────────────────────────────────────────────────────────────
@@ -125,12 +137,29 @@ function syncNewTitle(dialog) {
   title.required = !picked || picked.value === 'new';
 }
 
-function openDialog(dialog) {
+function openDialog(dialog, opener) {
   if (!dialog || dialog.open) return;
   if (dialog.id === 'lib-picker') syncNewTitle(dialog);
+  if (opener) openers.set(dialog, opener);
   if (typeof dialog.showModal === 'function') dialog.showModal();
   else dialog.setAttribute('open', '');
 }
+
+// ── danger confirm (DangerConfirm molecule) ───────────────────────────────────
+// The "{Action}…" trigger opens its <dialog class="danger-dialog"> with invoker commands
+// (command="show-modal" commandfor=…); this is the fallback where they are unsupported. Whatever
+// opened a dialog gets focus back when it closes (Cancel, Esc or the close button).
+
+const openers = new WeakMap();
+const invokers = typeof HTMLButtonElement !== 'undefined' && 'commandForElement' in HTMLButtonElement.prototype;
+
+document.addEventListener('close', (e) => {
+  const dialog = e.target;
+  if (!(dialog instanceof HTMLDialogElement)) return;
+  const opener = openers.get(dialog);
+  openers.delete(dialog);
+  if (opener?.isConnected && !opener.disabled) opener.focus();
+}, true);
 
 // ── events ────────────────────────────────────────────────────────────────────
 
@@ -138,8 +167,11 @@ document.addEventListener('change', (e) => {
   const el = e.target;
   if (!(el instanceof HTMLInputElement)) return;
 
-  // A visibility switch posts its own form (K1/K3: form="gal-vis-{gid}" or "b-vis").
+  // A gallery-list switch posts its own form at once (K1/K3: form="gal-vis-{gid}"; no confirm step).
+  // The builder's switch is a field of its Save form (b-panel): changing it submits nothing, so typed
+  // edits are kept; CSS shows the publish warning while it is on.
   if (el.type === 'checkbox' && el.getAttribute('role') === 'switch' && el.form && !el.disabled) {
+    if (!el.form.id.startsWith('gal-vis-')) return;
     if (typeof el.form.requestSubmit === 'function') el.form.requestSubmit();
     else el.form.submit();
     return;
@@ -179,22 +211,20 @@ document.addEventListener('click', (e) => {
     return;
   }
 
+  // A DangerConfirm trigger: open its modal (invoker commands do this natively; remember the opener).
+  if (button.matches('.danger-confirm > .danger-trigger')) {
+    const target = document.getElementById(button.getAttribute('commandfor') ?? '');
+    if (target instanceof HTMLDialogElement) {
+      if (invokers) openers.set(target, button);
+      else { e.preventDefault(); openDialog(target, button); }
+    }
+    return;
+  }
+
   // Owner bar "New gallery" (C2).
   if (button.name === 'action' && button.value === 'new-gallery' && button.closest('.owner-bar')) {
     e.preventDefault();
     openDialog(document.getElementById('gal-new'));
-    return;
-  }
-
-  // "Keep private" in a publish warning: back to the page the warning came from.
-  const warning = button.closest('.publish-warning');
-  if (warning && button.type === 'button') {
-    const form = button.form;
-    if (!form) return;
-    e.preventDefault();
-    const action = new URL(form.action, location.href).pathname;
-    const fromList = form.querySelector('input[name="from"]')?.value === 'list';
-    location.assign(fromList ? '/admin/galleries' : action.replace(/\/visibility$/, ''));
     return;
   }
 
@@ -204,13 +234,13 @@ document.addEventListener('click', (e) => {
 
   if (button.name === 'action' && button.value === 'add') {
     e.preventDefault();
-    closeBulkDelete(root);
+    closeBulkDelete();
     openDialog(document.getElementById('lib-picker'));
     return;
   }
   if (button.name === 'action' && button.value === 'delete') {
     e.preventDefault();
-    if (ticked(root).length > 0) showBulkDelete(root);
+    if (ticked(root).length > 0) showBulkDelete(root, button);
     return;
   }
 
@@ -219,7 +249,7 @@ document.addEventListener('click', (e) => {
     e.preventDefault();
     for (const box of ids(root)) box.checked = false;
     sayLimit(root, null);
-    closeBulkDelete(root);
+    closeBulkDelete();
     refresh(root);
     return;
   }

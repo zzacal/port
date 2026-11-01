@@ -193,17 +193,46 @@ public class LibraryComponentAdditionsTests
     }
 
     [Fact]
-    public async Task VisibilityToggle_FormId_reaches_the_switch_with_value_on_and_Make_public_posts_confirm()
+    public async Task VisibilityToggle_FormId_reaches_the_switch_with_value_on_and_the_warning_has_no_buttons()
     {
         var html = D(await Render.Html<VisibilityToggle>(new { Public = false, GalleryTitle = "Coast", PhotoCount = 3, Warning = true, FormId = "gal-vis-x" }));
         var input = Tag(html, "input", "role=\"switch\"");
         Assert.Matches("\\sform=\"gal-vis-x\"", input);
         Assert.Matches("\\svalue=\"on\"", input);
-        var make = Regex.Match(html, "<button\\b[^>]*>\\s*Make public\\s*</button>").Value;
-        Assert.Matches("\\sform=\"gal-vis-x\"", make);
-        Assert.Matches("\\sname=\"confirm\"", make);
-        Assert.Matches("\\svalue=\"1\"", make);
-        Assert.Contains("type=\"submit\"", make);
+        // Owner feedback: no confirm step, so no "Make public"/"Keep private" and no confirm field.
+        var warning = LibraryHtml.Blocks(html, "div", "publish-warning").Single();
+        Assert.DoesNotContain("<button", warning);
+        Assert.DoesNotContain("Make public", html);
+        Assert.DoesNotContain("Keep private", html);
+        Assert.DoesNotContain("name=\"confirm\"", html);
+        // Without PartOfSave there is no vis marker and no CSS-driven Save-time warning.
+        Assert.DoesNotContain("name=\"vis\"", html);
+        Assert.DoesNotContain("on-save", html);
+    }
+
+    [Fact]
+    public async Task VisibilityToggle_PartOfSave_adds_the_vis_marker_and_a_buttonless_warning_for_a_private_gallery()
+    {
+        var html = D(await Render.Html<VisibilityToggle>(new { Public = false, GalleryTitle = "Coast", PhotoCount = 3, FormId = "b-panel", PartOfSave = true }));
+        var input = Tag(html, "input", "role=\"switch\"");
+        Assert.Matches("\\sform=\"b-panel\"", input);
+        Assert.False(HasAttr(input, "checked"), input);
+        Assert.Matches("<input type=\"hidden\" name=\"vis\" value=\"1\" form=\"b-panel\"", html);
+        var warning = LibraryHtml.Blocks(html, "div", "publish-warning").Single();
+        Assert.Contains("publish-warning on-save", warning);
+        Assert.Contains("When you save, “Coast” becomes public: it will be listed on the home page with its 3 photos, and anyone can see them.", warning);
+        Assert.DoesNotContain("<button", warning);
+
+        // Checked overrides the stored state (a refused save keeps the owner's choice).
+        var kept = Tag(D(await Render.Html<VisibilityToggle>(new { Public = false, Checked = (bool?)true, GalleryTitle = "Coast", PhotoCount = 3, FormId = "b-panel", PartOfSave = true })),
+            "input", "role=\"switch\"");
+        Assert.True(HasAttr(kept, "checked"), kept);
+
+        // A public gallery needs no warning; an empty private one (disabled) gets none either.
+        Assert.DoesNotContain("publish-warning", await Render.Html<VisibilityToggle>(new { Public = true, GalleryTitle = "Coast", PhotoCount = 3, FormId = "b-panel", PartOfSave = true }));
+        var empty = await Render.Html<VisibilityToggle>(new { Public = false, GalleryTitle = "Coast", PhotoCount = 0, FormId = "b-panel", PartOfSave = true, DisabledReason = Reason });
+        Assert.DoesNotContain("publish-warning", empty);
+        Assert.Contains("name=\"vis\"", empty);
     }
 
     [Fact]

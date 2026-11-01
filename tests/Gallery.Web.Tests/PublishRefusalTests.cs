@@ -11,8 +11,10 @@ namespace Gallery.Web.Tests;
 
 /// <summary>
 /// 009 T041 [SAFETY] (Constitution II.6; SC-006, FR-030; contracts/http.md G4): an empty gallery can
-/// never be published over HTTP, whatever the request carries. The emptiness check runs FIRST: a
-/// confirmed publish, an unconfirmed one, a form with no fields and a bodiless POST all answer 409
+/// never be published over HTTP, whatever the request carries, through G4 (the list's switch) or B2
+/// (the builder's Save with the switch on). The emptiness check runs FIRST: a publish (with or
+/// without the retired confirm=1), a form with no fields and a bodiless POST to G4, and a forged
+/// public=on save (with typed text) to B2 all answer 409
 /// with the exact reason in <c>role="status"</c>, store nothing (visibility stays <c>private</c>, the
 /// <c>galleries</c>/<c>site</c> documents are unchanged), leave <c>/</c> byte-identical and make no
 /// edge call. The race (the last photo removed in another tab between the load and the write) is
@@ -65,16 +67,24 @@ public class PublishRefusalTests(S3ProxyFixture s3, MongoFixture mongo) : IClass
         var dump = await DumpAsync(h);
         var path = $"/admin/galleries/{gid}/visibility";
 
-        await AssertRefusedAsync(h, await h.PostFormAsync(path, [F("public", "on"), F("confirm", "1"), F("from", "list")]),
-            gid, home, dump, "confirmed from the list");
+        await AssertRefusedAsync(h, await h.PostFormAsync(path, [F("public", "on"), F("from", "list")]),
+            gid, home, dump, "public=on from the list");
         await AssertRefusedAsync(h, await h.PostFormAsync(path, [F("public", "on"), F("confirm", "1"), F("from", "builder")]),
-            gid, home, dump, "confirmed from the builder");
+            gid, home, dump, "public=on with the retired confirm=1 from the builder");
         await AssertRefusedAsync(h, await h.PostFormAsync(path, [F("public", "on")]),
-            gid, home, dump, "public=on only (no confirm: the emptiness check comes before the warning)");
+            gid, home, dump, "public=on only");
         await AssertRefusedAsync(h, await h.PostFormAsync(path, []),
             gid, home, dump, "a form carrying only the CSRF token");
         await AssertRefusedAsync(h, await h.PostBareAsync(path, csrfHeader: true),
             gid, home, dump, "a bodiless POST with only the CSRF header");
+
+        // B2: the builder's Save with a forged public=on (the switch is disabled for an empty
+        // gallery) is refused the same way, and the typed text is not stored either.
+        var save = $"/admin/galleries/{gid}";
+        await AssertRefusedAsync(h, await h.PostFormAsync(save, [F("title", "Renamed"), F("description", "Typed."), F("vis", "1"), F("public", "on")]),
+            gid, home, dump, "B2 save with title, description, vis=1 and public=on");
+        await AssertRefusedAsync(h, await h.PostFormAsync(save, [F("vis", "1"), F("public", "on")]),
+            gid, home, dump, "B2 save with vis=1 and public=on only");
 
         // A bodiless POST with no token at all never reaches the handler (antiforgery, 400) and stores nothing either.
         var noToken = await h.PostBareAsync(path);
@@ -95,11 +105,11 @@ public class PublishRefusalTests(S3ProxyFixture s3, MongoFixture mongo) : IClass
         await h.SettleAsync();
         var path = $"/admin/galleries/{gid}/visibility";
 
-        var fromList = await LibraryHtml.BodyAsync(await h.PostFormAsync(path, [F("public", "on"), F("confirm", "1"), F("from", "list")]));
+        var fromList = await LibraryHtml.BodyAsync(await h.PostFormAsync(path, [F("public", "on"), F("from", "list")]));
         Assert.Matches("<a href=\"/admin/galleries\" aria-current=\"page\"", fromList);
         Assert.Contains("<form id=\"gal-order\"", fromList);
 
-        var fromBuilder = await LibraryHtml.BodyAsync(await h.PostFormAsync(path, [F("public", "on"), F("confirm", "1"), F("from", "builder")]));
+        var fromBuilder = await LibraryHtml.BodyAsync(await h.PostFormAsync(path, [F("public", "on"), F("from", "builder")]));
         Assert.Contains("<form id=\"b-panel\"", fromBuilder);
         Assert.Equal(Reason, LibraryHtml.Status(fromBuilder));
     }
@@ -134,13 +144,58 @@ public class PublishRefusalTests(S3ProxyFixture s3, MongoFixture mongo) : IClass
         await h.SettleAsync();
         var home = await GalleryHtml.HomeRawAsync(h);
 
-        var resp = await h.PostFormAsync($"/admin/galleries/{gid}/visibility", [F("public", "on"), F("confirm", "1"), F("from", "builder")]);
+        var resp = await h.PostFormAsync($"/admin/galleries/{gid}/visibility", [F("public", "on"), F("from", "builder")]);
 
         Assert.Equal(1, fired);
         Assert.Equal(HttpStatusCode.Conflict, resp.StatusCode);
         Assert.Equal(Reason, LibraryHtml.Status(await LibraryHtml.BodyAsync(resp)));
         var g = await GalleryHtml.LoadAsync(h, gid);
         Assert.Equal("private", g.Visibility);
+        Assert.Empty(g.Items);
+        Assert.Empty((await h.SiteAsync()).HomeCards);
+        Assert.Equal(home, await GalleryHtml.HomeRawAsync(h));
+        Assert.DoesNotContain(h.LogLines, l => l.StartsWith($"owner.action gallery.publish {gid} ", StringComparison.Ordinal));
+        await InvariantChecker.AssertAsync(h.Db);
+    }
+
+    [Fact]
+    public async Task A_remove_racing_the_Save_publish_is_refused_by_the_conditional_write_and_stores_no_text()
+    {
+        var fired = 0;
+        string? photo = null;
+        LibraryHost? host = null;
+        Func<string, Task> emptyIt = async gid =>
+        {
+            if (Interlocked.Exchange(ref fired, 1) == 1) return;
+            using var other = host!.Scope();
+            var r = await other.ServiceProvider.GetRequiredService<GalleryService>().RemoveAsync(gid, photo!);
+            Assert.Equal(1, r.Removed);
+        };
+        await using var h = await LibraryHost.CreateAsync(mongo, s3, configure: b =>
+            b.Host.UseServiceProviderFactory(new SwapAtBuild(services =>
+            {
+                services.RemoveAll<GalleryService>();
+                services.AddScoped(sp => ActivatorUtilities.CreateInstance<GalleryService>(sp, emptyIt));
+            })));
+        host = h;
+        var ids = await GalleryHtml.ImageIdsAsync(h, 1);
+        photo = ids[0];
+        var gid = await GalleryHtml.GalleryAsync(h, "Race", ids);
+        await h.SettleAsync();
+        var home = await GalleryHtml.HomeRawAsync(h);
+
+        // B2: Save with new text and the switch on; the photo goes in "another tab" before the write.
+        var resp = await h.PostFormAsync($"/admin/galleries/{gid}",
+            [F("title", "Renamed"), F("description", "Typed."), F("vis", "1"), F("public", "on")]);
+
+        Assert.Equal(1, fired);
+        Assert.Equal(HttpStatusCode.Conflict, resp.StatusCode);
+        var body = await LibraryHtml.BodyAsync(resp);
+        Assert.Equal(Reason, LibraryHtml.Status(body));
+        var g = await GalleryHtml.LoadAsync(h, gid);
+        Assert.Equal("private", g.Visibility);
+        Assert.Equal("Race", g.Title);
+        Assert.Null(g.Description);
         Assert.Empty(g.Items);
         Assert.Empty((await h.SiteAsync()).HomeCards);
         Assert.Equal(home, await GalleryHtml.HomeRawAsync(h));
@@ -167,7 +222,10 @@ public class PublishRefusalTests(S3ProxyFixture s3, MongoFixture mongo) : IClass
         var builderSwitch = GalleryHtml.SwitchOf(aside);
         Assert.True(GalleryHtml.HasAttr(builderSwitch, "disabled"), builderSwitch);
         Assert.False(GalleryHtml.HasAttr(builderSwitch, "checked"), builderSwitch);
-        Assert.Matches("form=\"b-vis\"", builderSwitch);
+        Assert.Matches("form=\"b-panel\"", builderSwitch);
+        Assert.DoesNotContain("<form id=\"b-vis\"", builder);
+        // No Save-time warning is offered for a gallery that cannot be published.
+        Assert.DoesNotContain("publish-warning", aside);
         Assert.Matches($"<p class=\"hint\"[^>]*>{Regex.Escape(Reason)}</p>", aside);
     }
 

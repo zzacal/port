@@ -77,7 +77,7 @@ public class LibraryAccessTests(S3ProxyFixture s3, MongoFixture mongo) : IClassF
         "L4" => [new("ids", c.Iid)],
         "G2" => [new("title", "Hacked")],
         "G3" => [new("order", c.Gid)],
-        "G4" => [new("public", "on"), new("confirm", "1"), new("from", "list")],
+        "G4" => [new("public", "on"), new("from", "list")],
         "B2" => [new("title", "Hacked"), new("description", "Hacked")],
         "B4" => [new("image", c.Iid)],
         "B5" => [new("image", c.Iid)],

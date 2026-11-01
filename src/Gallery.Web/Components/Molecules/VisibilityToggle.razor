@@ -1,18 +1,17 @@
 @* Admin visibility-toggle molecule (feature 005): switch to publish/unpublish a gallery, with publish warning. *@
-@* While the publish warning is up the switch shows the requested state (on), per contract. *@
-@* 009 K3: FormId also reaches the Switch (form="…" value="on"), "Make public" then posts confirm=1,
-   and DisabledReason disables the switch and replaces the hint with the reason. All as expressions,
-   so the default render is byte-identical. *@
-<Switch Label="Public" Name="public" Checked="@(Public || Warning)" Hint="@(DisabledReason ?? Hint)" Disabled="@(DisabledReason is not null)" FormId="@FormId" Value="@(FormId is null ? null : "on")" />
-@if (Warning)
+@* 009 K3: FormId also reaches the Switch (form="…" value="on") and DisabledReason disables the switch
+   and replaces the hint with the reason. Owner feedback (no confirm button): the warning carries no
+   buttons. PartOfSave (the builder's Save form): the switch is a plain field of that form, a hidden
+   vis=1 marker tells the server to read it, and for a stored-private gallery the warning is rendered
+   up front and shown by CSS only while the switch is on (no JS, no submit). Checked overrides the
+   stored state (a refused save keeps what was typed). All as expressions, so the default render is
+   byte-identical. *@
+<Switch Label="Public" Name="public" Checked="@(Checked ?? (Public || Warning))" Hint="@(DisabledReason ?? Hint)" Disabled="@(DisabledReason is not null)" FormId="@FormId" Value="@(FormId is null ? null : "on")" />@Marker
+@if (Warning || OnSaveWarning)
 {
-    <div class="publish-warning" role="alert">
+    <div class="@(OnSaveWarning && !Warning ? "publish-warning on-save" : "publish-warning")" role="alert">
         <span class="bang" aria-hidden="true">!</span>
-        <p>Make &#x201C;@GalleryTitle&#x201D; public? It will be listed on the home page with its @PhotoCount photos, and anyone can see them.</p>
-        <div class="actions">
-            <Button Variant="ButtonVariant.Primary" FormId="@FormId" Name="@(FormId is null ? null : "confirm")" Value="@(FormId is null ? null : "1")">Make public</Button>
-            <Button Variant="ButtonVariant.Quiet" Type="button" FormId="@FormId">Keep private</Button>
-        </div>
+        <p>When you save, &#x201C;@GalleryTitle&#x201D; becomes public: it will be listed on the home page with its @PhotoCount photos, and anyone can see them.</p>
     </div>
 }
 
@@ -20,6 +19,8 @@
     [Parameter] public bool Public { get; set; }
     [Parameter] public string GalleryTitle { get; set; } = "";
     [Parameter] public int PhotoCount { get; set; }
+
+    /// <summary>Shows the publish warning (with the switch on) whatever the switch state (the /ui/ specimen).</summary>
     [Parameter] public bool Warning { get; set; }
     [Parameter] public string? FormId { get; set; }
 
@@ -28,6 +29,21 @@
     /// (e.g. "Add a photo before making this gallery public"). Null leaves the toggle unchanged.
     /// </summary>
     [Parameter] public string? DisabledReason { get; set; }
+
+    /// <summary>
+    /// The switch is a field of a Save form (<see cref="FormId"/>): renders the hidden
+    /// <c>vis=1</c> marker and, for a private gallery that can be published, the warning that CSS
+    /// shows while the switch is on.
+    /// </summary>
+    [Parameter] public bool PartOfSave { get; set; }
+
+    /// <summary>The switch's state when it differs from <see cref="Public"/> (a refused save re-render); null = stored.</summary>
+    [Parameter] public bool? Checked { get; set; }
+
+    private bool OnSaveWarning => PartOfSave && !Public && DisabledReason is null;
+
+    private RenderFragment? Marker => !PartOfSave ? null
+        : @<input type="hidden" name="vis" value="1" form="@FormId">;
 
     private string Hint => Public
         ? "Public: listed on the home page."

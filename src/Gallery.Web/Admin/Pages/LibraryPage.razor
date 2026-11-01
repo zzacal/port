@@ -42,11 +42,9 @@
                 <Button Variant="@AddVariant" Type="button" Name="action" Value="add">Add to gallery&#x2026;</Button>
                 <Button Variant="ButtonVariant.Danger" Type="button" Name="action" Value="delete">Delete&#x2026;</Button>
             </SelectionBar>
-            <div class="lib-bulk-delete" hidden>
-                <DangerConfirm Action="Delete" Target="0 photos"
-                               Consequence="This removes them from every gallery and deletes the original files. It can't be undone."
-                               ConfirmLabel="Delete photos" FormId="lib-delete" />
-            </div>
+            <DangerConfirm Trigger="false" Id="lib-bulk-confirm" Action="Delete" Target="0 photos" Title="Delete 0 photos?"
+                           Consequence="This removes them from every gallery and deletes the original files. It can't be undone."
+                           ConfirmLabel="Delete photos" FormId="lib-delete" />
             <Pager PrevHref="@PrevHref" NextHref="@NextHref" />
             <p class="lib-pages">Page @Data.Page of @Data.TotalPages</p>
             <dialog id="lib-picker" class="lib-picker" aria-labelledby="lib-picker-h">
@@ -110,7 +108,7 @@
 
     private static RenderFragment? ViewFor(string? href) => href is null
         ? null
-        : @<TextLink Href="@href">View &#x2197;</TextLink>;
+        : @<TextLink Href="@href" Target="_blank">View &#x2197;</TextLink>;
 
     private RenderFragment? PanelFragment => Open is null ? null : Panel(Open);
 
@@ -136,7 +134,7 @@
             }</ul>;
 
     private static RenderFragment DangerFor(LibraryTile open) =>
-        @<DangerConfirm Action="Delete photo" Target="@open.Image.Title" Consequence="@DeleteConsequence(open.GalleryCount)"
+        @<DangerConfirm Action="Delete photo" Target="@open.Image.Title" Title="@($"Delete \u201C{open.Image.Title}\u201D?")" Consequence="@DeleteConsequence(open.GalleryCount)"
                         ConfirmLabel="Delete photo" FormId="lib-del-one" />;
 
     /// <summary>contracts/components.md "delete confirm (one)".</summary>

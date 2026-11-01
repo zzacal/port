@@ -73,6 +73,33 @@ public class UploadPageTests : IClassFixture<MongoFixture>, IAsyncLifetime
 
     // ── the page ─────────────────────────────────────────────────────────────
 
+    /// <summary>The markup without Razor's scoped-CSS attributes (b-xxxxxxxxxx) and with … “ ” un-escaped, so assertions read as written.</summary>
+    private static string Unscoped(string html) => System.Text.RegularExpressions.Regex.Replace(
+        System.Text.RegularExpressions.Regex.Replace(html, " b-[a-z0-9]{10}(?=[ >/])", ""),
+        "&#x(2026|201C|201D);", m => ((char)Convert.ToInt32(m.Groups[1].Value, 16)).ToString());
+
+    [Fact]
+    public async Task Footer_templates_carry_the_discard_confirm_as_a_dialog_open_only_in_confirmdiscard()
+    {
+        await using var host = await NewHostAsync();
+        var html = Unscoped(await (await host.GetAsync("/admin/upload")).Content.ReadAsStringAsync());
+        foreach (var s in new[] { "inprogress", "ready", "blocked", "confirmdiscard" })
+        {
+            var start = html.IndexOf($"<template data-footer=\"{s}\">", StringComparison.Ordinal);
+            Assert.True(start >= 0, s);
+            var tpl = html[start..html.IndexOf("</template>", start, StringComparison.Ordinal)];
+            Assert.Contains("class=\"btn btn-danger danger-trigger\"", tpl);
+            Assert.Contains(">Discard this batch?</h2>", tpl);
+            // The count upload.js rewrites lives in the consequence paragraph.
+            Assert.Contains("<p id=\"upload-actions-confirm-desc\" class=\"danger-consequence\">All 0 uploaded files are deleted. Nothing is added to your library.</p>", tpl);
+            Assert.Matches(">Cancel</button>\\s*<button class=\"btn btn-danger\" type=\"submit\"[^>]*>\\s*Discard batch\\s*</button>", tpl);
+            var open = System.Text.RegularExpressions.Regex.IsMatch(tpl, "<dialog[^>]* open[ >]");
+            Assert.Equal(s == "confirmdiscard", open);
+        }
+        Assert.DoesNotContain("<details", html);
+        Assert.DoesNotContain("again to cancel", html);
+    }
+
     [Fact]
     public async Task Owner_gets_the_upload_page()
     {

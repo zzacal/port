@@ -138,12 +138,12 @@ public class LibraryTimingEvidenceTests(S3ProxyFixture s3, MongoFixture mongo) :
             await SeeOtherAsync(h.PostFormAsync($"/admin/galleries/{gid}/cover", form), $"/admin/galleries/{gid}");
         }
 
-        // ── G4: 30 visibility saves, publish (confirmed) and unpublish ───────
+        // ── G4: 30 visibility saves, publish and unpublish (no confirm step) ───────
         for (var i = 0; i < Saves; i++)
         {
             var publish = i % 2 == 0;
             IEnumerable<KeyValuePair<string, string>> form = publish
-                ? [F("public", "on"), F("confirm", "1"), F("from", "builder")]
+                ? [F("public", "on"), F("from", "builder")]
                 : [F("from", "builder")];
             await SeeOtherAsync(h.PostFormAsync($"/admin/galleries/{gid}/visibility", form),
                 $"/admin/galleries/{gid}?visibility={(publish ? "public" : "private")}");

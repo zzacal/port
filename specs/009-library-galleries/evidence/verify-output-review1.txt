@@ -1,0 +1,79 @@
+SKIP gate build+test (SKIP_GATES=1, reusing artifacts)
+PASS setup S3Proxy c6c6d81b0cae on :62517, buckets gallery-dev-public-verify/gallery-dev-private-verify created; Mongo db gallery_verify009_1793550718_dev
+PASS setup app pid 4690 on https://localhost:5094, fake provider pid 4689 on http://127.0.0.1:5095
+PASS signin POST /admin/signin 302 to the fake provider: http://127.0.0.1:5095/authorize?client_id=<v>&redirect_uri=<v>&response_type=<v>&scope=<v>&code_challenge=<v>&code_challenge_method=<v>&response_mode=<v>&nonce=<v>&prompt=<v>&state=<v>&x-client-SKU=<v>&x-client-ver=<v>
+PASS signin POST /signin-oidc 302 to /admin; GET /admin/upload 200 with data-csrf
+PASS upload 2 photos registered, uploaded, completed and confirmed (count 2)
+PASS L1 GET /admin/library 200 no-store, 2 tiles (ids zwqoou… 34rjhc…), __RequestVerificationToken field present
+PASS L3 POST /admin/library/add (gallery=new) 303 /admin/galleries/auninmwfsafdr4k6li5nnr3zgq?added=2; stored: private harbour-walk zwqoourmao5rxybry6ghgrtjdq,34rjhc4mk7p4slqnmk3ckke4h4
+PASS B1 GET /admin/galleries/{gid} 200, b-order form lists the 2 members in stored order
+PASS B3 POST …/order (reversed) 303 /admin/galleries/auninmwfsafdr4k6li5nnr3zgq?ordered=1; items now reversed
+PASS B3 builder after PRG shows "Order saved"
+PASS B1 builder: the switch belongs to b-panel (vis=1 marker), Save-time warning with no confirm button, no b-vis form
+PASS B2 Save with vis=1 public=on: 303 /admin/galleries/auninmwfsafdr4k6li5nnr3zgq?saved=1&visibility=public, stored visibility public
+PASS edge after B2 publish: edge.purge gallery.publish log-only 4 0 skipped https://localhost:5081/ https://localhost:5081/g/auninmwfsafdr4k6li5nnr3zgq/harbour-walk https://localhost:5081/g/auninmwfsafdr4k6li5nnr3zgq/harbour-wal
+PASS home GET / 200 lists "Harbour walk" (/g/{gid}/harbour-walk)
+PASS public GET /g/{gid}/harbour-walk 200 (page now in the output cache)
+PASS B2 POST /admin/galleries/{gid} 303 /admin/galleries/auninmwfsafdr4k6li5nnr3zgq?saved=1; stored harbour-at-night|Harbour at night|Lights on the water.
+PASS edge after B2 rename: edge.purge gallery.update log-only 7 0 skipped https://localhost:5081/ https://localhost:5081/g/auninmwfsafdr4k6li5nnr3zgq/harbour-at-night https://localhost:5081/g/auninmwfsafdr4k6li5nnr3zgq/harbour-
+PASS B2 old URL /g/{gid}/harbour-walk 301 → /g/auninmwfsafdr4k6li5nnr3zgq/harbour-at-night (cached 200 evicted)
+PASS B2 new URL 200 with the new title
+PASS L2 POST /admin/library/images/{iid} 303 /admin/library?page=1&open=zwqoourmao5rxybry6ghgrtjdq&saved=1; stored Quay lamps|Taken from the north pier.
+PASS edge after L2 save: edge.purge image.update log-only 2 0 skipped https://localhost:5081/g/auninmwfsafdr4k6li5nnr3zgq/harbour-at-night https://localhost:5081/g/auninmwfsafdr4k6li5nnr3zgq/harbour-at-night/zwqoourmao5rxybry
+PASS L2 photo page shows the new title and caption at once
+PASS L2 BARE POST (no body, token in X-CSRF-TOKEN) 303 /admin/library?page=1&open=zwqoourmao5rxybry6ghgrtjdq&saved=1; values kept: Quay lamps|Taken from the north pier.
+PASS G2 POST /admin/galleries 303 /admin/galleries/lkucvrj4uxdmefwxo734umtck4
+PASS G4 empty gallery public=on: 409 "Add a photo before making this gallery public", stored still private
+PASS B2 empty gallery Save with forged public=on: 409 with the reason, nothing stored (private|Empty for now)
+PASS csrf POST /admin/galleries without __RequestVerificationToken 400, galleries 2 → 2
+PASS L5 POST /admin/library/images/{iid}/delete 303 /admin/library?page=1&deleted=1&leftovers=0; record gone, left the gallery, 2/2 public files gone
+PASS edge after L5 delete: edge.purge image.delete log-only 2 0.05 skipped https://img.test/00b44e642b521f22.avif https://img.test/2ac0a782c16b2824.webp
+PASS seed inserted a seed-shaped image + public gallery (mongosh) and their 8 public files
+     before remove-seeded: 2 images, 3 galleries (owner content hash 8717332ab0bf7403)
+     | seeded galleries removed: 1
+     | seeded images removed: 1
+     | owner galleries changed: 0
+     | public files deleted: 8
+     | public files kept (shared with an uploaded photo): 0
+     | leftover files (logged): 0
+     | The running app drops its page cache within 60 seconds.
+PASS remove run 1: exit 0, 1 gallery + 1 image removed, 8 public files deleted, homeOrder cleaned, owner content unchanged
+     log: edge.purge gallery.delete log-only 3 0 skipped https://localhost:5081/ https://localhost:5081/g/seedverifygalleryaaaaaaaaa/seeded-verify https://localhost:5081/g/seedverifygalleryaaaaaaaaa/seeded-veri
+     log: owner.action seeded.remove seeded 2 galleries=1 images=1 ownerGalleries=0 deleted=8 kept=0 leftovers=0
+     log: op.timing maintenance.remove-seeded 329.11 ok
+     log: edge.purge image.delete log-only 8 0.06 skipped https://img.test/seedverify1280abcd.avif https://img.test/seedverify1280abcd.webp https://img.test/seedverify320abcd.avif https://img.test/seedverify320
+     | seeded galleries removed: 0
+     | seeded images removed: 0
+     | owner galleries changed: 0
+     | public files deleted: 0
+     | public files kept (shared with an uploaded photo): 0
+     | leftover files (logged): 0
+     | The running app drops its page cache within 60 seconds.
+PASS remove run 2: exit 0, every count 0, owner content unchanged
+     | Target guard failed: Mongo:Database must end with _dev (got: gallery_verify)
+PASS guard Mongo:Database=gallery_verify: exit 4 'Target guard failed: Mongo:Database must end with _dev', gallery_verify exists=false (before false), counts 0 0; a seeded image in gallery_verify009_1793550718_dev was not touched
+PASS FR-049 37 app requests (readiness probe of / included), 37 http.request lines, same method+status sequence
+PASS FR-049 4 x 'http.request GET /admin/library' (route template)
+PASS FR-049 1 x 'http.request POST /admin/library/add' (route template)
+PASS FR-049 2 x 'http.request POST /admin/library/images/{iid}' (route template)
+PASS FR-049 1 x 'http.request POST /admin/library/images/{iid}/delete' (route template)
+PASS FR-049 2 x 'http.request POST /admin/galleries' (route template)
+PASS FR-049 3 x 'http.request POST /admin/galleries/{gid}' (route template)
+PASS FR-049 1 x 'http.request POST /admin/galleries/{gid}/order' (route template)
+PASS FR-049 1 x 'http.request POST /admin/galleries/{gid}/visibility' (route template)
+PASS FR-049 3 x 'http.request GET /g/{id}/{slug}' (route template)
+PASS edge 7 edge.purge lines, every one mode log-only
+PASS FR-050 1 x 'owner.action gallery.publish'
+PASS FR-050 1 x 'owner.action image.delete'
+PASS FR-050 8 x 'op.timing db.library.page'
+PASS FR-050 9 x 'op.timing db.site.project'
+PASS FR-050 1 x 'op.timing library.image.delete'
+PASS FR-050 6 x 'edge.lag'
+PASS script pkill appears nowhere in this script (servers stopped by kill <pid>)
+     specs/009-library-galleries/evidence/verify-run.log: 299 lines, 1 distinct 32+-character tokens (redact before committing)
+PASS secrets no presigned URL or credential value in specs/009-library-galleries/evidence/verify-run.log
+     Warning/Error entries:
+          1 Error Microsoft.AspNetCore.Server.Kestrel: Unexpected exception in TimingPipeFlusher.FlushAsync.
+          1 Error Microsoft.AspNetCore.Server.Kestrel: Unhandled exception while processing 0HNPO6MK8EIF5.
+
+ALL PASS

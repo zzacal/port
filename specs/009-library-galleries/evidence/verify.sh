@@ -226,22 +226,21 @@ req GET "$loc"   # follow the PRG redirect
 grep -q 'Order saved' "$TMP/b" && pass B3 "builder after PRG shows \"Order saved\"" || fail B3 "no 'Order saved' status after the redirect"
 TOK=$(form_token)
 
-# ── 8. G4 publish: without confirm (warning, no write), then with confirm=1 ─────────────────────
-req POST "/admin/galleries/$GID/visibility" --data-urlencode "__RequestVerificationToken=$TOK" \
-  --data-urlencode "from=builder" --data-urlencode "public=on"
-vis=$(mq "print(d.galleries.findOne({_id:'$GID'}).visibility)")
-[ "$(status)" = 200 ] && grep -q 'name="confirm" value="1"' "$TMP/b" && grep -q 'Make public' "$TMP/b" && [ "$vis" = private ] \
-  && pass G4 "public=on without confirm: 200 re-render with the publish warning (Make public, name=confirm), stored visibility still private" \
-  || fail G4 "no-confirm status=$(status) confirm-button=$(grep -c 'name="confirm"' "$TMP/b") stored=$vis"
+# ── 8. publish through the builder's Save (B2: the switch is part of the Save form, no confirm) ──
+req GET "/admin/galleries/$GID"
+[ "$(status)" = 200 ] && grep -q 'name="vis" value="1" form="b-panel"' "$TMP/b" && grep -q 'When you save' "$TMP/b" \
+  && ! grep -q 'name="confirm"' "$TMP/b" && ! grep -q 'Make public' "$TMP/b" && ! grep -q 'id="b-vis"' "$TMP/b" \
+  && pass B1 "builder: the switch belongs to b-panel (vis=1 marker), Save-time warning with no confirm button, no b-vis form" \
+  || fail B1 "status=$(status) vis-marker=$(grep -c 'name="vis"' "$TMP/b") confirm=$(grep -c 'name="confirm"' "$TMP/b")"
 TOK=$(form_token)
 p_before=$(purge_count gallery.publish)
-req POST "/admin/galleries/$GID/visibility" --data-urlencode "__RequestVerificationToken=$TOK" \
-  --data-urlencode "from=builder" --data-urlencode "public=on" --data-urlencode "confirm=1"
+req POST "/admin/galleries/$GID" --data-urlencode "__RequestVerificationToken=$TOK" \
+  --data-urlencode "title=Harbour walk" --data-urlencode "description=" --data-urlencode "vis=1" --data-urlencode "public=on"
 loc=$(hdr location); vis=$(mq "print(d.galleries.findOne({_id:'$GID'}).visibility)")
-[ "$(status)" = 303 ] && [ "$loc" = "/admin/galleries/$GID?visibility=public" ] && [ "$vis" = public ] \
-  && pass G4 "public=on confirm=1: 303 $loc, stored visibility public" \
-  || fail G4 "confirm status=$(status) location=$loc stored=$vis"
-expect_purge gallery.publish "$p_before" "after G4 publish"
+[ "$(status)" = 303 ] && [ "$loc" = "/admin/galleries/$GID?saved=1&visibility=public" ] && [ "$vis" = public ] \
+  && pass B2 "Save with vis=1 public=on: 303 $loc, stored visibility public" \
+  || fail B2 "publish-save status=$(status) location=$loc stored=$vis"
+expect_purge gallery.publish "$p_before" "after B2 publish"
 
 # ── 9. GET / lists it; the gallery page is cached before the rename ─────────────────────────────
 req GET /
@@ -300,11 +299,18 @@ loc=$(hdr location); EGID=$(echo "$loc" | sed -nE 's#^/admin/galleries/([a-z2-7]
 [ "$(status)" = 303 ] && [ -n "$EGID" ] && pass G2 "POST /admin/galleries 303 $loc" || fail G2 "status=$(status) location=$loc"
 req GET "/admin/galleries/$EGID"; TOK=$(form_token)
 req POST "/admin/galleries/$EGID/visibility" --data-urlencode "__RequestVerificationToken=$TOK" \
-  --data-urlencode "from=builder" --data-urlencode "public=on" --data-urlencode "confirm=1"
+  --data-urlencode "from=list" --data-urlencode "public=on"
 vis=$(mq "print(d.galleries.findOne({_id:'$EGID'}).visibility)")
 [ "$(status)" = 409 ] && grep -q 'Add a photo before making this gallery public' "$TMP/b" && [ "$vis" = private ] \
-  && pass G4 "empty gallery public=on confirm=1: 409 \"Add a photo before making this gallery public\", stored still private" \
+  && pass G4 "empty gallery public=on: 409 \"Add a photo before making this gallery public\", stored still private" \
   || fail G4 "empty status=$(status) stored=$vis"
+TOK=$(form_token)
+req POST "/admin/galleries/$EGID" --data-urlencode "__RequestVerificationToken=$TOK" \
+  --data-urlencode "title=Forged" --data-urlencode "vis=1" --data-urlencode "public=on"
+gdoc=$(mq "const g = d.galleries.findOne({_id:'$EGID'}); print(g.visibility + '|' + g.title)")
+[ "$(status)" = 409 ] && grep -q 'Add a photo before making this gallery public' "$TMP/b" && [ "$gdoc" = "private|Empty for now" ] \
+  && pass B2 "empty gallery Save with forged public=on: 409 with the reason, nothing stored ($gdoc)" \
+  || fail B2 "empty save status=$(status) stored=$gdoc"
 
 # ── 13. a POST without the token → 400 ──────────────────────────────────────────────────────────
 ng_before=$(mq "print(d.galleries.countDocuments({}))")

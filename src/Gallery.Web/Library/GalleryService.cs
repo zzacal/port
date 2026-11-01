@@ -9,6 +9,12 @@ using MongoDB.Driver;
 
 namespace Gallery.Web.Library;
 
+/// <summary>A B2 text edit riding with a visibility write: null fields keep the stored value.</summary>
+public sealed record TextEdit(string? Title, string? Description);
+
+/// <summary>B2's outcome: the operation result and, when the stored visibility changed, whether it is now public.</summary>
+public sealed record SaveOutcome(OperationResult Result, bool? NowPublic);
+
 /// <summary>Outcome of THE single-item add gate (<see cref="GalleryService.AddOneAsync"/>).</summary>
 public enum AddOutcome
 {
@@ -335,14 +341,19 @@ public sealed class GalleryService
     // ── visibility (P-VIS) [SAFETY] II.5, II.6 ───────────────────────────────
 
     /// <summary>
-    /// G4 in the contracted order: load → empty <c>items</c> → refused 409 FIRST, whatever else was
-    /// sent → not confirmed → <see cref="OperationStatus.NeedsConfirm"/> with no write → the
-    /// conditional write <c>updateOne({_id, "items.0":{$exists:true}}, {$set:{visibility:"public"}})</c>
-    /// → matched 0 (emptied in another tab) → the same refusal.
+    /// G4 and B2 publish in the contracted order: load (or the caller's just-loaded
+    /// <paramref name="loaded"/>) → empty <c>items</c> → refused 409 FIRST, whatever else was sent →
+    /// not confirmed → <see cref="OperationStatus.NeedsConfirm"/> with no write → the conditional write
+    /// <c>updateOne({_id, "items.0":{$exists:true}}, {$set:{visibility:"public", …}})</c> → matched 0
+    /// (emptied in another tab) → the same refusal. The owner routes always pass
+    /// <paramref name="confirmed"/> = true: the builder's Save and the list's switch ARE the owner's
+    /// decision (II.5; decisions log, owner feedback "no confirm button"). <paramref name="text"/>
+    /// (already validated by <see cref="SaveAsync"/>) rides in the SAME conditional write, so a refused
+    /// publish stores no text either, and its P-RENAME/P-DESC purge joins P-VIS in one scope.
     /// </summary>
-    public async Task<OperationResult> PublishAsync(string gid, bool confirmed)
+    public async Task<OperationResult> PublishAsync(string gid, bool confirmed, TextEdit? text = null, GalleryDoc? loaded = null)
     {
-        var gallery = await LoadAsync(gid);
+        var gallery = loaded ?? await LoadAsync(gid);
         if (gallery is null) return OperationResult.NotFound();
         if (gallery.Items.Count == 0) return Refuse("db.gallery.update", 409, EmptyPublishReason);
         if (!confirmed) return OperationResult.NeedsConfirm();
@@ -351,71 +362,148 @@ public sealed class GalleryService
         if (_beforePublishWrite is not null)
             await _beforePublishWrite(gid);
 
+        var plan = PlanText(gallery, text);
         var scope = Begin("gallery.publish");
+        var update = ApplyText(Builders<GalleryDoc>.Update
+            .Set(g => g.Visibility, "public").Set(g => g.UpdatedAt, DateTime.UtcNow), plan);
         var r = await _timer.Time("db.gallery.update", () => _galleries.UpdateOneAsync(
             Builders<GalleryDoc>.Filter.Eq(g => g.Id, gid) & Builders<GalleryDoc>.Filter.Exists("items.0"),
-            Builders<GalleryDoc>.Update.Set(g => g.Visibility, "public").Set(g => g.UpdatedAt, DateTime.UtcNow)));
+            update));
         if (r.MatchedCount == 0) return Refuse("db.gallery.update", 409, EmptyPublishReason);
 
-        scope.Touch(GallerySnapshot.From(gallery), PurgeKind.Visibility);
+        var before = GallerySnapshot.From(gallery);
+        scope.Touch(before, PurgeKind.Visibility);
+        TouchText(scope, before, plan);
         await scope.CompleteAsync();
         OwnerAction("gallery.publish", gid, $"photos={gallery.Items.Count}");
         return OperationResult.Ok() with { GalleryId = gid };
     }
 
-    /// <summary>G4 unpublish: writes at once (hiding is safe and reversible, decisions row 4).</summary>
-    public async Task<OperationResult> UnpublishAsync(string gid)
+    /// <summary>
+    /// G4 / B2 unpublish: writes at once (hiding is safe and reversible, decisions row 4).
+    /// <paramref name="text"/> (validated by <see cref="SaveAsync"/>) rides in the same write.
+    /// </summary>
+    public async Task<OperationResult> UnpublishAsync(string gid, TextEdit? text = null, GalleryDoc? loaded = null)
     {
-        var gallery = await LoadAsync(gid);
+        var gallery = loaded ?? await LoadAsync(gid);
         if (gallery is null) return OperationResult.NotFound();
 
         await Indexes.EnsureOnceAsync(_db);
+        var plan = PlanText(gallery, text);
         var scope = Begin("gallery.unpublish");
-        scope.Touch(GallerySnapshot.From(gallery), PurgeKind.Visibility);
+        var before = GallerySnapshot.From(gallery);
+        scope.Touch(before, PurgeKind.Visibility);
+        TouchText(scope, before, plan);
+        var update = ApplyText(Builders<GalleryDoc>.Update
+            .Set(g => g.Visibility, "private").Set(g => g.UpdatedAt, DateTime.UtcNow), plan);
         await _timer.Time("db.gallery.update", () => _galleries.UpdateOneAsync(
-            Builders<GalleryDoc>.Filter.Eq(g => g.Id, gid),
-            Builders<GalleryDoc>.Update.Set(g => g.Visibility, "private").Set(g => g.UpdatedAt, DateTime.UtcNow)));
+            Builders<GalleryDoc>.Filter.Eq(g => g.Id, gid), update));
         await scope.CompleteAsync();
         OwnerAction("gallery.unpublish", gid, $"photos={gallery.Items.Count}");
         return OperationResult.Ok() with { GalleryId = gid };
     }
 
-    // ── text (P-RENAME / P-DESC) ─────────────────────────────────────────────
+    // ── B2 save: text + visibility in one request ────────────────────────────
 
     /// <summary>
-    /// B2: a null field keeps the stored value (a bare POST changes nothing). Title trimmed,
+    /// B2 (owner feedback: Save saves everything, the switch included). Order: title/description
+    /// validation (422, nothing stored) → when <paramref name="wantPublic"/> asks for a change, the
+    /// visibility write carrying the text (<see cref="PublishAsync"/>: emptiness FIRST, then the
+    /// conditional <c>items.0</c> write; or <see cref="UnpublishAsync"/>) → otherwise the text alone
+    /// (<see cref="UpdateTextAsync"/>). <paramref name="wantPublic"/> null (the form carried no
+    /// <c>vis</c> marker, e.g. a bare POST) never touches visibility. <c>NowPublic</c> is set only
+    /// when the stored visibility changed.
+    /// </summary>
+    public async Task<SaveOutcome> SaveAsync(string gid, string? title, string? description, bool? wantPublic)
+    {
+        if (TextProblem(title, description) is { } problem)
+            return new(Refuse("db.gallery.update", 422, problem), null);
+
+        if (wantPublic is { } want)
+        {
+            var gallery = await LoadAsync(gid);
+            if (gallery is null) return new(OperationResult.NotFound(), null);
+            var isPublic = gallery.Visibility == "public";
+            var text = new TextEdit(title, description);
+            if (want && !isPublic)
+            {
+                var r = await PublishAsync(gid, confirmed: true, text, gallery);
+                return new(r, r.IsOk ? true : null);
+            }
+            if (!want && isPublic)
+            {
+                var r = await UnpublishAsync(gid, text, gallery);
+                return new(r, r.IsOk ? false : null);
+            }
+            return new(await UpdateTextAsync(gid, title, description, gallery), null);
+        }
+        return new(await UpdateTextAsync(gid, title, description), null);
+    }
+
+    // ── text (P-RENAME / P-DESC) ─────────────────────────────────────────────
+
+    /// <summary>The B2 text rules: title (when sent) per <see cref="TitleProblem"/>, description 0..<c>DescriptionMax</c>. Null when valid.</summary>
+    private string? TextProblem(string? title, string? description)
+    {
+        if (title is not null && TitleProblem(title, _options) is { } problem) return problem;
+        var desc = description?.Trim();
+        if (desc is not null && desc.Length > _options.DescriptionMax)
+            return $"The description can be at most {_options.DescriptionMax} characters.";
+        return null;
+    }
+
+    /// <summary>What a text edit changes on <paramref name="gallery"/> (null fields keep the stored value).</summary>
+    private sealed record TextPlan(string Title, string? Description, bool TitleChanged, bool DescriptionChanged)
+    {
+        public bool Changed => TitleChanged || DescriptionChanged;
+    }
+
+    private static TextPlan PlanText(GalleryDoc gallery, TextEdit? text)
+    {
+        var newTitle = text?.Title?.Trim() ?? gallery.Title;
+        var desc = text?.Description?.Trim();
+        var newDesc = text?.Description is null ? gallery.Description : (desc!.Length == 0 ? null : desc);
+        return new(newTitle, newDesc, newTitle != gallery.Title, newDesc != gallery.Description);
+    }
+
+    private static UpdateDefinition<GalleryDoc> ApplyText(UpdateDefinition<GalleryDoc> update, TextPlan plan) =>
+        !plan.Changed
+            ? update
+            : update.Set(g => g.Title, plan.Title)
+                .Set(g => g.Slug, Slug.From(plan.Title))
+                .Set(g => g.Description, plan.Description); // an empty description stores null
+
+    /// <summary>P-RENAME when the title changed, else P-DESC when the description changed, else nothing.</summary>
+    private static void TouchText(OperationScope scope, GallerySnapshot before, TextPlan plan)
+    {
+        if (plan.TitleChanged) scope.Touch(before, PurgeKind.Rename);
+        else if (plan.DescriptionChanged) scope.Touch(before, PurgeKind.Description);
+    }
+
+    /// <summary>
+    /// B2 text only: a null field keeps the stored value (a bare POST changes nothing). Title trimmed,
     /// 1..<c>TitleMax</c>; description 0..<c>DescriptionMax</c> (empty stores null). A title change
     /// recomputes the slug and purges P-RENAME (both slugs when the slug changed, one otherwise);
     /// else a description change purges P-DESC; else nothing.
     /// </summary>
-    public async Task<OperationResult> UpdateTextAsync(string gid, string? title, string? description)
+    public async Task<OperationResult> UpdateTextAsync(string gid, string? title, string? description, GalleryDoc? loaded = null)
     {
-        if (title is not null && TitleProblem(title, _options) is { } problem)
+        if (TextProblem(title, description) is { } problem)
             return Refuse("db.gallery.update", 422, problem);
-        var desc = description?.Trim();
-        if (desc is not null && desc.Length > _options.DescriptionMax)
-            return Refuse("db.gallery.update", 422, $"The description can be at most {_options.DescriptionMax} characters.");
 
-        var gallery = await LoadAsync(gid);
+        var gallery = loaded ?? await LoadAsync(gid);
         if (gallery is null) return OperationResult.NotFound();
 
-        var newTitle = title?.Trim() ?? gallery.Title;
-        var newDesc = description is null ? gallery.Description : (desc!.Length == 0 ? null : desc);
-        var titleChanged = newTitle != gallery.Title;
-        var descChanged = newDesc != gallery.Description;
-        if (!titleChanged && !descChanged)
+        var plan = PlanText(gallery, new TextEdit(title, description));
+        if (!plan.Changed)
             return OperationResult.Ok() with { GalleryId = gid };
 
         await Indexes.EnsureOnceAsync(_db);
         var scope = Begin("gallery.update");
-        scope.Touch(GallerySnapshot.From(gallery), titleChanged ? PurgeKind.Rename : PurgeKind.Description);
-        var update = Builders<GalleryDoc>.Update
-            .Set(g => g.Title, newTitle)
-            .Set(g => g.Slug, Slug.From(newTitle))
-            .Set(g => g.UpdatedAt, DateTime.UtcNow);
-        update = update.Set(g => g.Description, newDesc); // an empty description stores null
+        TouchText(scope, GallerySnapshot.From(gallery), plan);
         await _timer.Time("db.gallery.update", () => _galleries.UpdateOneAsync(
-            Builders<GalleryDoc>.Filter.Eq(g => g.Id, gid), update));
+            Builders<GalleryDoc>.Filter.Eq(g => g.Id, gid),
+            ApplyText(Builders<GalleryDoc>.Update.Set(g => g.UpdatedAt, DateTime.UtcNow), plan)));
         await scope.CompleteAsync();
         return OperationResult.Ok() with { GalleryId = gid };
     }

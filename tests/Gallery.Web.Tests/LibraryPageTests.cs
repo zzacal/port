@@ -236,13 +236,13 @@ public class LibraryPageTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         var open = await GetOkAsync(h, $"/admin/library?open={img.Id}");
         Assert.Equal(["Save"], PrimaryButtons(open));
         Assert.Matches("<button class=\"btn btn-secondary\"[^>]*>\\s*Add to gallery…\\s*</button>", open);
-        // UI-4: Delete photo (summary and confirm) is outlined Danger, never Primary.
-        Assert.Matches("<summary class=\"btn btn-danger\"[^>]*>Delete photo…</summary>", open);
+        // UI-4: Delete photo (trigger and the confirm dialog's action) is outlined Danger, never Primary.
+        Assert.Matches("<button [^>]*class=\"btn btn-danger danger-trigger\" type=\"button\"[^>]*>(Delete photo…|Delete photo&#x2026;)</button>", open);
         Assert.Matches("<button class=\"btn btn-danger\"[^>]*form=\"lib-del-one\"[^>]*>\\s*Delete photo\\s*</button>", open);
         Assert.DoesNotMatch("btn-primary[^>]*>\\s*Delete", open);
 
         // The picker dialog's own primary (Add) is inside the dialog only.
-        var dialog = Regex.Match(rest, "<dialog\\b.*?</dialog>", RegexOptions.Singleline).Value;
+        var dialog = Regex.Match(rest, "<dialog id=\"lib-picker\".*?</dialog>", RegexOptions.Singleline).Value;
         Assert.Matches("<button class=\"btn btn-primary\"[^>]*>\\s*Add\\s*</button>", dialog);
     }
 

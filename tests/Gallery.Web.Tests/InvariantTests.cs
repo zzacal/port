@@ -125,9 +125,9 @@ public partial class InvariantTests(S3ProxyFixture s3, MongoFixture mongo) : ICl
         Assert.Equal($"/admin/galleries/{gid}?removed=1", removed.Headers.Location?.ToString());
         await AfterAsync(h, "remove");
 
-        // 7. publish (G4, confirmed): the home page now lists Coast.
+        // 7. publish (G4, the switch on): the home page now lists Coast.
         await Post(h, "publish", HttpStatusCode.SeeOther, $"/admin/galleries/{gid}/visibility",
-            [F("public", "on"), F("confirm", "1"), F("from", "builder")]);
+            [F("public", "on"), F("from", "builder")]);
         var home = await AfterAsync(h, "publish");
         Assert.Contains($"/g/{gid}/coast", home);
 
@@ -144,7 +144,7 @@ public partial class InvariantTests(S3ProxyFixture s3, MongoFixture mongo) : ICl
 
         // Publish again so the bulk delete changes a listed gallery's cover and count.
         await Post(h, "republish", HttpStatusCode.SeeOther, $"/admin/galleries/{gid}/visibility",
-            [F("public", "on"), F("confirm", "1"), F("from", "list")]);
+            [F("public", "on"), F("from", "list")]);
         await AfterAsync(h, "republish");
 
         // 10. bulk delete (L4): two members, one of them the current cover.
@@ -164,10 +164,10 @@ public partial class InvariantTests(S3ProxyFixture s3, MongoFixture mongo) : ICl
         home = await AfterAsync(h, "gallery delete");
         Assert.DoesNotContain($"/g/{gid}/", home);
 
-        // 12. publish refusal (G4 on the empty Spare, confirmed): 409, nothing stored.
+        // 12. publish refusal (G4 on the empty Spare): 409, nothing stored.
         var dump = await DumpAsync(h);
         var refused = await Post(h, "publish refusal", HttpStatusCode.Conflict, $"/admin/galleries/{spare}/visibility",
-            [F("public", "on"), F("confirm", "1"), F("from", "list")]);
+            [F("public", "on"), F("from", "list")]);
         Assert.Contains(GalleryService.EmptyPublishReason, WebUtility.HtmlDecode(await refused.Content.ReadAsStringAsync()));
         Assert.Equal(dump, await DumpAsync(h));
         await AfterAsync(h, "publish refusal");

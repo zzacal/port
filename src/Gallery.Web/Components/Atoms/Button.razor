@@ -1,7 +1,7 @@
 @* Admin button atom (feature 005): primary/secondary/quiet/danger; button/link/summary element; busy state. *@
 @if (Element == ButtonElement.Link)
 {
-    <a class="@CssClass" href="@Href" aria-label="@AriaLabel">@ChildContent</a>
+    <a class="@CssClass" href="@Href" aria-label="@AriaLabel" target="@Target" rel="@(Target == "_blank" ? "noopener" : null)">@ChildContent</a>
 }
 else if (Element == ButtonElement.Summary)
 {
@@ -9,7 +9,7 @@ else if (Element == ButtonElement.Summary)
 }
 else
 {
-    <button class="@CssClass" type="@Type" disabled="@(Disabled || Busy)" aria-busy="@(Busy ? "true" : null)" form="@FormId" name="@Name" value="@Value" aria-label="@AriaLabel">
+    <button @attributes="Attributes" class="@ButtonClass" type="@Type" disabled="@(Disabled || Busy)" aria-busy="@(Busy ? "true" : null)" form="@FormId" name="@Name" value="@Value" aria-label="@AriaLabel">
         @if (Busy)
         {
             <span class="spinner" aria-hidden="true"></span>
@@ -29,6 +29,13 @@ else
     [Parameter] public string? Name { get; set; }
     [Parameter] public string? Value { get; set; }
     [Parameter] public string? AriaLabel { get; set; }
+
+    /// <summary>Link element only: "_blank" opens a new tab (with rel="noopener"). Pair it with a trailing ↗.</summary>
+    [Parameter] public string? Target { get; set; }
+
+    /// <summary>Button element only: extra attributes (e.g. invoker <c>command</c>/<c>commandfor</c>,
+    /// <c>autofocus</c>) for DangerConfirm's modal. The named parameters above take precedence.</summary>
+    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? Attributes { get; set; }
     [Parameter, EditorRequired] public RenderFragment ChildContent { get; set; } = default!;
 
     private string VariantClass => Variant switch
@@ -41,4 +48,7 @@ else
     };
 
     private string CssClass => Busy ? VariantClass + " is-busy" : VariantClass;
+
+    /// <summary>A splatted <c>class</c> is appended to the variant classes, never replaces them.</summary>
+    private string ButtonClass => Attributes?.TryGetValue("class", out var extra) == true && extra is string { Length: > 0 } s ? $"{CssClass} {s}" : CssClass;
 }

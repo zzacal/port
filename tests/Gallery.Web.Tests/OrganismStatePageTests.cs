@@ -12,7 +12,7 @@ public class OrganismStatePageTests
     public static TheoryData<Type, string[]> Pages() => new()
     {
         { typeof(OwnerBarPage), ["Upload current, with primary action", "Library current", "Galleries current, viewing a gallery", "Phone width"] },
-        { typeof(SidePanelPage), ["At rest", "Saving", "Saved", "With danger area"] },
+        { typeof(SidePanelPage), ["At rest", "Saving", "Saved", "With danger area", "Delete confirm open"] },
         { typeof(UploadDropzonePage), ["Idle", "Drag-over", "Files refused"] },
         { typeof(BatchFooterPage), ["In progress (12 of 40)", "Ready (40)", "Blocked (38 ready, 2 failed)", "Discard confirmation"] },
         { typeof(GalleryBuilderPage), ["At rest (cover pinned on photo 3)", "Dragging photo 2 to position 5", "Photo 3 lifted for keyboard moving", "Publish warning", "Empty gallery"] },
@@ -27,6 +27,35 @@ public class OrganismStatePageTests
         var headings = Regex.Matches(html, "<h2 class=\"specimen-label\"[^>]*>([^<]*)</h2>")
             .Select(m => System.Net.WebUtility.HtmlDecode(m.Groups[1].Value)).ToList();
         Assert.Equal(labels, headings);
+    }
+
+    /// <summary>The markup without Razor's scoped-CSS attributes (b-xxxxxxxxxx) and with … “ ” un-escaped, so assertions read as written.</summary>
+    private static string Unscoped(string html) => System.Text.RegularExpressions.Regex.Replace(
+        System.Text.RegularExpressions.Regex.Replace(html, " b-[a-z0-9]{10}(?=[ >/])", ""),
+        "&#x(2026|201C|201D);", m => ((char)Convert.ToInt32(m.Groups[1].Value, 16)).ToString());
+
+    [Fact]
+    public async Task Danger_confirms_on_organism_pages_are_dialogs_with_Cancel()
+    {
+        foreach (var page in new[] { typeof(SidePanelPage), typeof(BatchFooterPage), typeof(GalleryBuilderPage) })
+        {
+            var html = Unscoped(await Render.Html(page));
+            Assert.DoesNotContain("<details", html);
+            Assert.DoesNotContain("again to cancel", html);
+            var dialogs = Regex.Matches(html, "<dialog[^>]*class=\"danger-dialog\"").Count;
+            Assert.True(dialogs > 0, $"{page.Name}: no danger dialog");
+            Assert.Equal(dialogs, Regex.Matches(html, "<button [^>]*autofocus[^>]*class=\"btn btn-quiet danger-cancel\"[^>]*>Cancel</button>").Count);
+            // Every dialog id is unique on the page, so each trigger opens its own. (GalleryBuilderPage's
+            // specimens repeat one gallery with no form; GalleryBuilder does not pass a confirm Id yet.)
+            if (page == typeof(GalleryBuilderPage)) continue;
+            var ids = Regex.Matches(html, "<dialog id=\"([^\"]+)\" class=\"danger-dialog\"").Select(m => m.Groups[1].Value).ToList();
+            Assert.Equal(ids.Count, ids.Distinct().Count());
+        }
+        var footer = Unscoped(await Render.Html<BatchFooterPage>());
+        Assert.Single(Regex.Matches(footer, "<dialog[^>]*class=\"danger-dialog\"[^>]* open[ >]"));
+        Assert.Contains(">Discard this batch?</h2>", footer);
+        var builder = Unscoped(await Render.Html<GalleryBuilderPage>());
+        Assert.Contains(">Delete gallery “Coast, winter”?</h2>", builder);
     }
 
     [Fact]

@@ -125,9 +125,16 @@ public class AtomMoleculeStatePageTests
         var html = await Render.Html<DangerConfirmPage>();
         Guards.AssertNoInlineStyle(html);
         Guards.AssertNoScript(html);
-        Assert.Contains("Delete image, closed", html);
-        Assert.Contains("Delete image, open", html);
+        Assert.Contains("Delete photo, closed", html);
+        Assert.Contains("Delete photo, open", html);
         Assert.Contains("Delete gallery, open", html);
+        Assert.Contains("Bulk delete (opened from the selection bar), open", html);
+        Assert.Contains("Discard batch, open", html);
+        // Every specimen is a modal dialog with a Cancel; the open ones render open, the closed one does not.
+        Assert.Equal(5, Guards.Count(html, "class=\"danger-dialog\""));
+        Assert.Equal(4, System.Text.RegularExpressions.Regex.Matches(html, "<dialog[^>]*class=\"danger-dialog\"[^>]* open[ >]").Count);
+        Assert.Equal(5, System.Text.RegularExpressions.Regex.Matches(html, ">\\s*Cancel\\s*</button>").Count);
+        Assert.DoesNotContain("<details", html);
     }
 
     // ── VisibilityTogglePage ──────────────────────────────────────────────────

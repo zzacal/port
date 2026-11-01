@@ -120,6 +120,11 @@ public class LibraryDeleteTests(S3ProxyFixture s3, MongoFixture mongo) : IClassF
         Assert.Empty(await h.SettleAsync());
     }
 
+    /// <summary>The markup without Razor's scoped-CSS attributes (b-xxxxxxxxxx) and with … “ ” un-escaped, so assertions read as written.</summary>
+    private static string Unscoped(string html) => System.Text.RegularExpressions.Regex.Replace(
+        System.Text.RegularExpressions.Regex.Replace(html, " b-[a-z0-9]{10}(?=[ >/])", ""),
+        "&#x(2026|201C|201D);", m => ((char)Convert.ToInt32(m.Groups[1].Value, 16)).ToString());
+
     [Fact]
     public async Task The_bulk_confirm_copy_matches_the_contract_and_is_outlined_danger()
     {
@@ -127,11 +132,19 @@ public class LibraryDeleteTests(S3ProxyFixture s3, MongoFixture mongo) : IClassF
         await h.InsertUploadedImageAsync(files: false);
 
         var html = await GalleryHtml.GetOkAsync(h, "/admin/library");
-        var bulk = LibraryHtml.Blocks(html, "div", "lib-bulk-delete").Single();
+        html = Unscoped(html);
+        var bulk = LibraryHtml.Blocks(html, "dialog", "danger-dialog").Single();
+        Assert.Contains("id=\"lib-bulk-confirm\"", bulk);
         Assert.Contains("This removes them from every gallery and deletes the original files. It can't be undone.", bulk);
-        Assert.Matches("<summary class=\"btn btn-danger\"[^>]*>Delete…</summary>", bulk);
-        Assert.Matches("<button class=\"btn btn-danger\"[^>]*type=\"submit\"[^>]*form=\"lib-delete\"[^>]*>\\s*Delete photos\\s*</button>", bulk);
+        Assert.Contains(">Delete 0 photos?</h2>", bulk);
+        // The bar's "Delete…" is the only trigger (no second identical control); the dialog has
+        // Cancel first and the outlined danger action last, which library.js renames "Delete {n} photos".
+        Assert.Equal(1, Guards.Count(html, "Delete…"));
+        Assert.DoesNotContain("danger-trigger", html);
+        Assert.Matches("<button [^>]*class=\"btn btn-quiet danger-cancel\" type=\"button\"[^>]*>Cancel</button>\\s*<button class=\"btn btn-danger\"[^>]*type=\"submit\"[^>]*form=\"lib-delete\"[^>]*>\\s*Delete photos\\s*</button>", bulk);
         Assert.DoesNotContain("btn-primary", bulk);
+        Assert.DoesNotContain("lib-bulk-delete", html);
+        Assert.DoesNotContain("<details", html);
         Assert.Matches("<form id=\"lib-delete\" method=\"post\" action=\"/admin/library/delete\" hidden[ >]", html);
     }
 }

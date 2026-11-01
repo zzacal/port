@@ -90,12 +90,18 @@ public class EdgeSecretTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixt
             Assert.True(resp.StatusCode == HttpStatusCode.OK, $"{label} answered {(int)resp.StatusCode}");
         }
 
-        var warn = await Scan("POST /admin/galleries/{gid}/visibility (G4 warning)", h.PostFormAsync(
-            $"/admin/galleries/{gid}/visibility", [F("public", "on"), F("from", "builder")]));
-        Assert.Equal(HttpStatusCode.OK, warn.StatusCode);
-        var publish = await Scan("POST /admin/galleries/{gid}/visibility (G4 publish)", h.PostFormAsync(
-            $"/admin/galleries/{gid}/visibility", [F("public", "on"), F("confirm", "1"), F("from", "builder")]));
+        var refused = await Scan("POST /admin/galleries/{gid} (B2 refused, re-rendered)", h.PostFormAsync(
+            $"/admin/galleries/{gid}", [F("title", "   "), F("vis", "1"), F("public", "on")]));
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, refused.StatusCode);
+        var publish = await Scan("POST /admin/galleries/{gid} (B2 save with public)", h.PostFormAsync(
+            $"/admin/galleries/{gid}", [F("title", "Coast"), F("vis", "1"), F("public", "on")]));
         Assert.Equal(HttpStatusCode.SeeOther, publish.StatusCode);
+        var unpublish = await Scan("POST /admin/galleries/{gid}/visibility (G4 list switch off)", h.PostFormAsync(
+            $"/admin/galleries/{gid}/visibility", [F("from", "list")]));
+        Assert.Equal(HttpStatusCode.SeeOther, unpublish.StatusCode);
+        var republish = await Scan("POST /admin/galleries/{gid}/visibility (G4 list switch on)", h.PostFormAsync(
+            $"/admin/galleries/{gid}/visibility", [F("public", "on"), F("from", "list")]));
+        Assert.Equal(HttpStatusCode.SeeOther, republish.StatusCode);
         var rename = await Scan("POST /admin/galleries/{gid} (B2 rename)", h.PostFormAsync(
             $"/admin/galleries/{gid}", [F("title", "Coast Path")]));
         Assert.Equal(HttpStatusCode.SeeOther, rename.StatusCode);
@@ -119,7 +125,7 @@ public class EdgeSecretTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixt
         Assert.Equal(0, await h.Galleries.CountDocumentsAsync(FilterDefinition<Data.GalleryDoc>.Empty));
 
         // ── no response carries the token ────────────────────────────────────
-        Assert.Equal(12, scanned.Count);
+        Assert.Equal(14, scanned.Count);
         foreach (var (label, resp, body) in scanned)
         {
             Assert.False(body.Contains(Token, StringComparison.Ordinal), $"{label}: the response body contains Edge:ApiToken");

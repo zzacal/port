@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Gallery.Web.Tests.Fixtures;
 using Microsoft.Playwright;
+using MongoDB.Driver;
 
 namespace Gallery.Web.Tests;
 
@@ -398,7 +399,7 @@ public sealed class LibraryBrowserTests(LibraryBrowserFixture fx)
     // ── publish (UI-5) ─────────────────────────────────────────────────────────────────────
 
     [Fact]
-    public async Task Publish_switch_reads_false_when_private_shows_the_warning_and_make_public_publishes()
+    public async Task List_switch_reads_false_when_private_and_publishes_at_once_with_no_warning()
     {
         await using var site = await fx.NewSiteAsync();
         var ids = await site.ImagesAsync(2);
@@ -409,22 +410,65 @@ public sealed class LibraryBrowserTests(LibraryBrowserFixture fx)
         var input = card.Locator(".gal-row input[role='switch']");
         Assert.False(await input.EvaluateAsync<bool>("i => i.checked"), "a private gallery's switch is checked after load");
 
+        // No confirmation step on the list (DEFAULT decision): the switch publishes at once.
         await NavigatesAsync(page, () => card.Locator(".gal-row label.switch").ClickAsync());
-        var warned = page.Locator($"section.gal reorder-grid .cs > *:has(a[href='/admin/galleries/{gid}'])");
-        var warning = warned.Locator(".publish-warning");
-        Assert.True(await warning.IsVisibleAsync());
-        Assert.Contains("Make “Coast” public? It will be listed on the home page with its 2 photos", await warning.InnerTextAsync());
-        Assert.Equal("private", (await site.GalleryDocAsync(gid)).Visibility);
-
-        // UI-3 in the publish-warning state: Make public is the one filled button.
-        var filled = await FilledAsync(page);
-        Assert.Equal(["Make public"], filled.Outside);
-
-        await NavigatesAsync(page, () =>
-            warning.GetByRole(AriaRole.Button, new() { Name = "Make public", Exact = true }).ClickAsync());
         Assert.Equal("public", (await site.GalleryDocAsync(gid)).Visibility);
+        Assert.Equal(0, await page.Locator(".publish-warning").CountAsync());
+        Assert.Equal(["New gallery"], (await FilledAsync(page)).Outside);
         var after = page.Locator($"section.gal reorder-grid .cs > *:has(a[href='/admin/galleries/{gid}']) .gal-row input[role='switch']");
         Assert.True(await after.EvaluateAsync<bool>("i => i.checked"));
+
+        // And off again: unpublished at once.
+        await NavigatesAsync(page, () =>
+            page.Locator($"section.gal reorder-grid .cs > *:has(a[href='/admin/galleries/{gid}']) .gal-row label.switch").ClickAsync());
+        Assert.Equal("private", (await site.GalleryDocAsync(gid)).Visibility);
+    }
+
+    [Fact]
+    public async Task Builder_switch_keeps_typed_edits_shows_a_buttonless_warning_and_Save_stores_all_three()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var ids = await site.ImagesAsync(2);
+        var gid = await site.GalleryAsync("Coast", ids);
+        var page = await site.OpenAsync($"/admin/galleries/{gid}");
+        var panel = page.Locator(".builder .side-panel");
+        var warning = panel.Locator(".publish-warning");
+        Assert.False(await warning.IsVisibleAsync(), "the warning shows before the switch is turned on");
+
+        await panel.Locator("input[name='title']").FillAsync("Coastline");
+        await panel.Locator("textarea[name='description']").FillAsync("Winter walks.");
+        var url = page.Url;
+
+        // Flipping the switch submits nothing and does not navigate; the warning appears with no buttons.
+        var posts = await PostsDuring(page, () => panel.Locator("label.switch").ClickAsync());
+        Assert.Empty(posts);
+        Assert.Equal(url, page.Url);
+        Assert.True(await panel.Locator("input[role='switch']").EvaluateAsync<bool>("i => i.checked"));
+        Assert.True(await warning.IsVisibleAsync(), "the publish warning is not shown while the switch is on");
+        // The warning names the stored title (server-rendered; Save applies the typed one).
+        Assert.Contains("When you save, “Coast” becomes public: it will be listed on the home page with its 2 photos", await warning.InnerTextAsync());
+        Assert.Equal(0, await warning.Locator("button").CountAsync());
+        Assert.Equal(0, await page.GetByRole(AriaRole.Button, new() { Name = "Make public" }).CountAsync());
+        var filled = (await FilledAsync(page)).Outside;
+        Assert.Contains("Save", filled);
+        Assert.DoesNotContain("Make public", filled);
+        // The typed values are still there.
+        Assert.Equal("Coastline", await panel.Locator("input[name='title']").InputValueAsync());
+        Assert.Equal("Winter walks.", await panel.Locator("textarea[name='description']").InputValueAsync());
+        Assert.Equal("private", (await site.GalleryDocAsync(gid)).Visibility);
+
+        // Turning it back off hides the warning; on again shows it.
+        await panel.Locator("label.switch").ClickAsync();
+        Assert.False(await warning.IsVisibleAsync());
+        await panel.Locator("label.switch").ClickAsync();
+        Assert.True(await warning.IsVisibleAsync());
+
+        // Save stores the title, the description AND the visibility in one request.
+        await NavigatesAsync(page, () => page.GetByRole(AriaRole.Button, new() { Name = "Save", Exact = true }).ClickAsync());
+        var g = await site.GalleryDocAsync(gid);
+        Assert.Equal(("Coastline", "Winter walks.", "public"), (g.Title, g.Description, g.Visibility));
+        Assert.Equal("Saved. The gallery is public", (await page.Locator(".b-status[role='status']").InnerTextAsync()).Trim());
+        Assert.Equal(0, await page.Locator(".publish-warning").CountAsync());
     }
 
     // ── UI-2 geometry ──────────────────────────────────────────────────────────────────────
@@ -484,11 +528,154 @@ public sealed class LibraryBrowserTests(LibraryBrowserFixture fx)
         Assert.Equal(["Save"], (await FilledAsync(builder)).Outside);
         await AssertDangerOutlinedAsync(builder, "builder");
 
-        // Builder, publish warning: Make public, and Save is demoted.
-        await NavigatesAsync(builder, () => builder.Locator(".builder .side-panel label.switch").ClickAsync());
+        // Builder, publish warning (switch on, not yet saved): Save stays the one primary.
+        await builder.Locator(".builder .side-panel label.switch").ClickAsync();
         Assert.True(await builder.Locator(".builder .publish-warning").IsVisibleAsync());
-        Assert.Equal(["Make public"], (await FilledAsync(builder)).Outside);
+        Assert.Equal(["Save"], (await FilledAsync(builder)).Outside);
         await AssertDangerOutlinedAsync(builder, "builder, publish warning");
+    }
+
+    /// <summary>Waits (briefly) for <paramref name="el"/> to hold focus: dialogs restore focus on their queued 'close' event.</summary>
+    private static async Task FocusedAsync(ILocator el, string because)
+    {
+        for (var i = 0; i < 40; i++)
+        {
+            if (await el.EvaluateAsync<bool>("b => b === document.activeElement")) return;
+            await Task.Delay(25);
+        }
+        Assert.Fail(because + ": " + await el.Page.EvaluateAsync<string>("() => document.activeElement?.outerHTML.slice(0, 200) ?? 'none'"));
+    }
+
+    // ── bulk delete confirm (modal DangerConfirm) ──────────────────────────────────────────
+
+    private static ILocator BulkDialog(IPage page) => page.Locator("section.lib dialog#lib-bulk-confirm");
+
+    private static Task<bool> IsModalAsync(ILocator dialog) => dialog.EvaluateAsync<bool>("d => d.open && d.matches(':modal')");
+
+    private static async Task OpenBulkDeleteAsync(IPage page)
+    {
+        var delete = Bar(page).GetByRole(AriaRole.Button, new() { Name = "Delete…", Exact = true });
+        await delete.ClickAsync();
+        Assert.True(await IsModalAsync(BulkDialog(page)), "Delete… did not open a modal dialog");
+    }
+
+    [Fact]
+    public async Task Bulk_delete_opens_a_modal_confirm_that_blocks_the_page_and_names_the_count()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var ids = await site.ImagesAsync(3);
+        var page = await site.OpenAsync("/admin/library");
+        await Marks(page).Nth(0).ClickAsync();
+        await Marks(page).Nth(1).ClickAsync();
+
+        await OpenBulkDeleteAsync(page);
+        var dialog = BulkDialog(page);
+        Assert.Equal(1, await page.Locator("dialog[open]").CountAsync());
+        Assert.Equal("Delete 2 photos?", (await dialog.Locator("h2").InnerTextAsync()).Trim());
+        Assert.Equal("Delete 2 photos?", await dialog.EvaluateAsync<string>("d => document.getElementById(d.getAttribute('aria-labelledby')).textContent.trim()"));
+        Assert.Equal("This removes them from every gallery and deletes the original files. It can't be undone.",
+            (await dialog.Locator(".danger-consequence").InnerTextAsync()).Trim());
+
+        // Cancel first (left) with the focus; the named danger action last (right).
+        var buttons = await dialog.Locator(".danger-actions button").EvaluateAllAsync<string[]>("els => els.map(e => e.textContent.trim())");
+        Assert.Equal(["Cancel", "Delete 2 photos"], buttons);
+        var cancelBox = await dialog.GetByRole(AriaRole.Button, new() { Name = "Cancel", Exact = true }).BoundingBoxAsync();
+        var actionBox = await dialog.GetByRole(AriaRole.Button, new() { Name = "Delete 2 photos", Exact = true }).BoundingBoxAsync();
+        Assert.True(cancelBox!.X < actionBox!.X, "Cancel is not on the left of the danger action");
+        Assert.Equal("Cancel", await page.EvaluateAsync<string>("() => document.activeElement?.textContent.trim()"));
+
+        // Only one "Delete…" control in the page (the bar's), and nothing behind the dialog is live:
+        // the point under "Add to gallery…" hits the backdrop, and a click there does nothing.
+        Assert.Equal(1, await page.GetByRole(AriaRole.Button, new() { Name = "Delete…", Exact = true }).CountAsync());
+        var hit = await Bar(page).GetByRole(AriaRole.Button, new() { Name = "Add to gallery…", Exact = true }).EvaluateAsync<bool>(
+            "b => { const r = b.getBoundingClientRect(); const at = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return at === b || b.contains(at); }");
+        Assert.False(hit, "Add to gallery… is still reachable behind the open confirm");
+        var add = Bar(page).GetByRole(AriaRole.Button, new() { Name = "Add to gallery…", Exact = true });
+        await Assert.ThrowsAsync<TimeoutException>(() => add.ClickAsync(new() { Timeout = 1000 }));
+        Assert.False(await page.Locator("dialog#lib-picker").EvaluateAsync<bool>("d => d.open"));
+
+        // UI-3 / UI-4 with the confirm open: nothing filled inside it, its action is outlined danger.
+        var filled = await FilledAsync(page);
+        Assert.True(filled.Modal);
+        Assert.Empty(filled.Inside);
+        await AssertDangerOutlinedAsync(page, "library, bulk confirm open");
+
+        // The ids follow the ticks into the hidden lib-delete form.
+        var copied = await page.Locator("form#lib-delete input[name='ids']").EvaluateAllAsync<string[]>("els => els.map(e => e.value)");
+        Assert.Equal(new[] { ids[2], ids[1] }.Order(), copied.Order());
+    }
+
+    [Fact]
+    public async Task Bulk_delete_Esc_and_Cancel_close_the_confirm_and_delete_nothing()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var ids = await site.ImagesAsync(3);
+        var page = await site.OpenAsync("/admin/library");
+        await Marks(page).Nth(0).ClickAsync();
+        await Marks(page).Nth(1).ClickAsync();
+        var delete = Bar(page).GetByRole(AriaRole.Button, new() { Name = "Delete…", Exact = true });
+
+        var posts = await PostsDuring(page, async () =>
+        {
+            await OpenBulkDeleteAsync(page);
+            await page.Keyboard.PressAsync("Escape");
+            Assert.False(await BulkDialog(page).EvaluateAsync<bool>("d => d.open"), "Esc did not close the confirm");
+            await FocusedAsync(delete, "focus did not return to Delete… after Esc");
+
+            await OpenBulkDeleteAsync(page);
+            await BulkDialog(page).GetByRole(AriaRole.Button, new() { Name = "Cancel", Exact = true }).ClickAsync();
+            Assert.False(await BulkDialog(page).EvaluateAsync<bool>("d => d.open"), "Cancel did not close the confirm");
+            await FocusedAsync(delete, "focus did not return to Delete… after Cancel");
+        });
+
+        Assert.Empty(posts);
+        Assert.Equal(3, await site.Images.CountDocumentsAsync(i => ids.Contains(i.Id) && i.DeletingAt == null));
+        Assert.Equal("2 selected", await CountTextAsync(page));
+        // The page is live again.
+        await Bar(page).GetByRole(AriaRole.Button, new() { Name = "Add to gallery…", Exact = true }).ClickAsync(new() { Timeout = 2000 });
+        Assert.True(await page.Locator("dialog#lib-picker").EvaluateAsync<bool>("d => d.open"));
+    }
+
+    [Fact]
+    public async Task Bulk_delete_danger_button_deletes_the_ticked_photos()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var ids = await site.ImagesAsync(3);
+        var page = await site.OpenAsync("/admin/library");
+        await Marks(page).Nth(0).ClickAsync();
+        await Marks(page).Nth(1).ClickAsync();
+
+        await OpenBulkDeleteAsync(page);
+        await NavigatesAsync(page, () =>
+            BulkDialog(page).GetByRole(AriaRole.Button, new() { Name = "Delete 2 photos", Exact = true }).ClickAsync());
+
+        // Tiles are newest first: the first two marks were ids[2] and ids[1].
+        Assert.Equal(1, await site.Images.CountDocumentsAsync(i => ids.Contains(i.Id) && i.DeletingAt == null));
+        Assert.Equal(1, await site.Images.CountDocumentsAsync(i => i.Id == ids[0] && i.DeletingAt == null));
+    }
+
+    [Fact]
+    public async Task Single_photo_delete_in_the_side_panel_is_a_modal_confirm_with_cancel()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var ids = await site.ImagesAsync(2);
+        var page = await site.OpenAsync($"/admin/library?open={ids[0]}");
+        var trigger = page.Locator(".side-panel .danger-confirm .danger-trigger");
+        Assert.Equal("Delete photo…", (await trigger.InnerTextAsync()).Trim());
+
+        await trigger.ClickAsync();
+        var dialog = page.Locator(".side-panel dialog.danger-dialog");
+        Assert.True(await IsModalAsync(dialog));
+        Assert.Equal("Delete “Photo 1”?", (await dialog.Locator("h2").InnerTextAsync()).Trim());
+        Assert.Equal("Cancel", await page.EvaluateAsync<string>("() => document.activeElement?.textContent.trim()"));
+        await dialog.GetByRole(AriaRole.Button, new() { Name = "Cancel", Exact = true }).ClickAsync();
+        Assert.False(await dialog.EvaluateAsync<bool>("d => d.open"));
+        await FocusedAsync(trigger, "focus did not return to Delete photo…");
+
+        await trigger.ClickAsync();
+        await NavigatesAsync(page, () => dialog.GetByRole(AriaRole.Button, new() { Name = "Delete photo", Exact = true }).ClickAsync());
+        Assert.Equal(0, await site.Images.CountDocumentsAsync(i => i.Id == ids[0] && i.DeletingAt == null));
+        Assert.Equal(1, await site.Images.CountDocumentsAsync(i => i.Id == ids[1] && i.DeletingAt == null));
     }
 
     // ── FR-003: no owner script on public pages ────────────────────────────────────────────
