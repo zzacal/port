@@ -12,10 +12,23 @@ public static class ExifFormat
         if (make is null && model is null) return null;
         if (make is null) return model;
         if (model is null) return make;
-        // Drop Make when Model already starts with Make (case-insensitive)
+        // Drop Make when Model already names the brand (case-insensitive):
+        // - Model starts with the whole Make ("Canon" / "Canon EOS R5"), or
+        // - Model's first word is Make's first word, for makes with a company suffix
+        //   ("LEICA CAMERA AG" / "LEICA Q3 43", "NIKON CORPORATION" / "NIKON Z 8").
+        //   Whole words only, so "OM Digital Solutions" / "OMX1" keeps the make.
         if (model.StartsWith(make, StringComparison.OrdinalIgnoreCase))
             return model;
+        if (string.Equals(FirstWord(model), FirstWord(make), StringComparison.OrdinalIgnoreCase))
+            return model;
         return $"{make} {model}";
+    }
+
+    private static string FirstWord(string s)
+    {
+        s = s.Trim();
+        var space = s.IndexOf(' ');
+        return space < 0 ? s : s[..space];
     }
 
     public static string? Lens(Exif? exif)

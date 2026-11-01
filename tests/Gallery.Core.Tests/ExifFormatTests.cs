@@ -39,6 +39,22 @@ public class ExifFormatTests
     public void Camera_ModelStartsWithMakeCaseInsensitive_DropsPrefix() =>
         Assert.Equal("canon EOS R5", ExifFormat.Camera(new Exif("CANON", "canon EOS R5", null, null, null, null, null, null)));
 
+    // Owner decision: makes that carry a company suffix ("LEICA CAMERA AG") still collapse when the
+    // model names the brand, by matching the make's FIRST WORD as a whole word of the model.
+    [Theory]
+    [InlineData("LEICA CAMERA AG", "LEICA Q3 43", "LEICA Q3 43")]
+    [InlineData("NIKON CORPORATION", "NIKON Z 8", "NIKON Z 8")]
+    [InlineData("RICOH IMAGING COMPANY, LTD.", "RICOH GR III", "RICOH GR III")]
+    [InlineData("Canon", "Canon EOS R5", "Canon EOS R5")]
+    [InlineData("FUJIFILM", "X100VI", "FUJIFILM X100VI")]
+    [InlineData("SONY", "ILCE-7M4", "SONY ILCE-7M4")]
+    // Whole word only: "OM" is a prefix of "OMX1" but not its first word, so the make stays.
+    [InlineData("OM Digital Solutions", "OMX1", "OM Digital Solutions OMX1")]
+    // Model equal to the make's first word.
+    [InlineData("LEICA CAMERA AG", "LEICA", "LEICA")]
+    public void Camera_ModelNamingTheBrand_DropsTheMake(string make, string model, string expected) =>
+        Assert.Equal(expected, ExifFormat.Camera(new Exif(make, model, null, null, null, null, null, null)));
+
     // Lens: null Exif
     [Fact]
     public void Lens_NullExif_ReturnsNull() =>
