@@ -85,3 +85,17 @@ P7  repo read (not a probe, a finding)
     => an ImageDoc inserted by upload would be DELETED by the next seed run (FR-035 violated).
        Plan: SeedKey/SourceHash become nullable with [BsonIgnoreIfNull]; [SAFETY] test seeds after an
        upload and asserts the uploaded image survives.
+
+== P9 (T041, parent, 2026-11-01): S3Proxy CORS preflight ==
+Image: andrewgaul/s3proxy@sha256:87662b2a… (same as S3ProxyFixture), env as the fixture plus
+S3PROXY_CORS_ALLOW_ORIGINS=http://localhost:5092, S3PROXY_CORS_ALLOW_METHODS=PUT,
+S3PROXY_CORS_ALLOW_HEADERS=content-type. The container log confirmed that CORS config was loaded
+("CORS allowed origins: [http://localhost:5092]", methods [PUT], headers [content-type]).
+OPTIONS /probe-bucket/k.jpg and OPTIONS / with Origin http://localhost:5092,
+Access-Control-Request-Method PUT, Access-Control-Request-Headers content-type → 403 Forbidden,
+no Access-Control-* headers. Same as P2.
+The follow-up variants (header case, S3PROXY_CORS_ALLOW_ALL) were not run: the approval prompt
+timed out in the unattended run. Container stopped by id.
+Result: the preflight is NOT served by the emulator in this configuration → decisions row 35
+fallback applies (decisions row 63). The __Host- cookie question is left to T044, which falls
+back to https://localhost with the dev cert if Chrome drops the cookie on http.

@@ -583,7 +583,7 @@ completes, with no browser.
 
 ## Phase 8: User Story 1 (cont.): browser worker and page script, Batch G
 
-- [ ] T041 (high tier, parent, ≤ 2 minutes) **S3Proxy CORS preflight probe**, the FIRST step of
+- [X] T041 (high tier, parent, ≤ 2 minutes) **S3Proxy CORS preflight probe**, the FIRST step of
   the browser e2e work (decisions row 35, research R-14). Start a throwaway S3Proxy container
   (same pinned image as `S3ProxyFixture`) with `S3PROXY_CORS_ALLOW_ORIGINS=http://localhost:5092`,
   `S3PROXY_CORS_ALLOW_METHODS=PUT`, `S3PROXY_CORS_ALLOW_HEADERS=content-type`. Then
