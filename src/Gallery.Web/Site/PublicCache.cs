@@ -14,6 +14,12 @@ public static class PublicCache
     public const string PolicyName = "public-page";
 
     /// <summary>
+    /// 009 (research R-07, FR-044): per-page tag added to every cached public response beside
+    /// <see cref="PolicyName"/>, so one page can be evicted with EvictByTagAsync. The path has no query.
+    /// </summary>
+    public static string PageTag(string path) => $"page:{path}";
+
+    /// <summary>
     /// Registers AddOutputCache with the public-page policy. Call before app.Build().
     /// </summary>
     public static IServiceCollection AddPublicOutputCache(this IServiceCollection services)

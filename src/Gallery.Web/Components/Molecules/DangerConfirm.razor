@@ -1,12 +1,30 @@
-@* Admin danger-confirm molecule (feature 005): expandable details panel for a destructive action. *@
-<details class="danger-confirm" open="@Open">
-    <Button Element="ButtonElement.Summary" Variant="ButtonVariant.Danger">@Action&#x2026;</Button>
-    <div class="confirm-body" role="group" aria-label="@($"Confirm {Action}")">
-        <p><strong>@Action &#x201C;@Target&#x201D;?</strong> @Consequence</p>
-        <Button Variant="ButtonVariant.Danger" Type="submit" FormId="@FormId" Name="@Name" Value="@Value">@ConfirmLabel</Button>
-        <span class="cancel-hint">Click &#x201C;@Action&#x2026;&#x201D; again to cancel.</span>
-    </div>
-</details>
+@* Admin danger-confirm molecule (feature 005, reworked): a "{Action}…" trigger that opens a modal
+   confirmation <dialog> (role=alertdialog). Confirmation-dialog guidance (NN/g "Confirmation Dialogs
+   Can Prevent User Errors", Apple HIG Alerts, Carbon dialog pattern):
+   - the title restates the specific action and target; the consequence follows it;
+   - the buttons name what happens ("Delete photo", not "Yes"), with a button titled exactly "Cancel";
+   - Cancel is first (leading/left), the outlined danger action last (trailing/right), one action only;
+   - initial focus goes to Cancel (autofocus), never to the destructive button; Esc cancels;
+   - the dialog is opened with showModal(), so the page behind it is inert.
+   Opening/closing uses HTML invoker commands (command / commandfor); admin-assets/library.js (loaded
+   on every page with a DangerConfirm except /admin/upload, whose upload.js drives its own) is the
+   fallback for browsers without them and returns focus to the trigger on close. Open=true renders the
+   dialog open in place (non-modal), for the /ui specimens and the upload footer's confirmdiscard
+   template, which upload.js re-opens modally. *@
+<div class="danger-confirm">
+    @if (Trigger)
+    {
+        <Button Variant="ButtonVariant.Danger" Type="button" class="danger-trigger" command="show-modal" commandfor="@DialogId" aria-haspopup="dialog">@Action&#x2026;</Button>
+    }
+    <dialog id="@DialogId" class="danger-dialog" role="alertdialog" aria-modal="true" aria-labelledby="@($"{DialogId}-title")" aria-describedby="@($"{DialogId}-desc")" open="@Open">
+        <h2 id="@($"{DialogId}-title")" class="danger-title">@Heading</h2>
+        <p id="@($"{DialogId}-desc")" class="danger-consequence">@Consequence</p>
+        <div class="danger-actions">
+            <Button Variant="ButtonVariant.Quiet" Type="button" Name="action" Value="cancel" class="danger-cancel" command="close" commandfor="@DialogId" autofocus>Cancel</Button>
+            <Button Variant="ButtonVariant.Danger" Type="submit" FormId="@FormId" Name="@Name" Value="@Value">@ConfirmLabel</Button>
+        </div>
+    </dialog>
+</div>
 
 @code {
     [Parameter, EditorRequired] public string Action { get; set; } = "";
@@ -17,4 +35,28 @@
     [Parameter] public string? FormId { get; set; }
     [Parameter] public string? Name { get; set; }
     [Parameter] public string? Value { get; set; }
+
+    /// <summary>The dialog's id. Defaults to "{FormId}-confirm", else "confirm-{action-target}". Set it
+    /// when two confirms on one page share a form, or an action and target.</summary>
+    [Parameter] public string? Id { get; set; }
+
+    /// <summary>The dialog title. Defaults to "{Action} “{Target}”?".</summary>
+    [Parameter] public string? Title { get; set; }
+
+    /// <summary>False renders only the dialog, for a confirm opened by a control elsewhere (the library
+    /// selection bar's "Delete…"), so the page never shows two identical triggers.</summary>
+    [Parameter] public bool Trigger { get; set; } = true;
+
+    private string Heading => Title ?? $"{Action} \u201C{Target}\u201D?";
+
+    private string DialogId => Id ?? (FormId is { Length: > 0 } f ? $"{f}-confirm" : "confirm-" + Slug($"{Action} {Target}"));
+
+    /// <summary>Deterministic (the /ui pages are compared byte for byte), so specimens that repeat an
+    /// action and target without a form pass <see cref="Id"/>.</summary>
+    private static string Slug(string text)
+    {
+        var chars = text.ToLowerInvariant().Select(c => char.IsAsciiLetterOrDigit(c) ? c : '-').ToArray();
+        var slug = string.Join('-', new string(chars).Split('-', StringSplitOptions.RemoveEmptyEntries));
+        return slug.Length == 0 ? "danger" : slug;
+    }
 }

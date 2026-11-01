@@ -158,13 +158,14 @@ public class AdminAccessTests(MongoFixture mongo) : IAsyncLifetime
         AssertNoindex(oidcResp);
     }
 
-    // ── Owner with session GET /admin/upload → 200 (008 FR-001); library still 404 until 009 ──
+    // ── Owner with session GET /admin/upload and /admin/library → 200; unbuilt routes 404 ──
     // Requirement change (008 T035, decisions row 38): this test asserted 404 for /admin/upload
-    // while no upload page existed. 008 builds it, so the upload assertion flips to 200 and the
-    // "not built yet" guard moves to /admin/library. No other assertion in this file changed.
+    // while no upload page existed; 008 flipped it to 200. Requirement change (009 T036, 009
+    // decisions row 56): 009 builds the library, so it flips to 200 too and the "not built" guard
+    // moves to /admin/not-built. No other assertion in this file changed.
 
     [Fact]
-    public async Task Owner_GetAdminUpload_returns_200_and_library_still_404()
+    public async Task Owner_GetAdminUpload_and_library_return_200()
     {
         var host = await CreateHostWithClaimedOwner();
         await using var _ = host;
@@ -173,7 +174,10 @@ public class AdminAccessTests(MongoFixture mongo) : IAsyncLifetime
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
 
         var library = await host.GetAsync("/admin/library");
-        Assert.Equal(HttpStatusCode.NotFound, library.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, library.StatusCode);
+
+        var notBuilt = await host.GetAsync("/admin/not-built");
+        Assert.Equal(HttpStatusCode.NotFound, notBuilt.StatusCode);
     }
 
     // ── FR-022: LogLines has http.request entries with status and duration ────

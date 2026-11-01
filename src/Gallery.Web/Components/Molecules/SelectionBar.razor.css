@@ -18,6 +18,12 @@
     flex: 1;
 }
 
+/* 009 K5: the bar renders at Count 0 with the hidden attribute (library.js toggles it). The
+   display: flex above would otherwise override the UA [hidden] rule and leave it visible. */
+.selection-bar[hidden] {
+    display: none;
+}
+
 .selection-bar:focus-visible {
     outline: 2px solid var(--color-text);
     outline-offset: 2px;

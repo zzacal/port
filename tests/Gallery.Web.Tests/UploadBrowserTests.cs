@@ -305,6 +305,67 @@ public sealed class UploadBrowserTests(UploadBrowserFixture fx)
         }
     }
 
+    /// <summary>Waits (briefly) for <paramref name="el"/> to hold focus: dialogs restore focus on their queued 'close' event.</summary>
+    private static async Task FocusedAsync(ILocator el, string because)
+    {
+        for (var i = 0; i < 40; i++)
+        {
+            if (await el.EvaluateAsync<bool>("b => b === document.activeElement")) return;
+            await Task.Delay(25);
+        }
+        Assert.Fail(because + ": " + await el.Page.EvaluateAsync<string>("() => document.activeElement?.outerHTML.slice(0, 200) ?? 'none'"));
+    }
+
+    // ── discard: the footer's DangerConfirm is a modal with Cancel ──────────────────────────
+
+    [Fact]
+    public async Task Discard_batch_confirms_in_a_modal_cancel_keeps_the_batch_and_discard_discards_it()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var page = await site.OpenUploadAsync();
+        await Pick(page, Fixture("orientation-6.jpg"), Fixture("gps-camera.jpg"));
+        await WaitForState(page, "orientation-6.jpg", "succeeded");
+        await WaitForState(page, "gps-camera.jpg", "succeeded");
+
+        var footer = page.Locator("upload-batch > .batch-footer");
+        var trigger = footer.Locator(".danger-confirm .danger-trigger");
+        Assert.Equal("Discard batch…", (await trigger.InnerTextAsync()).Trim());
+        var batches = site.Db.GetCollection<BatchDoc>(BatchStore.CollectionName);
+
+        // Open: a modal titled "Discard this batch?" with the live count, Cancel focused, page inert.
+        await trigger.ClickAsync();
+        var dialog = footer.Locator("dialog.danger-dialog");
+        Assert.True(await dialog.EvaluateAsync<bool>("d => d.open && d.matches(':modal')"));
+        Assert.Equal(1, await page.Locator("dialog[open]").CountAsync());
+        Assert.Equal("Discard this batch?", (await dialog.Locator("h2").InnerTextAsync()).Trim());
+        Assert.Equal("All 2 uploaded files are deleted. Nothing is added to your library.",
+            (await dialog.Locator(".danger-consequence").InnerTextAsync()).Trim());
+        Assert.Equal(["Cancel", "Discard batch"],
+            await dialog.Locator(".danger-actions button").EvaluateAllAsync<string[]>("els => els.map(e => e.textContent.trim())"));
+        Assert.Equal("Cancel", await page.EvaluateAsync<string>("() => document.activeElement?.textContent.trim()"));
+        var add = footer.Locator(".bf-actions > button.btn-primary");
+        await Assert.ThrowsAsync<TimeoutException>(() => add.ClickAsync(new() { Timeout = 1000 }));
+
+        // Esc and Cancel close it, nothing is discarded, and focus returns to the trigger.
+        await page.Keyboard.PressAsync("Escape");
+        Assert.Equal(0, await page.Locator("dialog[open]").CountAsync());
+        await FocusedAsync(trigger, "focus did not return after Esc");
+        await trigger.ClickAsync();
+        await footer.Locator("dialog.danger-dialog").GetByRole(AriaRole.Button, new() { Name = "Cancel", Exact = true }).ClickAsync();
+        Assert.Equal(0, await page.Locator("dialog[open]").CountAsync());
+        await FocusedAsync(trigger, "focus did not return after Cancel: ");
+        Assert.Equal(1, await batches.CountDocumentsAsync(b => b.State == BatchStates.Open));
+        Assert.Equal(2, await Tiles(page).CountAsync());
+
+        // The danger action discards.
+        await trigger.ClickAsync();
+        await footer.Locator("dialog.danger-dialog").GetByRole(AriaRole.Button, new() { Name = "Discard batch", Exact = true }).ClickAsync();
+        await page.WaitForFunctionAsync("() => document.querySelectorAll('upload-batch .cs > .batch-item').length === 0",
+            null, new() { Timeout = WaitMs });
+        Assert.Equal(0, await batches.CountDocumentsAsync(b => b.State == BatchStates.Open));
+        Assert.Equal(1, await batches.CountDocumentsAsync(b => b.State == BatchStates.Discarded));
+    }
+
     // ── FR-006: no script → the notice, and no control that cannot work ─────────────────────
 
     [Fact]

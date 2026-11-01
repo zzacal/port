@@ -1,0 +1,47 @@
+/* 009 gallery list (contracts/components.md C2). Wrappers and captions authored here carry this
+   page's scope; Tile's own elements need ::deep. No @media: the grid's column counts come from
+   ContactSheet. */
+.gal-heading { margin: 0 0 var(--space-s); font-size: var(--type-brand); }
+.gal-result { margin: 0 0 var(--space-s); font-size: var(--type-body); }
+.gal-empty { font-size: var(--type-body); color: var(--color-muted); }
+
+reorder-grid { display: block; }
+
+/* A gallery with no photos: the same 4:3 cell as Tile's, left blank (Tile's empty branch has no
+   caption slot, so the card is drawn here). */
+.gal-tile { display: block; min-width: 0; text-align: center; }
+.gal-tile .cell {
+    aspect-ratio: var(--cell-ratio);
+    width: 100%;
+    margin-bottom: 8px;
+    background: var(--color-surface);
+    border-radius: 4px;
+}
+
+/* Private galleries are dimmed (photo only; the controls stay full strength). */
+.gal ::deep .is-private .cell { opacity: 0.55; }
+
+/* UI-2: status, handle, switch, View and Edit sit under the title, never over the photo. */
+.gal-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 4px 12px;
+    margin-top: 4px;
+    font-size: var(--type-caption);
+}
+.gal-status { color: var(--color-muted); }
+
+/* New gallery dialog */
+.gal-new {
+    max-width: 32rem;
+    width: calc(100% - 2 * var(--space-s));
+    border: 1px solid var(--color-rule);
+    border-radius: 6px;
+    background: var(--color-bg);
+    color: var(--color-text);
+    padding: var(--space-m);
+}
+.gal-new h2 { margin: 0 0 var(--space-s); font-size: var(--type-body); }
+.gal-new-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: var(--space-s); }

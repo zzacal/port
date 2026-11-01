@@ -1,9 +1,12 @@
-@* Admin selection-bar molecule (feature 005): sticky bar showing selected count and batch actions. *@
-@if (Count > 0)
+@* Admin selection-bar molecule (feature 005): sticky bar showing selected count and batch actions.
+   009 K5 (all optional; the default render is byte-identical): Render keeps the bar in the markup at
+   Count 0 with the hidden attribute (the page script toggles it), SelectAllLabel adds a Quiet
+   button after Clear, Limit renders data-limit (the server's selection cap, UI-7). *@
+@if (Count > 0 || Render)
 {
-    <div class="selection-bar" role="region" aria-label="Selection">
+    <div class="selection-bar" role="region" aria-label="Selection" hidden="@(Count == 0)" data-limit="@Limit">
         <span class="count">@Count selected</span>
-        <Button Variant="ButtonVariant.Quiet" Type="button">Clear</Button>
+        <Button Variant="ButtonVariant.Quiet" Type="button">Clear</Button>@SelectAll
         <span class="spacer"></span>
         @ChildContent
     </div>
@@ -13,4 +16,16 @@
     [Parameter] public int Count { get; set; }
     [Parameter] public int Total { get; set; }
     [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>009 K5: render the bar even at Count 0, carrying the <c>hidden</c> attribute.</summary>
+    [Parameter] public bool Render { get; set; }
+
+    /// <summary>009 K5: adds a Quiet <c>type="button"</c> with this label after Clear.</summary>
+    [Parameter] public string? SelectAllLabel { get; set; }
+
+    /// <summary>009 K5: the selection cap, rendered as <c>data-limit</c>.</summary>
+    [Parameter] public int? Limit { get; set; }
+
+    private RenderFragment? SelectAll => SelectAllLabel is null ? null
+        : @<Button Variant="ButtonVariant.Quiet" Type="button">@SelectAllLabel</Button>;
 }

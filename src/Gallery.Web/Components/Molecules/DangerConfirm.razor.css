@@ -2,26 +2,42 @@
     display: block;
 }
 
-.danger-confirm:focus-visible {
-    outline: 2px solid var(--color-text);
-    outline-offset: 2px;
+.danger-dialog {
+    max-width: 28rem;
+    width: calc(100% - 2 * var(--space-s));
+    border: 1px solid var(--color-rule);
+    border-top: 4px solid var(--color-danger);
+    border-radius: 6px;
+    background: var(--color-bg);
+    color: var(--color-text);
+    padding: var(--space-m);
 }
 
-.confirm-body {
-    margin-top: 8px;
-    padding: 12px;
-    border-left: 4px solid var(--color-danger);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+.danger-dialog::backdrop {
+    background: rgb(0 0 0 / 0.4);
 }
 
-.confirm-body p {
+/* Open=true without showModal() (the /ui specimens): show it in place rather than floating. */
+.danger-dialog[open]:not(:modal) {
+    position: static;
+    margin: 8px 0 0;
+    width: auto;
+}
+
+.danger-title {
+    margin: 0 0 8px;
     font-size: var(--type-body);
-    margin: 0;
 }
 
-.cancel-hint {
-    font-size: var(--type-caption);
-    color: var(--color-muted);
+.danger-consequence {
+    margin: 0;
+    font-size: var(--type-body);
+}
+
+/* Cancel on the leading side, the danger action trailing (Apple HIG, Carbon). */
+.danger-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: var(--space-s);
 }

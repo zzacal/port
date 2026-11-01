@@ -1,6 +1,8 @@
 using Gallery.Web.Admin;
 using Gallery.Web.Admin.Auth;
 using Gallery.Web.Data;
+using Gallery.Web.Edge;
+using Gallery.Web.Library;
 using Gallery.Web.Observability;
 using Gallery.Web.Site;
 using Gallery.Web.Storage;
@@ -86,6 +88,9 @@ public static class AppBuilder
 
         // ── Upload pipeline (008; all registrations live in UploadSetup) ─────
         builder.Services.AddUpload(builder.Configuration);
+        // ── Library and edge (009; all registrations live in LibrarySetup / EdgeSetup) ──
+        builder.Services.AddLibrary(builder.Configuration);
+        builder.Services.AddEdge(builder.Configuration);
         builder.Services.TryAddSingleton(TimeProvider.System);
         // ── Build ────────────────────────────────────────────────────────────
         var app = builder.Build();

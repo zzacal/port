@@ -1,0 +1,66 @@
+== p95-selftest/plain.log
+format: plain message lines
+PASS SC-002 http.request GET /admin/library 200 n=20 p95=109.83 ms <= 500
+PASS SC-003 POST /admin/library/images/{iid} n=5 p95=63.07 ms <= 500
+PASS SC-003 POST /admin/library/add n=5 p95=59.43 ms <= 500
+PASS SC-003 POST /admin/library/delete n=5 p95=65.71 ms <= 500
+PASS SC-003 POST /admin/library/images/{iid}/delete n=5 p95=71.48 ms <= 500
+PASS SC-003 POST /admin/galleries n=5 p95=72.98 ms <= 500
+PASS SC-003 POST /admin/galleries/order n=5 p95=72.15 ms <= 500
+PASS SC-003 POST /admin/galleries/{gid}/visibility n=5 p95=45.48 ms <= 500
+PASS SC-003 POST /admin/galleries/{gid} n=5 p95=74.07 ms <= 500
+PASS SC-003 POST /admin/galleries/{gid}/order n=5 p95=76.87 ms <= 500
+PASS SC-003 POST /admin/galleries/{gid}/cover n=5 p95=79.62 ms <= 500
+PASS SC-003 POST /admin/galleries/{gid}/remove n=5 p95=79.85 ms <= 500
+PASS SC-003 POST /admin/galleries/{gid}/delete n=5 p95=55.56 ms <= 500
+PASS SC-005 edge.lag n=8 max=823.00 ms <= 60000
+
+ALL PASS
+exit=0
+
+== p95-selftest/json.log
+format: JSON console log
+PASS SC-002 http.request GET /admin/library 200 n=20 p95=109.83 ms <= 500
+PASS SC-003 POST /admin/library/images/{iid} n=5 p95=63.07 ms <= 500
+PASS SC-003 POST /admin/library/add n=5 p95=59.43 ms <= 500
+PASS SC-003 POST /admin/library/delete n=5 p95=65.71 ms <= 500
+PASS SC-003 POST /admin/library/images/{iid}/delete n=5 p95=71.48 ms <= 500
+PASS SC-003 POST /admin/galleries n=5 p95=72.98 ms <= 500
+PASS SC-003 POST /admin/galleries/order n=5 p95=72.15 ms <= 500
+PASS SC-003 POST /admin/galleries/{gid}/visibility n=5 p95=45.48 ms <= 500
+PASS SC-003 POST /admin/galleries/{gid} n=5 p95=74.07 ms <= 500
+PASS SC-003 POST /admin/galleries/{gid}/order n=5 p95=76.87 ms <= 500
+PASS SC-003 POST /admin/galleries/{gid}/cover n=5 p95=79.62 ms <= 500
+PASS SC-003 POST /admin/galleries/{gid}/remove n=5 p95=79.85 ms <= 500
+PASS SC-003 POST /admin/galleries/{gid}/delete n=5 p95=55.56 ms <= 500
+PASS SC-005 edge.lag n=8 max=823.00 ms <= 60000
+
+ALL PASS
+exit=0
+
+== p95-selftest/wrong-format.log
+format: plain message lines
+FAIL SC-002 http.request GET /admin/library 200 n=0 (no matching events)
+FAIL SC-003 POST /admin/library/images/{iid} n=0 (no matching events)
+FAIL SC-003 POST /admin/library/add n=0 (no matching events)
+FAIL SC-003 POST /admin/library/delete n=0 (no matching events)
+FAIL SC-003 POST /admin/library/images/{iid}/delete n=0 (no matching events)
+FAIL SC-003 POST /admin/galleries n=0 (no matching events)
+FAIL SC-003 POST /admin/galleries/order n=0 (no matching events)
+FAIL SC-003 POST /admin/galleries/{gid}/visibility n=0 (no matching events)
+FAIL SC-003 POST /admin/galleries/{gid} n=0 (no matching events)
+FAIL SC-003 POST /admin/galleries/{gid}/order n=0 (no matching events)
+FAIL SC-003 POST /admin/galleries/{gid}/cover n=0 (no matching events)
+FAIL SC-003 POST /admin/galleries/{gid}/remove n=0 (no matching events)
+FAIL SC-003 POST /admin/galleries/{gid}/delete n=0 (no matching events)
+FAIL SC-005 edge.lag n=0 (no matching events)
+
+14 FAILED
+exit=14
+
+== p95-selftest/empty.log
+FAIL missing, unreadable or empty log
+
+1 FAILED
+exit=1
+

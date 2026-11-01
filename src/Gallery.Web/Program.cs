@@ -1,6 +1,12 @@
+if (args.Length > 0 && args[0] == "remove-seeded")
+{
+    return await Gallery.Web.Maintenance.RemoveSeededCommand.RunAsync(args, Console.Out);
+}
+
 if (args.Length > 0 && args[0] == "seed")
 {
-    return await Gallery.Web.Seed.SeedCommand.RunAsync(args, Console.Out);
+    Console.Out.WriteLine("Unknown command: seed");
+    return 64;
 }
 
 Gallery.Web.AppBuilder.Build(args).Run();

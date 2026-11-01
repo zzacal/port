@@ -1,0 +1,63 @@
+009 plan probes (2026-11-01, unattended run). Throwaway probe sources lived in /tmp/probe009.
+
+P1  Local Mongo topology (dev container gallery-mongo, mongo:8)
+    command: docker exec gallery-mongo mongosh --eval 'db.hello()' (fields printed: setName, isWritablePrimary, maxWireVersion)
+    result:  {"setName":null,"isWritablePrimary":true,"maxWire":28}
+    meaning: the dev database is a STANDALONE server (no replica set), and the Testcontainers MongoDb
+             fixture starts the same image with no replica-set option. Multi-document transactions are
+             not available on either target, so the 009 write paths are designed as ordered,
+             idempotent single-document updates (research R-03), not transactions.
+
+P2  Origin output cache: per-page eviction by tag (FR-044)
+    probe:   /tmp/probe009/oc (minimal app adding tags through IOutputCacheFeature, then
+             IOutputCacheStore.EvictByTagAsync). Built OK.
+    result:  NOT RUN. The curl step against the probe server raised an approval prompt that was
+             denied/timed out (unattended run: treated as "no", not retried). The probe server was
+             stopped by its own pid.
+    fallback (research R-07): decide from the framework source instead of a run, and make the first
+             implement task a failing integration test with Site:OutputCache=true that proves both
+             (a) a public page IS served from the output cache on a second request and (b) the
+             009 eviction drops exactly the affected page. UNVERIFIED suspicion, from the
+             framework's documented model (a policy is applied through CacheOutput() endpoint
+             metadata or a base policy, and IOutputCacheFeature exists only for such requests): the
+             public endpoints call no CacheOutput() and register no base policy, so the 006
+             "public-page" policy may never apply, and the tag added in StatusAndHeadersResult may go
+             to a feature that is null. Recorded as decisions row 23 and as a plan risk; the
+             test in (a) settles it before any eviction code is written.
+
+P3  S3 multi-object delete (DeleteObjects) against S3Proxy with the app's client settings
+    image:   andrewgaul/s3proxy@sha256:87662b2a5afcdfa5f478a1c61650bae4c87bbd15f6ff2823236bcfd66ef7fe04
+             (the S3ProxyFixture digest), started on 127.0.0.1:59009, stopped after the run.
+    client:  AWSSDK.S3 4.0.104.8, ForcePathStyle, AuthenticationRegion=auto, checksums WHEN_REQUIRED
+    result:  deleteObjects keys=250 (200 existed) deleted=250 errors=0 ms=104 ; remaining=0
+    meaning: one DeleteObjects call removes up to 1000 keys, and keys that do not exist are
+             reported as deleted (no error), which matches "already missing counts as deleted"
+             (FR-016). R2 documents DeleteObjects support; it is exercised against R2 only in the
+             on-demand GALLERY_R2_TESTS suite. Research R-05 still keeps the per-key DeleteAsync
+             path for its per-key failure logging; DeleteObjects is the recorded alternative.
+
+P4  Cloudflare purge API facts (fetched docs, 2026-11-01; no real Cloudflare call made)
+    https://developers.cloudflare.com/cache/how-to/purge-cache/ - "Single-file purge limits ...
+      Free: 800 URLs per second ... Max operations per request 100". Fetch: OK
+    https://developers.cloudflare.com/api/resources/cache/methods/purge/ - "POST
+      /zones/{zone_id}/purge_cache ... files: Full URLs ... Accepted Permissions: Cache Purge";
+      rate-limit error code 1134 "Unable to purge, rate limit reached". Fetch: OK
+
+P2b Origin output cache, settled by test (009 T002, tests/Gallery.Web.Tests/OutputCacheEvictionTests.cs)
+    host:    AdminHost.CreateAsync with Site:OutputCache=true; one public gallery with two images.
+    before:  RED, written and run before any source change (head bbadc16, src identical to 27eef20):
+               Home_second_GET_is_served_from_the_output_cache
+                 Assert.Equal() Failure: Values differ / Expected: 1 / Actual: 2   (op.timing db.site.read)
+               Gallery_and_photo_second_GET_is_served_from_the_output_cache
+                 Assert.Equal() Failure: Values differ / Expected: 1 / Actual: 2   (op.timing db.gallery.read)
+             Both requests returned 200 first, so the failure is the read-count assertion, not an
+             exception. The P2 suspicion is confirmed: the 006 "public-page" policy never applied,
+             because no public endpoint carried CacheOutput() and no base policy exists.
+    fix:     PublicEndpoints attaches .CacheOutput(PublicCache.PolicyName) to "/", "/g/{id}/{slug}"
+             and "/g/{id}/{slug}/{imageId}" when Site:OutputCache is true (not the /g/{id} short
+             route; the default policy caches 200 only, so no 301/404). PublicCache.PageTag(path) =
+             "page:{path}", added by StatusAndHeadersResult beside the "public-page" tag.
+    after:   GREEN, all three facts, including Evicting_a_page_tag_drops_only_that_page.
+    break:   commenting out the PageTag line in StatusAndHeadersResult turned the eviction fact RED:
+               Assert.Equal() Failure: Values differ / Expected: 2 / Actual: 1  (db.gallery.read after evict)
+             then restored (file touched) and green again.

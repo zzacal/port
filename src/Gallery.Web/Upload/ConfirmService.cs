@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Gallery.Web.Data;
+using Gallery.Web.Library;
 using Gallery.Web.Observability;
 using Gallery.Web.Storage;
 using MongoDB.Driver;
@@ -31,6 +32,8 @@ public sealed class ConfirmService
     public const string ImmutableCacheControl = "public, max-age=31536000, immutable";
     public const string MasterCacheControl = "private, no-store";
     public const int MaxStorageOpsInFlight = 8;
+    /// <summary>The documented default of <see cref="LibraryOptions.TitleMax"/>, which is the cap
+    /// confirm applies (009 T007).</summary>
     public const int MaxTitleChars = 200;
 
     private readonly BatchStore _store;
@@ -39,6 +42,7 @@ public sealed class ConfirmService
     private readonly OpTimer _timer;
     private readonly TimeProvider _clock;
     private readonly UploadOptions _options;
+    private readonly LibraryOptions _library;
     private readonly ILogger _log;
     private readonly string _pub;
     private readonly string _priv;
@@ -50,7 +54,8 @@ public sealed class ConfirmService
     /// </param>
     public ConfirmService(
         BatchStore store, ImageStore images, StorageOptions storage, IMongoDatabase db, OpTimer timer,
-        TimeProvider clock, UploadOptions options, ILoggerFactory loggers, Func<string, Task>? afterItem = null)
+        TimeProvider clock, UploadOptions options, LibraryOptions library, ILoggerFactory loggers,
+        Func<string, Task>? afterItem = null)
     {
         _store = store;
         _images = images;
@@ -58,6 +63,7 @@ public sealed class ConfirmService
         _timer = timer;
         _clock = clock;
         _options = options;
+        _library = library;
         _log = loggers.CreateLogger(UploadEndpoints.LogCategory);
         _pub = storage.PublicBucket ?? string.Empty;
         _priv = storage.PrivateBucket ?? string.Empty;
@@ -66,31 +72,14 @@ public sealed class ConfirmService
 
     public static string MasterKey(string itemId) => $"masters/{itemId}.jpg";
 
-    // A dev database seeded before 008 has a non-partial unique seedKey_1 index, which refuses a
-    // second image with no seedKey. Upgrade it once per database per process before the first
-    // confirm (decisions row 60). A failed attempt is forgotten so the next confirm retries.
-    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, Lazy<Task>> SeedKeyIndexEnsured = new();
-
-    private async Task EnsureSeedKeyIndexOnceAsync()
-    {
-        var db = _imageDocs.Database;
-        var key = $"{db.Client.Settings.Server}/{db.DatabaseNamespace.DatabaseName}";
-        var lazy = SeedKeyIndexEnsured.GetOrAdd(key, _ => new Lazy<Task>(() => Gallery.Web.Seed.Seeder.EnsureSeedKeyIndexesAsync(db)));
-        try { await lazy.Value; }
-        catch
-        {
-            SeedKeyIndexEnsured.TryRemove(new KeyValuePair<string, Lazy<Task>>(key, lazy));
-            throw;
-        }
-    }
-
     /// <summary>data-model "Library image" title: file name without its last extension, trimmed,
-    /// at most 200 characters, "Untitled" when empty (D-13).</summary>
-    public static string TitleFrom(string fileName)
+    /// at most <paramref name="maxChars"/> characters (confirm passes <c>Library:TitleMax</c>),
+    /// "Untitled" when empty (D-13).</summary>
+    public static string TitleFrom(string fileName, int maxChars = MaxTitleChars)
     {
         var dot = fileName.LastIndexOf('.');
         var t = (dot >= 0 ? fileName[..dot] : fileName).Trim();
-        if (t.Length > MaxTitleChars) t = t[..MaxTitleChars].TrimEnd();
+        if (t.Length > maxChars) t = t[..maxChars].TrimEnd();
         return t.Length == 0 ? "Untitled" : t;
     }
 
@@ -101,7 +90,9 @@ public sealed class ConfirmService
         if (before.State == BatchStates.Confirmed) return ConfirmResult.Confirmed(before.ConfirmedCount ?? 0);
         if (before.State != BatchStates.Open) return ConfirmResult.NotFound();
 
-        await EnsureSeedKeyIndexOnceAsync();
+        // A dev database seeded before 008 has a non-partial unique seedKey_1 index, which refuses
+        // a second image with no seedKey (decisions row 60): upgrade it once per process first.
+        await Indexes.EnsureOnceAsync(_imageDocs.Database);
 
         // A run that finds confirmStartedAt already set resumes an earlier, interrupted run.
         var resumed = before.ConfirmStartedAt is not null;
@@ -270,7 +261,7 @@ public sealed class ConfirmService
         var u = Builders<ImageDoc>.Update;
         var updates = new List<UpdateDefinition<ImageDoc>>
         {
-            u.SetOnInsert(i => i.Title, TitleFrom(item.FileName)),
+            u.SetOnInsert(i => i.Title, TitleFrom(item.FileName, _library.TitleMax)),
             u.SetOnInsert(i => i.Width, v.Width),
             u.SetOnInsert(i => i.Height, v.Height),
             u.SetOnInsert(i => i.Placeholder, v.Placeholder),

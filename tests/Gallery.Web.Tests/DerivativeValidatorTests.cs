@@ -1,4 +1,4 @@
-using Gallery.Web.Seed;
+using Gallery.Web.Upload;
 using Gallery.Web.Tests.Fixtures;
 
 namespace Gallery.Web.Tests;

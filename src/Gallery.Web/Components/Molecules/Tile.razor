@@ -1,7 +1,8 @@
 @* One contact-sheet cell (D-20): the whole photo letterboxed and centred in a fixed 4:3
    cell, title only below. The Tile owns the link; there is no separate picture-link.
    Admin additions (feature 005, all optional; public output byte-identical when unset): Overlay
-   controls over the cell, an extra root class, a caption under the title, and no link.
+   controls over the photo (drawn inside Picture's letterboxed frame, so they are placed from the
+   photo's own corners, not the cell's), an extra root class, a caption under the title, and no link.
    Branch bodies are deliberately unindented: Razor emits their whitespace verbatim, and
    PublicOutputUnchangedTests pins the public markup byte-for-byte. *@
 @if (Image is null)
@@ -14,11 +15,7 @@ else if (!string.IsNullOrEmpty(Href))
 {
 <a class="@RootClass" href="@Href" data-preload-srcset="@PreloadSrcSet" data-preload-sizes="@PreloadSizes">
     <div class="cell">
-        <Picture Image="Image" Sizes="@Sizes" Fit="PictureFit.Contain" Priority="Priority" TransitionId="@TransitionId" />
-@if (Overlay is not null)
-{
-        <div class="overlay">@Overlay</div>
-}
+        <Picture Image="Image" Sizes="@Sizes" Fit="PictureFit.Contain" Priority="Priority" TransitionId="@TransitionId" ChildContent="@OverlayLayer" />
     </div>
     <Title Text="@Image.Title" />@Caption
 </a>
@@ -27,11 +24,7 @@ else
 {
 <div class="@RootClass">
     <div class="cell">
-        <Picture Image="Image" Sizes="@Sizes" Fit="PictureFit.Contain" Priority="Priority" TransitionId="@TransitionId" />
-@if (Overlay is not null)
-{
-        <div class="overlay">@Overlay</div>
-}
+        <Picture Image="Image" Sizes="@Sizes" Fit="PictureFit.Contain" Priority="Priority" TransitionId="@TransitionId" ChildContent="@OverlayLayer" />
     </div>
     <Title Text="@Image.Title" />@Caption
 </div>
@@ -69,6 +62,8 @@ else
         if (Image is null && string.IsNullOrEmpty(EmptyTitle))
             throw new ArgumentException("Image is required when EmptyTitle is not set.", nameof(Image));
     }
+
+    private RenderFragment? OverlayLayer => Overlay is null ? null : @<div class="overlay">@Overlay</div>;
 
     private string RootClass => string.IsNullOrEmpty(CssClass) ? "tile" : "tile " + CssClass;
 }

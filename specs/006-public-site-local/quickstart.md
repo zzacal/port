@@ -27,6 +27,8 @@ a bucket is added.
 
 ## Part B: prepare and seed the owner's photos
 
+(Retired by feature 009: the seed command, manifest and scripts no longer exist; see specs/009-library-galleries.)
+
 ```bash
 bash scripts/prepare-photos.sh                 # → .dev-prepared/, "prepared 93, skipped-unchanged 0, rejected 0"
 bash scripts/seed-manifest.sh                  # → seed/manifest.json (refuses if it exists); edit freely

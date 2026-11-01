@@ -1,5 +1,7 @@
 # Contract: Seed manifest, preparation, and seeding (006)
 
+(Retired by feature 009: the seed command, manifest and scripts no longer exist; see specs/009-library-galleries.)
+
 ## `seed/manifest.json` (committed, owner-editable)
 
 ```json

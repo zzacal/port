@@ -1,6 +1,5 @@
 using System.Globalization;
 using Gallery.Core.Images;
-using Gallery.Web.Seed;
 using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
 using MetadataExtractor.Formats.FileType;

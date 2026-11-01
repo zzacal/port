@@ -39,32 +39,47 @@ img.layer {
     object-fit: fill;
 }
 
-/* Contain: fill the parent's fixed box, letterbox the photo, centre it. */
+/* Contain: fill the parent's fixed box and letterbox the photo, centred. The .frame shrink-wraps
+   the inline <svg> sizer, whose width/height attributes carry the photo's ratio: capped at the
+   container's width and height (cq units), it is the photo's letterboxed rectangle before any
+   image loads. Every layer fills the frame exactly, so placeholder, thumbnail and photo cover the
+   same rectangle (the 32 px placeholder's rounded ratio is stretched by a few percent rather than
+   letterboxed into a second, smaller box). Overlays (ChildContent) are placed from its corners. */
 .fit-contain {
+    height: 100%;
+    container-type: size;
+}
+
+.fit-contain .frame {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: fit-content;
+    height: fit-content;
+}
+
+.fit-contain .sizer {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100cqw;
+    max-height: 100cqh;
+}
+
+.fit-contain .layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
     height: 100%;
 }
 
-.fit-contain .main,
 .fit-contain .main img {
     width: 100%;
     height: 100%;
     object-fit: contain;
-    object-position: center;
 }
 
-/* The thumbnail is the same photo (ratio within 0.5%), shown at full size (IV.15). */
+.fit-contain .ph,
 .fit-contain .thumb {
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-/* The placeholder's rounded ratio can differ from the photo's by a few percent. Inset by 2%
-   so its letterboxed content always sits inside the photo's, never as a visible sliver. */
-.fit-contain .ph {
-    inset: 2%;
-    width: 96%;
-    height: 96%;
-    object-fit: contain;
+    object-fit: fill;
 }

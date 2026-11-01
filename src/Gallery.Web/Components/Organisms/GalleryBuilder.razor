@@ -1,9 +1,15 @@
 @* Admin gallery-builder organism (feature 005): sortable photo grid with side panel for editing.
    Per-tile controls sit in a row under the title, not over the photo: photos are letterboxed, so
-   corner overlays floated over empty cell space and covered small photos (browser review, T032). *@
+   corner overlays floated over empty cell space and covered small photos (browser review, T032).
+   009 K6 (all optional; the /ui/ page passes none, so the default render is byte-identical): the
+   b-ctl row gains the K4 cover controls, a Quiet Remove submit and a View link; the grid is wrapped
+   in <reorder-grid data-form> for reorder.js; the inputs get the K2 required/pattern and the
+   LibraryOptions limits; the toggle gets K3. Every addition is an expression, never an @if.
+   With a FormId the Public switch is a field of that Save form (owner feedback): Save posts the
+   title, description and visibility together; the publish warning has no buttons. *@
 @using Gallery.Core.Images
 <div class="builder">
-    <section class="b-grid" aria-label="Photos">
+    <section class="b-grid" aria-label="Photos">@StatusLine@ReorderOpen
         @if (State == BuilderState.Empty)
         {
             <p class="b-empty">No photos in this gallery yet. <a href="/admin/library">Add photos from the library</a></p>
@@ -16,6 +22,7 @@
                     var index = i;
                     var item = Items[index];
                     var tileTitle = item.Title;
+                    var itemId = IdAt(index);
                     var coverState = index == PinnedIndex
                         ? CoverState.Pinned
                         : (PinnedIndex == null && index == 0 ? CoverState.Automatic : CoverState.Unpinned);
@@ -34,28 +41,27 @@
                         <Caption>
                             <div class="b-ctl">
                                 <DragHandle Label="@($"Move {tileTitle}")" State="@handleState" Position="@(index + 1)" Total="@Items.Count" />
-                                <CoverMarker State="@coverState" ImageTitle="@tileTitle" />
+                                <CoverMarker State="@coverState" ImageTitle="@tileTitle" FormId="@CoverFormId" ImageId="@(CoverFormId is null ? null : itemId)" UnpinFormId="@UnpinFormId" />@RemoveFor(itemId, tileTitle)@ViewFor(itemId)
                             </div>
                         </Caption>
                     </Tile>
                 }
             </ContactSheet>
-        }
+        }@ReorderClose
     </section>
-    <SidePanel Heading="Gallery" State="SaveState.Idle" FormId="@FormId"
-               SaveVariant="@(State == BuilderState.PublishWarning ? ButtonVariant.Secondary : ButtonVariant.Primary)">
+    <SidePanel Heading="Gallery" State="SaveState.Idle" FormId="@FormId" SaveVariant="ButtonVariant.Primary">
         <ChildContent>
-            <Input Label="Title" Name="title" Value="@Title" MaxLength="200" />
-            <Input Label="Description" Name="description" Value="@Description" Multiline="true" MaxLength="5000" />
-            <VisibilityToggle Public="@Public" GalleryTitle="@Title" PhotoCount="@Items.Count" Warning="@(State == BuilderState.PublishWarning)" FormId="@FormId" />
-            <p class="b-view"><Button Element="ButtonElement.Link" Variant="ButtonVariant.Quiet" Href="@ViewHref">View gallery ↗</Button></p>
+            <Input Label="Title" Name="title" Value="@Title" MaxLength="@(TitleMax ?? 200)" Required="@(TitleMax is not null)" Pattern="@(TitleMax is null ? null : TitlePattern)" />
+            <Input Label="Description" Name="description" Value="@Description" Multiline="true" MaxLength="@(DescriptionMax ?? 5000)" />
+            <VisibilityToggle Public="@Public" Checked="@PublicChecked" GalleryTitle="@Title" PhotoCount="@Items.Count" Warning="@(State == BuilderState.PublishWarning)" FormId="@FormId" PartOfSave="@(FormId is not null)" DisabledReason="@PublicDisabledReason" />
+            <p class="b-view"><Button Element="ButtonElement.Link" Variant="ButtonVariant.Quiet" Href="@ViewHref" Target="@(ViewExternal ? "_blank" : null)">@ViewLabel@ViewArrow</Button></p>
         </ChildContent>
         <Danger>
             <DangerConfirm Action="Delete gallery"
                            Target="@Title"
                            Consequence="@($"Its {Items.Count} photos stay in your library. This can't be undone.")"
                            ConfirmLabel="Delete gallery"
-                           FormId="@FormId" />
+                           FormId="@(DeleteFormId ?? FormId)" />
         </Danger>
     </SidePanel>
 </div>
@@ -71,4 +77,75 @@
     [Parameter] public int DropIndex { get; set; }
     [Parameter] public string ViewHref { get; set; } = "/";
     [Parameter] public string? FormId { get; set; }
+
+    // ── 009 K6 (contracts/components.md) ────────────────────────────────────
+
+    /// <summary>The image id of each item, in order (defaults to each item's own id).</summary>
+    [Parameter] public IReadOnlyList<string>? ItemIds { get; set; }
+
+    /// <summary>Hidden B5 form: each tile gets a Quiet <c>Remove</c> submit (<c>name="image" value="{id}"</c>).</summary>
+    [Parameter] public string? RemoveFormId { get; set; }
+
+    /// <summary>Hidden B4 pin form: "Make cover" submits <c>image={id}</c> on it (K4).</summary>
+    [Parameter] public string? CoverFormId { get; set; }
+
+    /// <summary>Hidden B4 unpin form: "Unpin" submits it with no image (K4).</summary>
+    [Parameter] public string? UnpinFormId { get; set; }
+
+    /// <summary>Hidden B3 form: the grid is wrapped in <c>&lt;reorder-grid data-form="…"&gt;</c>.</summary>
+    [Parameter] public string? OrderFormId { get; set; }
+
+    /// <summary><c>/g/{gid}/{slug}</c>: each tile gets <c>View ↗</c> to <c>{PhotoHrefBase}/{id}</c> (UI-1).</summary>
+    [Parameter] public string? PhotoHrefBase { get; set; }
+
+    /// <summary>K3 on the toggle: disables the switch with this reason (empty gallery, II.6).</summary>
+    [Parameter] public string? PublicDisabledReason { get; set; }
+
+    /// <summary>LibraryOptions.TitleMax; when set the title input is also <c>required</c> with the not-blank pattern.</summary>
+    [Parameter] public int? TitleMax { get; set; }
+
+    /// <summary>LibraryOptions.DescriptionMax.</summary>
+    [Parameter] public int? DescriptionMax { get; set; }
+
+    /// <summary>The <c>role="status"</c> line above the grid (PRG result or refusal reason).</summary>
+    [Parameter] public string? Status { get; set; }
+
+    /// <summary>
+    /// The switch's state after a refused save (what the owner had set), or null for <see cref="Public"/>.
+    /// The switch is a field of the <see cref="FormId"/> Save form: Save posts it with the text
+    /// (owner feedback; it never submits on its own).
+    /// </summary>
+    [Parameter] public bool? PublicChecked { get; set; }
+
+    /// <summary>Hidden B6 form the delete confirm posts (defaults to <see cref="FormId"/>; C3 names <c>b-delete</c>).</summary>
+    [Parameter] public string? DeleteFormId { get; set; }
+
+    /// <summary>The panel's view-link text ("View gallery" by default; C3: "Back to galleries" for a gallery with no photos).</summary>
+    [Parameter] public string ViewLabel { get; set; } = "View gallery";
+
+    /// <summary>Whether the view link ends with " ↗" (an external, visitor view). False for "Back to galleries".</summary>
+    [Parameter] public bool ViewExternal { get; set; } = true;
+
+    // A MarkupString, not a string, so the arrow renders as the literal character, exactly as the
+    // 005 markup did (a string expression would encode it as &#x2197;).
+    private MarkupString ViewArrow => ViewExternal ? new(" ↗") : default;
+
+    /// <summary>The single-line not-blank rule the server applies (FR-010).</summary>
+    public const string TitlePattern = @".*\S.*";
+
+    private string IdAt(int index) => ItemIds is not null && index < ItemIds.Count ? ItemIds[index] : Items[index].Id;
+
+    private RenderFragment? StatusLine => Status is null ? null
+        : @<p class="b-status" role="status">@Status</p>;
+
+    private MarkupString ReorderOpen => OrderFormId is null ? default
+        : new MarkupString($"<reorder-grid data-form=\"{System.Net.WebUtility.HtmlEncode(OrderFormId)}\">");
+
+    private MarkupString ReorderClose => OrderFormId is null ? default : new MarkupString("</reorder-grid>");
+
+    private RenderFragment? RemoveFor(string id, string title) => RemoveFormId is null ? null
+        : @<Button Variant="ButtonVariant.Quiet" FormId="@RemoveFormId" Name="image" Value="@id" AriaLabel="@($"Remove {title} from this gallery")">Remove</Button>;
+
+    private RenderFragment? ViewFor(string id) => PhotoHrefBase is null ? null
+        : @<TextLink Href="@($"{PhotoHrefBase}/{id}")" Target="_blank">View &#x2197;</TextLink>;
 }

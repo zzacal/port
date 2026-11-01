@@ -1,4 +1,3 @@
-using Gallery.Web.Seed;
 using Gallery.Web.Upload;
 using static Gallery.Web.Tests.Fixtures.UploadFixtures;
 

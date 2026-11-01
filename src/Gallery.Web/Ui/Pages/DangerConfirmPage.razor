@@ -1,27 +1,48 @@
 @inject SampleCatalog Samples
 <UiLayout Title="DangerConfirm">
-    <Specimen Label="Delete image, closed">
-        <DangerConfirm
-            Action="Delete image"
+    <Specimen Label="Delete photo, closed">
+        <DangerConfirm Id="ui-dc-photo-closed"
+            Action="Delete photo"
             Target="Mountain Lake"
-            Consequence="This removes it from every gallery and deletes the original file. It can't be undone."
-            ConfirmLabel="Delete image permanently"
+            Title="Delete “Mountain Lake”?"
+            Consequence="It is in 2 galleries. This removes it from every gallery and deletes the original file. It can't be undone."
+            ConfirmLabel="Delete photo"
             Open="false" />
     </Specimen>
-    <Specimen Label="Delete image, open">
-        <DangerConfirm
-            Action="Delete image"
+    <Specimen Label="Delete photo, open">
+        <DangerConfirm Id="ui-dc-photo-open"
+            Action="Delete photo"
             Target="Mountain Lake"
-            Consequence="This removes it from every gallery and deletes the original file. It can't be undone."
-            ConfirmLabel="Delete image permanently"
+            Title="Delete “Mountain Lake”?"
+            Consequence="It is in 2 galleries. This removes it from every gallery and deletes the original file. It can't be undone."
+            ConfirmLabel="Delete photo"
             Open="true" />
     </Specimen>
     <Specimen Label="Delete gallery, open">
-        <DangerConfirm
+        <DangerConfirm Id="ui-dc-gallery-open"
             Action="Delete gallery"
             Target="Coast, winter"
+            Title="Delete gallery “Coast, winter”?"
             Consequence="Its 24 photos stay in your library. This can't be undone."
             ConfirmLabel="Delete gallery"
+            Open="true" />
+    </Specimen>
+    <Specimen Label="Bulk delete (opened from the selection bar), open">
+        <DangerConfirm Id="ui-dc-bulk-open" Trigger="false"
+            Action="Delete"
+            Target="3 photos"
+            Title="Delete 3 photos?"
+            Consequence="This removes them from every gallery and deletes the original files. It can't be undone."
+            ConfirmLabel="Delete 3 photos"
+            Open="true" />
+    </Specimen>
+    <Specimen Label="Discard batch, open">
+        <DangerConfirm Id="ui-dc-discard-open"
+            Action="Discard batch"
+            Target="this batch"
+            Title="Discard this batch?"
+            Consequence="All 40 uploaded files are deleted. Nothing is added to your library."
+            ConfirmLabel="Discard batch"
             Open="true" />
     </Specimen>
 </UiLayout>

@@ -13,7 +13,11 @@
 //       .bf-summary > span > first text node    "{ready} ready · " and .bf-failed "{failed} failed" (blocked)
 //       .bf-actions > button.btn-primary        "Add {total} photos to library"
 //       .bf-reason                              "Restart or delete the {failed} failed photos to continue" (blocked)
-//       .danger-confirm .confirm-body p         the text node holding the count gets {total}
+//       .danger-dialog .danger-consequence      the text node holding the count gets {total}
+//   The discard confirm is the footer DangerConfirm: “Discard batch…” swaps in the confirmdiscard
+//   footer and opens its <dialog> with showModal() (page inert, focus on Cancel); while it is open
+//   the counts are updated in place. Cancel or Esc closes it ('close'), back to the plain footer
+//   with focus on the trigger; “Discard batch” in the dialog calls U-discard.
 //
 // App calls send X-CSRF-TOKEN and credentials "same-origin". Storage PUTs send credentials "omit"
 // and exactly one header, Content-Type (FR-044).
@@ -179,7 +183,10 @@ function start(root) {
         : failed > 0 ? 'blocked'
           : 'inprogress';
 
-    const el = clone(`template[data-footer="${kind}"]`);
+    // While the discard confirm is open as a modal, update that footer in place (same template, same
+    // structure) so the modal, and the focus inside it, survive progress updates.
+    const inPlace = kind === 'confirmdiscard' && old?.querySelector('dialog.danger-dialog[open]') ? old : null;
+    const el = inPlace ?? clone(`template[data-footer="${kind}"]`);
     const summary = el.querySelector('.bf-summary');
     const span = summary.querySelector(':scope > span');
     if (kind === 'inprogress' || kind === 'confirmdiscard') {
@@ -196,14 +203,30 @@ function start(root) {
     el.querySelector('.bf-actions > button.btn-primary').textContent = `Add ${total} photos to library`;
     const reason = el.querySelector('.bf-reason');
     if (reason && kind === 'blocked') reason.textContent = `Restart or delete the ${failed} failed photos to continue`;
-    const consequence = el.querySelector('.danger-confirm .confirm-body p');
+    const consequence = el.querySelector('.danger-confirm .danger-consequence');
     if (consequence) {
       for (const node of consequence.childNodes) {
         if (node.nodeType === Node.TEXT_NODE && /\d+/.test(node.nodeValue)) node.nodeValue = node.nodeValue.replace(/\d+/, String(total));
       }
     }
 
+    if (inPlace) return;
+    // The confirmdiscard template renders its dialog open in place; show it as a modal instead so
+    // the rest of the page is inert (Cancel gets focus through autofocus). Drop `open` while the
+    // clone is still detached, so no 'close' reaches the listener below.
+    const dialog = el.querySelector('dialog.danger-dialog[open]');
+    const modal = dialog && typeof dialog.showModal === 'function';
+    if (modal) dialog.removeAttribute('open');
     if (old) old.replaceWith(el); else templates.before(el);
+    if (modal) dialog.showModal();
+  }
+
+  /** Discard confirm closed (Cancel or Esc): back to the plain footer, focus on its "Discard batch…". */
+  function closeDiscard() {
+    if (!discardOpen) return;
+    discardOpen = false;
+    renderFooter();
+    root.querySelector(':scope > .batch-footer .danger-trigger')?.focus();
   }
 
   function setState(item, state, extra = {}) {
@@ -569,7 +592,19 @@ function start(root) {
       else if (button.value === 'delete') remove(item);
       return;
     }
-    if (button.closest('.danger-confirm .confirm-body')) {
+    if (button.matches('.danger-confirm .danger-trigger')) {
+      e.preventDefault(); // not the invoker command: the footer re-renders as confirmdiscard
+      discardOpen = true;
+      renderFooter();
+      return;
+    }
+    if (button.matches('.danger-dialog .danger-cancel')) {
+      e.preventDefault();
+      button.closest('dialog').close();
+      closeDiscard(); // now, not on the queued 'close' event, so focus is back before the next input
+      return;
+    }
+    if (button.matches('.danger-dialog .danger-actions button.btn-danger')) {
       e.preventDefault();
       discard();
       return;
@@ -580,13 +615,13 @@ function start(root) {
     }
   });
 
-  // The footer's DangerConfirm is a <details>; 'toggle' does not bubble, so listen in capture.
-  root.addEventListener('toggle', (e) => {
-    const details = e.target;
-    if (!(details instanceof HTMLDetailsElement) || !details.matches('.batch-footer .danger-confirm')) return;
-    if (details.open === discardOpen) return;
-    discardOpen = details.open;
-    renderFooter();
+  // The footer's DangerConfirm is a modal <dialog>; Cancel and Esc both end in 'close', which does
+  // not bubble, so listen in capture. Only the live footer's dialog counts.
+  root.addEventListener('close', (e) => {
+    const dialog = e.target;
+    if (!(dialog instanceof HTMLDialogElement) || !dialog.matches('.batch-footer .danger-dialog')) return;
+    if (dialog.closest('.batch-footer')?.parentElement !== root) return;
+    closeDiscard();
   }, true);
 
   window.addEventListener('pageshow', (e) => { if (e.persisted) reconcile(); });

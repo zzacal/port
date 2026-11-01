@@ -27,10 +27,13 @@
     border-radius: 50%;
 }
 
-.actions {
+/* PartOfSave: the Save-time warning shows only while the switch (its preceding sibling) is on. */
+.publish-warning.on-save {
+    display: none;
+}
+
+.switch:has(input:checked) ~ .publish-warning.on-save {
     display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
 }
 
 .publish-warning:focus-visible {

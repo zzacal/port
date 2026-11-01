@@ -1,6 +1,6 @@
 @* Admin switch atom (feature 005): a checkbox styled as a toggle, with label, hint, and role="switch". *@
 <label class="switch">
-    <input type="checkbox" role="switch" name="@Name" checked="@Checked" disabled="@Disabled" aria-describedby="@(Hint != null ? HintId : null)" />
+    <input type="checkbox" role="switch" name="@Name" checked="@Checked" disabled="@Disabled" aria-describedby="@(Hint != null ? HintId : null)" form="@FormId" value="@Value" />
     <span class="track" aria-hidden="true"></span>
     <span class="text">@Label</span>
 </label>
@@ -15,6 +15,12 @@
     [Parameter] public bool Checked { get; set; }
     [Parameter] public bool Disabled { get; set; }
     [Parameter] public string? Hint { get; set; }
+
+    /// <summary>009 K1: renders form="…" on the input (a control outside its form).</summary>
+    [Parameter] public string? FormId { get; set; }
+
+    /// <summary>009 K1: renders value="…" on the input (e.g. "on").</summary>
+    [Parameter] public string? Value { get; set; }
 
     private string HintId => "hint-" + Name;
 }

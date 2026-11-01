@@ -12,9 +12,19 @@
         <SidePanel Heading="Photo">
             <ChildContent><Fields /></ChildContent>
             <Danger>
-                <DangerConfirm Action="Delete image" Target="Mountain Lake"
-                               Consequence="This removes it from every gallery and deletes the original file. It can't be undone."
-                               ConfirmLabel="Delete image permanently" />
+                <DangerConfirm Id="ui-sp-confirm-closed" Action="Delete photo" Target="Mountain Lake" Title="Delete “Mountain Lake”?"
+                               Consequence="It is in 2 galleries. This removes it from every gallery and deletes the original file. It can't be undone."
+                               ConfirmLabel="Delete photo" />
+            </Danger>
+        </SidePanel>
+    </Specimen>
+    <Specimen Label="Delete confirm open" Width="w-320">
+        <SidePanel Heading="Photo">
+            <ChildContent><Fields /></ChildContent>
+            <Danger>
+                <DangerConfirm Id="ui-sp-confirm-open" Action="Delete photo" Target="Mountain Lake" Title="Delete “Mountain Lake”?"
+                               Consequence="It is in 2 galleries. This removes it from every gallery and deletes the original file. It can't be undone."
+                               ConfirmLabel="Delete photo" Open="true" />
             </Danger>
         </SidePanel>
     </Specimen>
