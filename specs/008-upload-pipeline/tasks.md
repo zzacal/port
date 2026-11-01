@@ -786,13 +786,13 @@ line when the owner runs them.
 - [X] O-01 Cloudflare dashboard: lifecycle rule on `gallery-dev-private`, deleting `staging/`
   objects 7 days after creation (spec Assumptions owner prerequisite 2, D-11 backstop). Optional:
   `masters/` to Infrequent Access after 30 days.
-- [ ] O-02 The skipped roadmap spike (decisions row 6), as quickstart Part C steps 1–5. On
+- [ ] O-02 (JPEG part done by the owner 2026-11-01, decisions row 74) The skipped roadmap spike (decisions row 6), as quickstart Part C steps 1–5. On
   `https://localhost:5081`, in Chrome, Safari macOS and iOS Safari: 40 real exports, an 18–20 MB
   JPEG, an EXIF-rotated photo, a HEIC and a renamed PNG. Capture `evidence/live-run.log` (commit a
   redacted copy) and run `p95.sh` on it for SC-006/007 (R2)/008/009/010. Record per browser: the
   20 MB time, iOS memory behaviour, real placeholder and size bytes against the estimates, and
   whether any colour profile appeared (decisions rows 9 and 29). A miss reopens D-09.
-- [ ] O-03 Real R2 storage facts: `GALLERY_R2_TESTS=1 dotnet test --artifacts-path artifacts
+- [X] O-03 Real R2 storage facts: `GALLERY_R2_TESTS=1 dotnet test --artifacts-path artifacts
   --filter Category=R2`, covering T015–T017 on R2, including copy-if-match 412 (decisions row 27).
   Save the redacted output as `evidence/r2-tests.txt`.
 - [X] O-04 SC-003 on R2 (quickstart Part C step 6): `staging/{batchId}/` lists zero objects after
