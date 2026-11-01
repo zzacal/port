@@ -71,7 +71,7 @@ writes the 003 sample set to Mongo and uploads its derivatives to R2. No admin r
 
 ### 007 Owner sign-in and claim
 
-**Status: done on branch `007-owner-signin-claim` (not merged).** Evidence:
+**Status: done, merged to main 2026-10-31 (0118c52).** Evidence:
 `specs/007-owner-signin-claim/evidence/` (verify.sh 10/10 PASS, non-vacuity.sh 8/8 guards red on
 their breaks, p95.sh SC-006 PASS on the 60-callback test log and the live run, live-walkthrough.md
 with real Google). Not delivered: a live "cancel at Google" check, because Google's account
