@@ -354,7 +354,7 @@ completes, with no browser.
 **Owns**: `src/Gallery.Web/Upload/UploadEndpoints.cs`, `UploadSetup.cs` (additive: call
 `MapUploadEndpoints`), `tests/Gallery.Web.Tests/UploadFlowTests.cs`.
 
-- [ ] T025 [US1] Create `src/Gallery.Web/Upload/UploadEndpoints.cs` with
+- [X] T025 [US1] Create `src/Gallery.Web/Upload/UploadEndpoints.cs` with
   `MapUploadEndpoints(RouteGroupBuilder admin)` (called from `UploadSetup.MapUpload`). Implement
   the shared rules of contracts/http.md:
   - `OpaqueId.IsValid` on path ids, or 404;
@@ -365,18 +365,18 @@ completes, with no browser.
   - messages never echo a key or a URL.
   Implement U2 `GET /admin/upload/state` with the EFFECTIVE state from `EffectiveState.Of` and
   `TimeProvider`.
-- [ ] T026 [US1] Implement U3 `POST /admin/upload/items` exactly per contracts/http.md (steps 1–4,
+- [X] T026 [US1] Implement U3 `POST /admin/upload/items` exactly per contracts/http.md (steps 1–4,
   refusal strings verbatim). More than `MaxPhotosPerBatch` entries → 400. Name sanitising
   (data-model `fileName` rule) strips path separators and control chars. Each accepted item gets
   `PresignPutAsync(priv, StagingKeys.Master(…), "image/jpeg", PresignMinutes)`.
-- [ ] T027 [US1] Implement U4 `POST /admin/upload/items/{itemId}/master`:
+- [X] T027 [US1] Implement U4 `POST /admin/upload/items/{itemId}/master`:
   - `HeadAsync`, then `GetRangeAsync` of `MasterHeaderBytes`, a single 1 MB retry on
     `NeedsMoreBytes`, then `MasterCheck.Check`, all inside `OpTimer.Time("upload.master-check")`;
   - on success: set `master` and `heartbeatAt`, and presign each `Ladder.For(width)` × {avif, webp};
   - on rejection: `failed` + reason, `DeletePrefixAsync` of the attempt prefix, 422, and one
     `upload.rejected … master.jpg {reason}`;
   - a missing object → 422 "original not found", with the item state unchanged.
-- [ ] T028 [US1] **[SAFETY]** Implement U5 `progress` (forward-only, `heartbeatAt`, 409 on a
+- [X] T028 [US1] **[SAFETY]** Implement U5 `progress` (forward-only, `heartbeatAt`, 409 on a
   terminal or effective-interrupted item) and U7 `complete` (contracts/http.md U7; FR-022–FR-029;
   plan items 2 and 8):
   1. Log the accepted browser timings with `OpTiming.Log(op, ms, "ok")` (name regex and range of
@@ -389,7 +389,7 @@ completes, with no browser.
      the size keys `{sha256-16hex}.{ext}`, the ETags and byte counts; set `succeeded`.
   4. Fail: `failed` + reason, `DeletePrefixAsync` of the attempt prefix, 422, `upload.rejected`
      with the failing file name; ZERO writes to the public bucket on this path.
-- [ ] T029 [US1] **[SAFETY]** Write `tests/Gallery.Web.Tests/UploadFlowTests.cs`
+- [X] T029 [US1] **[SAFETY]** Write `tests/Gallery.Web.Tests/UploadFlowTests.cs`
   (`[Collection("s3")]` + MongoFixture, `UploadHost`):
   - **Happy path**: register `gps-camera.jpg`, PUT the master, U4 returns exactly the 320 size,
     PUT `gps-320.avif` and `gps-320.webp`, then U7 with `gps-placeholder.webp` → 200

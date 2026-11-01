@@ -18,6 +18,7 @@ public static class UploadSetup
 
     public static RouteGroupBuilder MapUpload(this RouteGroupBuilder admin)
     {
+        admin.MapUploadEndpoints();
         return admin;
     }
 }
