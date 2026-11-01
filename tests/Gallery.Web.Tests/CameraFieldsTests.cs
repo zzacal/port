@@ -1,4 +1,4 @@
-using Gallery.Web.Seed;
+using Gallery.Web.Upload;
 using Gallery.Web.Tests.Fixtures;
 using MetadataExtractor.Formats.Exif;
 
@@ -126,7 +126,7 @@ public class CameraFieldsTests
     public void Source_CameraFields_does_not_contain_Gps()
     {
         // Read our own source code to assert no GpsDirectory reference
-        var seedDir = Path.GetFullPath(Path.Combine(Render.RepoRoot, "src", "Gallery.Web", "Seed"));
+        var seedDir = Path.GetFullPath(Path.Combine(Render.RepoRoot, "src", "Gallery.Web", "Upload"));
         var cameraFieldsPath = Path.Combine(seedDir, "CameraFields.cs");
         Assert.True(File.Exists(cameraFieldsPath), $"CameraFields.cs not found at: {cameraFieldsPath}");
 

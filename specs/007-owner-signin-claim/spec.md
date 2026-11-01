@@ -157,6 +157,7 @@ catalogue content; with the owner session, confirm both render.
 - **The owner record does not exist at all** (fresh datastore, never seeded): treated as
   unclaimed; the claim creates it, and a race on creation still has exactly one winner.
 - **Re-running the dev seed after a claim**: the claim survives; seeding never resets the owner.
+  (Retired by feature 009: the seed command, manifest and scripts no longer exist; see specs/009-library-galleries.)
 - **Stranger claims first (E-02)**: they become owner. The claim event (identity, IP, time) is the
   detection; the real owner's sign-in is refused. Recovery is out of band only: the operator clears
   the owner fields directly in the datastore, and the runbook says how.

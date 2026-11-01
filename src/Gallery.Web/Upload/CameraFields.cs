@@ -2,7 +2,7 @@ using Gallery.Core.Images;
 using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
 
-namespace Gallery.Web.Seed;
+namespace Gallery.Web.Upload;
 
 /// <summary>
 /// Reads only the allowlisted camera fields from a JPEG stream using MetadataExtractor.

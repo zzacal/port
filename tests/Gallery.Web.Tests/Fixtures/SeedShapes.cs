@@ -13,7 +13,7 @@ namespace Gallery.Web.Tests.Fixtures;
 /// insert realistic data without the retired seeder:
 /// <list type="bullet">
 /// <item>Seed-shaped (<see cref="SeededImage"/>, <see cref="SeededGallery"/>): what
-///   <c>Seed/Seeder.cs</c> wrote: <c>seedKey</c> (non-empty), <c>sourceHash</c>, title, optional
+///   the retired seeder wrote: <c>seedKey</c> (non-empty), <c>sourceHash</c>, title, optional
 ///   caption, width/height, placeholder (color + preview), derivatives
 ///   (<c>w, avif, webp, bytesAvif, bytesWebp</c> with <c>{sha256-16hex}.{ext}</c> names), galleryIds,
 ///   createdAt; galleries with seedKey, slug (<see cref="Slug.From"/>), title, visibility, items,

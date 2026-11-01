@@ -3,7 +3,7 @@ using MetadataExtractor.Formats.FileType;
 using MetadataExtractor.Formats.WebP;
 using MetadataExtractor.Formats.Heif;
 
-namespace Gallery.Web.Seed;
+namespace Gallery.Web.Upload;
 
 /// <summary>
 /// Result of validating a single derivative file.

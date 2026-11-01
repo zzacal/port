@@ -4,11 +4,12 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Gallery.Core.Ids;
 using Gallery.Web.Data;
-using Gallery.Web.Seed;
+using Gallery.Web.Maintenance;
 using Gallery.Web.Storage;
 using Gallery.Web.Tests.Fixtures;
 using Gallery.Web.Upload;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging.Abstractions;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -548,9 +549,14 @@ public class UploadConfirmTests : IClassFixture<MongoFixture>, IAsyncLifetime
     // ── seed coexistence (FR-035) ────────────────────────────────────────────
 
     [Fact]
-    public async Task Seed_run_after_confirm_leaves_uploaded_images()
+    public async Task Removal_command_after_confirm_leaves_uploaded_images()
     {
-        await using var host = await NewHostAsync();
+        // A recording edge provider: the removal's purge never reaches a real edge.
+        await using var host = await UploadHost.CreateAsync(_mongo, _google, _s3, configure: b =>
+        {
+            b.Services.RemoveAll<Gallery.Web.Edge.IEdgeProvider>();
+            b.Services.AddSingleton<Gallery.Web.Edge.IEdgeProvider>(new RecordingEdgeProvider());
+        });
         var a = await StageAsync(host, PhotoA);
         var b = await StageAsync(host, PhotoB);
         Assert.Equal(HttpStatusCode.OK, (await ConfirmAsync(host, a.BatchId)).StatusCode);
@@ -560,26 +566,13 @@ public class UploadConfirmTests : IClassFixture<MongoFixture>, IAsyncLifetime
             .ToDictionary(d => d["_id"].AsString, d => d.ToJson());
         Assert.Equal(new[] { a.ItemId, b.ItemId }.OrderBy(x => x), before.Keys.OrderBy(x => x));
 
-        // Control: a pre-008-shaped image (seedKey "") IS removed by the same run, proving the
-        // run reached the clean-up step that would otherwise have removed the uploaded images.
+        // Control: a seeded image (seedKey "seed-control") IS removed by the same run, proving the
+        // run reached the delete step that would otherwise have removed the uploaded images.
         var controlId = OpaqueId.NewId();
-        await images.InsertOneAsync(new BsonDocument { ["_id"] = controlId, ["seedKey"] = "", ["title"] = "old shape" });
+        await images.InsertOneAsync(new BsonDocument { ["_id"] = controlId, ["seedKey"] = "seed-control", ["title"] = "old shape" });
 
-        var tmpDir = Path.Combine(Path.GetTempPath(), $"gallery-confirm-seed-{Guid.NewGuid():N}");
-        Directory.CreateDirectory(tmpDir);
-        try
-        {
-            var manifest = new Manifest
-            {
-                Galleries = [new ManifestGallery { Key = "gallery-1", Title = "Gallery One", Visibility = "public", Photos = ["photo-a.jpg"] }],
-                Photos = new Dictionary<string, ManifestPhoto> { ["photo-a.jpg"] = new ManifestPhoto { Title = "Photo One" } },
-            };
-            var store = new ImageStore(new S3ClientFactory(_s3.StorageOptions), NullLogger<ImageStore>.Instance);
-            var seeder = new Seeder(manifest, tmpDir, "/dev/null", store, Db(host), NullLogger.Instance, _s3.StorageOptions.PublicBucket!);
-            var summary = await seeder.SeedAsync();
-            Assert.Equal(1, summary.ImagesDeleted);
-        }
-        finally { if (Directory.Exists(tmpDir)) Directory.Delete(tmpDir, true); }
+        var summary = await RemoveSeededCommand.RemoveAsync(host.Services);
+        Assert.Equal(1, summary.ImagesRemoved);
 
         Assert.Null(await images.Find(new BsonDocument("_id", controlId)).FirstOrDefaultAsync());
         foreach (var (id, json) in before)
@@ -591,26 +584,19 @@ public class UploadConfirmTests : IClassFixture<MongoFixture>, IAsyncLifetime
     }
 
     /// <summary>
-    /// FR-035 the other way round: the dev database has been seeded (so the seeder's
-    /// <c>seedKey</c> index exists) before the owner confirms a batch of two.
+    /// FR-035 the other way round: the dev database holds seeded content (and its <c>seedKey</c>
+    /// index exists) before the owner confirms a batch of two.
     /// </summary>
     [Fact]
-    public async Task Confirm_after_a_seed_run_adds_both_images()
+    public async Task Confirm_after_seeded_content_adds_both_images()
     {
         await using var host = await NewHostAsync();
-        var tmpDir = Path.Combine(Path.GetTempPath(), $"gallery-seed-first-{Guid.NewGuid():N}");
-        Directory.CreateDirectory(tmpDir);
-        try
-        {
-            var manifest = new Manifest
-            {
-                Galleries = [new ManifestGallery { Key = "gallery-1", Title = "Gallery One", Visibility = "public", Photos = ["photo-a.jpg"] }],
-                Photos = new Dictionary<string, ManifestPhoto> { ["photo-a.jpg"] = new ManifestPhoto { Title = "Photo One" } },
-            };
-            var store = new ImageStore(new S3ClientFactory(_s3.StorageOptions), NullLogger<ImageStore>.Instance);
-            await new Seeder(manifest, tmpDir, "/dev/null", store, Db(host), NullLogger.Instance, _s3.StorageOptions.PublicBucket!).SeedAsync();
-        }
-        finally { if (Directory.Exists(tmpDir)) Directory.Delete(tmpDir, true); }
+        var seededImage = SeedShapes.SeededImage();
+        var seededGallery = SeedShapes.SeededGallery([seededImage], title: "Gallery One");
+        SeedShapes.Link([seededImage], [seededGallery]);
+        await Db(host).GetCollection<ImageDoc>("images").InsertOneAsync(seededImage);
+        await Db(host).GetCollection<GalleryDoc>("galleries").InsertOneAsync(seededGallery);
+        await Indexes.EnsureAsync(Db(host));
 
         var a = await StageAsync(host, PhotoA);
         var b = await StageAsync(host, PhotoB);

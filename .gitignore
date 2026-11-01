@@ -488,5 +488,5 @@ $RECYCLE.BIN/
 # Owner photos used as local seed input (never commit: originals carry EXIF/GPS)
 /dev-pictures/
 
-# Prepared derivatives of dev-pictures (local only; regenerate with scripts/prepare-photos.sh)
+# Prepared derivatives of dev-pictures (local only; stays ignored after the 009 seed retirement)
 /.dev-prepared/

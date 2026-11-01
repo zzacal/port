@@ -2,7 +2,7 @@ namespace Gallery.Web.Tests;
 
 /// <summary>
 /// [SAFETY] Constitution I.4 (no web reset): the only code allowed to write the owner fields is the
-/// claim in <c>Data/OwnerStore.cs</c>, plus the seed's insert-only nulls in <c>Seed/Seeder.cs</c>.
+/// claim in <c>Data/OwnerStore.cs</c>.
 /// This is a source scan, not an HTTP test, because a second writer is a defect even before any
 /// route reaches it. Any other file naming <c>claimedSubject</c>, <c>claimedAt</c> or
 /// <c>claimedIp</c> fails with its path. Do not widen the allow-list to make a new writer pass.
@@ -28,14 +28,12 @@ public class OwnerWriteGuardTests
                 var line = lines[i];
                 if (!Fields.Any(f => line.Contains(f, StringComparison.Ordinal))) continue;
 
-                var allowed =
-                    rel == "Gallery.Web/Data/OwnerStore.cs" ||
-                    (rel == "Gallery.Web/Seed/Seeder.cs" && line.Contains("SetOnInsert(", StringComparison.Ordinal));
+                var allowed = rel == "Gallery.Web/Data/OwnerStore.cs";
                 if (!allowed) violations.Add($"{rel}:{i + 1}: {line.Trim()}");
             }
         }
 
         Assert.True(violations.Count == 0,
-            "Owner fields named outside OwnerStore.cs / Seeder SetOnInsert (I.4):\n" + string.Join("\n", violations));
+            "Owner fields named outside OwnerStore.cs (I.4):\n" + string.Join("\n", violations));
     }
 }

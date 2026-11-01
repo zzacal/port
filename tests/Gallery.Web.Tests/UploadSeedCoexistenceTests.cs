@@ -1,8 +1,9 @@
 using Gallery.Web.Data;
-using Gallery.Web.Seed;
-using Gallery.Web.Storage;
+using Gallery.Web.Edge;
+using Gallery.Web.Maintenance;
 using Gallery.Web.Tests.Fixtures;
-using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -10,9 +11,8 @@ namespace Gallery.Web.Tests;
 
 /// <summary>
 /// 008 T007 [SAFETY] (FR-035, plan item 7, research R-10): an uploaded image carries no
-/// <c>seedKey</c>/<c>sourceHash</c> element, so a seed run's clean-up (step 5e: delete images whose
-/// seedKey exists and is not in the manifest) leaves it untouched. Same class shape, fixtures and
-/// Seeder construction as <see cref="SeederWithS3Tests"/>.
+/// <c>seedKey</c>/<c>sourceHash</c> element, so the 009 removal command (which deletes images whose
+/// seedKey is present and non-empty) leaves it untouched.
 /// </summary>
 [Collection("s3")]
 public class UploadSeedCoexistenceTests : IClassFixture<MongoFixture>
@@ -52,7 +52,7 @@ public class UploadSeedCoexistenceTests : IClassFixture<MongoFixture>
     }
 
     [Fact]
-    public async Task Seed_run_leaves_an_uploaded_image_untouched()
+    public async Task Removal_command_leaves_an_uploaded_image_untouched()
     {
         var db = _mongo.NewDatabase();
         var images = db.GetCollection<BsonDocument>("images");
@@ -61,40 +61,30 @@ public class UploadSeedCoexistenceTests : IClassFixture<MongoFixture>
         await db.GetCollection<ImageDoc>("images").InsertOneAsync(UploadedImage(uploadedId));
         var before = (await images.Find(Builders<BsonDocument>.Filter.Eq("_id", uploadedId)).SingleAsync()).ToJson();
 
-        // Control: the pre-008 shape (seedKey "") IS deleted by the same run, which proves the run
-        // reached the clean-up step that would otherwise have removed the uploaded image.
-        var controlId = Gallery.Core.Ids.OpaqueId.NewId();
-        await images.InsertOneAsync(new BsonDocument { ["_id"] = controlId, ["seedKey"] = "", ["title"] = "old shape" });
+        // Control: a seed-shaped image IS deleted by the same run, which proves the run reached the
+        // delete step that would otherwise have removed the uploaded image.
+        var control = SeedShapes.SeededImage();
+        var controlId = control.Id;
+        await db.GetCollection<ImageDoc>("images").InsertOneAsync(control);
 
-        var tmpDir = Path.Combine(Path.GetTempPath(), $"gallery-coexist-test-{Guid.NewGuid():N}");
-        Directory.CreateDirectory(tmpDir);
-        try
-        {
-            var manifest = new Manifest
-            {
-                Galleries = [new ManifestGallery { Key = "gallery-1", Title = "Gallery One", Visibility = "public", Photos = ["photo-a.jpg"] }],
-                Photos = new Dictionary<string, ManifestPhoto> { ["photo-a.jpg"] = new ManifestPhoto { Title = "Photo One" } },
-            };
-            var seeder = new Seeder(manifest, tmpDir, "/dev/null", NewStore(), db, NullLogger.Instance, _s3.StorageOptions.PublicBucket!);
-            var summary = await seeder.SeedAsync();
+        await using var host = await NewHostAsync(db);
+        var summary = await RemoveSeededCommand.RemoveAsync(host.Services);
 
-            Assert.Equal(1, summary.ImagesDeleted);
-            Assert.Null(await images.Find(Builders<BsonDocument>.Filter.Eq("_id", controlId)).FirstOrDefaultAsync());
+        Assert.Equal(1, summary.ImagesRemoved);
+        Assert.Null(await images.Find(Builders<BsonDocument>.Filter.Eq("_id", controlId)).FirstOrDefaultAsync());
 
-            var after = await images.Find(Builders<BsonDocument>.Filter.Eq("_id", uploadedId)).FirstOrDefaultAsync();
-            Assert.NotNull(after);
-            Assert.Equal(before, after.ToJson());
-        }
-        finally { if (Directory.Exists(tmpDir)) Directory.Delete(tmpDir, true); }
+        var after = await images.Find(Builders<BsonDocument>.Filter.Eq("_id", uploadedId)).FirstOrDefaultAsync();
+        Assert.NotNull(after);
+        Assert.Equal(before, after.ToJson());
     }
 
     /// <summary>
     /// 008 decisions row 60: a dev database seeded before 008 has a plain unique <c>seedKey_1</c>
     /// index, which treats every missing seedKey as null. With two uploaded images present the
-    /// seed run must replace it with the partial index and leave both images untouched.
+    /// index setup must replace it with the partial index and leave both images untouched.
     /// </summary>
     [Fact]
-    public async Task Seed_run_replaces_legacy_seedKey_index_and_keeps_two_uploads()
+    public async Task Indexes_replace_legacy_seedKey_index_and_keep_two_uploads()
     {
         var db = _mongo.NewDatabase();
         var images = db.GetCollection<BsonDocument>("images");
@@ -108,32 +98,38 @@ public class UploadSeedCoexistenceTests : IClassFixture<MongoFixture>
         await Assert.ThrowsAsync<MongoWriteException>(() =>
             db.GetCollection<ImageDoc>("images").InsertOneAsync(UploadedImage(Gallery.Core.Ids.OpaqueId.NewId())));
 
-        var tmpDir = Path.Combine(Path.GetTempPath(), $"gallery-coexist-test-{Guid.NewGuid():N}");
-        Directory.CreateDirectory(tmpDir);
-        try
-        {
-            var manifest = new Manifest
-            {
-                Galleries = [new ManifestGallery { Key = "gallery-1", Title = "Gallery One", Visibility = "public", Photos = ["photo-a.jpg"] }],
-                Photos = new Dictionary<string, ManifestPhoto> { ["photo-a.jpg"] = new ManifestPhoto { Title = "Photo One" } },
-            };
-            var seeder = new Seeder(manifest, tmpDir, "/dev/null", NewStore(), db, NullLogger.Instance, _s3.StorageOptions.PublicBucket!);
-            await seeder.SeedAsync();
+        await Indexes.EnsureAsync(db);
 
-            var idx = (await (await images.Indexes.ListAsync()).ToListAsync())
-                .Single(i => i["name"] == "seedKey_1");
-            Assert.True(idx["unique"].AsBoolean);
-            Assert.True(idx.Contains("partialFilterExpression"), $"seedKey_1 is not partial: {idx}");
-            Assert.Equal(new BsonDocument("seedKey", new BsonDocument("$exists", true)), idx["partialFilterExpression"].AsBsonDocument);
+        var idx = (await (await images.Indexes.ListAsync()).ToListAsync())
+            .Single(i => i["name"] == "seedKey_1");
+        Assert.True(idx["unique"].AsBoolean);
+        Assert.True(idx.Contains("partialFilterExpression"), $"seedKey_1 is not partial: {idx}");
+        Assert.Equal(new BsonDocument("seedKey", new BsonDocument("$exists", true)), idx["partialFilterExpression"].AsBsonDocument);
 
-            var id2 = Gallery.Core.Ids.OpaqueId.NewId();
-            await db.GetCollection<ImageDoc>("images").InsertOneAsync(UploadedImage(id2));
-            Assert.Equal(2, await images.CountDocumentsAsync(Builders<BsonDocument>.Filter.In("_id", new[] { id1, id2 })));
-        }
-        finally { if (Directory.Exists(tmpDir)) Directory.Delete(tmpDir, true); }
+        var id2 = Gallery.Core.Ids.OpaqueId.NewId();
+        await db.GetCollection<ImageDoc>("images").InsertOneAsync(UploadedImage(id2));
+        Assert.Equal(2, await images.CountDocumentsAsync(Builders<BsonDocument>.Filter.In("_id", new[] { id1, id2 })));
     }
 
-    private ImageStore NewStore() =>
-        new(new Gallery.Web.Storage.S3ClientFactory(_s3.StorageOptions),
-            Microsoft.Extensions.Logging.Abstractions.NullLogger<ImageStore>.Instance);
+    /// <summary>
+    /// A host on the test's database and S3Proxy, with a recording edge provider (no edge call), so
+    /// <see cref="RemoveSeededCommand.RemoveAsync"/> runs on the app's own registrations.
+    /// </summary>
+    private Task<AdminHost> NewHostAsync(IMongoDatabase db)
+    {
+        var so = _s3.StorageOptions;
+        return AdminHost.CreateAsync(_mongo, extraOverrides: new Dictionary<string, string?>
+        {
+            ["Mongo:Database"] = db.DatabaseNamespace.DatabaseName,
+            ["Storage:ServiceUrl"] = so.ServiceUrl,
+            ["Storage:AccessKeyId"] = so.AccessKeyId,
+            ["Storage:SecretAccessKey"] = so.SecretAccessKey,
+            ["Storage:PublicBucket"] = so.PublicBucket,
+            ["Storage:PrivateBucket"] = so.PrivateBucket,
+        }, configure: b =>
+        {
+            b.Services.RemoveAll<IEdgeProvider>();
+            b.Services.AddSingleton<IEdgeProvider>(new RecordingEdgeProvider());
+        });
+    }
 }
