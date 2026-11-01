@@ -26,6 +26,8 @@ out-of-band owner reset (Constitution I.4), and how to read the claim event (E-0
    `dotnet user-secrets --project src/Gallery.Web list | sed -E 's/=.*/= <set>/'`
 6. Trust the development certificate (the `__Host-` cookies need HTTPS):
    `dotnet dev-certs https --trust`, then `dotnet dev-certs https --check --trust`.
+   Firefox keeps its own certificate store: set `security.enterprise_roots.enabled` to `true` in
+   `about:config` so it trusts the macOS keychain, or it reports a self-signed certificate.
 7. Run on the `https` launch profile: `dotnet run --project src/Gallery.Web --launch-profile https`
    and open `https://localhost:5081/admin`.
 

@@ -43,7 +43,9 @@ markup with and without the owner cookie).
 6. Sign out → sign-in page shows "Sign in" (not claim wording).
 7. Sign in with the second test account → "Not the owner"; no `__Host-gallery` cookie in DevTools;
    `site` document unchanged. "Try another account" → Google's account chooser.
-8. Cancel at Google's account chooser → "Sign-in didn't complete. Nothing was saved."
+8. Cancel at Google: NOT reachable live (2026-10-31). Google's account chooser has no cancel, and
+   scope `openid` shows no consent screen, so `error=access_denied` can't be produced from the UI.
+   Covered by `RefusalTests.Cancel_at_google_redirects_to_failed_page_and_no_session`.
 9. With the owner signed in, open `/` and compare to a private window: identical markup, no
    `Set-Cookie` on public responses.
 10. `/ui/` opens for the owner; in a private window it redirects to sign-in.

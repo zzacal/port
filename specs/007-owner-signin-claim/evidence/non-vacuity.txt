@@ -11,3 +11,5 @@ SKIP (i) specs/007-owner-signin-claim/evidence/live-run.log not captured yet
 restored: build clean
 
 ALL PASS
+
+(i) rerun after T033: p95.sh finds 6 callbacks in live-run.redacted.log (PASS)

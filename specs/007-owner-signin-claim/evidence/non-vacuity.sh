@@ -74,7 +74,7 @@ brk h src/Gallery.Web/Admin/Auth/AuthSetup.cs \
   'FullyQualifiedName~OwnerClaimTests' 'anti-forgery cookie without SecurePolicy=Always'
 
 # (i) the p95 script must find callbacks in every log it is given (0 = format mismatch).
-for log in specs/007-owner-signin-claim/evidence/sc006-callbacks.log specs/007-owner-signin-claim/evidence/live-run.log; do
+for log in specs/007-owner-signin-claim/evidence/sc006-callbacks.log specs/007-owner-signin-claim/evidence/live-run.redacted.log; do
   if [ ! -s "$log" ]; then echo "SKIP (i) $log not captured yet"; continue; fi
   n=$(bash specs/007-owner-signin-claim/evidence/p95.sh "$log" | sed -n 's/^callbacks=\([0-9]*\).*/\1/p')
   [ "${n:-0}" -gt 0 ] && echo "PASS (i) p95.sh finds $n callbacks in $log" || { echo "FAIL (i) p95.sh finds 0 callbacks in $log"; fails=$((fails+1)); }

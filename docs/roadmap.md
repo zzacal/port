@@ -71,6 +71,14 @@ writes the 003 sample set to Mongo and uploads its derivatives to R2. No admin r
 
 ### 007 Owner sign-in and claim
 
+**Status: done on branch `007-owner-signin-claim` (not merged).** Evidence:
+`specs/007-owner-signin-claim/evidence/` (verify.sh 10/10 PASS, non-vacuity.sh 8/8 guards red on
+their breaks, p95.sh SC-006 PASS on the 60-callback test log and the live run, live-walkthrough.md
+with real Google). Not delivered: a live "cancel at Google" check, because Google's account
+chooser has no cancel and scope `openid` shows no consent screen; the path is covered by an
+automated test. Deferred: the sign-in page look (007 tasks D-001, needs a D-23 change). The
+Upload, Library and Galleries links answer 404 for the owner until 008 and 009.
+
 The first `/admin` route. Google sign-in, the atomic claim, the refusal path, a session cookie,
 and antiforgery. AdminLayout renders an empty owner shell. This runs locally against a Google
 OAuth client with a localhost redirect URI.

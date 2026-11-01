@@ -378,11 +378,11 @@ identical with and without it.
   (it takes seconds), so the file is regenerated on every gate.
 - [X] T032 Fold every executor `decisions_made` entry into `specs/007-owner-signin-claim/decisions.md`
   as numbered rows; reject any that contradict the contracts.
-- [ ] T033 Live walkthrough with real Google (owner at the keyboard, high tier guiding):
+- [X] T033 Live walkthrough with real Google (owner at the keyboard, high tier guiding):
   quickstart.md steps 1–10 on `https://localhost:5081`, log captured to `evidence/live-run.log`;
   record observations in `evidence/live-walkthrough.md`; run `p95.sh` on both logs, tee to
   `evidence/p95-output.txt`.
-- [ ] T034 Non-vacuity (high tier): for each [SAFETY] guard, apply the deliberate break, confirm
+- [X] T034 Non-vacuity (high tier): for each [SAFETY] guard, apply the deliberate break, confirm
   the named test fails on its assertion (not an exception), restore, `touch` the file, rebuild:
   (a) drop `claimedSubject:null` from the claim filter → ClaimRaceTests fails;
   (b) remove the refusal `HandleResponse` → RefusalTests I-2 fails;
@@ -396,7 +396,7 @@ identical with and without it.
   (i) run `p95.sh` on both logs and confirm it reports a non-zero callback count for each (a zero
   count means a format mismatch, not a fast app).
   Record each red message in `evidence/non-vacuity.txt`.
-- [ ] T035 Update `docs/roadmap.md` 007 status on completion (evidence paths, what was not
+- [X] T035 Update `docs/roadmap.md` 007 status on completion (evidence paths, what was not
   delivered), clean rebuild (`dotnet clean` first) with 0 warnings, all tests green.
 
 ## Deferred (owner-reported, not in 007 scope)
