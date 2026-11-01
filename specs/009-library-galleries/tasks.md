@@ -870,7 +870,7 @@ Runs in parallel with Batch G (disjoint files).
   max ≤ 60000. n=0 is a FAIL; an empty or unreadable log is a FAIL. Test it on synthetic logs in
   `evidence/p95-selftest/` (plain, JSON, wrong format, empty), which must give PASS, PASS, FAIL and
   FAIL. Commit those logs. It can be written while Batch A runs.
-- [ ] T057 Timing evidence. Write `tests/Gallery.Web.Tests/LibraryTimingEvidenceTests.cs`
+- [X] T057 Timing evidence. Write `tests/Gallery.Web.Tests/LibraryTimingEvidenceTests.cs`
   (`[Trait("Category","Evidence")]`): a `LibraryHost` with 100 uploaded images (and a second set of
   100 for the bulk delete) GETs `/admin/library` 30 times, then runs 30 of each save (L2, B2, B3,
   B4, B5, G3, G4) plus 5 bulk adds and 5 bulk deletes of 100, waits on `EdgeQueue.WhenIdleAsync(60 s)`,

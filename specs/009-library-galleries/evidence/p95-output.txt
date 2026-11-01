@@ -1,0 +1,18 @@
+== specs/009-library-galleries/evidence/library-timings.log
+format: plain message lines
+PASS SC-002 http.request GET /admin/library 200 n=30 p95=17.28 ms <= 500
+PASS SC-003 POST /admin/library/images/{iid} n=30 p95=3.74 ms <= 500
+PASS SC-003 POST /admin/library/add n=5 p95=158.16 ms <= 500
+FAIL SC-003 POST /admin/library/delete n=5 p95=531.95 ms > 500
+PASS SC-003 POST /admin/library/images/{iid}/delete n=5 p95=33.40 ms <= 500
+PASS SC-003 POST /admin/galleries n=5 p95=3.53 ms <= 500
+PASS SC-003 POST /admin/galleries/order n=30 p95=4.68 ms <= 500
+PASS SC-003 POST /admin/galleries/{gid}/visibility n=30 p95=6.94 ms <= 500
+PASS SC-003 POST /admin/galleries/{gid} n=30 p95=6.15 ms <= 500
+PASS SC-003 POST /admin/galleries/{gid}/order n=30 p95=5.96 ms <= 500
+PASS SC-003 POST /admin/galleries/{gid}/cover n=30 p95=4.64 ms <= 500
+PASS SC-003 POST /admin/galleries/{gid}/remove n=30 p95=5.58 ms <= 500
+PASS SC-003 POST /admin/galleries/{gid}/delete n=5 p95=8.44 ms <= 500
+PASS SC-005 edge.lag n=169 max=7116.25 ms <= 60000
+
+1 FAILED
