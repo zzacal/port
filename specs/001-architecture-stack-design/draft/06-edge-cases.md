@@ -9,7 +9,7 @@
 **Mechanism**: D-04 writes claimedSubject, claimedAt, and claimedIp atomically. No web route can overwrite a set claimedSubject (data-model Owner). The owner's subsequent sign-in fails the conditional update and receives no session.
 
 ### E-03: Tab closed or connection lost mid-batch
-**Outcome**: When the owner returns, the open batch is still there. Images that had succeeded remain succeeded; images that were processing or uploading for more than two minutes are shown as interrupted with Restart and Delete. Nothing has entered the library.
+**Outcome**: When the owner returns, the open batch is still there. Images that had succeeded remain succeeded; images that were waiting, processing, or uploading with no progress for more than two minutes are shown as interrupted with Restart and Delete. Nothing has entered the library.
 **Mechanism**: D-11 persists the batch on the server (FR-017). D-11 (decisions #17) evaluates the heartbeat field: no heartbeat for 2 minutes transitions the item to interrupted when the batch is next read. L-02 captures the failed-or-interrupted state; L-05 has not fired, so no image is in the library.
 
 ### E-04: Restart when master never reached the server
@@ -29,7 +29,7 @@
 **Mechanism**: D-11 enforces FR-028: the Confirm action is disabled client-side until every remaining item is succeeded, and the server independently rejects a confirm request if any item is not in the succeeded state.
 
 ### E-08: Owner tries to start a new upload while a batch is unconfirmed
-**Outcome**: The owner is redirected to the existing open batch, not given a new one.
+**Outcome**: The upload page shows the existing open batch, and newly picked files join it (up to the 100-photo limit); no second batch is started.
 **Mechanism**: D-11 enforces FR-029 via the unique partial index on `{state:"open"}` in the batches collection (data-model Upload batch). The server returns the open batch's URL; no second batch document can be inserted while one is open.
 
 ### E-09: Selected file is not a JPEG, is over 20 MB, or is a corrupt JPEG
@@ -41,7 +41,7 @@
 **Mechanism**: D-09 reads and applies EXIF orientation in the Web Worker before the resize-and-encode ladder; the encoded derivatives carry no EXIF (Constitution III). D-10 runs structural parsers plus MetadataExtractor on every uploaded file; any metadata outside the allowlist causes rejection (Constitution III.5–III.8). The server extracts allowlisted camera fields from the master by ranged download without decoding pixels (D-10, decisions #11).
 
 ### E-11: Source image is smaller than the smallest ladder width
-**Outcome**: No upscaling occurs; only widths at or below the source width are produced.
+**Outcome**: No upscaling occurs; only widths at or below the source width are produced. A source narrower than 320 px gets exactly one width, its own, in AVIF and WebP (feature 008 Clarification 5).
 **Mechanism**: D-09 checks each ladder step against the source dimensions and skips any width that would require upscaling (Constitution IV.6; decisions #10). The derivatives array on the Image document contains only the widths that were actually generated (data-model Image).
 
 ### E-12: Edge purge fails after a visibility change

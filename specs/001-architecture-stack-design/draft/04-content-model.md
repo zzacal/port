@@ -69,7 +69,7 @@ A unique partial index on `{state:"open"}` enforces a single open batch (FR-029,
 | itemId | id | Becomes the Image `_id` when the batch is confirmed. |
 | fileName | string | Shown when the owner is asked to pick the file again (FR-027). |
 | fileSize | int | 20 MB at most (FR-014). |
-| state | `queued` \| `processing` \| `uploading` \| `succeeded` \| `failed` \| `interrupted` | |
+| state | `queued` \| `processing` \| `uploading` \| `succeeded` \| `failed` \| `interrupted` | `interrupted` is computed on read from `heartbeatAt`, never stored (D-11). |
 | reason | string? | Set when the state is `failed`. |
 | masterStored | bool | Lets Restart reuse the staged master (FR-027). |
 | derivativesStored | key[] | |
@@ -88,6 +88,7 @@ stateDiagram-v2
     queued --> failed : error (with reason)
     processing --> failed : error (with reason)
     uploading --> failed : error (with reason)
+    queued --> interrupted : no heartbeat for 2 min
     processing --> interrupted : no heartbeat for 2 min
     uploading --> interrupted : no heartbeat for 2 min
     failed --> queued : Restart — new attemptId, staged files of old attempt deleted
