@@ -1,0 +1,12 @@
+PASS gate build: 0 warnings, 0 errors
+PASS gate tests: 497 passed in 2 assemblies
+PASS FR-018 / 200, no Set-Cookie
+PASS H4 /admin 302 /admin/signin, no-store, noindex
+PASS R-09 http /admin 307 to https
+PASS H7 /ui/ 302 /admin/signin
+PASS H1 /admin/signin 200 with anti-forgery token
+PASS H2 POST /admin/signin 302 accounts.google.com, prompt=select_account, scope=openid
+PASS H2 POST /admin/signin without token 400
+PASS secrets 636 committed files: Google client secret absent
+
+ALL PASS

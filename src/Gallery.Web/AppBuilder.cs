@@ -1,3 +1,5 @@
+using Gallery.Web.Admin;
+using Gallery.Web.Admin.Auth;
 using Gallery.Web.Data;
 using Gallery.Web.Observability;
 using Gallery.Web.Site;
@@ -10,7 +12,10 @@ namespace Gallery.Web;
 
 public static class AppBuilder
 {
-    public static WebApplication Build(string[] args, IDictionary<string, string?>? overrides = null)
+    public static WebApplication Build(
+        string[] args,
+        IDictionary<string, string?>? overrides = null,
+        Action<WebApplicationBuilder>? configure = null)
     {
         var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +25,9 @@ public static class AppBuilder
         // Apply test overrides last so they win over all other configuration sources.
         if (overrides is not null)
             builder.Configuration.AddInMemoryCollection(overrides);
+
+        // Test seam: e.g. a log-capturing provider.
+        configure?.Invoke(builder);
 
         // ── UI / component services ──────────────────────────────────────────
         builder.Services.AddRazorComponents();
@@ -62,6 +70,10 @@ public static class AppBuilder
         });
 
         builder.Services.AddScoped<ContentReader>();
+        builder.Services.AddScoped<OwnerStore>();
+
+        // ── Auth (owner cookie + optional OIDC) ─────────────────────────────
+        builder.Services.AddOwnerAuth(builder.Configuration);
 
         // ── Site options ─────────────────────────────────────────────────────
         var siteOptions = builder.Configuration.GetSection("Site").Get<SiteOptions>() ?? new SiteOptions();
@@ -74,6 +86,17 @@ public static class AppBuilder
 
         app.UseRouting();
         app.UseMiddleware<RequestTimingMiddleware>();
+
+        // Redirect admin and OIDC paths to HTTPS (R-09)
+        app.UseWhen(
+            c => c.Request.Path.StartsWithSegments("/admin")
+                 || c.Request.Path.StartsWithSegments("/signin-oidc"),
+            a => a.UseHttpsRedirection());
+
+        app.UseAdminHeaders();
+        app.UseAuthentication();
+        app.UseAuthorization();
+
         app.UseOutputCache();
 
         app.UseStaticFiles(new StaticFileOptions
@@ -86,14 +109,16 @@ public static class AppBuilder
         });
 
         app.MapPublic();
+        app.MapAdmin();
 
+        // MapUi in every environment (R-12 / T024)
+        // Eager fixture loads at startup (Development only)
         if (app.Environment.IsDevelopment())
         {
-            // Load fixtures eagerly so startup timing is logged once, not on the first /ui request.
             _ = app.Services.GetRequiredService<InlineStyles>();
             _ = app.Services.GetRequiredService<SampleCatalog>();
-            app.MapUi();
         }
+        app.MapUi();
 
         return app;
     }

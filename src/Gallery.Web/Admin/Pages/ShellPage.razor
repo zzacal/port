@@ -1,0 +1,14 @@
+@* Owner shell page for /admin (T014, contracts/http.md H4). *@
+@using Gallery.Web.Components
+@using Gallery.Web.Components.Templates
+
+<AdminLayout Title="Gallery admin" SignOut="@SignOut">
+    <section class="admin-empty">
+        <h1>Signed in</h1>
+        <p>Upload and gallery management arrive in later updates.</p>
+    </section>
+</AdminLayout>
+
+@code {
+    [Parameter] public FormToken? SignOut { get; set; }
+}

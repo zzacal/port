@@ -1,0 +1,10 @@
+== specs/007-owner-signin-claim/evidence/sc006-callbacks.log
+callbacks=60  auth.claim=1
+PASS SC-006 ownership work p95 0.70 ms < 50
+PASS SC-006 callback duration p95 2.78 ms < 1000
+== specs/007-owner-signin-claim/evidence/live-run.redacted.log
+callbacks=6  auth.claim=1
+PASS SC-006 ownership work p95 35.88 ms < 50
+PASS SC-006 callback duration p95 232.58 ms < 1000
+
+ALL PASS

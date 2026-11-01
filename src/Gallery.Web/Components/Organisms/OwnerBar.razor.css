@@ -68,3 +68,5 @@ nav a[aria-current="page"] {
     gap: 8px;
     flex-wrap: wrap;
 }
+
+.ob-signout { display: contents; }

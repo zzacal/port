@@ -6,12 +6,12 @@ namespace Gallery.Web.Ui;
 public static class UiEndpoints
 {
     /// <summary>
-    /// Maps /ui/ and one route per UiCatalog entry. Call only in Development (FR-010);
-    /// becomes the owner policy once sign-in exists.
+    /// Maps /ui/ and one route per UiCatalog entry, in every environment, behind the owner session
+    /// (FR-021, D-21). Without it a GET is redirected to /admin/signin.
     /// </summary>
     public static void MapUi(this WebApplication app)
     {
-        var ui = app.MapGroup("/ui").AddEndpointFilter(async (ctx, next) =>
+        var ui = app.MapGroup("/ui").RequireAuthorization("owner").AddEndpointFilter(async (ctx, next) =>
         {
             ctx.HttpContext.Response.Headers["X-Robots-Tag"] = "noindex";
             return await next(ctx);
