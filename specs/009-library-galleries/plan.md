@@ -83,7 +83,7 @@ two admin scripts, one console command).
 - Existing tests pass unmodified, except the stated requirement changes listed under Test changes.
 - The owner's `dotnet watch` on 5080/5081 is never touched.
 
-**Scale/Scope**: one owner and up to 5,000 images. There are 14 owner routes, 3 pages, 6 optional
+**Scale/Scope**: one owner and up to 5,000 images. There are 15 owner routes, 3 pages, 6 optional
 component parameters, 2 scripts, 1 command and about 12 new test classes.
 
 ## Constitution Check
@@ -93,7 +93,7 @@ component parameters, 2 scripts, 1 command and about 12 new test classes.
 | Principle | Status | How |
 |---|---|---|
 | I.1, I.2, I.4, I.5 | N/A | No ownership change. `SiteProjector` sets only `homeOrder`, `homeCards`, `updatedAt` (`OwnerWriteGuardTests` keeps scanning; its Seeder allowance is removed with the seeder). |
-| I.3 others refused | PASS [SAFETY] | Every route in the `/admin` group, before the catch-all. `LibraryAccessTests`: no session → 302/401 on all 14. |
+| I.3 others refused | PASS [SAFETY] | Every route in the `/admin` group, before the catch-all. `LibraryAccessTests`: no session → 302/401 on all 15 (contracts/http.md L1–L5, G1–G4, B1–B6). |
 | I.6 CSRF | PASS [SAFETY] | Existing `AdminAntiforgeryFilter` on the group. Every POST is tested without a token and expects 400. |
 | II.1 | PASS | Public routes are unchanged apart from the cache tag. |
 | II.2 private unlisted, noindex, purge on change | PASS | `SiteProjector` lists only public, non-empty galleries. Unpublish purges `/` and the gallery pages (P-VIS). |
@@ -202,6 +202,7 @@ tests/Gallery.Web.Tests/
 ├── Library*/Gallery*/Publish*/Builder*/ImageDelete*/Invariant*/PurgeSet*/Edge*/OutputCacheEviction*/
 │   RemoveSeeded*/LibraryAccess*/LibraryComponentAdditions*/LibraryBrowser* Tests.cs   # NEW
 ├── SeederTests.cs, SeedCommandTests.cs, ManifestTests.cs                   # DELETED (code retired)
+├── CameraFieldsTests.cs, DerivativeValidatorTests.cs, UploadValidatorTests.cs  # namespace-only (Test changes 6)
 └── UploadSeedCoexistenceTests.cs, OwnerClaimTests.cs (OwnerClaimSeedTests), UploadConfirmTests.cs (2 seed facts),
     AdminAccessTests.cs (library 404 → 200), OwnerWriteGuardTests.cs (Seeder allowance removed)   # requirement changes
 ```
@@ -245,6 +246,11 @@ The edits were made in `specs/001-architecture-stack-design/draft/` and reassemb
    assertion stays.
 5. `PublicRoutesTests` and `BrowserSiteFixture` already insert documents directly with `SeedKey`
    set. They keep compiling, since `string?` accepts the value, and stay unmodified.
+6. Namespace-only edits forced by moving `DerivativeValidator` and `CameraFields` to `Upload/`
+   (found by the tasks-phase grep; tasks.md T047, decisions row 34): `CameraFieldsTests.cs` (its
+   `using` and the source path in `Source_CameraFields_does_not_contain_Gps`),
+   `DerivativeValidatorTests.cs` and `UploadValidatorTests.cs` (their `using`). No assertion
+   changes.
 
 ## Risks
 

@@ -49,7 +49,8 @@ Rules (from the owner's UI review conventions and 005/008):
     Href="?page=n&open={id}">Edit</TextLink>{View}</div>`, where View is `TextLink "View ↗"` to the
     photo page (R-04) or nothing.
 - `SelectionBar Render=true Count=0 Total={tiles} SelectAllLabel="Select all on this page"
-  Limit={PageSize}` with children: `Add to gallery…` (Primary, `type="button"`, opens the picker),
+  Limit={PageSize}` with children: `Add to gallery…` (Primary, or Secondary while the side panel is
+  open, since the panel's Save is then the one primary; `type="button"`, opens the picker),
   `Delete…` (Danger, `type="button"`, opens the bulk confirm). The Delete form uses `lib-delete`
   and the same ticked ids (the script copies them).
 - Gallery picker: a `<dialog id="lib-picker">` whose `<form>` targets `lib-select`: one radio

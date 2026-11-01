@@ -19,8 +19,9 @@ dotnet test Gallery.slnx --artifacts-path artifacts --blame-hang-timeout 120s
 ```
 
 Expected: every test passes, including unmodified `UiPagesUnchangedTests`,
-`PublicOutputUnchangedTests`, `PublicRoutesTests`, `BrowserTests`, `UploadPageTests`, and the one
-stated requirement change in `AdminAccessTests` (contracts/http.md).
+`PublicOutputUnchangedTests`, `PublicRoutesTests`, `BrowserTests`, `UploadPageTests`. The stated
+requirement changes are exactly those of plan.md "Test changes" (the `AdminAccessTests`
+rename in contracts/http.md, and the seed retirement listed in tasks.md T047).
 
 Scenario coverage (one test class each, names indicative):
 
@@ -46,16 +47,19 @@ Scenario coverage (one test class each, names indicative):
 ## Part B: evidence (parent)
 
 ```bash
-bash specs/009-library-galleries/evidence/p95.sh specs/009-library-galleries/evidence/perf.log
-bash specs/009-library-galleries/evidence/non-vacuity.sh | tee specs/009-library-galleries/evidence/non-vacuity-output.txt
+bash specs/009-library-galleries/evidence/p95.sh specs/009-library-galleries/evidence/library-timings.log
+bash specs/009-library-galleries/evidence/verify.sh | tee specs/009-library-galleries/evidence/verify-output.txt
+bash specs/009-library-galleries/evidence/non-vacuity.sh | tee specs/009-library-galleries/evidence/non-vacuity.txt
 ```
 
 - `p95.sh` was first run on synthetic logs (one passing per SC, one empty → FAIL).
-- `perf.log` is captured from a 5094 instance (`Site:OutputCache=false`) seeded with 100 uploaded
-  test images, driven by a curl loop of 100 library GETs and 100 of each save; SC-002/003/005 PASS.
-- `non-vacuity.sh` breaks each [SAFETY] guard once (publish refusal removed, shared-file check
-  removed, guard check inverted, owner filter dropped, token logged, antiforgery filter skipped on
-  the new group) and records the red test with its assertion message.
+- `library-timings.log` is written by `LibraryTimingEvidenceTests` (tasks.md T057: 100 uploaded
+  test images, 30 library GETs, 30 of each save, 5 bulk adds and deletes of 100); SC-002/003/005
+  PASS with non-zero n. `verify.sh` is the live-server curl walkthrough on 5094 (T058).
+- `non-vacuity.sh` breaks each [SAFETY] guard once (tasks.md T060 list: publish refusal removed,
+  conditional write dropped, shared-file check removed, guard check inverted, owner filter
+  dropped, token logged, routes moved off the owner group, and more) and records the red test
+  with its assertion message.
 
 ## Part C: owner live walkthrough (after the build; owner present)
 

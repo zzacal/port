@@ -7,7 +7,7 @@ credential (FR-043, SC-011).
 | Event template | Emitted by | Notes |
 |---|---|---|
 | `http.request {method} {route} {status} {duration_ms} {db_reads}` | existing middleware | route = pattern, e.g. `/admin/galleries/{gid}/order` |
-| `op.timing {op} {duration_ms} {outcome}` | existing `OpTimer.Time` / `OpTiming.Log` | `outcome` ∈ `ok`, `error`, `refused`, `stale`, `skipped` |
+| `op.timing {op} {duration_ms} {outcome}` | existing `OpTimer.Time` / `OpTiming.Log` | `outcome` ∈ `ok`, `error`, `refused`, `stale`, `skipped`; `OpTimer.Time` writes `ok`/`error`, a refused gate or stale reorder adds one `OpTiming.Log` line with `refused`/`stale` |
 | `edge.purge {op} {mode} {count} {duration_ms} {outcome} {addresses}` | `EdgeWorker`, once per provider call | `mode` ∈ `log-only`, `dev-zone`, `recorder`; `count` ≤ 100; `addresses` = space-joined URLs; `outcome` ∈ `ok`, `skipped`, `failed`, `rate-limited` |
 | `edge.warm {op} {mode} {count} {duration_ms} {outcome}` | `EdgeWorker`, once per warm batch | |
 | `edge.lag {op} {duration_ms}` | `EdgeWorker`, after the warm of one `EdgeWork` | time from enqueue to warm done (SC-005) |
@@ -21,7 +21,7 @@ credential (FR-043, SC-011).
 |---|---|---|
 | `db.library.page`, `db.library.count`, `db.galleries.list`, `db.site.order` | L1 | SC-002 |
 | `db.image.update`, `db.image.tombstone`, `db.image.delete`, `db.images.shared` | image services | SC-003 |
-| `db.gallery.create`, `db.gallery.update`, `db.gallery.delete`, `db.gallery.read` | gallery services | SC-003 |
+| `db.gallery.create`, `db.gallery.update`, `db.gallery.delete`, `db.gallery.load` | gallery services (`db.gallery.load` is the owner read, kept apart from the public `ContentReader`'s `db.gallery.read`) | SC-003 |
 | `db.membership.repair` | `MembershipRepair` | |
 | `db.site.project` | `SiteProjector` (read + write) | SC-007 |
 | `s3.delete` | existing `ImageStore` | |

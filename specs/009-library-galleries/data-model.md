@@ -97,7 +97,8 @@ Repeating `DeleteAsync` on a tombstoned image resumes from "pull from galleries"
   status lines use it.
 - **OperationResult**: `Ok`, `Refused(reason, status)`, `Stale`, plus counts (`added`, `skipped`,
   `deleted`, `leftovers`) for the PRG status query.
-- **EdgeWork**: operation name, page addresses, file addresses, warm image URLs, enqueue time.
+- **EdgeWork**: operation name, page addresses, file addresses, warm file URLs (`WarmFiles`, from
+  `PurgeSets.WarmFiles`), enqueue time.
 - **Settings** (`LibraryOptions`, section `Library`): `PageSize` 100, `TitleMax` 200,
   `CaptionMax` 2000, `DescriptionMax` 5000. (`EdgeOptions`, section `Edge`): `ZoneId`, `ApiToken`
   (user-secrets only), `SiteBaseUrl` (default `https://localhost:5081`), `PurgePages` (false),

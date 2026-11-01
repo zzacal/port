@@ -57,11 +57,14 @@ the files it names, in the same batch as the code they guard.
 - **Logging, verbatim** (contracts/log-events.md; `evidence/p95.sh` parses these names):
   - Timing uses the existing `OpTimer.Time` or `OpTiming.Log` exactly:
     `op.timing {op} {duration_ms} {outcome}`, with `outcome` one of `ok`, `error`, `refused`,
-    `stale`, `skipped`.
+    `stale`, `skipped`. `OpTimer.Time` writes `ok`/`error` itself; a service that refuses (a
+    gate) or detects a stale reorder logs one extra `OpTiming.Log` line for the operation's db op
+    with `refused` or `stale`, and `skipped` is used only by the edge worker.
   - op names used by 009 (no others): `db.library.page`, `db.library.count`, `db.galleries.list`,
     `db.site.order`, `db.image.update`, `db.image.tombstone`, `db.image.delete`,
     `db.images.shared`, `db.gallery.create`, `db.gallery.update`, `db.gallery.delete`,
-    `db.gallery.read`, `db.membership.repair`, `db.site.project`, `s3.delete` (existing
+    `db.gallery.load` (owner reads; `db.gallery.read` stays the public `ContentReader` op),
+    `db.membership.repair`, `db.site.project`, `s3.delete` (existing
     `ImageStore`), `library.image.delete`, `library.bulk.add`, `library.bulk.delete`,
     `cache.evict`, `edge.purge.call`, `edge.warm.request`, `maintenance.remove-seeded`.
   - Events, exactly these templates:
@@ -146,7 +149,9 @@ From speckit-orchestration "Post-implement UI review", applied to every owner pa
   - `Evicting_a_page_tag_drops_only_that_page`: after both pages are cached,
     `IOutputCacheStore.EvictByTagAsync(PublicCache.PageTag("/g/{gid}/{slug}"))`; the gallery page
     is re-read (a second `db.gallery.read`) and `/` is not (still one `db.site.read`).
-  Run it BEFORE changing any source and record the result as part P2b in
+  Write the first two facts and run them BEFORE changing any source (the third needs
+  `PageTag`, so it is added after the source change below). Record the red/green result as part
+  P2b in
   `evidence/probe-results.txt`: red or green, and the assertion message.
   - If the first two facts are red (the 006 cache never applies), edit
     `src/Gallery.Web/Site/PublicEndpoints.cs` to add `.CacheOutput(PublicCache.PolicyName)` to
@@ -203,8 +208,11 @@ only), `src/Gallery.Web/Upload/ConfirmService.cs` (the index call and the title 
     until T047 deletes the seeder.
   - Add the 009 indexes: `images {createdAt:-1, _id:-1}` (name `library_page`),
     `images {"derivatives.avif":1}` and `images {"derivatives.webp":1}`.
-  - `ConfirmService` calls `Indexes.EnsureAsync` where it now calls the seeder method (same
-    once-per-process `Lazy`).
+  - Move the once-per-process `Lazy` cache from `ConfirmService` into `Indexes` as
+    `Indexes.EnsureOnceAsync(IMongoDatabase db)` (keyed by database name, retried after a
+    failure exactly as today). `ConfirmService` calls it where it now calls the seeder method;
+    `GalleryService`, `ImageService` and `ImageDeleteService` call it before their first write,
+    and the removal command calls `EnsureAsync` (data-model "Indexes").
 - [ ] T006 **[SAFETY]** Write `tests/Gallery.Web.Tests/IndexesTests.cs` (`[Collection("mongo")]`):
   - after `EnsureAsync`, two images AND two galleries without `seedKey` insert without
     DuplicateKey (the 008 orchestration rule: test with TWO documents);
@@ -262,7 +270,7 @@ only), `src/Gallery.Web/Upload/ConfirmService.cs` (the index call and the title 
 - [ ] T012 Create `src/Gallery.Web/Edge/EdgeOptions.cs` (section `Edge`: `ZoneId`, `ApiToken`,
   `SiteBaseUrl` default `https://localhost:5081`, `PurgePages` false, `MaxUrlsPerCall` 100,
   `MaxUrlsPerSecond` 800, `QueueCapacity` 1000; `ToString()` not overridden), `EdgeWork.cs`
-  (record: `Op`, `Pages`, `Files`, `WarmImages`, `EnqueuedAt`), `IEdgeCache.cs`
+  (record: `Op`, `Pages`, `Files`, `WarmFiles`, `EnqueuedAt`), `IEdgeCache.cs`
   (`void Enqueue(EdgeWork work)`) and `IEdgeProvider.cs` (`string Mode`,
   `Task<EdgeOutcome> PurgeAsync(IReadOnlyList<string> urls, CancellationToken)`,
   `Task<EdgeOutcome> WarmAsync(IReadOnlyList<string> urls, CancellationToken)`). In `AddEdge`:
@@ -274,15 +282,23 @@ only), `src/Gallery.Web/Upload/ConfirmService.cs` (the index call and the title 
   `GalleryDelete`, `Text`, `Delete`) from BEFORE/AFTER snapshots
   (`GallerySnapshot(Id, Slug, Visibility, Items)`). Addresses are absolute: pages on
   `Edge:SiteBaseUrl`, files on `Storage:ImageBaseUrl`; de-duplicated and ordinally sorted.
+  Add `WarmFiles(purgedPages, after, homeCards, avifKeysOf)` (FR-039, contracts/edge.md "Warm"):
+  for each purged page that still exists AFTER the change, every AVIF width URL of its first-row
+  images (home: the first 3 `homeCards` covers; gallery page: the first 4 `items`; photo page: the
+  photo itself); never a file in the deleted set. `avifKeysOf` is a lookup the caller fills from
+  the image documents it already read.
 - [ ] T014 Write `tests/Gallery.Web.Tests/PurgeSetTests.cs` (pure, SC-004): one fact per
   contracts/edge.md row, each asserting set EQUALITY, plus: a gallery emptied by the change is
   still purged; a private gallery with photos is purged and `/` is not; rename to the same slug
   gives one slug's paths only; a private-only gallery move gives an empty P-ORDER; P-TEXT adds `/`
   only when the image is the cover of a listed gallery (decisions row 24); P-DELETE files are
-  exactly the keys passed as deleted.
+  exactly the keys passed as deleted. `WarmFiles`: a purged gallery page of 6 photos gives the
+  AVIF URLs of exactly its first 4; `/` gives the first 3 covers; a page that 404s after the change
+  gives none; a deleted key is never returned.
 - [ ] T015 Create `src/Gallery.Web/Edge/EdgeQueue.cs` (implements `IEdgeCache`; bounded
   `Channel<EdgeWork>` of `QueueCapacity`; a full queue logs `edge.dropped {op} {count}` and never
-  blocks or throws) and `src/Gallery.Web/Edge/EdgeWorker.cs` (`BackgroundService`): per work item
+  blocks or throws; `Task<bool> WhenIdleAsync(TimeSpan timeout)` completes when the queue is empty
+  and no work item is in flight, for the removal command and the evidence test) and `src/Gallery.Web/Edge/EdgeWorker.cs` (`BackgroundService`): per work item
   it splits pages and files into calls of at most `MaxUrlsPerCall`, spaces calls so no more than
   `MaxUrlsPerSecond` URLs leave per rolling second, purges, then warms, logging `edge.purge` per
   call, `edge.warm` per warm batch and `edge.lag` after the warm (templates verbatim). Page URLs
@@ -304,8 +320,11 @@ only), `src/Gallery.Web/Upload/ConfirmService.cs` (the index call and the title 
   write `tests/Gallery.Web.Tests/EdgeWorkerTests.cs`: 250 file URLs → exactly 3 purge calls of
   100, 100 and 50; with `MaxUrlsPerSecond=100` the third call starts ≥ 2 s after the first;
   `PurgePages=false` → page URLs only in a `skipped` `edge.purge` line, never in a recorder
-  call; a throwing provider → one `failed` line and the next work item still runs; a queue of
-  capacity 1 with a blocked gate → `edge.dropped`; one `edge.lag` per work item; the log-only
+  call; `PurgePages=true` → the page URLs are purged by the provider AND each is warmed with an
+  anonymous GET (IV.10; the hosting feature turns this on); a throwing provider → one `failed`
+  line and the next work item still runs; a queue of
+  capacity 1 with a blocked gate → `edge.dropped`; one `edge.lag` per work item; `WhenIdleAsync`
+  returns false while the gate is closed and true after it opens; the log-only
   provider logs every address with outcome `skipped`.
 - [ ] T018 **[SAFETY]** Write `tests/Gallery.Web.Tests/CloudflareEdgeProviderTests.cs` with a fake
   `HttpMessageHandler` and the test token `test-edge-token-0123456789abcdef`: the request URL is
@@ -351,10 +370,15 @@ recorder after every operation.
   Prove it once in `GalleryServiceTests.cs`: GET `/admin` → 200, the token is non-empty, and
   `IEdgeProvider` resolves to the recorder.
 - [ ] T021 [US1] Create `src/Gallery.Web/Library/OperationResult.cs` (data-model "Value objects")
+  and, in the same file, `OperationScope`: it collects the BEFORE and AFTER `GallerySnapshot` of
+  every gallery an operation touches, the deleted public keys and the counts; one scope per
+  request; `CompleteAsync()` runs card rebuilds, `SiteProjector.ProjectAsync`, eviction and ONE
+  `Enqueue` exactly once, so a bulk loop of single-item calls flushes once,
   and `src/Gallery.Web/Library/GalleryService.cs` part 1 (scoped). Every write follows
   contracts/http.md "Every write": the ordered single-document updates of research R-01, then
   `CardBuilder.Build` for each affected gallery, `SiteProjector.ProjectAsync`,
-  `PageCacheEvictor.EvictAsync(page paths)`, then `IEdgeCache.Enqueue` (never awaited further):
+  `PageCacheEvictor.EvictAsync(page paths)`, then `IEdgeCache.Enqueue` (never awaited further). The enqueued `EdgeWork`
+  carries `PurgeSets.WarmFiles(...)` computed from the AFTER state it already read:
   - `CreateAsync(title)`: trimmed title 1..`TitleMax`, `OpaqueId.NewId()`, `Slug.From`,
     visibility `private`, empty `items`, NO `seedKey`, appended to `homeOrder`; no purge (L-10).
   - `AddOneAsync(gid, iid, OperationScope)`: THE single-item add gate (unknown or tombstoned
@@ -490,9 +514,11 @@ from `AddAsync` (no second add path); `DeleteAsync` called from `DeleteManyAsync
   with status, Edit and View, SelectionBar with `Limit=@PageSize`, the gallery picker dialog with
   the public note, the bulk `DangerConfirm`, the side panel with bound Title/Caption inputs whose
   `maxlength` come from `LibraryOptions`, the danger area, Pager, empty state, the
-  `AdminAssets.UrlFor("admin-assets/library.js")` module script). Acceptance criteria UI-1, UI-2,
+  `AdminAssets.UrlFor("admin-assets/library.js")` module script). With `?open`, the panel's Save
+  is Primary and the bar's "Add to gallery…" is Secondary. Acceptance criteria UI-1, UI-2,
   UI-3, UI-4, UI-7 and UI-8.
 - [ ] T032 [US1] Write `tests/Gallery.Web.Tests/LibraryPageTests.cs`:
+  - FR-002: the owner bar's Library link carries `aria-current="page"` and Galleries does not;
   - 101 uploaded images: page 1 holds 100 newest first, page 2 holds 1, `?page=9` renders page 2;
   - empty library: "No photos yet." with the `/admin/upload` link;
   - status lines: "Not in a gallery", "In 2 galleries", "In 2 galleries · public in 1";
@@ -500,7 +526,9 @@ from `AddAsync` (no second add path); `DeleteAsync` called from `DeleteManyAsync
     gallery in home order; an image in no gallery has no View link;
   - UI-2: the only element inside the tile's photo cell is the `pos-tl` SelectMark; status, Edit
     and View are inside `.lib-row` in the caption;
-  - UI-3: exactly one `btn-primary` outside `<dialog>` elements; UI-4: `Delete…` and
+  - UI-3: outside `<dialog>` elements, exactly one `btn-primary`: without `?open` it is the
+    selection bar's "Add to gallery…"; with `?open` it is the panel's Save and "Add to gallery…"
+    renders `btn-secondary` (contracts/components.md C1); UI-4: `Delete…` and
     `Delete photo` carry `btn-danger` and not `btn-primary`;
   - UI-7: with override `Library:TitleMax=50` and `Library:PageSize=20` the title input has
     `maxlength="50"`, `required`, `pattern`, and the bar `data-limit="20"`;
@@ -516,6 +544,10 @@ from `AddAsync` (no second add path); `DeleteAsync` called from `DeleteManyAsync
   - `PostBareAsync` on L2 → 303 and BOTH stored values unchanged (the bare-POST class);
   - the recorder set for an image in a public gallery equals P-TEXT; for an image in no gallery
     with a page, zero calls;
+  - FR-044 end to end, on a host with `Site:OutputCache=true`: GET the image's photo page and `/`
+    (both cached), save a new title through L2, GET both again → the photo page shows the new title
+    (a second `db.gallery.read`), while `/` is still served from the cache (one `db.site.read`)
+    because the image is not a cover;
   - the panel's gallery list links each holding gallery's builder; delete copy "It is in 2
     galleries. This removes it from every gallery and deletes the original file. It can't be
     undone." ("It is in no gallery." for 0).
@@ -536,7 +568,7 @@ from `AddAsync` (no second add path); `DeleteAsync` called from `DeleteManyAsync
 
 **Parent task after Batch D**:
 
-- [ ] T036 (high tier, parent) Stated requirement change, FR-001 (contracts/http.md "Changed
+- [ ] T036 [US1] (high tier, parent) Stated requirement change, FR-001 (contracts/http.md "Changed
   existing test"): in `tests/Gallery.Web.Tests/AdminAccessTests.cs`, rename
   `Owner_GetAdminUpload_returns_200_and_library_still_404` to
   `Owner_GetAdminUpload_and_library_return_200`; assert 200 for `/admin/upload` and
@@ -573,7 +605,8 @@ Runs in parallel with Batch G (disjoint files).
 - [ ] T038 [US3] Create `src/Gallery.Web/Admin/Pages/GalleriesPage.razor` exactly per
   contracts/components.md C2 and map G1 GET. Acceptance criteria UI-1 (View only when the gallery
   has photos; Edit to the builder), UI-2 (status, handle, switch, View, Edit in `.gal-row` under
-  the title), UI-3 ("New gallery" is the one primary; Secondary while a publish warning is shown;
+  the title; the owner bar marks Galleries `aria-current="page"`, FR-002), UI-3 ("New gallery"
+  is the one primary; Secondary while a publish warning is shown;
   the dialog's Create is the primary only while the dialog is open), UI-5.
 - [ ] T039 [US4] Create `src/Gallery.Web/Admin/Pages/GalleryPage.razor` exactly per
   contracts/components.md C3 and map B1 GET (404 for an unknown gallery). Acceptance criteria
@@ -586,8 +619,11 @@ Runs in parallel with Batch G (disjoint files).
   only when the listed relative order changed (decisions row 32); a stale G3 → 409 with "The
   gallery list changed in another tab. Reload to see the current order."; G2 → 303 to the builder,
   last in `homeOrder`, zero recorder calls; publish from the list redirects to
-  `/admin/galleries?visibility=public`; unpublish → gone from `/` at once, the gallery page now
-  has the noindex marker, P-VIS recorded; card statuses (4 variants) and dimmed `is-private`;
+  `/admin/galleries?visibility=public`; unpublish → gone from `/` at once, `homeOrder`
+  unchanged (FR-032), the gallery page now
+  has the noindex marker, P-VIS recorded; one `owner.action gallery.publish {gid} …` and one
+  `owner.action gallery.unpublish {gid} …` line (FR-050); card statuses (4 variants) and dimmed
+  `is-private`;
   UI-5 on the rendered list: the public card's switch has `checked`, the private card's switch
   has no `checked` attribute, the empty card's switch has `disabled` and "Add a photo before
   making this gallery public" while a non-empty card's has no `disabled` attribute. Enable the
@@ -607,10 +643,12 @@ Runs in parallel with Batch G (disjoint files).
   404, its list status "Public · hidden until it has a photo", and adding a photo brings it back at
   its position with no publish; rename Coast → Coastline: the old address answers 301 to the new
   one and P-RENAME holds both; B2 bare POST keeps title and description; delete gallery → 303
-  `deleted=1`, page 404, images still in the library and their other galleries; the empty builder
+  `deleted=1`, page 404, images still in the library and their other galleries, one `owner.action
+  gallery.delete {gid}` line (FR-050); the empty builder
   shows "No photos in this gallery yet." with the library link.
 - [ ] T043 [US5] Write `tests/Gallery.Web.Tests/LibraryDeleteTests.cs` (US5, FR-013/FR-014): L5 →
-  303 `deleted=1&leftovers=0`, the image gone everywhere; L4 of 3 with one failing key (the T026
+  303 `deleted=1&leftovers=0`, the image gone everywhere, one `owner.action image.delete {iid}`
+  line (FR-050); L4 of 3 with one failing key (the T026
   `IObjectDeleter` override) → 303 `deleted=3&leftovers=1` and the rendered status "3 deleted · 1
   files could not be removed and were logged"; exactly 3 `op.timing library.image.delete` lines
   (the bulk path calls the single path, UI-6); `PageSize+1` ids → 422 and nothing deleted; L5 on
@@ -626,21 +664,34 @@ Runs in parallel with Batch G (disjoint files).
 - [ ] T044 [US6] **[SAFETY]** Create `src/Gallery.Web/Maintenance/DevTargetGuard.cs`:
   `static IReadOnlyList<string> Check(string environment, StorageOptions s, MongoOptions m)` with
   the three checks of contracts/removal-command.md, phrased as `SeedCommand` phrases them today
-  (read `Seed/SeedCommand.cs` lines 95–105; it is deleted in T047, so this is a move, not a copy).
+  (read `Seed/SeedCommand.cs` lines 95–105). Until T047 deletes `SeedCommand`, the two copies
+  coexist; T047 removes the old one, and T052's source guard keeps it from coming back.
   An empty list means pass.
 - [ ] T045 [US6] **[SAFETY]** Create `src/Gallery.Web/Maintenance/RemoveSeededCommand.cs` exactly
   per contracts/removal-command.md: `public static Task<int> RunAsync(string[] args, TextWriter
   output, IDictionary<string,string?>? overrides = null)`; configuration sources in the contracted
-  order with overrides last; exit 2 (`Missing required setting: {key}`, never a value), 4
+  order with overrides last; the environment is the configuration key `ASPNETCORE_ENVIRONMENT`
+  (default `Production`), as `SeedCommand` reads it; exit 2 (`Missing required setting: {key}`,
+  never a value), 4
   (`Target guard failed: {check}` per check, nothing touched), 5 (`Stopped: {error type}. Run the
   command again to finish.`), 0 with the seven summary lines verbatim. It builds a service
-  provider with the same registrations the app uses (`AddLibrary`, `AddEdge`, Mongo, storage) and
-  CALLS `Indexes.EnsureAsync`, `GalleryService.DeleteAsync` and `ImageDeleteService.DeleteAsync`.
+  host with `Host.CreateApplicationBuilder` and the same registrations the app uses (`AddLibrary`,
+  `AddEdge`, Mongo, storage, `OpTimer`, and the existing `AddPublicOutputCache()` so
+  `PageCacheEvictor` resolves; its evictions are no-ops in this separate process, which is why the
+  output says the running app drops its cache within 60 s). The guard runs BEFORE the host is
+  built or started. It starts the host (so `EdgeWorker` runs), CALLS `Indexes.EnsureAsync`,
+  `GalleryService.DeleteAsync` and `ImageDeleteService.DeleteAsync` inside a scope, then awaits
+  `EdgeQueue.WhenIdleAsync(30 s)` before stopping the host, so the purge goes through the
+  configured provider (contracts/removal-command.md). The post-guard body is a separate
+  `public static Task<RemovalSummary> RemoveAsync(IServiceProvider services)` (the seven counts),
+  which `RunAsync` calls; tests that prove owner content survives but not the guard call it with a
+  test host's services.
   The selection filter is exactly `{seedKey:{$exists:true, $nin:[null,""]}}` on both collections.
   Timed as `maintenance.remove-seeded`; logs `owner.action seeded.remove`.
 - [ ] T046 [US6] **[SAFETY]** Write `tests/Gallery.Web.Tests/RemoveSeededTests.cs`
-  (`[Collection("s3")]` + MongoFixture; databases named `*_dev`, buckets `gallery-dev-*` created
-  on S3Proxy; `ASPNETCORE_ENVIRONMENT` passed through overrides, never by mutating the process
+  (`[Collection("s3")]` + MongoFixture; each fact opens its own database
+  `new MongoClient(mongo.ConnectionString).GetDatabase($"gallery_rs_{Guid.NewGuid():N}_dev")`
+  (MongoFixture stays unmodified), buckets `gallery-dev-*` created on S3Proxy; `ASPNETCORE_ENVIRONMENT` passed through overrides, never by mutating the process
   environment):
   - one fact per guard check plus all three failing → exit 4 with exactly the failing checks named,
     and dumps of `images`, `galleries`, `site` and both buckets identical before and after;
@@ -653,11 +704,13 @@ Runs in parallel with Batch G (disjoint files).
     recomputed; the shared key still exists and is counted as kept; `claimedSubject`, `claimedAt`
     and `claimedIp` unchanged (I.4; the check moved here from the retired
     `OwnerClaimSeedTests.Reseed_keeps_claim`, decisions row 27); the seven output lines match;
-  - a second run prints zeros for every count (SC-010, FR-047).
+  - a second run prints zeros for every count (SC-010, FR-047);
+  - the first run logs one `owner.action seeded.remove` line with the counts and one
+    `op.timing maintenance.remove-seeded … ok` (FR-049, FR-050).
 
 ## Phase 8: Seed retirement and the stated test changes (high tier, parent, after Batches E and G)
 
-- [ ] T047 (high tier, parent ONLY) **Retire the seed** (FR-045, research R-11, decisions rows 26
+- [ ] T047 [US6] (high tier, parent ONLY) **Retire the seed** (FR-045, research R-11, decisions rows 26
   and 27, orchestration "Removal/deletion features"). Step 0: re-run the inventory grep and
   compare it with the list below; any extra hit is a blocker until classified.
   `grep -rn -E "Seeder|SeedCommand|Manifest\b|PhotoJson|seed-manifest|prepare-photos|Gallery\.Web\.Seed|EnsureSeedKeyIndexesAsync|\"seed\"" src tests scripts .gitignore`
@@ -687,16 +740,17 @@ Runs in parallel with Batch G (disjoint files).
   - **Rewritten facts, assertions kept (stated requirement change)**:
     - `tests/Gallery.Web.Tests/UploadSeedCoexistenceTests.cs`:
       `Seed_run_leaves_an_uploaded_image_untouched` → `Removal_command_leaves_an_uploaded_image_untouched`
-      (seed-shaped docs from `SeedShapes` in a `*_dev`-named database, then
-      `RemoveSeededCommand.RunAsync` with `gallery-dev-*` bucket overrides; the uploaded image's `ToJson()` is identical);
+      (seed-shaped docs from `SeedShapes`, then `RemoveSeededCommand.RemoveAsync` over a
+      service provider built on the test's database and S3Proxy, as T046's tests do; the uploaded image's `ToJson()` is identical);
       `Seed_run_replaces_legacy_seedKey_index_and_keeps_two_uploads` →
       `Indexes_replace_legacy_seedKey_index_and_keep_two_uploads` (`Indexes.EnsureAsync`
       instead of `SeedAsync`; every index assertion unchanged). The serialisation fact stays
       byte-identical. Drop `using Gallery.Web.Seed;` and the class comment's Seeder sentence.
     - `tests/Gallery.Web.Tests/UploadConfirmTests.cs`: `Seed_run_after_confirm_leaves_uploaded_images`
       → `Removal_command_after_confirm_leaves_uploaded_images` (the control image gets
-      `seedKey: "seed-control"`, because the removal filter keeps `""`; `summary.ImagesDeleted ==
-      1` becomes the output line `seeded images removed: 1`); `Confirm_after_a_seed_run_adds_both_images`
+      `seedKey: "seed-control"`, because the removal filter keeps `""`; it calls
+      `RemoveSeededCommand.RemoveAsync` with the host's services, and `summary.ImagesDeleted == 1`
+      becomes `SeededImagesRemoved == 1`); `Confirm_after_a_seed_run_adds_both_images`
       → `Confirm_after_seeded_content_adds_both_images` (`SeedShapes` docs plus
       `Indexes.EnsureAsync` before the batch). Every other fact in the file stays byte-identical.
   - **Namespace-only edits forced by the move** (`using Gallery.Web.Seed;` →
@@ -721,7 +775,9 @@ Runs in parallel with Batch G (disjoint files).
   and the `.gitignore` patterns; `dotnet run --project src/Gallery.Web --no-launch-profile -- seed`
   exits 64; `git diff --stat 27eef20 -- tests/` lists exactly the files above plus `AdminAccessTests.cs`
   and the new files; full build `-warnaserror` and full suite green; the expected test count is the
-  T001 count minus the 32 deleted facts plus the new ones. Record every deleted or moved file in
+  T001 count minus the deleted test cases (9 + 7 + 15 methods plus `Reseed_keeps_claim`, counted
+  per class from the T001 run with theories expanded) plus the new ones. Record every deleted or
+  moved file in
   decisions.md in one DEFAULT row and in the commit body.
 
 ## Phase 9: Scripts and browser, Batch F (one executor, 4 tasks, after Batch E)
@@ -753,19 +809,23 @@ Runs in parallel with Batch G (disjoint files).
   computed `display` is `grid`, and `library.js` loaded (the bar element is upgraded).
 - [ ] T051 [US3] Write `tests/Gallery.Web.Tests/LibraryBrowserTests.cs`
   (`[Trait("Category","Browser")]`, `[Collection("library-browser")]`), asserting outcomes:
-  - drag a builder tile to the front → after the submit the stored `items` order changed (FR-022);
-    the same in the gallery list (FR-019);
-  - keyboard: focus a handle, Space, ArrowRight ×2, Space → stored order moved by 2; Escape after
-    a move → order unchanged and no POST sent;
+  - drag a builder tile to the front → while the pointer is down a `.drop-slot` is in the grid at
+    the landing index, and after the drop the stored `items` order changed (FR-022); the same in
+    the gallery list (FR-019);
+  - keyboard: focus a handle, Space, ArrowRight ×2, Space → stored order moved by 2, and the live
+    region read "Position 3 of n" before the drop; Escape after a move → order unchanged and no
+    POST sent;
   - select 3 tiles → "3 selected"; Select all on this page → count = tiles on the page; with
-    host `Library:PageSize=5` and 5 tiles plus nothing more, a 6th tick is impossible (UI-7);
+    host `Library:PageSize=5` and 7 images, page 1 shows 5 tiles, Select all gives "5 selected"
+    and the bar's `data-limit` is "5" (UI-7; the page never holds more than the limit);
   - the picker shows the public note for a public gallery;
   - publish: toggling the switch of a non-empty private gallery shows the warning; "Make public"
     → public; the switch of a private gallery reads `input.checked === false` after load (UI-5);
   - UI-2 geometry at 1440, 1024 and 390 px: each tile's control row's bounding box lies below the
     photo cell's bottom edge and inside the tile's box; only the select mark intersects the cell;
-  - UI-3/UI-4: per state (no selection, selection, picker open, publish warning) exactly one
-    visible button has a non-transparent computed background (the primary); every delete button
+  - UI-3/UI-4: per state (no selection, selection, side panel open with a selection, picker open,
+    publish warning) exactly one visible button OUTSIDE an open modal `<dialog>` has a
+    non-transparent computed background, and when a modal dialog is open exactly one inside it does; every delete button
     has a transparent background and a coloured border;
   - no `/admin-assets/` script on `/`, a gallery page or a photo page (FR-003).
   Run the class 3 times; it must be green all 3 times.
@@ -813,8 +873,10 @@ Runs in parallel with Batch G (disjoint files).
 - [ ] T057 Timing evidence. Write `tests/Gallery.Web.Tests/LibraryTimingEvidenceTests.cs`
   (`[Trait("Category","Evidence")]`): a `LibraryHost` with 100 uploaded images (and a second set of
   100 for the bulk delete) GETs `/admin/library` 30 times, then runs 30 of each save (L2, B2, B3,
-  B4, B5, G3, G4) plus 5 bulk adds and 5 bulk deletes of 100, waits for the edge queue to drain,
-  and writes `LogLines` (one message per line, in order) to
+  B4, B5, G3, G4) plus 5 bulk adds and 5 bulk deletes of 100, waits on `EdgeQueue.WhenIdleAsync(60 s)`,
+  asserts at least one `op.timing` line for every op name in the Rules except
+  `maintenance.remove-seeded` (T046) and `edge.purge.call`/`edge.warm.request` (dev-zone only;
+  T018) (FR-049), and writes `LogLines` (one message per line, in order) to
   `specs/009-library-galleries/evidence/library-timings.log`. Then run `bash
   specs/009-library-galleries/evidence/p95.sh specs/009-library-galleries/evidence/library-timings.log
   | tee specs/009-library-galleries/evidence/p95-output.txt`. SC-002, SC-003 and SC-005 must PASS

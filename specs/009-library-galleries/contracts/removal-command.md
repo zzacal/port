@@ -58,4 +58,10 @@ replaces the retired `OwnerClaimSeedTests` reseed check).
 (`SeederTests`, `SeedCommandTests`, `ManifestTests`, the seed half of `UploadSeedCoexistenceTests`,
 `OwnerClaimSeedTests`). `.dev-prepared/` and `dev-pictures/` stay gitignored on the owner's
 machine; the command does not read them. `DerivativeValidator` and `CameraFields` move to
-`Upload/` unchanged.
+`Upload/` unchanged apart from the namespace, which forces `using`-only edits in
+`CameraFieldsTests`, `DerivativeValidatorTests` and `UploadValidatorTests` (plus the source path
+in `Source_CameraFields_does_not_contain_Gps`). The full inventory is tasks.md T047.
+
+Test entry point: the post-guard body is `RemoveSeededCommand.RemoveAsync(IServiceProvider)`,
+which `RunAsync` calls after the guard passes; tests of the owner-content filter call it on a test
+host's services, and the guard tests call `RunAsync`.
