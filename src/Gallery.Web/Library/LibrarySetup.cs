@@ -11,6 +11,9 @@ public static class LibrarySetup
 {
     public static IServiceCollection AddLibrary(this IServiceCollection s, IConfiguration c)
     {
+        s.AddSingleton(LibraryOptions.Load(c));
+        s.AddScoped<SiteProjector>();
+        s.AddScoped<MembershipRepair>();
         return s;
     }
 

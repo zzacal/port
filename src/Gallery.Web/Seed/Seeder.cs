@@ -535,47 +535,6 @@ public sealed class Seeder
 
     private Task EnsureIndexesAsync(CancellationToken ct) => EnsureSeedKeyIndexesAsync(_db, ct);
 
-    /// <summary>
-    /// Creates (or upgrades from the pre-008 non-partial form) the partial unique <c>seedKey_1</c>
-    /// index on images and galleries. Also called by upload confirm, so a dev database seeded
-    /// before 008 accepts a second uploaded image without waiting for the next seed run.
-    /// </summary>
-    public static async Task EnsureSeedKeyIndexesAsync(IMongoDatabase db, CancellationToken ct = default)
-    {
-        var imagesCol = db.GetCollection<BsonDocument>("images");
-        var galleriesCol = db.GetCollection<BsonDocument>("galleries");
-
-        // Partial unique index: only seeded documents carry seedKey. Owner-created documents
-        // (uploads in 008, galleries in 009) omit it, and a plain unique index would treat every
-        // missing field as null and refuse the second one (008 decisions row 60).
-        var indexKeysDef = Builders<BsonDocument>.IndexKeys.Ascending("seedKey");
-        var indexOptions = new CreateIndexOptions<BsonDocument>
-        {
-            Unique = true,
-            Name = "seedKey_1",
-            PartialFilterExpression = Builders<BsonDocument>.Filter.Exists("seedKey"),
-        };
-
-        await EnsureSeedKeyIndexAsync(imagesCol, indexKeysDef, indexOptions, ct);
-        await EnsureSeedKeyIndexAsync(galleriesCol, indexKeysDef, indexOptions, ct);
-    }
-
-    private static async Task EnsureSeedKeyIndexAsync(
-        IMongoCollection<BsonDocument> col,
-        IndexKeysDefinition<BsonDocument> keys,
-        CreateIndexOptions<BsonDocument> options,
-        CancellationToken ct)
-    {
-        try
-        {
-            await col.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(keys, options), cancellationToken: ct);
-        }
-        catch (MongoCommandException ex) when (ex.Code is 85 or 86)
-        {
-            // An older non-partial seedKey_1 exists (IndexOptionsConflict / IndexKeySpecsConflict):
-            // replace it with the partial one.
-            await col.Indexes.DropOneAsync("seedKey_1", ct);
-            await col.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(keys, options), cancellationToken: ct);
-        }
-    }
+    /// <summary>Moved to <see cref="Indexes.EnsureAsync"/> (009 T005); this delegate goes with the seeder (T047).</summary>
+    public static Task EnsureSeedKeyIndexesAsync(IMongoDatabase db, CancellationToken ct = default) => Indexes.EnsureAsync(db, ct);
 }

@@ -53,6 +53,8 @@ public sealed class ImageDoc
     [BsonElement("derivatives")] public List<DerivativeDoc> Derivatives { get; set; } = [];
     [BsonElement("galleryIds")]  public List<string> GalleryIds { get; set; } = [];
     [BsonElement("createdAt")]   public DateTime CreatedAt  { get; set; }
+    // 009 R-02: tombstone set at the start of a delete; absent on live images.
+    [BsonElement("deletingAt")]  [BsonIgnoreIfNull] public DateTime? DeletingAt { get; set; }
 }
 
 // ---------------------------------------------------------------------------
@@ -80,7 +82,9 @@ public sealed class GalleryCardDoc
 public sealed class GalleryDoc
 {
     [BsonElement("_id")]          public string Id           { get; set; } = string.Empty;
-    [BsonElement("seedKey")]      public string SeedKey      { get; set; } = string.Empty;
+    // 009 FR-048 [SAFETY]: null (absent in BSON) for owner-created galleries, so the removal
+    // command's "seedKey exists and non-empty" filter never selects them.
+    [BsonElement("seedKey")]      [BsonIgnoreIfNull] public string? SeedKey { get; set; }
     [BsonElement("slug")]         public string Slug         { get; set; } = string.Empty;
     [BsonElement("title")]        public string Title        { get; set; } = string.Empty;
     [BsonElement("description")]  public string? Description { get; set; }

@@ -194,12 +194,12 @@ only), `src/Gallery.Web/Upload/ConfirmService.cs` (the index call and the title 
 `tests/Gallery.Web.Tests/{IndexesTests,CardBuilderTests,SiteProjectorTests,MembershipRepairTests}.cs`,
 `tests/Gallery.Web.Tests/Fixtures/{SeedShapes,InvariantChecker}.cs`.
 
-- [ ] T004 **[SAFETY]** In `src/Gallery.Web/Data/Documents.cs` (FR-048, decisions row 13):
+- [X] T004 **[SAFETY]** In `src/Gallery.Web/Data/Documents.cs` (FR-048, decisions row 13):
   - `GalleryDoc.SeedKey` becomes `string?` with NO initialiser and `[BsonIgnoreIfNull]`;
   - `ImageDoc` gains `[BsonElement("deletingAt")] [BsonIgnoreIfNull] public DateTime? DeletingAt`.
   Every existing writer sets `SeedKey` explicitly, so existing tests stay green. Fix any nullable
   warning at the consumer with a null check, never with `!`.
-- [ ] T005 Create `src/Gallery.Web/Data/Indexes.cs` with `public static Task
+- [X] T005 Create `src/Gallery.Web/Data/Indexes.cs` with `public static Task
   EnsureAsync(IMongoDatabase db, CancellationToken ct = default)` (research R-11, data-model
   "Indexes"):
   - MOVE the body of `Seeder.EnsureSeedKeyIndexesAsync` here unchanged (the partial unique
@@ -213,7 +213,7 @@ only), `src/Gallery.Web/Upload/ConfirmService.cs` (the index call and the title 
     failure exactly as today). `ConfirmService` calls it where it now calls the seeder method;
     `GalleryService`, `ImageService` and `ImageDeleteService` call it before their first write,
     and the removal command calls `EnsureAsync` (data-model "Indexes").
-- [ ] T006 **[SAFETY]** Write `tests/Gallery.Web.Tests/IndexesTests.cs` (`[Collection("mongo")]`):
+- [X] T006 **[SAFETY]** Write `tests/Gallery.Web.Tests/IndexesTests.cs` (`[Collection("mongo")]`):
   - after `EnsureAsync`, two images AND two galleries without `seedKey` insert without
     DuplicateKey (the 008 orchestration rule: test with TWO documents);
   - a pre-existing plain unique `seedKey_1` on each collection is replaced by the partial form
@@ -221,13 +221,13 @@ only), `src/Gallery.Web/Upload/ConfirmService.cs` (the index call and the title 
   - the three 009 indexes exist with their keys; a second `EnsureAsync` call is a no-op;
   - `new GalleryDoc{…}.ToBsonDocument()` without a seed key has no `seedKey` element, and
     `new ImageDoc{…}` without `DeletingAt` has no `deletingAt` element.
-- [ ] T007 Create `src/Gallery.Web/Library/LibraryOptions.cs`, section `Library`: `PageSize` 100,
+- [X] T007 Create `src/Gallery.Web/Library/LibraryOptions.cs`, section `Library`: `PageSize` 100,
   `TitleMax` 200, `CaptionMax` 2000, `DescriptionMax` 5000 (research R-09). Startup validation:
   every value > 0, or startup throws naming the key. Register it in `AddLibrary` as one
   singleton. `ConfirmService` takes `LibraryOptions` and caps upload titles at `TitleMax` instead
   of the constant (the constant stays as the default's documented value; `UploadConfirmTests`
   stay green unmodified).
-- [ ] T008 Create `src/Gallery.Web/Library/CardBuilder.cs`: `public static GalleryCardDoc
+- [X] T008 Create `src/Gallery.Web/Library/CardBuilder.cs`: `public static GalleryCardDoc
   Build(GalleryDoc g, ImageDoc? cover)`. Cover = `pinnedCover` when set, else `items[0]`, else
   none; `imageCount` = `items.Count`; title and slug from the gallery. It produces exactly the
   shape `GalleryCardDoc` already defines (the shape the public pages read). Create
@@ -236,20 +236,20 @@ only), `src/Gallery.Web/Upload/ConfirmService.cs` (the index call and the title 
   (public AND `imageCount ≥ 1`, in `homeOrder` order) and `updatedAt`, with upsert on
   `_id:"site"`, all inside `OpTimer.Time("db.site.project")`. It never names `claimedSubject`,
   `claimedAt` or `claimedIp` (`OwnerWriteGuardTests` scans for them). Register it scoped.
-- [ ] T009 Write `tests/Gallery.Web.Tests/CardBuilderTests.cs` (pinned cover, first-item cover,
+- [X] T009 Write `tests/Gallery.Web.Tests/CardBuilderTests.cs` (pinned cover, first-item cover,
   empty gallery: no cover and count 0, pinned cover removed → falls back) and
   `tests/Gallery.Web.Tests/SiteProjectorTests.cs` (`[Collection("mongo")]`): private and empty
   galleries are excluded, `homeOrder` order is kept, a site document carrying a claim keeps
   `claimedSubject`, `claimedAt` and `claimedIp` byte-identical after `ProjectAsync`, and GET `/`
   on an `AdminHost` over that database answers with `db_reads` 1 in its `http.request` line
   (SC-007).
-- [ ] T010 Create `src/Gallery.Web/Library/MembershipRepair.cs` (scoped):
+- [X] T010 Create `src/Gallery.Web/Library/MembershipRepair.cs` (scoped):
   `RepairAsync(IReadOnlyCollection<string> imageIds)` sets each image's `galleryIds` to the ids
   of the galleries whose `items` contain it (one `galleries.find({items:{$in:ids}})`, then one
   update per image), inside `OpTimer.Time("db.membership.repair")` (research R-01). Write
   `tests/Gallery.Web.Tests/MembershipRepairTests.cs`: stale extra ids are removed, missing ids are
   added, an image in no gallery gets `[]`, and a second run changes nothing.
-- [ ] T011 Create `tests/Gallery.Web.Tests/Fixtures/SeedShapes.cs`: builders for seed-shaped
+- [X] T011 Create `tests/Gallery.Web.Tests/Fixtures/SeedShapes.cs`: builders for seed-shaped
   `ImageDoc` and `GalleryDoc` (non-empty `seedKey`, `sourceHash`, derivative keys, card) with the
   field set the retired seeder wrote (read `Seed/Seeder.cs` for the field list; do not call it),
   and for upload-shaped images (no `seedKey`). Create
@@ -267,7 +267,7 @@ only), `src/Gallery.Web/Upload/ConfirmService.cs` (the index call and the title 
 `tests/Gallery.Web.Tests/Fixtures/RecordingEdgeProvider.cs`. It registers `PageCacheEvictor` in
 `EdgeSetup.cs`, not in `LibrarySetup.cs` (Batch A owns that file).
 
-- [ ] T012 Create `src/Gallery.Web/Edge/EdgeOptions.cs` (section `Edge`: `ZoneId`, `ApiToken`,
+- [X] T012 Create `src/Gallery.Web/Edge/EdgeOptions.cs` (section `Edge`: `ZoneId`, `ApiToken`,
   `SiteBaseUrl` default `https://localhost:5081`, `PurgePages` false, `MaxUrlsPerCall` 100,
   `MaxUrlsPerSecond` 800, `QueueCapacity` 1000; `ToString()` not overridden), `EdgeWork.cs`
   (record: `Op`, `Pages`, `Files`, `WarmFiles`, `EnqueuedAt`), `IEdgeCache.cs`
@@ -276,7 +276,7 @@ only), `src/Gallery.Web/Upload/ConfirmService.cs` (the index call and the title 
   `Task<EdgeOutcome> WarmAsync(IReadOnlyList<string> urls, CancellationToken)`). In `AddEdge`:
   bind and register the options; register `CloudflareEdgeProvider` when both `ZoneId` and
   `ApiToken` are non-empty, else `LogOnlyEdgeProvider` (FR-042, decisions row 6).
-- [ ] T013 Create `src/Gallery.Web/Edge/PurgeSets.cs`, pure and static, exactly per
+- [X] T013 Create `src/Gallery.Web/Edge/PurgeSets.cs`, pure and static, exactly per
   contracts/edge.md: `HasPage`, `Listed`, `Home`, `Changed` (using `GalleryNav.Neighbours`),
   `Pages`, and one method per set (`Members`, `Visibility`, `Rename`, `Description`, `Order`,
   `GalleryDelete`, `Text`, `Delete`) from BEFORE/AFTER snapshots
@@ -287,7 +287,7 @@ only), `src/Gallery.Web/Upload/ConfirmService.cs` (the index call and the title 
   images (home: the first 3 `homeCards` covers; gallery page: the first 4 `items`; photo page: the
   photo itself); never a file in the deleted set. `avifKeysOf` is a lookup the caller fills from
   the image documents it already read.
-- [ ] T014 Write `tests/Gallery.Web.Tests/PurgeSetTests.cs` (pure, SC-004): one fact per
+- [X] T014 Write `tests/Gallery.Web.Tests/PurgeSetTests.cs` (pure, SC-004): one fact per
   contracts/edge.md row, each asserting set EQUALITY, plus: a gallery emptied by the change is
   still purged; a private gallery with photos is purged and `/` is not; rename to the same slug
   gives one slug's paths only; a private-only gallery move gives an empty P-ORDER; P-TEXT adds `/`
@@ -295,7 +295,7 @@ only), `src/Gallery.Web/Upload/ConfirmService.cs` (the index call and the title 
   exactly the keys passed as deleted. `WarmFiles`: a purged gallery page of 6 photos gives the
   AVIF URLs of exactly its first 4; `/` gives the first 3 covers; a page that 404s after the change
   gives none; a deleted key is never returned.
-- [ ] T015 Create `src/Gallery.Web/Edge/EdgeQueue.cs` (implements `IEdgeCache`; bounded
+- [X] T015 Create `src/Gallery.Web/Edge/EdgeQueue.cs` (implements `IEdgeCache`; bounded
   `Channel<EdgeWork>` of `QueueCapacity`; a full queue logs `edge.dropped {op} {count}` and never
   blocks or throws; `Task<bool> WhenIdleAsync(TimeSpan timeout)` completes when the queue is empty
   and no work item is in flight, for the removal command and the evidence test) and `src/Gallery.Web/Edge/EdgeWorker.cs` (`BackgroundService`): per work item
@@ -306,7 +306,7 @@ only), `src/Gallery.Web/Upload/ConfirmService.cs` (the index call and the title 
   (decisions row 21). A provider exception is logged as outcome `failed` and never stops the
   worker. Create `src/Gallery.Web/Edge/LogOnlyEdgeProvider.cs` (`Mode` = `log-only`, returns
   `skipped`, logs every address). Register queue and worker in `AddEdge`.
-- [ ] T016 **[SAFETY]** Create `src/Gallery.Web/Edge/CloudflareEdgeProvider.cs` (III.9-style
+- [X] T016 **[SAFETY]** Create `src/Gallery.Web/Edge/CloudflareEdgeProvider.cs` (III.9-style
   credential handling, FR-043, research R-06): a named `HttpClient` from `IHttpClientFactory`;
   `POST https://api.cloudflare.com/client/v4/zones/{ZoneId}/purge_cache` with JSON
   `{"files":[…]}` and the header `Authorization: Bearer {ApiToken}`; one retry after 2 s on HTTP
@@ -314,7 +314,7 @@ only), `src/Gallery.Web/Upload/ConfirmService.cs` (the index call and the title 
   an anonymous `GET` per file URL (no cookie, no Authorization header), timed as
   `edge.warm.request`. Every call is timed as `edge.purge.call`. The token goes ONLY into that
   header: never into a URL, a log message, an exception message or `ToString()`.
-- [ ] T017 Create `tests/Gallery.Web.Tests/Fixtures/RecordingEdgeProvider.cs` (`Mode` =
+- [X] T017 Create `tests/Gallery.Web.Tests/Fixtures/RecordingEdgeProvider.cs` (`Mode` =
   `recorder`; records every purge and warm call's URL list; `Gate` is an optional
   `TaskCompletionSource` that blocks calls until released; `AllPurged()` returns the union) and
   write `tests/Gallery.Web.Tests/EdgeWorkerTests.cs`: 250 file URLs → exactly 3 purge calls of
@@ -326,13 +326,13 @@ only), `src/Gallery.Web/Upload/ConfirmService.cs` (the index call and the title 
   capacity 1 with a blocked gate → `edge.dropped`; one `edge.lag` per work item; `WhenIdleAsync`
   returns false while the gate is closed and true after it opens; the log-only
   provider logs every address with outcome `skipped`.
-- [ ] T018 **[SAFETY]** Write `tests/Gallery.Web.Tests/CloudflareEdgeProviderTests.cs` with a fake
+- [X] T018 **[SAFETY]** Write `tests/Gallery.Web.Tests/CloudflareEdgeProviderTests.cs` with a fake
   `HttpMessageHandler` and the test token `test-edge-token-0123456789abcdef`: the request URL is
   exactly the zone purge URL; the body is `{"files":[…]}`; the `Authorization` header is exactly
   `Bearer test-edge-token-0123456789abcdef`; 429 then 200 → two requests and outcome `ok`; 429
   twice → outcome `rate-limited`; warm requests carry no `Authorization` and no `Cookie`; the token
   appears in no captured log line and in no request URL.
-- [ ] T019 Create `src/Gallery.Web/Library/PageCacheEvictor.cs` (scoped):
+- [X] T019 Create `src/Gallery.Web/Library/PageCacheEvictor.cs` (scoped):
   `EvictAsync(IEnumerable<string> pagePaths)` calls `IOutputCacheStore.EvictByTagAsync
   (PublicCache.PageTag(path))` for each distinct path, inside `OpTimer.Time("cache.evict")`; it
   takes page PATHS (no host). Register it in `AddEdge`. Write
