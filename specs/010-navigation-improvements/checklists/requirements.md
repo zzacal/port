@@ -42,5 +42,7 @@
 - "Catalogue page", "edge-cached" and "datastore reads" are this project's established vocabulary
   (specs 003–009), used for behaviour, not technology. The stack appears only in Assumptions, as
   planning inputs.
-- Clarify targets: the scope pick by number; buttons vs tap zones (touches the "photo is not a
-  link" rule); library status "+N" ordering; private galleries showing no gallery-to-gallery links.
+- Clarify session 2026-11-01: 6 answers recorded (one was a layout follow-up the owner asked
+  about). Gallery link in the bottom row; scope as recommended; text links with 44×44 tap
+  areas; no links at the end of a private gallery; "+N" links to the first by title; keys work
+  silently. Re-validated: 16/16 items still pass; no regressions.

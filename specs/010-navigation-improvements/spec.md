@@ -11,6 +11,30 @@ terrible" report and the navigation study delivered in conversation on 2026-11-0
 recommended first set (ideas 1, 2, 3, 4, 6, 8, 11, 13) is the scope; the rest are listed as out of
 scope below.
 
+## Clarifications
+
+### Session 2026-11-01
+
+- Q: Where does the gallery link sit on the photo page, and what does it look like? → A: In the
+  bottom navigation row (layout 2): `[ Previous ]   ← {Gallery title} · N / total   [ Next ]`,
+  under the title and camera details. It is a small text link in the caption style, with a left
+  arrow, not a button or icon; the counter follows it on the same line. Nothing is added above
+  the photo, so the photo keeps all its height. On a narrow screen, a title too long for the row
+  moves onto its own line above Previous and Next rather than squeezing them.
+- Q: Which navigation ideas should this feature include? → A: The recommended set as written
+  (study ideas 1, 2, 3, 4, 6, 8, 11, 13). Swipe (5), the thumbnail strip (7) and the cheap extras
+  (10, 14, 15) stay out of scope.
+- Q: What should Previous and Next look like once they're bigger? → A: They stay text links reading
+  "Previous" and "Next", looking as they do today; each gets an invisible tap area of at least
+  44×44 CSS px. They are not buttons, and the photo itself stays a non-link (no tap zones).
+- Q: On a private gallery, should the end of the page show anything in place of the previous/next
+  gallery links? → A: Nothing. A private gallery ends after its last photo, with no gallery links
+  and no "All galleries" link. It is never anyone's previous or next gallery either.
+- Q: When a library photo is in several galleries, which gallery should its "Coast +2" status link
+  to? → A: The first by title, alphabetically (case-insensitive), whatever its visibility.
+- Q: Should the photo page's arrow keys and Esc be shown to visitors anywhere, or work silently?
+  → A: Silently. Nothing on the page mentions them: no hint line and no tooltip.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Know where I am and get back from a photo (Priority: P1)
@@ -28,9 +52,9 @@ photo page names the gallery and shows "N / total".
 
 **Acceptance Scenarios**:
 
-1. **Given** a visitor opens a photo page directly, **When** the page loads, **Then** it shows the
-   gallery's title as a link to that gallery, and the photo's position as "N / total" (for example
-   "4 / 23").
+1. **Given** a visitor opens a photo page directly, **When** the page loads, **Then** the bottom
+   navigation row reads `[ Previous ]   ← {Gallery title} · N / total   [ Next ]` (for example
+   "← September 6 · 4 / 23"), with the title linking to that gallery.
 2. **Given** a visitor is on photo 18 of a 23-photo gallery, **When** they follow the gallery link,
    **Then** the gallery page opens with photo 18's tile in view, not at the top of the page.
 3. **Given** scripts are disabled, **When** the visitor follows the gallery link, **Then** the same
@@ -51,8 +75,9 @@ keyboard, press Right, Left and Escape on a photo page and check where each one 
 
 **Acceptance Scenarios**:
 
-1. **Given** a photo page on a small screen, **When** it renders, **Then** Previous and Next are
-   each at least 44 by 44 CSS pixels and do not overlap.
+1. **Given** a photo page on a small screen, **When** it renders, **Then** Previous and Next still
+   look like today's text links, and each one's tap area measures at least 44 by 44 CSS pixels
+   without overlapping the other or the gallery link.
 2. **Given** a photo page with a next photo, **When** the visitor presses the Right arrow key,
    **Then** the next photo's page opens. Left goes to the previous photo.
 3. **Given** a photo page, **When** the visitor presses Escape, **Then** the gallery page opens at
@@ -81,9 +106,9 @@ that it opens the gallery that follows it on the home page.
    the visitor reaches the end of its photos, **Then** links to the previous and next listed
    galleries, by title, appear there, in home-page order.
 2. **Given** the first (or last) listed gallery, **Then** only the link that exists is shown.
-3. **Given** a private gallery (unlisted, reached by direct link), **Then** no previous/next gallery
-   links are shown, so an unlisted gallery never points visitors at, or gets pointed at by, the
-   listed sequence.
+3. **Given** a private gallery (unlisted, reached by direct link), **Then** the page ends after its
+   last photo with no gallery links of any kind (no previous/next, no "All galleries"), and no
+   listed gallery links to it.
 4. **Given** the owner reorders the home page, or publishes, unpublishes, renames or deletes a
    gallery, **When** a visitor next loads an affected gallery page, **Then** its previous/next
    gallery links reflect the change. Edge-cached copies are refreshed as for any other public
@@ -121,8 +146,8 @@ photo that is in several.
 1. **Given** a library photo in exactly one gallery, **Then** its status links to that gallery's
    editing page.
 2. **Given** a library photo in two or more galleries, **Then** its status links to the first one
-   (by gallery title) and states how many others there are ("Coast +2"). The full list stays in the
-   side panel.
+   by title, alphabetically and ignoring case, public or private, and states how many others there
+   are ("Coast +2"). The full list stays in the side panel.
 3. **Given** a library photo in no gallery, **Then** the status stays plain text ("Not in a
    gallery").
 
@@ -143,8 +168,11 @@ photo that is in several.
   being typed: the page does not intercept them.
 - The visitor's Save-Data setting does not affect navigation links or keys; it continues to
   suppress only predictive fetching (IV.14).
-- On small screens the gallery link, the counter, the title and the metadata must still fit without
-  pushing the photo smaller than today at the same width.
+- On small screens the photo MUST NOT get smaller than today at the same width. A gallery title too
+  long for the navigation row moves the gallery link and counter onto their own line above
+  Previous and Next; it never shrinks the Previous/Next tap areas below their minimum size (FR-004).
+- A first or last photo: the row keeps the gallery link and counter centred even though one of Previous/Next
+  is missing.
 
 ## Requirements *(mandatory)*
 
@@ -152,17 +180,21 @@ photo that is in several.
 
 Photo page
 
-- **FR-001**: Every photo page MUST show the title of its gallery as a link to that gallery page.
+- **FR-001**: Every photo page MUST show the title of its gallery, preceded by a left arrow, as a
+  link to that gallery page. It sits in the bottom navigation row, centred between Previous and
+  Next, in the caption text style (not a button). Nothing is added above the photo.
 - **FR-002**: The gallery link MUST bring the visitor to the gallery page with the current photo's
   tile in view, with and without scripts.
 - **FR-003**: Every photo page MUST show the photo's position in its gallery as "N / total", using
-  the gallery's own order.
-- **FR-004**: Previous and Next MUST each present a target of at least 44 by 44 CSS pixels at every
-  supported width, MUST stay links that work without scripts, and MUST render nothing for a
-  missing direction (as today).
+  the gallery's own order, directly after the gallery link on the same line (separated by " · ").
+- **FR-004**: Previous and Next MUST stay text links reading "Previous" and "Next", with today's
+  look (no button outline or fill), each with a tap area of at least 44 by 44 CSS pixels at every
+  supported width, larger than the visible text. They MUST work without scripts and MUST render
+  nothing for a missing direction (as today). The photo itself MUST NOT become a link.
 - **FR-005**: With scripts enabled, the Left and Right arrow keys MUST go to the previous and next
   photo, and Escape MUST go to the gallery page as in FR-002. Keys MUST NOT be intercepted when a
-  modifier key is held, or when focus is in a text field.
+  modifier key is held, or when focus is in a text field. The keys work silently: no hint text or
+  tooltip announces them.
 - **FR-006**: Keyboard navigation MUST use the same transition between pages as clicking does
   (IV.16) and MUST NOT disturb the existing predictive loading of neighbouring photos (IV.13).
 
@@ -171,7 +203,8 @@ Gallery page
 - **FR-007**: A listed gallery's page MUST end with links to the previous and next listed
   galleries, labelled with their titles, in home-page order. A missing direction renders nothing.
 - **FR-008**: A gallery that is not listed (private, or empty) MUST NOT show previous/next gallery
-  links, and MUST NOT appear as anyone's previous or next gallery.
+  links or any other end-of-gallery link, and MUST NOT appear as anyone's previous or next gallery
+  (II.2: private means unlisted).
 - **FR-009**: Every change that alters which gallery comes before or after another (home reorder,
   publish, unpublish, rename, delete, a listed gallery becoming empty or non-empty) MUST refresh
   the gallery pages whose links change, including edge-cached copies (IV.18). Showing a stale
@@ -184,13 +217,13 @@ Header
 Admin library
 
 - **FR-011**: A library photo's gallery status MUST link to the gallery editing page when the photo
-  is in at least one gallery: to the only gallery, or to the first by title with a "+N" count of
-  the others. A photo in no gallery keeps the plain status.
+  is in at least one gallery: to the only gallery, or to the first by title (alphabetical,
+  case-insensitive, regardless of visibility) with a "+N" count of the others. A photo in no gallery keeps the plain status.
 
 Components and catalogue
 
 - **FR-012**: Every new or changed visual element (the gallery link and counter on the photo page,
-  the larger previous/next controls, the gallery-to-gallery links, the header, the linked library
+  the larger previous/next tap areas, the gallery-to-gallery links, the header, the linked library
   status) MUST be built as, or as part of, a catalogued component, with its states shown on that
   component's catalogue page before any page uses it. States include: first photo, last photo,
   one-photo gallery, first and last gallery, and a photo in zero, one and several galleries.
@@ -243,15 +276,13 @@ Quality floors carried from the constitution
 
 ## Assumptions
 
-- Scope is the study's recommended set. The owner has not yet picked by number; this spec takes
-  the recommended set as the default, to be cut or extended in clarify.
-- **Defaults taken on the two open calls from the study** (clarify can overturn either):
-  - Previous/Next become larger buttons, not tap zones over the left and right halves of the photo.
-    The photo stays a non-link (as recorded in the solo viewer today).
-  - The header does not stay fixed while scrolling.
+- Scope is the study's recommended set, confirmed by the owner in clarify (2026-11-01).
+- Previous/Next: the owner chose text links with a larger invisible tap area (clarify, 2026-11-01),
+  over outlined buttons or tap zones on the photo.
+- The header does not stay fixed while scrolling (idea 12 is out of scope, confirmed with the scope
+  answer in clarify).
 - The duplicate header link is removed by dropping the "Galleries" item, because the site name
   already links home. If the owner prefers a word over the site name, the inverse works the same.
-- "First by title" for the library status is a default; "most recently added to" is the alternative.
 - Admin pages may require scripts (V.3), but nothing in Story 5 needs them.
 - Previous/next gallery comes from the home order that already drives the home page, so the gallery
   page can know its neighbours without an extra datastore read. If that turns out false, the
@@ -264,7 +295,7 @@ Quality floors carried from the constitution
   the keyboard shortcuts as a small page script (public pages may not ship a framework, IV.22);
   the stored reference copies are the 005 public baselines and the 006 catalogue baselines.
 
-### Out of scope (study ideas not in the recommended set; each can be added in clarify)
+### Out of scope (study ideas not in the recommended set; owner confirmed, 2026-11-01)
 
 - 5: swipe left/right on phones.
 - 7: a strip of nearby thumbnails under the photo.
