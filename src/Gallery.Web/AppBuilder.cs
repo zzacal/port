@@ -10,7 +10,10 @@ namespace Gallery.Web;
 
 public static class AppBuilder
 {
-    public static WebApplication Build(string[] args, IDictionary<string, string?>? overrides = null)
+    public static WebApplication Build(
+        string[] args,
+        IDictionary<string, string?>? overrides = null,
+        Action<WebApplicationBuilder>? configure = null)
     {
         var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +23,9 @@ public static class AppBuilder
         // Apply test overrides last so they win over all other configuration sources.
         if (overrides is not null)
             builder.Configuration.AddInMemoryCollection(overrides);
+
+        // Test seam: e.g. a log-capturing provider.
+        configure?.Invoke(builder);
 
         // ── UI / component services ──────────────────────────────────────────
         builder.Services.AddRazorComponents();

@@ -1,0 +1,5 @@
+007 baseline at b08f11a + T001-T003 (2026-10-31)
+Gallery.Core.Tests: 95 passed
+Gallery.Web.Tests: 320 passed
+Total: 415 passed, 0 failed
+Build: 0 warnings, 0 errors (-warnaserror)
