@@ -22,12 +22,12 @@ public static class PublicEndpoints
         string[] verbs = ["GET", "HEAD"];
 
         // Home
-        app.MapMethods("/", verbs, async (ContentReader reader, ImageStore store) =>
+        app.MapMethods("/", verbs, async (ContentReader reader, StorageOptions storage) =>
         {
             try
             {
                 var site = await reader.HomeAsync();
-                var url = MakeUrl(store);
+                var url = MakeUrl(storage);
                 // II.6: never list an empty gallery. The seed already keeps them out of homeCards;
                 // filtering here too means a stale listing cannot show one either.
                 var cards = site?.HomeCards
@@ -69,7 +69,7 @@ public static class PublicEndpoints
         });
 
         // Gallery page
-        app.MapMethods("/g/{id}/{slug}", verbs, async (string id, string slug, ContentReader reader, ImageStore store) =>
+        app.MapMethods("/g/{id}/{slug}", verbs, async (string id, string slug, ContentReader reader, StorageOptions storage) =>
         {
             if (!OpaqueId.IsValid(id))
                 return NotFoundResult();
@@ -83,7 +83,7 @@ public static class PublicEndpoints
                 if (gallery.Slug != slug)
                     return (IResult)new ShortPolicyRedirectResult($"/g/{id}/{gallery.Slug}");
 
-                var url = MakeUrl(store);
+                var url = MakeUrl(storage);
                 var imageDocs = await reader.ImagesAsync(gallery.Items, full: false);
 
                 var noIndex = gallery.Visibility != "public";
@@ -117,7 +117,7 @@ public static class PublicEndpoints
         });
 
         // Photo page
-        app.MapMethods("/g/{id}/{slug}/{imageId}", verbs, async (string id, string slug, string imageId, ContentReader reader, ImageStore store) =>
+        app.MapMethods("/g/{id}/{slug}/{imageId}", verbs, async (string id, string slug, string imageId, ContentReader reader, StorageOptions storage) =>
         {
             if (!OpaqueId.IsValid(id) || !OpaqueId.IsValid(imageId))
                 return NotFoundResult();
@@ -147,7 +147,7 @@ public static class PublicEndpoints
                 if (!imageIndex.TryGetValue(imageId, out var currentDoc))
                     return NotFoundResult();
 
-                var url = MakeUrl(store);
+                var url = MakeUrl(storage);
                 var currentView = ViewMapper.ToView(currentDoc, url);
                 var noIndex = gallery.Visibility != "public";
 
@@ -187,8 +187,14 @@ public static class PublicEndpoints
 
     // ── helpers ──────────────────────────────────────────────────────────────
 
-    private static Func<string, string> MakeUrl(ImageStore store) =>
-        key => store.PublicUrl(key);
+    // Pages only build image URLs, from ImageBaseUrl. They must not resolve ImageStore: that builds
+    // an S3 client, which throws when the storage credentials are absent, and research R-10 requires
+    // pages to render without them (only the seed and storage tests need credentials).
+    private static Func<string, string> MakeUrl(StorageOptions storage)
+    {
+        var baseUrl = (storage.ImageBaseUrl ?? "").TrimEnd('/');
+        return key => $"{baseUrl}/{key}";
+    }
 
     private static bool IsDataException(Exception ex) =>
         ex is MongoDB.Driver.MongoException || ex is TimeoutException;

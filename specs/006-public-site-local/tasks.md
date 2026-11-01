@@ -534,6 +534,31 @@ output for metadata.
   `dotnet add package` in T001; that is expected). Update `docs/roadmap.md` 006 as
   done-pending-review, and fold every executor `decisions_made` into `decisions.md` rows 16+.
 
+- [X] T038 Browser tests with Microsoft.Playwright 1.64.1 (owner request: "add playwright tests as a
+  last item"). Turns the one-off T034 browser pass into tests that run with `dotnet test`.
+  - `tests/Gallery.Web.Tests/Fixtures/BrowserSiteFixture.cs`, collection `"browser"`:
+    - a Mongo container holding one 6-photo gallery and a 1-photo gallery
+    - an image host serving real AVIF/WebP ladders with the immutable header, counting every request
+      per file
+    - the app on a random port, output cache off
+    - headless Google Chrome (`Channel = "chrome"`, so no browser download), with Prerender2
+      disabled so the 006 loader is measured alone
+  - `tests/Gallery.Web.Tests/BrowserTests.cs`, `[Trait("Category","Browser")]`, 16 cases:
+    - the page is styled (fixture guard)
+    - hover then click downloads the photo once, and the file was warmed before the click
+    - without a hover the photo is not fetched early (guards the guard)
+    - the next photo is served from the prefetch
+    - Save-Data suppresses neighbour and hover fetches
+    - zero layout shift and no horizontal scroll on home, gallery and photo at 1440, 1024 and 390
+    - tile and solo picture share a view-transition name
+    - the no-JS walk home → gallery → photo → next → back
+  - Non-vacuity: each guard is seen failing with its behaviour broken:
+    - the old WebP preload: hover and prefetch tests fail with "hover warmed [….webp], page shows
+      ….avif"
+    - the Save-Data guard removed
+    - forced overflow, and a forced animated shift
+  - Needs Docker, ffmpeg, cwebp and Google Chrome. The run takes about 20 s.
+
 ## Dependencies & Execution Order
 
 - Phase 1 (T001–T005) runs on the high tier, before dispatch. T005 must land before T018.

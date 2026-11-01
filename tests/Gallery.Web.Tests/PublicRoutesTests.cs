@@ -481,6 +481,40 @@ public class PublicRoutesTests(MongoFixture mongo) : IAsyncLifetime
         return count;
     }
 
+    // ── R-10: pages render without storage credentials ────────────────────────────────────────
+    // Only ImageBaseUrl is needed to build image URLs. Found by the browser fixture (T038), which
+    // sets no credentials: every page 500'd because the endpoints resolved ImageStore, whose
+    // constructor builds an S3 client. The other tests here pass dummy credentials and missed it.
+
+    [Fact]
+    public async Task Public_pages_render_with_no_storage_credentials()
+    {
+        var db = mongo.NewDatabase();
+        await SeedTestDataAsync(db);
+        var app = Gallery.Web.AppBuilder.Build(["--urls", "http://127.0.0.1:0"], new Dictionary<string, string?>
+        {
+            ["Mongo:ConnectionString"] = mongo.ConnectionString,
+            ["Mongo:Database"] = db.DatabaseNamespace.DatabaseName,
+            ["Storage:ImageBaseUrl"] = "https://img.test",
+            ["Storage:ServiceUrl"] = "",
+            ["Storage:AccessKeyId"] = "",
+            ["Storage:SecretAccessKey"] = "",
+            ["Site:OutputCache"] = "false",
+        });
+        await app.StartAsync();
+        try
+        {
+            using var http = new HttpClient { BaseAddress = new Uri(app.Urls.First()) };
+            foreach (var path in new[] { "/", $"/g/{GalleryPubId1}/autumn-walk", $"/g/{GalleryPubId1}/autumn-walk/{ImgId2}" })
+            {
+                var resp = await http.GetAsync(path);
+                Assert.True(resp.StatusCode == System.Net.HttpStatusCode.OK, $"{path} -> {(int)resp.StatusCode}");
+                Assert.Contains("https://img.test/", await resp.Content.ReadAsStringAsync());
+            }
+        }
+        finally { await app.StopAsync(); await app.DisposeAsync(); }
+    }
+
     // ── II.6: visitors never see an empty gallery ────────────────────────────────
     // The seeded site doc deliberately still lists the empty public gallery: the home page must
     // drop it even when the stored listing is stale, and its page must 404.
