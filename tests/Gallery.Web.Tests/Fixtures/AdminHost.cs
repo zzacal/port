@@ -264,6 +264,9 @@ public sealed class AdminHost : IAsyncDisposable
         _cookieJar["__Host-gallery"] = value;
     }
 
+    /// <summary>Forgets every cookie, as a new browser would.</summary>
+    public void ClearCookies() => _cookieJar.Clear();
+
     public async ValueTask DisposeAsync()
     {
         _client.Dispose();

@@ -247,9 +247,9 @@ Sequential, one executor. Files owned: everything listed in this phase.
 **Goal**: returning sign-in, 7-day sliding session, sign-out.
 **Independent test**: claimed DB → owner signs in → session; sign-out → sign-in card.
 
-- [ ] T019 [US2] Add POST `/admin/signout` (H5) inside the protected group in `AdminEndpoints.cs`:
+- [X] T019 [US2] Add POST `/admin/signout` (H5) inside the protected group in `AdminEndpoints.cs`:
   log `auth.signout {sub} {ip}`, `SignOutAsync("owner")`, 302 `/admin/signin`.
-- [ ] T020 [US2] Write `tests/Gallery.Web.Tests/OwnerSessionTests.cs`:
+- [X] T020 [US2] Write `tests/Gallery.Web.Tests/OwnerSessionTests.cs`:
   - claimed by `owner-1`; `SignInAsync("owner-1")` → shell; DB unchanged; no `auth.claim`; one
     `auth.signin`.
   - **[SAFETY]** sign-out with token (from `TokenAsync("/admin")`) → 302 `/admin/signin`,
@@ -273,7 +273,7 @@ Sequential, one executor. Files owned: everything listed in this phase.
 - [X] T021 [US3] Implement `OidcEvents.OnRemoteFailure` in `src/Gallery.Web/Admin/Auth/OidcEvents.cs`:
   log `auth.failed {ip} {reason}` (reason = `context.Failure?.GetType().Name ?? "unknown"`),
   `context.HandleResponse(); context.Response.Redirect("/admin/signin?r=failed");`.
-- [ ] T022 [US3] **[SAFETY]** Write `tests/Gallery.Web.Tests/RefusalTests.cs`:
+- [X] T022 [US3] **[SAFETY]** Write `tests/Gallery.Web.Tests/RefusalTests.cs`:
   - claimed by `owner-1`; snapshot the site doc (`ToJson()`); `SignInAsync("intruder")` → 302
     `/admin/signin?r=refused`, no `Set-Cookie: __Host-gallery=` with a non-empty value on that
     response (I-2); site doc byte-identical (I-3); one `auth.refused … not_owner`; no
@@ -297,7 +297,7 @@ Sequential, one executor. Files owned: everything listed in this phase.
 **Independent test**: every `/admin` and admin action refused without the session; public markup
 identical with and without it.
 
-- [ ] T023 [US4] **[SAFETY]** Write `tests/Gallery.Web.Tests/AdminAccessTests.cs`:
+- [X] T023 [US4] **[SAFETY]** Write `tests/Gallery.Web.Tests/AdminAccessTests.cs`:
   - I-1: without a session, GET `/admin`, `/admin/upload`, `/admin/library`, `/admin/galleries`,
     `/admin/x/y` → 302 `/admin/signin`, body contains none of `owner-bar`, `admin-empty`.
   - I-4: without a session, POST/PUT/DELETE to `/admin`, `/admin/signout`, `/admin/x` → 401 or
@@ -326,7 +326,7 @@ identical with and without it.
   `.RequireAuthorization("owner")` to the `/ui` group and update the summary comment (FR-021). In
   `AppBuilder.cs` map `/ui` in every environment (move `app.MapUi()` out of the `IsDevelopment`
   block; keep the eager fixture loads where they are).
-- [ ] T025 [US5] Write `tests/Gallery.Web.Tests/UiOwnerOnlyTests.cs`: Production-environment
+- [X] T025 [US5] Write `tests/Gallery.Web.Tests/UiOwnerOnlyTests.cs`: Production-environment
   host: without a session GET `/ui/` and `/ui/{first catalogue slug}` → 302 `/admin/signin`, body
   without `Specimen`/catalogue markup; with a minted owner session → 200 and the index lists
   `UiCatalog.Entries.Count` links.
@@ -351,7 +351,7 @@ identical with and without it.
   automatic default suppressed, `prompt=select_account`, scope `openid` only (007 R-01, R-03).
   Update the I.6 row in `draft/07-traceability.md` to the new mechanism. Run
   `bash specs/001-architecture-stack-design/evidence/assemble.sh` then `validate.sh`; all checks pass.
-- [ ] T029 Write `specs/007-owner-signin-claim/evidence/verify.sh` (tee to `verify-output.txt`),
+- [X] T029 Write `specs/007-owner-signin-claim/evidence/verify.sh` (tee to `verify-output.txt`),
   modelled on 006's: build/test gates; starts its own instance on :5090 (Development, no launch
   profile, user-secrets present) and checks: `/` has no `Set-Cookie`; `/admin` → 302
   `/admin/signin` with `no-store`; `/ui/` → 302 `/admin/signin`; GET `/admin/signin` then POST it
@@ -360,7 +360,7 @@ identical with and without it.
   token → 400. Committed-tree secret scan: load `Authentication:Google:ClientSecret` from
   user-secrets into a variable and `git ls-files | xargs grep -lF` it (prints file names only).
   Stops only its own PID.
-- [ ] T030 Write `specs/007-owner-signin-claim/evidence/p95.sh` (SC-006). **One input format**:
+- [X] T030 Write `specs/007-owner-signin-claim/evidence/p95.sh` (SC-006). **One input format**:
   plain message lines, one log message per line, exactly as the templates render them
   (`op.timing db.site.claim 3.21 won`, `http.request POST /signin-oidc 302 41.7 0`,
   `auth.claim owner-1 ::1 2026-…`). The script takes the file path as `$1`; if the first non-blank
@@ -371,7 +371,7 @@ identical with and without it.
   ANY route and before its own; requests are sequential in both sources), report p95 of the ownership sum (< 50) and of the callback
   `duration_ms` (< 1000), and the `auth.claim` count. Sources: `evidence/sc006-callbacks.log`
   (T031) and `evidence/live-run.log` (T033).
-- [ ] T031 Add `tests/Gallery.Web.Tests/SignInTimingEvidenceTests.cs` (trait `Category=Evidence`):
+- [X] T031 Add `tests/Gallery.Web.Tests/SignInTimingEvidenceTests.cs` (trait `Category=Evidence`):
   60 sequential FakeGoogle callbacks (1 claim, 49 returning owner, 10 refused) on one host; writes
   `LogLines` (the formatted messages, one per line, no JSON, in the order logged) to
   `specs/007-owner-signin-claim/evidence/sc006-callbacks.log`. It stays in the default test run
@@ -398,6 +398,14 @@ identical with and without it.
   Record each red message in `evidence/non-vacuity.txt`.
 - [ ] T035 Update `docs/roadmap.md` 007 status on completion (evidence paths, what was not
   delivered), clean rebuild (`dotnet clean` first) with 0 warnings, all tests green.
+
+## Deferred (owner-reported, not in 007 scope)
+
+- [ ] D-001 Redesign the sign-in page look (owner review 2026-10-31: "really ugly", the background
+  cover image makes it bad). The cover-behind-the-card treatment comes from design D-23 ("one card
+  over the home page's first cover"), so the fix needs a design decision first (drop or tone down
+  the cover, or a different layout), then a D-23 amendment and a `SignInCard` change. Do not
+  change it inside 007.
 
 ## Dependencies & Execution Order
 

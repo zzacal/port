@@ -159,6 +159,17 @@ public static class AdminEndpoints
             });
         });
 
+        // H5: POST /admin/signout — sign out (log, clear cookie, redirect)
+        admin.MapPost("/signout", async (HttpContext ctx, ILoggerFactory loggerFactory) =>
+        {
+            var logger = loggerFactory.CreateLogger("Gallery.Auth");
+            var sub = ctx.User.FindFirst("sub")?.Value ?? "unknown";
+            var ip = ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            logger.LogInformation("auth.signout {sub} {ip}", sub, ip);
+            await ctx.SignOutAsync(AuthSetup.OwnerScheme);
+            return Results.Redirect("/admin/signin");
+        });
+
         // H6: Catch-all — any unmatched /admin/** returns 404 (after auth + CSRF)
         admin.MapMethods("{**rest}", ["GET", "HEAD", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
             () => Results.StatusCode(404));
