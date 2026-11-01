@@ -190,7 +190,7 @@ public static class PublicEndpoints
     // Pages only build image URLs, from ImageBaseUrl. They must not resolve ImageStore: that builds
     // an S3 client, which throws when the storage credentials are absent, and research R-10 requires
     // pages to render without them (only the seed and storage tests need credentials).
-    private static Func<string, string> MakeUrl(StorageOptions storage)
+    internal static Func<string, string> MakeUrl(StorageOptions storage)
     {
         var baseUrl = (storage.ImageBaseUrl ?? "").TrimEnd('/');
         return key => $"{baseUrl}/{key}";

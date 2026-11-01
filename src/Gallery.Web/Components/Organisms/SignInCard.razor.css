@@ -58,3 +58,9 @@
     font-size: var(--type-body);
     margin: 0;
 }
+
+.si-notice {
+    font-size: var(--type-body);
+    color: var(--color-danger);
+    margin: 0;
+}

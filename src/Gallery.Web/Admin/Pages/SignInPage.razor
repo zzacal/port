@@ -1,0 +1,15 @@
+@* Sign-in page for /admin/signin (T014). Renders AdminLayout without the owner bar. *@
+@using Gallery.Web.Components
+@using Gallery.Web.Components.Organisms
+@using Gallery.Web.Components.Templates
+
+<AdminLayout Title="Sign in · Gallery" ShowOwnerBar="false">
+    <SignInCard State="@State" Cover="@Cover" Notice="@Notice" Antiforgery="@Antiforgery" />
+</AdminLayout>
+
+@code {
+    [Parameter] public SignInState State { get; set; } = SignInState.SignIn;
+    [Parameter] public Gallery.Core.Images.ImageView? Cover { get; set; }
+    [Parameter] public string? Notice { get; set; }
+    [Parameter] public FormToken? Antiforgery { get; set; }
+}

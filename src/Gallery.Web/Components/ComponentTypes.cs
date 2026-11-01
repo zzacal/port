@@ -26,3 +26,5 @@ public enum SignInState { SignIn, Claim, Refused }
 public enum AdminPage { Upload, Library, Galleries }
 
 public sealed record Refusal(string FileName, string Reason);
+
+public sealed record FormToken(string FieldName, string Value);

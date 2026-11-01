@@ -11,23 +11,21 @@
         <p class="si-site">@SiteName</p>
         @if (State == SignInState.SignIn)
         {
-            <h1>Sign in</h1>
+            <h1>Sign in</h1>@NoticeMarkup@Sep
             <p>Only the owner can manage this site.</p>
-            <form method="post" action="/admin/signin">
-                <Button Variant="ButtonVariant.Primary">Sign in with Google</Button>
+            <form method="post" action="/admin/signin">@TokenInput<Button Variant="ButtonVariant.Primary">Sign in with Google</Button>
             </form>
         }
         else if (State == SignInState.Claim)
         {
-            <h1>Claim this site</h1>
+            <h1>Claim this site</h1>@NoticeMarkup@Sep
             <p>This site has no owner yet. The first Google account to sign in becomes the owner. It can't be changed later from the web.</p>
-            <form method="post" action="/admin/signin">
-                <Button Variant="ButtonVariant.Primary">Sign in with Google and claim</Button>
+            <form method="post" action="/admin/signin">@TokenInput<Button Variant="ButtonVariant.Primary">Sign in with Google and claim</Button>
             </form>
         }
         else if (State == SignInState.Refused)
         {
-            <h1>Not the owner</h1>
+            <h1>Not the owner</h1>@NoticeMarkup@Sep
             <p>That Google account doesn't own this site, so it can't manage it. Nothing was saved.</p>
             <Button Element="ButtonElement.Link" Variant="ButtonVariant.Secondary" Href="/">Back to the gallery</Button>
             <Button Element="ButtonElement.Link" Variant="ButtonVariant.Quiet" Href="/admin/signin">Try another account</Button>
@@ -39,4 +37,15 @@
     [Parameter] public SignInState State { get; set; } = SignInState.SignIn;
     [Parameter] public ImageView? Cover { get; set; }
     [Parameter] public string SiteName { get; set; } = "Gallery";
+    [Parameter] public FormToken? Antiforgery { get; set; }
+    [Parameter] public string? Notice { get; set; }
+
+    // Preserves \n            whitespace that Razor would otherwise strip between @NoticeMarkup and <p>.
+    private static readonly MarkupString Sep = new("\n            ");
+
+    private RenderFragment? NoticeMarkup => Notice is null ? null
+        : @<p class="si-notice" role="alert">@Notice</p>;
+
+    private RenderFragment? TokenInput => Antiforgery is null ? null
+        : @<input type="hidden" name="@Antiforgery.FieldName" value="@Antiforgery.Value">;
 }

@@ -63,11 +63,11 @@ the story's own test file.
 
 Sequential, one executor. Files owned: everything listed in this phase.
 
-- [ ] T004 [P] Create `src/Gallery.Web/Admin/Auth/GoogleOptions.cs`: class `GoogleOptions` bound
+- [X] T004 [P] Create `src/Gallery.Web/Admin/Auth/GoogleOptions.cs`: class `GoogleOptions` bound
   from section `Authentication:Google` with `ClientId`, `ClientSecret` (strings, default ""),
   `Authority` (default `https://accounts.google.com`), `RequireHttpsMetadata` (bool, default
   true), and `bool IsConfigured => !IsNullOrWhiteSpace(ClientId) && !IsNullOrWhiteSpace(ClientSecret)`.
-- [ ] T005 [P] **[SAFETY]** Create `src/Gallery.Web/Data/OwnerStore.cs` per data-model.md:
+- [X] T005 [P] **[SAFETY]** Create `src/Gallery.Web/Data/OwnerStore.cs` per data-model.md:
   scoped, constructor `(IMongoDatabase db, OpTimer timer)`, collection `site` as `BsonDocument`.
   - `Task<string?> ReadOwnerAsync()`: find `_id:"site"`, projection `{claimedSubject:1}`, return
     the string or null (missing doc, missing field, or BSON null). Wrapped in
@@ -81,21 +81,21 @@ Sequential, one executor. Files owned: everything listed in this phase.
   - `public enum ClaimResult { Won, Lost }` in the same file.
   - No other method writes `claimedSubject`, `claimedAt` or `claimedIp` anywhere in `src/`.
   Register `builder.Services.AddScoped<OwnerStore>()` in `AppBuilder.cs` beside `ContentReader`.
-- [ ] T006 [P] Add `public sealed record FormToken(string FieldName, string Value);` to
+- [X] T006 [P] Add `public sealed record FormToken(string FieldName, string Value);` to
   `src/Gallery.Web/Components/ComponentTypes.cs`. Implement contracts/components.md for
   `src/Gallery.Web/Components/Organisms/SignInCard.razor` (+ `.razor.css` `.si-notice`, colour
   `var(--color-danger)`), `src/Gallery.Web/Components/Organisms/OwnerBar.razor` (+ `.razor.css`
   `.ob-signout { display: contents; }`), and `src/Gallery.Web/Components/Templates/AdminLayout.razor`.
   All new parameters default to absent; output with defaults must be byte-identical
   (`UiPagesUnchangedTests`, `PublicOutputUnchangedTests` green unmodified).
-- [ ] T007 [P] Write `tests/Gallery.Web.Tests/SignInComponentTests.cs` (HtmlRenderer via
+- [X] T007 [P] Write `tests/Gallery.Web.Tests/SignInComponentTests.cs` (HtmlRenderer via
   `Render.Html`): SignInCard with `Antiforgery` renders exactly one
   `<input type="hidden" name="F" value="V">` inside the form in SignIn and Claim states and none in
   Refused; `Notice` renders `<p class="si-notice" role="alert">` right after `</h1>` in all three
   states and is absent by default; OwnerBar `SignOut` renders a form posting to `/admin/signout`
   with the hidden input and a "Sign out" button, absent by default; AdminLayout `ShowOwnerBar=false`
   renders no `owner-bar`; `Guards.AssertNoInlineStyle` and `Guards.AssertNoScript` on each.
-- [ ] T008 **[SAFETY]** Create `src/Gallery.Web/Admin/Auth/AuthSetup.cs` with
+- [X] T008 **[SAFETY]** Create `src/Gallery.Web/Admin/Auth/AuthSetup.cs` with
   `IServiceCollection AddOwnerAuth(this IServiceCollection, IConfiguration)`:
   - First line: `AppContext.SetSwitch("Microsoft.AspNetCore.Authentication.SuppressAutoDefaultScheme", true);`
     (research R-03 probe part 3).
@@ -119,17 +119,17 @@ Sequential, one executor. Files owned: everything listed in this phase.
     `AddAuthenticationSchemes(OwnerScheme)`.
   - `AddAntiforgery(o => { o.Cookie.Name = "__Host-af"; o.Cookie.SecurePolicy = CookieSecurePolicy.Always; o.HeaderName = "X-CSRF-TOKEN"; })`.
   - Bind and register `GoogleOptions` as a singleton.
-- [ ] T009 **[SAFETY]** Create `src/Gallery.Web/Admin/AdminAntiforgeryFilter.cs`: an
+- [X] T009 **[SAFETY]** Create `src/Gallery.Web/Admin/AdminAntiforgeryFilter.cs`: an
   `IEndpointFilter` that, for any method other than GET, HEAD, OPTIONS, TRACE, calls
   `IAntiforgery.ValidateRequestAsync(httpContext)`; on `AntiforgeryValidationException` returns
   `Results.StatusCode(400)` without calling `next` (research R-04). The sign-in POST (H2) renders
   its own 400 page instead; it calls `IAntiforgery.IsRequestValidAsync` itself and is mapped
   outside the filter (T014).
-- [ ] T010 Create `src/Gallery.Web/Admin/AdminHeaders.cs`: middleware extension
+- [X] T010 Create `src/Gallery.Web/Admin/AdminHeaders.cs`: middleware extension
   `UseAdminHeaders()` that, for request paths starting with `/admin` or `/signin-oidc`, registers
   `Response.OnStarting` to set `Cache-Control: no-store` and `X-Robots-Tag: noindex` (FR-017,
   invariant I-5). Overwrite any existing values.
-- [ ] T011 Create `src/Gallery.Web/Admin/AdminEndpoints.cs` with `MapAdmin(this WebApplication)`:
+- [X] T011 Create `src/Gallery.Web/Admin/AdminEndpoints.cs` with `MapAdmin(this WebApplication)`:
   a group `/admin` with `.RequireAuthorization("owner").AddEndpointFilter<AdminAntiforgeryFilter>()`
   and a group fallback (`{**rest}` on all methods) returning 404 (H6). Story phases add routes to
   this file. Wire into `src/Gallery.Web/AppBuilder.cs`: `builder.Services.AddOwnerAuth(builder.Configuration)`
@@ -137,7 +137,7 @@ Sequential, one executor. Files owned: everything listed in this phase.
   `app.UseWhen(c => c.Request.Path.StartsWithSegments("/admin") || c.Request.Path.StartsWithSegments("/signin-oidc"), a => a.UseHttpsRedirection());`
   then `app.UseAdminHeaders(); app.UseAuthentication(); app.UseAuthorization();` placed before
   `UseOutputCache()`, then `app.MapAdmin();` after `app.MapPublic()`. Do NOT add `UseAntiforgery()`.
-- [ ] T012 Create `tests/Gallery.Web.Tests/Fixtures/FakeGoogle.cs` (research R-10): an
+- [X] T012 Create `tests/Gallery.Web.Tests/Fixtures/FakeGoogle.cs` (research R-10): an
   `IAsyncLifetime` that starts a minimal `WebApplication` on `http://127.0.0.1:0` serving:
   - `GET /.well-known/openid-configuration` → JSON with `issuer` = its base URL,
     `authorization_endpoint` = `{base}/authorize`, `token_endpoint` = `{base}/token`,
@@ -151,7 +151,7 @@ Sequential, one executor. Files owned: everything listed in this phase.
     `client_id` form value, `sub`, `nonce`, `iat`/`exp` now/+5 min. A code `fail` returns 400
     `{"error":"invalid_grant"}`.
   Expose `string Authority`, `static string Code(string sub, string nonce)`.
-- [ ] T013 Create `tests/Gallery.Web.Tests/Fixtures/AdminHost.cs`: helper that starts the app with
+- [X] T013 Create `tests/Gallery.Web.Tests/Fixtures/AdminHost.cs`: helper that starts the app with
   `AppBuilder.Build(["--urls","http://127.0.0.1:0"], overrides, configure)`, overrides as in
   `PublicRoutesTests.StartAppAsync` plus, when a `FakeGoogle` is given,
   `Authentication:Google:ClientId=test-client`, `ClientSecret=test-secret`, `Authority`,
@@ -178,7 +178,7 @@ Sequential, one executor. Files owned: everything listed in this phase.
 **Goal**: sign-in page, Google sign-in, atomic claim, claim event, owner shell.
 **Independent test**: unclaimed DB → sign in → shell; stored `sub`, time, IP; one `auth.claim`.
 
-- [ ] T014 [US1] Create `src/Gallery.Web/Admin/Pages/SignInPage.razor` and `ShellPage.razor`
+- [X] T014 [US1] Create `src/Gallery.Web/Admin/Pages/SignInPage.razor` and `ShellPage.razor`
   (contracts/components.md). Add to `AdminEndpoints.cs`, mapped on `app` (not the protected
   group): GET/HEAD `/admin/signin` (H1) and POST `/admin/signin` (H2), per contracts/http.md:
   - H1: if the `owner` scheme authenticates (`await ctx.AuthenticateAsync("owner")` succeeded) →
@@ -191,14 +191,14 @@ Sequential, one executor. Files owned: everything listed in this phase.
     configured → 503 page with the "isn't set up" notice. Else
     `Results.Challenge(new AuthenticationProperties { RedirectUri = "/admin" }, ["google"])`.
   - GET/HEAD `/admin` (H4) inside the protected group: `ShellPage` with `SignOut` token.
-- [ ] T015 [US1] **[SAFETY]** Create `src/Gallery.Web/Admin/Auth/OwnerSignIn.cs` per
+- [X] T015 [US1] **[SAFETY]** Create `src/Gallery.Web/Admin/Auth/OwnerSignIn.cs` per
   data-model.md: scoped, `(OwnerStore store, ILoggerFactory loggers)`, logger `Gallery.Auth`,
   `Task<SignInOutcome> ResolveAsync(string sub, string ip)` implementing the outcome diagram
   exactly, emitting `auth.claim` (on Won only, with `at` = the `atUtc` passed to TryClaim, ISO-8601)
   and `auth.refused` (with reason). `auth.signin` is NOT emitted here (T016 emits it after the cookie
   is issued). `public enum SignInOutcome { Claimed, SignedIn, RefusedNotOwner, RefusedLostRace }`.
   Register scoped in `AuthSetup.AddOwnerAuth`.
-- [ ] T016 [US1] **[SAFETY]** Implement `OidcEvents.OnTokenValidated` in
+- [X] T016 [US1] **[SAFETY]** Implement `OidcEvents.OnTokenValidated` in
   `src/Gallery.Web/Admin/Auth/OidcEvents.cs` (research R-07): read `sub` from
   `context.Principal`; missing → `context.Fail("no sub")`. ip =
   `HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown"`. Call `ResolveAsync`. For
@@ -206,7 +206,7 @@ Sequential, one executor. Files owned: everything listed in this phase.
   set `context.Properties.IsPersistent = true`, log `auth.signin`. For refusals:
   `context.HandleResponse(); context.Response.Redirect("/admin/signin?r=refused");` (no sign-in
   happens).
-- [ ] T017 [US1] Write `tests/Gallery.Web.Tests/OwnerClaimTests.cs` (`[Collection("mongo")]`,
+- [X] T017 [US1] Write `tests/Gallery.Web.Tests/OwnerClaimTests.cs` (`[Collection("mongo")]`,
   `MongoFixture`, `FakeGoogle`, `AdminHost`):
   - unclaimed (no site doc) → GET `/admin/signin` shows "Claim this site"; with seeded site doc
     (`claimedSubject: null`) same.
@@ -233,7 +233,7 @@ Sequential, one executor. Files owned: everything listed in this phase.
     `OwnerStore.TryClaimAsync("owner-1", ...)`, run a second real `Seeder.RunAsync` on the same DB,
     then assert `claimedSubject == "owner-1"` and `claimedAt`/`claimedIp` unchanged. Do NOT copy
     the seeder's update into the test; if the seeder cannot be driven this way, escalate.
-- [ ] T018 [US1] **[SAFETY]** Write `tests/Gallery.Web.Tests/ClaimRaceTests.cs`: against real
+- [X] T018 [US1] **[SAFETY]** Write `tests/Gallery.Web.Tests/ClaimRaceTests.cs`: against real
   Mongo, 50 tasks call `OwnerSignIn.ResolveAsync("sub-{i}", "ip")` concurrently, each in its own DI
   scope from one app host (no site doc at start); assert exactly one `Claimed`, 49
   `RefusedLostRace` or `RefusedNotOwner`, exactly one `auth.claim` line, stored `claimedSubject`
@@ -270,7 +270,7 @@ Sequential, one executor. Files owned: everything listed in this phase.
 **Goal**: refused card, no session, nothing stored; failed sign-ins handled.
 **Independent test**: claim with A, sign in with B → refused, no cookie, DB identical.
 
-- [ ] T021 [US3] Implement `OidcEvents.OnRemoteFailure` in `src/Gallery.Web/Admin/Auth/OidcEvents.cs`:
+- [X] T021 [US3] Implement `OidcEvents.OnRemoteFailure` in `src/Gallery.Web/Admin/Auth/OidcEvents.cs`:
   log `auth.failed {ip} {reason}` (reason = `context.Failure?.GetType().Name ?? "unknown"`),
   `context.HandleResponse(); context.Response.Redirect("/admin/signin?r=failed");`.
 - [ ] T022 [US3] **[SAFETY]** Write `tests/Gallery.Web.Tests/RefusalTests.cs`:
@@ -322,7 +322,7 @@ identical with and without it.
 
 ## Phase 7: User Story 5, the component catalogue becomes owner-only (P3)
 
-- [ ] T024 [US5] **[SAFETY]** In `src/Gallery.Web/Ui/UiEndpoints.cs` add
+- [X] T024 [US5] **[SAFETY]** In `src/Gallery.Web/Ui/UiEndpoints.cs` add
   `.RequireAuthorization("owner")` to the `/ui` group and update the summary comment (FR-021). In
   `AppBuilder.cs` map `/ui` in every environment (move `app.MapUi()` out of the `IsDevelopment`
   block; keep the eager fixture loads where they are).
@@ -333,17 +333,17 @@ identical with and without it.
 
 ## Phase 8: Polish, design record, evidence (high tier unless noted)
 
-- [ ] T026 Write `specs/007-owner-signin-claim/runbook.md` (FR-027): creating the Google client
+- [X] T026 Write `specs/007-owner-signin-claim/runbook.md` (FR-027): creating the Google client
   (the owner's steps from 2026-10-31: project, Google Auth Platform, External/Testing, test users,
   Web client, redirect `https://localhost:5081/signin-oidc`, user-secrets keys
   `Authentication:Google:ClientId`/`ClientSecret`, `dotnet dev-certs https --trust`); the owner
   reset `mongosh` command from data-model.md and what it does to existing sessions (R-06); how to
   read `auth.claim` to detect E-02.
-- [ ] T027 **[SAFETY]** Add `tests/Gallery.Web.Tests/OwnerWriteGuardTests.cs`: scan every `*.cs`
+- [X] T027 **[SAFETY]** Add `tests/Gallery.Web.Tests/OwnerWriteGuardTests.cs`: scan every `*.cs`
   under `src/` (via `Render.RepoRoot`) for the strings `claimedSubject`, `claimedAt`, `claimedIp`;
   allowed only in `Data/OwnerStore.cs` and `Seed/Seeder.cs` (the latter only inside `SetOnInsert(`
   lines). Any other occurrence fails with the file name (I.4).
-- [ ] T028 Edit `specs/001-architecture-stack-design/draft/02a-decisions-platform.md`: D-06
+- [X] T028 Edit `specs/001-architecture-stack-design/draft/02a-decisions-platform.md`: D-06
   Choice/Rationale/Alternatives per plan.md "Design record updates" (explicit validation filter on
   every non-safe `/admin` request, token from form field or `X-CSRF-TOKEN` header, built-in
   middleware not relied on; cite 007 research R-04 and the probe; middleware-only listed as a

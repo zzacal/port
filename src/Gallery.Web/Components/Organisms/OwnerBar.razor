@@ -10,7 +10,7 @@
     </nav>
     <div class="ob-actions">
         <Button Element="ButtonElement.Link" Variant="ButtonVariant.Quiet" Href="@ViewHref">@ViewLabel ↗</Button>
-        @PrimaryAction
+        @PrimaryAction@SignOutForm
     </div>
 </header>
 
@@ -19,4 +19,8 @@
     [Parameter] public string ViewHref { get; set; } = "/";
     [Parameter] public string ViewLabel { get; set; } = "View site";
     [Parameter] public RenderFragment? PrimaryAction { get; set; }
+    [Parameter] public FormToken? SignOut { get; set; }
+
+    private RenderFragment? SignOutForm => SignOut is null ? null
+        : @<form method="post" action="/admin/signout" class="ob-signout"><input type="hidden" name="@SignOut.FieldName" value="@SignOut.Value"><Button Variant="ButtonVariant.Quiet">Sign out</Button></form>;
 }

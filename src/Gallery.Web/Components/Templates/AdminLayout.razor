@@ -10,7 +10,7 @@
     <style>@((MarkupString)Styles.Css)</style>
 </head>
 <body class="admin">
-    <OwnerBar Current="@Current" ViewHref="@ViewHref" PrimaryAction="@PrimaryAction" />
+    @(ShowOwnerBar ? Bar : null)
     <div class="@BodyClass">
         <main class="admin-main">@ChildContent</main>
         @if (Aside is not null)
@@ -28,6 +28,10 @@
     [Parameter] public RenderFragment? PrimaryAction { get; set; }
     [Parameter] public RenderFragment? Aside { get; set; }
     [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public bool ShowOwnerBar { get; set; } = true;
+    [Parameter] public FormToken? SignOut { get; set; }
 
     private string BodyClass => Aside is not null ? "admin-body with-aside" : "admin-body";
+
+    private RenderFragment Bar => @<OwnerBar Current="@Current" ViewHref="@ViewHref" PrimaryAction="@PrimaryAction" SignOut="@SignOut" />;
 }
