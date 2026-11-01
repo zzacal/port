@@ -1,0 +1,35 @@
+== specs/008-upload-pipeline/evidence/p95-selftest/plain.log
+format: plain message lines
+PASS SC-006 op.timing s3.presign n=20 p95=19.94 ms <= 200
+PASS SC-007 op.timing upload.validate n=11 p95=980.25 ms <= 2000
+PASS SC-008 upload.confirmed count>=40 n=1 p95=5123.40 ms <= 60000
+     (SC-008 ignored 1 upload.confirmed with count < 40)
+n/a  SC-009 op.timing browser.total n=0 (owner live run)
+PASS SC-010 http.request GET /admin/upload 200 n=30 p95=49.70 ms <= 500
+
+ALL PASS
+exit=0
+
+== specs/008-upload-pipeline/evidence/p95-selftest/json.log
+format: JSON console log
+PASS SC-006 op.timing s3.presign n=20 p95=19.94 ms <= 200
+PASS SC-007 op.timing upload.validate n=11 p95=980.25 ms <= 2000
+PASS SC-008 upload.confirmed count>=40 n=1 p95=5123.40 ms <= 60000
+     (SC-008 ignored 1 upload.confirmed with count < 40)
+n/a  SC-009 op.timing browser.total n=0 (owner live run)
+PASS SC-010 http.request GET /admin/upload 200 n=30 p95=49.70 ms <= 500
+
+ALL PASS
+exit=0
+
+== specs/008-upload-pipeline/evidence/p95-selftest/wrong-format.log
+format: plain message lines
+FAIL SC-006 op.timing s3.presign n=0 (no matching events)
+FAIL SC-007 op.timing upload.validate n=0 (no matching events)
+FAIL SC-008 upload.confirmed count>=40 n=0 (no matching events)
+n/a  SC-009 op.timing browser.total n=0 (owner live run)
+FAIL SC-010 http.request GET /admin/upload 200 n=0 (no matching events)
+
+4 FAILED
+exit=4
+

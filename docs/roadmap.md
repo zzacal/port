@@ -35,8 +35,11 @@ R2 setup needed before 006 (owner, in the Cloudflare dashboard):
   Leave r2.dev disabled on both buckets (III.9).
 - [x] Create one API token with Object Read & Write, scoped to the two dev buckets only (III.9).
   Keep its keys in .NET user-secrets on your machine, never in the repo.
-- CORS on `gallery-dev-private` comes with 008, which is the first feature that uploads from the
-  browser.
+- [x] CORS on `gallery-dev-private` (owner, 2026-10-31, verified by terminal preflight):
+  AllowedOrigins `https://localhost:5081` only, AllowedMethods `PUT` only, AllowedHeaders
+  `content-type` only, MaxAge 3600. Preflight PUT from `https://localhost:5081` answers 204; GET,
+  and any request from `http://localhost:5080`, answer 403. Presigned PUTs must sign no header
+  except content-type (008 FR-044).
 
 Storage tests run one suite against two targets. The emulator runs on every test run. The dev R2
 buckets run on demand when the R2 keys are present in the environment, and must pass before any
@@ -92,14 +95,25 @@ OAuth client with a localhost redirect URI.
 
 ### 008 Upload pipeline into the library
 
+**Status: implemented on branch `008-upload-pipeline`, not merged (2026-11-01, unattended run;
+defaults in `specs/008-upload-pipeline/decisions.md`).** Evidence:
+`specs/008-upload-pipeline/evidence/` (verify.sh live walkthrough ALL PASS, p95.sh SC-006/007/008/010
+PASS on the 40-photo log, non-vacuity.sh, browser tests for the worker path). Not delivered until
+the owner's post-build live checks (008 tasks.md OWNER-ONLY): SC-009 browser timing and the
+Safari/iOS run, the R2 test suite including copy-if-match on real R2, and the 7-day lifecycle rule
+on `gallery-dev-private` `staging/`.
+
 The browser derivative worker, presigned R2 intake, server validation, the batch lifecycle, and
 the upload batch page. Confirmed images land in the library.
 
 - D-08, D-09, D-10, D-11, L-01 to L-06, E-03 to E-11, and R-07.
-- **Before `/speckit-plan`**: spike the jSquash AVIF encode of a 20 MB JPEG on Safari, iOS, and
+- **Before `/speckit-plan`**: ~~spike the jSquash AVIF encode of a 20 MB JPEG on Safari, iOS, and
   Chrome (memory and time, E-05). Also build the GPS-injected AVIF and WebP fixtures and confirm
   that MetadataExtractor and the structure parsers both reject them. Measure the real ThumbHash
-  and derivative sizes (section 10). A failed spike reopens D-09 or D-10 before planning.
+  and derivative sizes (section 10). A failed spike reopens D-09 or D-10 before planning.~~
+  - Status: Spike skipped by the owner (008 decisions row 6). Deferred to the owner's post-build
+    live tests (008 tasks.md, OWNER-ONLY O-02); the GPS fixtures and reader checks it named are
+    built and tested inside 008 (FR-041). First Chrome data point: probe P4 (decisions row 36).
 
 ### 009 Library and gallery management
 

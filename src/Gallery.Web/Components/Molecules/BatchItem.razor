@@ -1,5 +1,5 @@
 @* Admin batch-item molecule (feature 005): one queued/in-progress/completed/failed upload row. *@
-<div class="batch-item state-@StateClass">
+<div class="batch-item state-@StateClass" @attributes="RootAttrs">
     <div class="bcell">
         @if (Preview != null)
         {
@@ -56,6 +56,11 @@
     [Parameter] public string? FormId { get; set; }
 
     private string StateClass => State.ToString().ToLowerInvariant();
+
+    // 008 C2: data-item only when ItemId is set; absent by default.
+    private Dictionary<string, object>? RootAttrs => string.IsNullOrEmpty(ItemId)
+        ? null
+        : new Dictionary<string, object> { ["data-item"] = ItemId };
 
     private string SizeFormatted => SizeBytes >= 1_048_576
         ? $"{SizeBytes / 1_048_576.0:F1} MB"

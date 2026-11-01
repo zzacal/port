@@ -1,0 +1,28 @@
+008 baseline gate (T001), captured BEFORE any 008 code change
+=============================================================
+
+Captured: 2026-11-01, branch 008-upload-pipeline
+Head:     e7b0191 (docs-only commits on top of 47de295; `git diff --quiet 47de295 e7b0191 -- src tests` is
+          clean, so src/ and tests/ are byte-identical to 47de295)
+SDK:      dotnet 10.0.403
+
+Build: dotnet build Gallery.slnx -warnaserror --artifacts-path artifacts
+  Build succeeded. 0 Warning(s), 0 Error(s)
+
+Test:  dotnet test Gallery.slnx --no-build --artifacts-path artifacts --blame-hang-timeout 120s
+  Gallery.Core.Tests.dll  Failed 0, Passed  95, Skipped 0, Total  95
+  Gallery.Web.Tests.dll   Failed 0, Passed 402, Skipped 0, Total 402
+  Total                   497 passed, 0 failed, 0 skipped (exit 0)
+
+Byte-identity guards that pin pre-change output (must pass UNMODIFIED in every later batch):
+  - tests/Gallery.Web.Tests/PublicOutputUnchangedTests.cs  (public page output)
+  - tests/Gallery.Web.Tests/UiPagesUnchangedTests.cs       (/ui catalogue pages)
+
+Other existing suites named by the tasks.md rules (also UNMODIFIED): StorageTests, SeederTests,
+AdminAccessTests (sole stated exception: Owner_GetAdminUpload_returns_404, edited by T035 only),
+OrganismComponentTests.
+
+== T053 final gate (parent, after dotnet clean) ==
+build -warnaserror: 0 warnings, 0 errors
+tests: Gallery.Core.Tests 104, Gallery.Web.Tests 675 (total 779; baseline 497 -> +282)
+head before commit: 2c8b394

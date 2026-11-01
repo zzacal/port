@@ -1,0 +1,75 @@
+@* 008 upload page (contracts/components.md C3, contracts/http.md U1). Server-rendered from the
+   005 components; the page script reconciles it with U2 and fills the templates below. With
+   scripting disabled only the <noscript> notice shows (FR-006). No storage URL, key or presigned
+   URL is ever rendered here (FR-021, FR-043). *@
+@using Gallery.Web.Components
+@using Gallery.Web.Components.Molecules
+@using Gallery.Web.Components.Organisms
+@using Gallery.Web.Components.Templates
+@using Gallery.Web.Upload
+
+<AdminLayout Title="Upload" Current="AdminPage.Upload" SignOut="@SignOut">
+    <section class="upload">
+        <noscript><p class="upload-nojs">Uploading needs JavaScript. Turn it on to add photos.</p></noscript>
+        @if (Model.ConfirmedCount is int added)
+        {
+            <p class="upload-result" role="status">@added @(added == 1 ? "photo" : "photos") added to your library. <a href="/admin/library">Open the library</a></p>
+        }
+        <upload-batch hidden data-csrf="@Model.CsrfToken" data-max-bytes="@Model.MaxFileBytes" data-max-photos="@Model.MaxPhotos"
+                      data-state-url="@Model.StateUrl" data-worker="@Model.WorkerUrl" data-batch="@(Model.Batch?.Id ?? "")">
+            <form id="@UploadPageModel.FormId" method="post" action="/admin/upload" hidden></form>
+            <UploadDropzone MaxMb="@((int)Model.MaxMb)" MaxPhotos="@Model.MaxPhotos" FormId="@UploadPageModel.FormId" />
+            <ContactSheet Large="4" Medium="3" Small="2">
+                @foreach (var item in Items)
+                {
+                    <BatchItem FileName="@item.FileName" SizeBytes="@item.FileSize" State="@item.State" Percent="@item.Percent"
+                               Reason="@item.Reason" ItemId="@item.ItemId" FormId="@UploadPageModel.FormId" />
+                }
+            </ContactSheet>
+            @if (Model.Batch is { Total: > 0 } batch)
+            {
+                <BatchFooter State="@batch.FooterState" Total="@batch.Total" Ready="@batch.Ready" Failed="@batch.Failed" FormId="@UploadPageModel.FormId" />
+            }
+            <div class="upload-templates" hidden>
+                @foreach (var state in TileStates)
+                {
+                    <template data-tile="@state.ToString().ToLowerInvariant()"><BatchItem FileName="@Sentinel("name")" SizeBytes="0" State="@state" Percent="0"
+                               Reason="@Sentinel("reason")" ItemId="@Sentinel("id")" FormId="@UploadPageModel.FormId" /></template>
+                }
+                @foreach (var state in FooterStates)
+                {
+                    <template data-footer="@state.ToString().ToLowerInvariant()"><BatchFooter State="@state" Total="0" Ready="0" Failed="0" FormId="@UploadPageModel.FormId" /></template>
+                }
+                <template data-refusals><UploadDropzone State="DropzoneState.Refused" Refusals="@SentinelRefusals" MaxMb="@((int)Model.MaxMb)"
+                                                        MaxPhotos="@Model.MaxPhotos" FormId="@UploadPageModel.FormId" /></template>
+            </div>
+        </upload-batch>
+        <script type="module" src="@Model.ScriptUrl"></script>
+    </section>
+</AdminLayout>
+
+@code {
+    [Parameter, EditorRequired] public UploadPageModel Model { get; set; } = default!;
+    [Parameter] public FormToken? SignOut { get; set; }
+
+    /// <summary>Sentinel text the script replaces by walking text nodes and attribute values
+    /// (contracts/components.md "Templates"); U+2063 never occurs in a real file name.</summary>
+    public const char SentinelMark = '\u2063';
+
+    private static string Sentinel(string name) => $"{SentinelMark}{name}{SentinelMark}";
+
+    private static readonly BatchItemState[] TileStates =
+    [
+        BatchItemState.Queued, BatchItemState.Processing, BatchItemState.Uploading,
+        BatchItemState.Succeeded, BatchItemState.Failed, BatchItemState.Interrupted,
+    ];
+
+    private static readonly BatchState[] FooterStates =
+    [
+        BatchState.InProgress, BatchState.Ready, BatchState.Blocked, BatchState.ConfirmDiscard,
+    ];
+
+    private static readonly IReadOnlyList<Refusal> SentinelRefusals = [new Refusal(Sentinel("name"), Sentinel("reason"))];
+
+    private IReadOnlyList<UploadItemView> Items => Model.Batch?.Items ?? [];
+}
