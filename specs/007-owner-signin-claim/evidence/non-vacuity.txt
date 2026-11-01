@@ -1,0 +1,13 @@
+PASS (a) claim filter without claimedSubject:null -> red:   Failed Gallery.Web.Tests.ClaimRaceTests.Winner_calling_again_gets_SignedIn_no_second_claim_log |  Assert.Equal() Failure: Values differ Expected: SignedIn 
+PASS (b) refusal without HandleResponse -> red:   Failed Gallery.Web.Tests.RefusalTests.Refused_intruder_gets_no_session_and_site_doc_unchanged |  Assert.Equal() Failure: Strings differ  ↓ (pos 6) 
+PASS (c) admin group without the anti-forgery filter -> red:   Failed Gallery.Web.Tests.AdminAccessTests.I4_WithSession_NoToken_POST_returns_400(path: "/admin/signout") |  Assert.Equal() Failure: Values differ Expected: BadRequest 
+PASS (d) SuppressAutoDefaultScheme switched off -> red:   Failed Gallery.Web.Tests.AdminAccessTests.I6_NoConfigHost_PublicPages_ByteIdentical_With_MintedSession |  Set-Cookie present for / WITH minted session on no-config host (I-6) 
+PASS (e) OnValidatePrincipal without the owner comparison -> red:   Failed Gallery.Web.Tests.OwnerSessionTests.Out_of_band_owner_null_invalidates_existing_session |  Assert.Equal() Failure: Values differ Expected: Found 
+PASS (f) /ui without RequireAuthorization -> red:   Failed Gallery.Web.Tests.UiOwnerOnlyTests.NoSession_UiFirstSlug_Redirects_ToSignIn |  Assert.Equal() Failure: Values differ Expected: Found 
+PASS (g) owner field named outside OwnerStore -> red:   Failed Gallery.Web.Tests.OwnerWriteGuardTests.Owner_fields_are_named_only_by_the_claim_and_the_seed_insert |  Owner fields named outside OwnerStore.cs / Seeder SetOnInsert (I.4): Gallery.Web/Admin/AdminHeaders.cs:30: // claimedSubject written here 
+PASS (h) anti-forgery cookie without SecurePolicy=Always -> red:   Failed Gallery.Web.Tests.OwnerClaimTests.Antiforgery_cookie_has_correct_attributes |  Assert.Contains() Failure: Item not found in set Set: ["path", "samesite", "httponly"] 
+PASS (i) p95.sh finds 60 callbacks in specs/007-owner-signin-claim/evidence/sc006-callbacks.log
+SKIP (i) specs/007-owner-signin-claim/evidence/live-run.log not captured yet
+restored: build clean
+
+ALL PASS
