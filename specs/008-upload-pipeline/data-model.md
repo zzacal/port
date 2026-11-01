@@ -129,6 +129,7 @@ stateDiagram-v2
     open --> confirming : Confirm accepted (≥1 item, all effective succeeded) — confirmStartedAt set
     confirming --> confirmed : all items copied, images upserted, staged files deleted
     confirming --> confirming : Confirm repeated after a crash (idempotent)
+    confirming --> open : a copy refused by if-match — confirmed items pulled out, changed items failed (decisions row 45)
     open --> discarded : Discard — every staged file of the batch deleted
 ```
 

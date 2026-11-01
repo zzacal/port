@@ -169,7 +169,7 @@ tests/Gallery.Web.Tests/
 ├── UploadIntakeTests.cs, UploadLifecycleTests.cs, UploadConfirmTests.cs, UploadFlowTests.cs
 ├── UploadSeedCoexistenceTests.cs, UploadSecretScanTests.cs, UploadComponentAdditionsTests.cs
 ├── UploadBrowserTests.cs                        # Playwright: worker path + no-JS notice
-└── StorageTests.cs                              # + presign signed-headers, misuse, copy-if-match facts (emulator + R2)
+└── UploadStorageTests.cs                        # NEW: presign signed-headers, misuse, copy-if-match facts (emulator + R2); StorageTests.cs unmodified (decisions row 37)
 ```
 
 **Structure Decision**: upload server code goes in a new `Upload/` folder beside `Admin/`, `Site/`
@@ -214,8 +214,8 @@ Edited in `specs/001-architecture-stack-design/draft/`, then `evidence/assemble.
 4. No credential value in the page, the state JSON or any admin asset (FR-043, read from
    user-secrets inside the test, never printed).
 5. Every U3–U11 POST without CSRF answers 400; without the owner session it is refused.
-6. Confirm publishes only validated bytes (copy-if-match 412 test) and creates no public change
-   (SC-004).
+6. Confirm publishes only validated bytes (copy-if-match 412 test; the changed item fails alone
+   and the batch is never locked, decisions row 45) and creates no public change (SC-004).
 7. `seedKey` absent on uploaded images; a seed run after an upload leaves them (FR-035).
 8. The server ignores page-sent camera values and dimensions (FR-022, FR-027).
 9. A final non-vacuity task: one deliberate break per guard above, each must go red on its

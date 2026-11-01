@@ -41,7 +41,7 @@ Expected: all tests green. Existing tests are UNMODIFIED, including `UiPagesUnch
 | GPS AVIF and GPS WebP each rejected by reader 1 alone, by reader 2 alone, and by the combined validator | FR-041, SC-002, III rationale | `ContainerParserTests`, `UploadValidatorTests` |
 | embedded thumbnail (second `av01` item / `iref`), wrong width, wrong aspect, disallowed format, ICC, metadata-bearing placeholder | SC-002 | same |
 | photo rejected, then staging prefix empty and public bucket unchanged | FR-026, SC-002 | `UploadFlowTests` |
-| presigned URL signs `content-type;host` only; other operation, other key and expiry refused (emulator always; R2 when keys are present) | FR-042, FR-044, SC-011 | `StorageTests` (new facts) |
+| presigned URL signs `content-type;host` only; other operation, other key and expiry refused (emulator always; R2 when keys are present) | FR-042, FR-044, SC-011 | `UploadStorageTests` (new file; `StorageTests` unmodified, decisions row 37) |
 | over-20 MB, non-JPEG and 101st photo refused by the server | FR-005 | `UploadIntakeTests` |
 | 50 concurrent register calls give exactly one open batch and ≤ 100 items | FR-007 | `UploadIntakeTests` |
 | stale attemptId gives 409; Restart deletes the old attempt and reuses the master | FR-011 | `UploadLifecycleTests` |

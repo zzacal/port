@@ -285,7 +285,10 @@ reads and the design record embeds items. A background sweeper: rejected by D-11
 3. Set `state: "confirmed"`.
 
 A crash at any point leaves the batch open with `confirmStartedAt` set, and Confirm runs again to
-the same result. The sha256 for each public name is computed at validation time (the server
+the same result. When a copy is refused by if-match, that item fails ("changed after validation")
+and loses its staged files, the confirmed items are pulled out of the batch, and the batch returns
+to plain open with only the failed items, so the owner is never locked out (contracts/http.md U10;
+decisions row 45, added by /speckit-analyze). The sha256 for each public name is computed at validation time (the server
 already holds the bytes) and stored on the item.
 
 **Rationale**: Probe P3: copy with if-match succeeds while the object is unchanged and returns 412
@@ -394,9 +397,10 @@ D-11's timer clause is removed in the design record (VII.2).
 - **Readers**: unit tests per rejection class (SC-002 list), each asserting reader 1 alone, reader 2
   alone, and the combined validator (FR-041).
 - **Presign**: the signed-headers test (R-03), plus FR-042's other-operation, other-key and expiry
-  checks. They extend `StorageTests` with `[Fact]` pairs for the emulator and R2, following the
-  existing pattern.
-- **Browser E2E** (one Playwright test, `UploadBrowserTests`): the real page, worker and vendored
+  checks. They go in a new `UploadStorageTests` file with `[Fact]` pairs for the emulator and R2,
+  following the existing `StorageTests` pattern; `StorageTests.cs` stays unmodified (decisions
+  row 37).
+- **Browser E2E** (one Playwright test class, `UploadBrowserTests`): the real page, worker and vendored
   encoders upload two fixture JPEGs to the emulator, then confirm. It runs in Chrome via
   `Channel="chrome"`.
   - Before writing it, a 2-minute probe must settle two things. First, the owner `__Host-` cookie

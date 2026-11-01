@@ -105,6 +105,8 @@ The script fills sentinels only by walking text nodes and attribute values (`tex
    - Heartbeat: U5 at every state change and every 20 s.
    - On a worker error (incl. `RangeError`/out of memory): U6 with the message; the next item
      continues (FR-017).
+   - On a storage PUT failure (network error or non-2xx), retry that PUT once; if it fails again,
+     U6 with "upload failed ({status})" and the next item continues (decisions row 48).
 5. Restart: U8. With `needsFile: true` the tile shows "Pick {fileName} again" with a file input. A
    picked file with the same name continues the item; a different name is registered as a new
    item through U3 (E-04).

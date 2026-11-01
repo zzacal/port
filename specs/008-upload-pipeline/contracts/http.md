@@ -45,7 +45,8 @@ or
 
 ## U3 `POST /admin/upload/items`: register picked files (limit 128 KiB)
 
-Request: `{ "files": [ { "name": "a.jpg", "size": 1234, "type": "image/jpeg" } ] }` (1–100 entries).
+Request: `{ "files": [ { "name": "a.jpg", "size": 1234, "type": "image/jpeg" } ] }` (1–100 entries;
+0 entries or more than `MaxPhotosPerBatch` answers 400 `{"error":"bad-request"}`).
 
 Server, in order:
 1. Get or create the open batch (`db.batch.create` on insert; a DuplicateKey re-reads).
@@ -63,7 +64,7 @@ Server, in order:
                   "master": { "url": "https://…", "contentType": "image/jpeg" } } ],
   "refused":  [ { "index": 1, "name": "b.heic", "reason": "not a JPEG" } ] }
 ```
-More than `MaxPhotosPerBatch` entries in one request answers 400. Events: `db.batch.update`, and
+Events: `db.batch.update`, and
 `s3.presign` per item (SC-006 is read from `s3.presign`).
 
 ## U4 `POST /admin/upload/items/{itemId}/master`: check the stored original (limit 4 KiB)
@@ -99,6 +100,9 @@ truncated to 200 characters and has control characters stripped. Sets `failed`; 
 attempt are kept until Restart or Delete (L-02). 204.
 
 ## U7 `POST /admin/upload/items/{itemId}/complete`: report done, validate (limit 16 KiB)
+
+Each staged size is read whole with a cap of 8 MiB (`s3.get`); a larger object is rejected
+"{name}: too large".
 
 Request:
 ```json
@@ -156,8 +160,24 @@ Request: `{ "batchId": "…" }`. Gate: the batch is open, has ≥1 item, and eve
 { "error": "not-ready", "message": "Restart or delete the 2 photos that aren't ready",
   "notReady": 2 }
 ```
+A `batchId` that is not the open batch answers 404, except a batch that is already `confirmed`,
+which answers 200 with its stored `confirmedCount` (a repeat after success is idempotent).
+
 Run (research R-09; idempotent, re-entrant after a crash): 200
 `{ "batchId": "…", "count": 40, "redirect": "/admin/upload?confirmed=…" }`.
+
+Copy refused by if-match (a staged file changed after validation; decisions row 45): the server
+- marks THAT item `failed` with reason "changed after validation", deletes its item prefix, and
+  creates no image for it;
+- carries on with the other items; each confirmed item gets its image and is `$pull`ed from the
+  batch;
+- at the end clears `confirmStartedAt`, leaves the batch `open` with only the failed items, and
+  answers 409:
+```json
+{ "error": "changed-after-validation", "message": "1 photo changed after it was checked. Restart or delete it.",
+  "added": 39, "failed": 1 }
+```
+Nothing of the failed item reaches the public bucket. The owner can Restart or Delete it as usual.
 
 Events: `upload.confirm.item` per photo, `upload.confirm` (whole batch; SC-008), `s3.copy`,
 `s3.list`, `s3.delete`, `db.image.upsert`, `db.batch.update`, `upload.confirmed`. No purge or warm
@@ -165,7 +185,8 @@ call (FR-033).
 
 ## U11 `POST /admin/upload/discard` (limit 4 KiB)
 
-Request: `{ "batchId": "…" }`. Allowed on an open batch that is not confirming. The server deletes
+Request: `{ "batchId": "…" }`. Allowed on an open batch that is not confirming (409
+`confirm-in-progress` while confirming; 404 when `batchId` is not the open batch). The server deletes
 the `staging/{batchId}/` prefix and sets `state: discarded`. 200 `{ "redirect": "/admin/upload" }`.
 Event: `upload.discarded`.
 

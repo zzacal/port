@@ -83,9 +83,9 @@ files it names. Tests are written in the same batch as the code they guard.
 
 - [ ] T001 Run the baseline gate (`dotnet build … -warnaserror`, `dotnet test …`) on 47de295.
   Write the build warning count, the test count per assembly, and the head hash to
-  `specs/008-upload-pipeline/evidence/baseline.txt`. Then capture the pre-change public-output
-  reference the same way `PublicOutputUnchangedTests` does (no new file needed if that test already
-  pins it; note which test pins it in baseline.txt).
+  `specs/008-upload-pipeline/evidence/baseline.txt`. Also list there the test classes that pin
+  pre-change output (`PublicOutputUnchangedTests`, `UiPagesUnchangedTests`) so later batches know
+  which byte-identity guards apply.
 - [ ] T002 Write `scripts/vendor-encoders.sh` (research R-01). For each of `@jsquash/avif@2.1.1`,
   `@jsquash/webp@1.5.0` and `thumbhash@0.1.1` it must: curl the registry tarball, check
   `shasum -a 512` (base64) against the full `dist.integrity` string written into the script, and
@@ -165,9 +165,7 @@ parallel.
   - `Master(b,i,a)`, `Size(b,i,a,w,ext)`, `AttemptPrefix(b,i,a)`, `ItemPrefix(b,i)` and
     `BatchPrefix(b)` per data-model "Staged keys". Every key is built from stored ids; all ids
     must pass `OpaqueId.IsValid`, or the method throws.
-  - `static Task TryDeleteAsync(Func<Task> delete, string key, ILogger log)`, which logs
-    `upload.cleanup_failed {key} {error}` on any exception and never rethrows (FR-036).
-  Register `UploadOptions` in `AddUpload`.
+  Register `UploadOptions` in `AddUpload`. (The best-effort delete helper is Batch B's, T014.)
 - [ ] T010 Create `src/Gallery.Web/Data/BatchDocuments.cs` (`BatchDoc`, `BatchItemDoc`,
   `MasterDoc`, `ValidatedDoc`, `ValidatedSizeDoc`, `PlaceholderDoc`) with the BSON names of
   data-model.md exactly. Create `src/Gallery.Web/Upload/EffectiveState.cs` with
@@ -229,9 +227,11 @@ unmodified: the new facts go in a new file with the same abstract/emulator/R2 pa
   - `CopyIfMatchAsync(srcBucket,srcKey,dstBucket,dstKey, etag, contentType, cacheControl)` →
     `CopyOutcome { Copied, PreconditionFailed }` (op `s3.copy`, outcome `ok` or `rejected`). It
     sets `ETagToMatch` and `MetadataDirective=REPLACE`.
+  - `static Task TryDeleteAsync(Func<Task> delete, string key, ILogger log)`, which logs
+    `upload.cleanup_failed {key} {error}` on any exception and never rethrows (FR-036). It is
+    the ONLY place that template is logged.
   - `DeletePrefixAsync(bucket,prefix, ILogger)`, which lists and then deletes each key through
-    `StagingKeys.TryDeleteAsync`. Use this shape if T009 has landed; otherwise inline the same
-    try/log/no-rethrow and log the same template.
+    `TryDeleteAsync`, and never throws.
   `PresignPutAsync` is NOT changed (research R-03).
 - [ ] T015 **[SAFETY]** Write `tests/Gallery.Web.Tests/UploadStorageTests.cs`: an abstract
   `UploadStorageTests` plus `EmulatorUploadStorageTests` (`[Collection("s3")]`) and
@@ -383,7 +383,7 @@ completes, with no browser.
      R-16). Log `upload.timings_dropped` for the rest.
   2. Run the whole validation inside `OpTimer.Time("upload.validate")`: master re-check (same
      length, ETag and dimensions); every expected size present (`HeadAsync`), fetched with
-     `GetAsync(max 8 MB)` and checked by `UploadValidator.ValidateSize`; then the placeholder.
+     `GetAsync(max 8 MiB)` (contracts/http.md U7) and checked by `UploadValidator.ValidateSize`; then the placeholder.
   3. Pass: store `validated` with dimensions FROM `master` and camera FROM `MasterCheck` on the
      stored master prefix (the request's `camera` and any width or height field are never read),
      the size keys `{sha256-16hex}.{ext}`, the ETags and byte counts; set `succeeded`.
@@ -409,9 +409,20 @@ completes, with no browser.
     - `placeholder-exif.webp`.
     Each asserts 422, item `failed` with the reason naming the file, `ListAsync(priv, attempt
     prefix)` empty, `ListAsync(pub, "")` identical to before, and one `upload.rejected` line.
-  - A stale attemptId on U5 or U7 → 409 `stale-attempt`.
-  - Every request above logged `http.request` with route
-    `/admin/upload/items/{itemId}/complete` (FR-037).
+  - A stale attemptId on U4, U5 or U7 → 409 `stale-attempt`; an unknown or deleted itemId → 404
+    (FR-020).
+  - U4 presigns ONLY the server's ladder: for the 400-wide master the response has exactly one
+    size (320) and two URLs; for `fixture-6000x4000.jpg` exactly six widths (FR-020, FR-023).
+  - Timing and log lines (FR-037–FR-040), asserted on `LogLines` of the happy path:
+    - one `http.request POST /admin/upload/items/{itemId}/complete 200` line;
+    - one `op.timing upload.validate … ok` and one `op.timing upload.master-check … ok` per U4/U7;
+      at least one each of `s3.presign`, `s3.head`, `s3.get`, `s3.get-range`, `db.batch.update`;
+    - U7 sent with `timings` `[{op:"browser.total",ms:812.4},{op:"browser.encode.avif.320",ms:5},
+      {op:"evil",ms:1},{op:"browser.total",ms:-1}]` → exactly the two valid `op.timing browser.*`
+      lines and one `upload.timings_dropped {item} 2`;
+    - each rejection case logs one `upload.rejected` whose `file` is the failing name and whose
+      line contains no value read from the file (no coordinate, camera make or model string), no
+      key and no URL (FR-040).
 
 ## Phase 6: User Story 1 (cont.): confirm and the page, Batch E
 
@@ -431,14 +442,19 @@ completes, with no browser.
     - `CopyIfMatchAsync` of each size to `pub/{key}` with the validated ETag, the content type and
       `public, max-age=31536000, immutable`;
     - the master to `priv/masters/{itemId}.jpg` with if-match;
-    - a `PreconditionFailed` stops the whole confirm with 409 `{"error":"changed-after-validation"}`
-      and NO image upsert for that item;
+    - a `PreconditionFailed` follows contracts/http.md U10 "Copy refused by if-match" exactly: that
+      item `failed` ("changed after validation"), its item prefix deleted, NO image for it; the
+      other items continue and are `$pull`ed once their image exists; at the end
+      `confirmStartedAt` is cleared and the answer is 409 with `added`/`failed` counts;
     - upsert `ImageDoc{_id=itemId}` with `$setOnInsert` per data-model "Library image" (no seed
       fields, `galleryIds: []`) through `OpTimer.Time("db.image.upsert")`;
     - `DeletePrefixAsync` of the item prefix.
   - Then `MarkConfirmedAsync(count)` and `upload.confirmed {batch} {count} {duration_ms}`, all
     inside `OpTimer.Time("upload.confirm")`.
   - No purge or warm call anywhere (FR-033). 200 `{batchId,count,redirect}`.
+  - Crash seam for tests: `ConfirmService` takes an optional `Func<string, Task>? afterItem`
+    (constructor parameter, default null; DI never sets it). It runs after each item's upsert. A
+    test passes one that throws after the first item to simulate a crash.
 - [ ] T031 [US1] **[SAFETY]** Write `tests/Gallery.Web.Tests/UploadConfirmTests.cs`:
   - Confirm with one item still uploading, and with zero items → 409 `not-ready`, `notReady`
     exact.
@@ -446,11 +462,20 @@ completes, with no browser.
     name, `galleryIds` empty, no `seedKey` element; each `pub` key exists with the immutable
     `Cache-Control`; `priv/masters/{id}.jpg` exists; `ListAsync(priv, "staging/{batchId}/")` is
     empty (SC-003); the batch is `confirmed` with `confirmedCount` 2.
-  - `Confirm_twice_after_a_simulated_crash`: run `ConfirmService` for item 1 only through a test
-    hook, then call U10 → exactly 2 images, no duplicate keys (FR-032).
-  - `Reput_after_validation_publishes_nothing` (plan item 6): re-PUT `320.avif` through the still
-    valid presigned URL after `succeeded` → U10 answers 409 `changed-after-validation`, and that
-    item's public keys are absent.
+  - `Confirm_twice_after_a_simulated_crash`: build `ConfirmService` with an `afterItem` that throws
+    after item 1, run it (it throws, the batch stays open with `confirmStartedAt` set), then call
+    U10 → 200, exactly 2 images, no duplicate public keys (FR-032). A further U10 on the confirmed
+    batch → 200 with count 2 and still 2 images.
+  - `Reput_after_validation_publishes_nothing` (plan item 6): 2 items; re-PUT item 2's `320.avif`
+    through the still-valid presigned URL after `succeeded` → U10 answers 409
+    `changed-after-validation` with `added:1, failed:1`. Item 2's public keys are absent, it has no
+    image, it is `failed` with "changed after validation", and its item prefix is empty. Item 1 has
+    its image. The batch is open with only item 2 and no `confirmStartedAt`, and U9 delete on item 2
+    then works (no lock-out).
+  - Timing: the happy confirm logs one `op.timing upload.confirm … ok`, one
+    `upload.confirm.item` per photo, `s3.copy` lines, a `db.image.upsert` per photo, and one
+    `upload.confirmed {batch} 2 {duration_ms}` (FR-038, FR-040).
+  - U10 with a random batchId → 404; U11 on a confirming batch → 409 `confirm-in-progress`.
   - `Public_pages_byte_identical_around_confirm` (SC-004): seed public content with the
     `PublicRoutesTests` shape and GET `/` and every gallery page before and after a confirm → the
     bodies are byte-identical.
@@ -505,7 +530,7 @@ completes, with no browser.
 **Owns**: `UploadEndpoints.cs` (U6, U8, U9, U11 additions),
 `tests/Gallery.Web.Tests/{UploadIntakeTests,UploadLifecycleTests,UploadResumeTests,UploadAccessTests}.cs`.
 
-- [ ] T036 [P] [US3] Write `tests/Gallery.Web.Tests/UploadIntakeTests.cs` (US3 AS-4/5, FR-005):
+- [ ] T036 [US3] Write `tests/Gallery.Web.Tests/UploadIntakeTests.cs` (US3 AS-4/5, FR-005):
   - register with a `type:"image/png"` entry, a `size:20971521` entry and an empty name → each is
     refused with the exact contract string while the valid entries are accepted in the same call;
   - a batch of 95 plus 10 → 5 accepted and 5 "batch is full (100 photos)";
@@ -531,9 +556,11 @@ completes, with no browser.
     attempt);
   - restart without a master → `needsFile:true` with the fileName;
   - delete in each stored state → the item gone and the item prefix empty;
-  - discard → `discarded`, the batch prefix empty (SC-003), `images` count unchanged, and the
-    next GET of `/admin/upload/state` → `{"batch":null}`;
-  - `StagingKeys.TryDeleteAsync` with a throwing delegate logs exactly one
+  - discard → `discarded`, the batch prefix empty (SC-003), `images` count unchanged, one
+    `upload.discarded {batch} {count}` line with the exact count, and the next GET of
+    `/admin/upload/state` → `{"batch":null}`;
+  - restart and delete with a stale attemptId → 409 `stale-attempt`;
+  - `ImageStore.TryDeleteAsync` with a throwing delegate logs exactly one
     `upload.cleanup_failed {key} {error}` with the exception type name and does not throw
     (decisions row 44).
 - [ ] T039 [US5] Write `tests/Gallery.Web.Tests/UploadResumeTests.cs` (SC-005, FR-008, FR-010):
@@ -548,7 +575,10 @@ completes, with no browser.
   I.6, plan item 5). It is a theory over every U2–U11 route and method:
   - without a session, GET → 302 `/admin/signin` and POST → 401;
   - with a session and NO `X-CSRF-TOKEN` → 400 for every POST, with the batch document unchanged;
-  - with a session and a token → not 400 (a non-error status as per contract);
+  - with a session and a token, on a fresh batch with one registered item → exactly the
+    contract status: U2 200, U3 200, U4 422 (no master stored), U5 204, U6 204, U7 422, U8 409
+    `not-active` (the item is still queued), U9 204, U10 409 `not-ready`, U11 200. Each theory case
+    runs on its own fresh batch;
   - every response carries `Cache-Control: no-store`.
 
 ## Phase 8: User Story 1 (cont.): browser worker and page script, Batch G
@@ -623,6 +653,18 @@ completes, with no browser.
   - `Pick_time_refusals` (FR-004): with host `Upload:MaxFileBytes` small, picking
     `not-a-jpeg.jpg` and an over-limit JPEG lists both with their exact reasons, adds 0 tiles, and
     sends 0 requests to S3.
+  - `Drop_on_document_adds_tiles` (FR-003): dispatch `dragover` + `drop` with a `DataTransfer`
+    built from `orientation-6.jpg` on `document.body` (not the dropzone) → one tile appears.
+  - `Worker_failure_fails_only_that_photo` (FR-017, US4 AS-1): pick a JPEG whose bytes after the
+    SOI marker are garbage (`FF D8 FF` + random; written by the test) plus `gps-camera.jpg` → the
+    garbage tile becomes `state-failed` with a reason and Restart/Delete, the other reaches
+    `state-succeeded`, and the footer shows the Blocked copy.
+  - `Restart_without_master_asks_for_the_file` (FR-011, E-04): pick a file while
+    `page.RouteAsync` aborts every PUT to the S3 origin → after the retry the tile shows
+    `state-failed` with "upload failed" (C4 step 4). Remove the route and reload the page (it no
+    longer holds the file), then press Restart → the tile shows "Pick {name} again". Choosing a
+    file with the same name continues the item to `state-succeeded`; in a second run a different
+    name adds a new tile instead.
   - `No_js_shows_notice_and_no_control` (FR-006): a `JavaScriptEnabled=false` context shows the
     notice text and `upload-batch` is not visible.
   - `Main_thread_stays_responsive` (US1 AS-3): a `longtask` PerformanceObserver installed by init
@@ -678,8 +720,13 @@ completes, with no browser.
      DB or R2.
   3. Run the built dll (one pid, `kill` only it) on `http://localhost:5092`, Development, with
      env overrides for Mongo and Storage and `Authentication:Google:Authority` pointed at a
-     FakeGoogle started from `specs/008-upload-pipeline/evidence/fake-oidc.cs`
-     (`dotnet run fake-oidc.cs`, its own pid; decisions row 40).
+     fake provider started from `specs/008-upload-pipeline/evidence/fake-oidc.cs`
+     (`dotnet run fake-oidc.cs -- --urls http://127.0.0.1:5093`, its own pid; decisions row 40).
+     The file has NO `#:package` line: it serves the same four endpoints as
+     `tests/Gallery.Web.Tests/Fixtures/FakeGoogle.cs` (discovery, jwks, authorize redirect, token)
+     and builds the RS256 id_token by hand with `System.Security.Cryptography.RSA` and base64url.
+     The app gets `Authentication:Google:ClientId/ClientSecret` as the literal dummies
+     `verify-client`/`verify-secret`, never the owner's.
   4. Sign in through the fake provider with curl's cookie jar, then drive U3 → PUT master → U4 →
      PUT sizes → U7 → U10 with the committed fixture files.
   5. Check: `X-Amz-SignedHeaders=content-type%3Bhost` in every presigned URL; 413 on a 200 KB
@@ -717,6 +764,8 @@ completes, with no browser.
   - (g) AdminEndpoints: map upload on `app.MapGroup("/admin")` instead of the protected group →
     UploadAccessTests.
   - (h) ConfirmService: drop `ETagToMatch` → `Reput_after_validation_publishes_nothing`.
+  - (h2) ConfirmService: on `PreconditionFailed`, upsert the image anyway →
+    `Reput_after_validation_publishes_nothing` (the "no image for item 2" assertion).
   - (i) ConfirmService: push the item id into the first public gallery's `items` →
     `Public_pages_byte_identical_around_confirm`.
   - (j) ImageDoc: give `SeedKey` the initialiser `= string.Empty` →
@@ -748,6 +797,32 @@ line when the owner runs them.
   Save the redacted output as `evidence/r2-tests.txt`.
 - [ ] O-04 SC-003 on R2 (quickstart Part C step 6): `staging/{batchId}/` lists zero objects after
   a confirm and after a discard.
+
+## Requirement coverage (for /speckit-analyze and the parent's checkpoints)
+
+| Requirements | Tasks |
+|---|---|
+| FR-001, FR-002, FR-006, FR-009, FR-034 | T004, T032–T035, T040, T045 |
+| FR-003, FR-004, FR-014–FR-017 | T042–T045 |
+| FR-005, FR-022, US3 | T021, T022, T026, T027, T036 |
+| FR-007, FR-008, FR-010, US5 | T010–T012, T039 |
+| FR-011–FR-013, FR-036, US4 | T014, T037, T038, T045 |
+| FR-018–FR-021, FR-044 | T009, T015, T026, T027, T029, T034, T045 |
+| FR-023–FR-029, FR-041, US2 | T018–T024, T028, T029 |
+| FR-030–FR-033 | T030, T031, T047 |
+| FR-035 | T006, T007, T031 |
+| FR-037–FR-040 | Rules, T029, T031, T038, T048, T049 |
+| FR-042 | T016, O-03 |
+| FR-043 | T046 |
+| SC-001 | T049 (40 photos, server path), T045 (browser path, 2 photos), O-02 (40 real exports) |
+| SC-002 | T020, T024, T029 |
+| SC-003 | T031, T038, T050, O-04 |
+| SC-004 | T031, T039 |
+| SC-005 | T039 |
+| SC-006–SC-008, SC-010 | T048, T049 |
+| SC-009 | T048 (script), O-02 (owner live run) |
+| SC-011 | T016, O-03 |
+| SC-012 | T046 |
 
 ## Dependencies & Execution Order
 
