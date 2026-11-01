@@ -834,7 +834,7 @@ Runs in parallel with Batch G (disjoint files).
 
 **Batch H** (one executor, 4 tasks, after T047, parallel with Batch F; owns only the four test files below):
 
-- [ ] T052 [P] **[SAFETY]** Write `tests/Gallery.Web.Tests/LibrarySourceGuardTests.cs`:
+- [X] T052 [P] **[SAFETY]** Write `tests/Gallery.Web.Tests/LibrarySourceGuardTests.cs`:
   - (FR-003, IV.22) GET `/`, a gallery page and a photo page (with an owner cookie and without)
     contain no `/admin-assets/`, no `owner-bar`, no `lib-`/`gal-`/`b-ctl` class;
   - (C4) `library.js` and `reorder.js` contain none of `innerHTML`, `outerHTML`,
@@ -844,18 +844,18 @@ Runs in parallel with Batch G (disjoint files).
   - (FR-045) no file under `src/` or `scripts/` references `Seeder`, `SeedCommand`, `PhotoJson`,
     `seed-manifest` or `prepare-photos`, and `src/Gallery.Web/Seed/` does not exist (T047 has
     landed before this batch).
-- [ ] T053 [P] Write `tests/Gallery.Web.Tests/EdgeModeTests.cs` (SC-012, SC-003, FR-040,
+- [X] T053 [P] Write `tests/Gallery.Web.Tests/EdgeModeTests.cs` (SC-012, SC-003, FR-040,
   FR-042): a host with NO `Edge:*` settings starts, and every 009 POST succeeds with its contracted
   303; `edge.purge … log-only … skipped` lines carry the addresses. With the recorder `Gate`
   closed, an L3, a G4 and an L4 each return their 303 while the recorder has received ZERO calls;
   opening the gate delivers them.
-- [ ] T054 [P] **[SAFETY]** Write `tests/Gallery.Web.Tests/EdgeSecretTests.cs` (SC-011, FR-043):
+- [X] T054 [P] **[SAFETY]** Write `tests/Gallery.Web.Tests/EdgeSecretTests.cs` (SC-011, FR-043):
   a host with `Edge:ZoneId=zone-test` and `Edge:ApiToken=test-edge-token-0123456789abcdef`, and the
   named Cloudflare `HttpClient`'s primary handler replaced through `configure` by a recording fake;
   GET every owner page (L1, G1, B1, `?open=`) and run publish, rename and delete; the token appears
   in no response body or header and in no `LogLines` entry, AND (non-vacuity) the fake saw it in the
   `Authorization` header at least once. Failure messages name the route or event, never the value.
-- [ ] T055 [P] Write `tests/Gallery.Web.Tests/InvariantTests.cs` (SC-007, SC-009): one scripted
+- [X] T055 [P] Write `tests/Gallery.Web.Tests/InvariantTests.cs` (SC-007, SC-009): one scripted
   sequence over HTTP (create, bulk add, reorder, pin, unpin, remove, publish, rename, unpublish,
   bulk delete, gallery delete, publish refusal, stale reorder) on `LibraryHost`; after EVERY step
   `InvariantChecker.AssertAsync` passes and a fresh GET `/` logs `http.request … / 200 … 1`
