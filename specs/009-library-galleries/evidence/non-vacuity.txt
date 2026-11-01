@@ -1,0 +1,18 @@
+PASS (a) publish without the empty check -> red:   Failed Gallery.Web.Tests.PublishRefusalTests.An_empty_gallery_is_refused_409_for_every_request_shape_and_nothing_changes |  public=on only (no confirm: the emptiness check comes before the warning): answered 200, expected 409 
+PASS (b) publish write without the items.0 filter -> red:   Failed Gallery.Web.Tests.GalleryServiceTests.Publish_races_a_remove_and_the_conditional_write_refuses |  Assert.Equal() Failure: Values differ Expected: Refused 
+PASS (c) delete skips the shared-file check -> red:   Failed Gallery.Web.Tests.ImageDeleteTests.Shared_public_file_is_kept |  Assert.Contains() Failure: Item not found in set Set: ["063e71c3a76961cb.webp", "0ccf3e98ff989117.webp", "9dc6806cba32689e.avif", "9e4c3666b0fa17ec.avif", "a59eac58948faaf4.webp", ···] 
+PASS (d) record deleted before leaving galleries -> red:   Failed Gallery.Web.Tests.ImageDeleteTests.Crash_after_galleries_then_repeat |  Assert.Equal() Failure: Values differ Expected: 1 
+PASS (e) target guard always passes -> red:   Failed Gallery.Web.Tests.RemoveSeededTests.Guard_refuses_non_development_environment |  Assert.Equal() Failure: Values differ Expected: 4 
+PASS (f) seed filter {$exists:true} only (seedKey "" removed) -> red:   Failed Gallery.Web.Tests.RemoveSeededTests.Removes_seeded_and_never_touches_owner_content |  Assert.Equal() Failure: Collections differ  ↓ (pos 1) 
+PASS (f2) seed filter {} (everything) -> red:   Failed Gallery.Web.Tests.RemoveSeededTests.Removes_seeded_and_never_touches_owner_content |  Assert.Equal() Failure: Collections differ  ↓ (pos 0) 
+PASS (g) library routes mapped outside the protected admin group -> red:   Failed Gallery.Web.Tests.LibraryAccessTests.Without_a_session_GET_redirects_to_signin_and_POST_is_401(route: "G4") |  Assert.Equal() Failure: Values differ Expected: Unauthorized 
+PASS (h) purge logs the API token -> red:   Failed Gallery.Web.Tests.CloudflareEdgeProviderTests.A_429_then_200_sends_two_requests_and_is_ok |  Assert.DoesNotContain() Failure: Filter matched in collection  ↓ (pos 0) 
+PASS (i) galleries carry seedKey "" -> red:   Failed Gallery.Web.Tests.IndexesTests.GalleryDoc_without_seed_key_serialises_no_seedKey_element |  Assert.False() Failure Expected: False 
+PASS (j) create makes the gallery public -> red:   Failed Gallery.Web.Tests.LibrarySourceGuardTests.Public_visibility_is_written_only_inside_GalleryService_PublishAsync |  "public" is written outside GalleryService.PublishAsync at src/Gallery.Web/Library/GalleryService.cs:112 
+PASS (k) bulk add appends without the single-item gate -> red:   Failed Gallery.Web.Tests.GalleryServiceTests.Add_40_then_40_with_5_overlapping_counts_exactly_and_keeps_the_given_order |  Gallery.Web.Tests.Fixtures.InvariantChecker+InvariantViolation : Data-model invariants broken: image 3hl4ixfig3xledbgxiwzzf5l3u: galleryIds [] differs from membership [h7gwtgs555s7zjxyjjhmqppfxe] 
+PASS (l) switch renders checked="False" -> red:   Failed Gallery.Web.Tests.LibraryComponentAdditionsTests.Switch_Checked_false_renders_no_checked_attribute_at_all |  <input type="checkbox" role="switch" name="public" checked="False" form="f" value="on" b-dpzwms9ppw /> 
+PASS (m) public layout loads the admin script -> red:   Failed Gallery.Web.Tests.LibrarySourceGuardTests.Public_pages_carry_no_owner_markup_with_or_without_the_owner_session |  GET / (with the owner session) references /admin-assets/ 
+PASS (n) p95.sh finds non-zero n for all 14 rows in specs/009-library-galleries/evidence/library-timings.log
+restored: build clean
+
+ALL PASS

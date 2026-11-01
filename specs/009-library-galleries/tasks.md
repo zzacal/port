@@ -909,7 +909,7 @@ Runs in parallel with Batch G (disjoint files).
   `dotnet clean`, build `-warnaserror` (0 warnings) and the full suite; record the new test count in
   `evidence/baseline.txt`. Do not edit `docs/roadmap.md`; put the roadmap status notes in the
   completion report.
-- [ ] T060 **[SAFETY]** **Non-vacuity, final task** (high tier). Copy the orchestration template to
+- [X] T060 **[SAFETY]** **Non-vacuity, final task** (high tier). Copy the orchestration template to
   `specs/009-library-galleries/evidence/non-vacuity.sh`, add one `brk` line per guard below, run it
   on a clean committed tree, and tee the output to `evidence/non-vacuity.txt`. Every line must be
   `PASS` (red on an ASSERTION, not an exception), and the restored build must be clean:
