@@ -783,7 +783,7 @@ run them, does not wait for them, and marks the feature implemented when T001–
 are tracked here so they stay visible. Their results go into decisions.md and the roadmap status
 line when the owner runs them.
 
-- [ ] O-01 Cloudflare dashboard: lifecycle rule on `gallery-dev-private`, deleting `staging/`
+- [X] O-01 Cloudflare dashboard: lifecycle rule on `gallery-dev-private`, deleting `staging/`
   objects 7 days after creation (spec Assumptions owner prerequisite 2, D-11 backstop). Optional:
   `masters/` to Infrequent Access after 30 days.
 - [ ] O-02 The skipped roadmap spike (decisions row 6), as quickstart Part C steps 1–5. On
@@ -795,7 +795,7 @@ line when the owner runs them.
 - [ ] O-03 Real R2 storage facts: `GALLERY_R2_TESTS=1 dotnet test --artifacts-path artifacts
   --filter Category=R2`, covering T015–T017 on R2, including copy-if-match 412 (decisions row 27).
   Save the redacted output as `evidence/r2-tests.txt`.
-- [ ] O-04 SC-003 on R2 (quickstart Part C step 6): `staging/{batchId}/` lists zero objects after
+- [X] O-04 SC-003 on R2 (quickstart Part C step 6): `staging/{batchId}/` lists zero objects after
   a confirm and after a discard.
 
 ## Requirement coverage (for /speckit-analyze and the parent's checkpoints)
