@@ -82,6 +82,50 @@ public sealed class LibraryTileGeometryTests(LibraryBrowserFixture fx)
         Assert.True(errors.Count == 0, string.Join("\n", errors));
     }
 
+    /// <summary>
+    /// Owner report: the tick was not centred in the circle (it was a rotated bordered box, whose
+    /// corner sits 3.7 px left of the circle's centre). Measured on the RENDERED pixels: a ticked
+    /// mark is screenshotted at 8x and the centre of its white ink, inside the ring, must be within
+    /// half a CSS pixel of the circle's centre on both axes.
+    /// </summary>
+    [Fact]
+    public async Task The_tick_is_centred_in_the_select_circle()
+    {
+        await using var site = await fx.NewSiteAsync();
+        await site.ImagesAsync(1, "Tick");
+        {
+            var page = await site.OpenAsync("/admin/library", scale: 8);
+            var mark = page.Locator("section.lib .select-mark").First;
+            await mark.ClickAsync();
+            var dot = mark.Locator(".dot");
+            await Microsoft.Playwright.Assertions.Expect(page.Locator("section.lib input[name=ids]").First).ToBeCheckedAsync();
+            var png = await dot.ScreenshotAsync(new() { Type = Microsoft.Playwright.ScreenshotType.Png });
+
+            // Decode in the page (canvas) to keep the test free of image packages.
+            var ink = await page.EvaluateAsync<JsonElement>("""
+                async (b64) => {
+                  const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode();
+                  const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+                  const g = c.getContext('2d'); g.drawImage(img, 0, 0);
+                  const d = g.getImageData(0, 0, c.width, c.height).data;
+                  const cx = c.width / 2, cy = c.height / 2, r = c.width * 8.5 / 24; // inside the 2px ring
+                  let x0 = 1e9, x1 = -1, y0 = 1e9, y1 = -1;
+                  for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) {
+                    if ((x + .5 - cx) ** 2 + (y + .5 - cy) ** 2 > r * r) continue;
+                    const i = (y * c.width + x) * 4;
+                    if (Math.min(d[i], d[i + 1], d[i + 2]) > 160) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+                  }
+                  const px = c.width / 24;
+                  return { found: x1 >= 0, dx: ((x0 + x1 + 1) / 2 - cx) / px, dy: ((y0 + y1 + 1) / 2 - cy) / px };
+                }
+                """, Convert.ToBase64String(png));
+            Assert.True(ink.GetProperty("found").GetBoolean(), "no tick ink found inside the ticked circle");
+            var (dx, dy) = (ink.GetProperty("dx").GetDouble(), ink.GetProperty("dy").GetDouble());
+            Assert.True(Math.Abs(dx) <= 0.5 && Math.Abs(dy) <= 0.5,
+                $"tick ink centre is ({dx:F2}, {dy:F2}) CSS px from the circle's centre");
+        }
+    }
+
     private sealed record Rect(double X, double Y, double W, double H);
 
     private static Rect Box(JsonElement e) =>

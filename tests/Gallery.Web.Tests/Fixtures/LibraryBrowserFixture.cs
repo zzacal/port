@@ -255,11 +255,12 @@ public sealed class LibrarySite(
     /// <c>__Host-gallery</c> cookie: Secure, HttpOnly, Lax, path /, host-only. Image requests to
     /// the (unresolvable) image host are answered 404 at once so loads never wait on DNS.
     /// </summary>
-    public async Task<IBrowserContext> NewContextAsync(int width = 1440, int height = 900, bool owner = true)
+    public async Task<IBrowserContext> NewContextAsync(int width = 1440, int height = 900, bool owner = true, float scale = 1)
     {
         var ctx = await fixture.Browser.NewContextAsync(new()
         {
             ViewportSize = new() { Width = width, Height = height },
+            DeviceScaleFactor = scale,
         });
         _contexts.Add(ctx);
         await ctx.RouteAsync(LibraryBrowserFixture.ImageBaseUrl + "/**", r => r.FulfillAsync(new() { Status = 404 }));
@@ -285,9 +286,9 @@ public sealed class LibrarySite(
     /// A new context and page, navigated to <paramref name="path"/> and loaded. Throws when the
     /// owner session was not accepted (an owner page then redirects to sign-in).
     /// </summary>
-    public async Task<IPage> OpenAsync(string path, int width = 1440, int height = 900, bool owner = true)
+    public async Task<IPage> OpenAsync(string path, int width = 1440, int height = 900, bool owner = true, float scale = 1)
     {
-        var ctx = await NewContextAsync(width, height, owner);
+        var ctx = await NewContextAsync(width, height, owner, scale);
         var page = await ctx.NewPageAsync();
         var resp = await page.GotoAsync(BaseUrl + path, new() { WaitUntil = WaitUntilState.NetworkIdle });
         var expected = path.Split('?')[0];
