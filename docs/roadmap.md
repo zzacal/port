@@ -138,7 +138,7 @@ because they don't run .NET.
 | L-07 to L-17 | 009 |
 | E-01, E-02 | 007 |
 | E-03 to E-11 | 008 |
-| E-12, E-14, E-15, E-16, E-17, E-18 | 009 (E-16 rendering also in 006) |
+| E-12, E-14, E-15, E-16, E-17, E-18 | 009 (E-16 listing and 404 rules in 006; publish refusal in 009, II.6) |
 | E-13 | accepted risk (R-02) |
 | E-19 | hosting |
 | R-01 | hosting (first public deploy of `/admin`) |

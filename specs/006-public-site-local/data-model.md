@@ -54,7 +54,8 @@ allowlist (FR-013, SC-011).
 
 `{ galleryId, slug, title, imageCount, cover: CoverImage? }`, where `CoverImage` is
 `{ imageId, width, height, placeholder, derivatives }`. The cover is `pinnedCover` if set,
-otherwise `items[0]`. It is null for an empty gallery, and the card renders an empty cell (E-16).
+otherwise `items[0]`. It is null for an empty gallery. ~~and the card renders an empty cell (E-16)~~
+**AMENDED (constitution 4.2.0, II.6):** a card without a cover is never put in `homeCards`, and the home route skips one too.
 
 ## Mapping to the component model (Gallery.Core, unchanged records)
 

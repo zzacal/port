@@ -162,8 +162,9 @@ hover on a photo starts loading the destination image, and repeat with scripts d
 
 ### Edge Cases
 
-- A gallery with no photos: its home card shows an empty cover cell with the title (E-16), and its
-  page shows the title and no grid.
+- ~~A gallery with no photos: its home card shows an empty cover cell with the title (E-16), and its
+  page shows the title and no grid.~~ **AMENDED (constitution 4.2.0, II.6):** a gallery with no photos is never shown: it is
+  left off the home page even when public, and its page answers 404 (E-16 as amended).
 - A pinned cover is not set: the gallery's first photo is the cover.
 - The home page has no public galleries: it renders the site header and an empty page, not an
   error.
@@ -238,7 +239,8 @@ hover on a photo starts loading the destination image, and repeat with scripts d
   the home page, member photos in order, optional pinned cover) and each photo's title and optional
   caption. Photo titles default to the file name without its extension (D-13).
 - **FR-016**: The owner MUST be able to generate a first manifest that groups photos into galleries
-  by capture date and adds at least one private gallery, one gallery with no photos, one photo in
+  by capture date and adds at least one private gallery, one gallery with no photos (private, since
+  **AMENDED (constitution 4.2.0, II.6):** a gallery needs a photo to be public), one photo in
   two galleries, and one photo with a caption. Generating MUST NOT overwrite an existing manifest.
 - **FR-017**: A seed command MUST store the prepared files in the public image storage and write
   the galleries, photos, and home cards to the datastore as the manifest describes. It MUST report

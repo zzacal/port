@@ -366,7 +366,7 @@ this document after the claim (I.4).
 | claimedAt | datetime? | |
 | claimedIp | string? | Taken from CF-Connecting-IP (I.5, PC.9). |
 | homeOrder | id[] | Every gallery id, public and private, in the owner's manual order. Private galleries keep their position so publishing restores them in place. |
-| homeCards | GalleryCard[] | Denormalized cards for the public galleries in `homeOrder`, so the home page is one read (IV.9). |
+| homeCards | GalleryCard[] | Denormalized cards for the public galleries in `homeOrder` that hold at least one image (II.6), so the home page is one read (IV.9). |
 
 ### Image (collection `images`)
 
@@ -402,7 +402,8 @@ An Image exists only after its batch is confirmed. It has no state field (FR-017
 
 A GalleryCard is `{ galleryId, slug, title, coverImageId?, coverPlaceholder, coverWidth,
 coverHeight, coverDerivatives, imageCount }`. The cover is `pinnedCover` if set, otherwise
-`items[0]`. When the gallery has no items, the cover is null and the card renders empty.
+`items[0]`. When the gallery has no items, the cover is null and the card is kept out of
+`homeCards` (II.6, E-16).
 
 ### Upload Batch (collection `batches`, at most one with `state: open`)
 
@@ -501,7 +502,7 @@ then purges the image URLs at the edge.
 The gallery cover is the `pinnedCover` image if that field is set and the image is still a member
 of `items`. If `pinnedCover` is cleared—because the pinned image was removed from the gallery or
 deleted—or was never set, the cover falls back to `items[0]`. When the gallery has no items, the
-cover is null and the GalleryCard renders empty. The `card` field on Gallery is recomputed whenever
+cover is null and the GalleryCard is never listed (II.6, E-16). The `card` field on Gallery is recomputed whenever
 `items`, `pinnedCover`, or a member image changes (D-13).
 
 ### Visibility Rule
@@ -560,13 +561,13 @@ slug is cosmetic—a stale slug triggers a 301 redirect to the current one (D-14
 **Visitor sees**: If the gallery is public, the image appears in the gallery and on the home card after purge and warm, within at most 1 day if purge fails (D-16; FR-011).
 
 ### L-08: Image removed from gallery
-**Records**: The image's `_id` is removed from the Gallery `items` array; if the image was the `pinnedCover`, the pin is cleared and the cover falls back to the new first item (or null if the gallery is empty); the gallery `card` is recomputed; `galleryIds` on the Image document loses this gallery's id; `site.homeCards` is updated if the gallery is public and in `homeOrder` (data-model Gallery, Image; D-13; FR-009).
+**Records**: The image's `_id` is removed from the Gallery `items` array; if the image was the `pinnedCover`, the pin is cleared and the cover falls back to the new first item (or null if the gallery is empty); the gallery `card` is recomputed; `galleryIds` on the Image document loses this gallery's id; `site.homeCards` is updated if the gallery is public and in `homeOrder`, and drops the gallery when this was its last image; the gallery stays public (Constitution II.6) (data-model Gallery, Image; D-13; FR-009).
 **Storage**: No storage operations. Derivatives remain in `public/` because the image may still be in other galleries or the library (D-07; FR-013).
 **Pages and caches**: If the gallery is public, its page and the home page are purged and re-warmed (D-16; decisions #15; R-01).
-**Visitor sees**: If the gallery was public, the image disappears from the gallery page and the home card after purge and warm, within at most 1 day if purge fails (D-16; FR-011).
+**Visitor sees**: If the gallery was public, the image disappears from the gallery page and the home card after purge and warm, within at most 1 day if purge fails (D-16; FR-011). If it was the gallery's last image, the gallery leaves the home page and its page answers 404 until an image is added again (E-16; II.6).
 
 ### L-09: Image deleted
-**Records**: The Image document is removed from `images`; the image's `_id` is removed from `items` in every Gallery document in `galleryIds`; for each affected gallery, `pinnedCover` is cleared if it matched, the `card` is recomputed, and `site.homeCards` is updated for public galleries in `homeOrder` (data-model Image, Gallery; D-13; FR-013).
+**Records**: The Image document is removed from `images`; the image's `_id` is removed from `items` in every Gallery document in `galleryIds`; for each affected gallery, `pinnedCover` is cleared if it matched, the `card` is recomputed, and `site.homeCards` is updated for public galleries in `homeOrder`, dropping any gallery left with no images (II.6; E-16) (data-model Image, Gallery; D-13; FR-013).
 **Storage**: Hard delete: `private/masters/{imageId}.jpg` is deleted from the `private` bucket, and every `public/{hash}.{avif|webp}` derivative is deleted from the `public` bucket. These are immediate deletions triggered by the app (data-model; D-07; FR-013; decisions #1, #2).
 **Pages and caches**: An immediate edge purge is issued for every derivative URL and for every public page that referenced the image (gallery pages and the home page for affected public galleries). The purge is best-effort at up to 100 URLs per call and 800/s (D-16; decisions #15; R-01; FR-013). Copies already held in visitor browser caches can persist for up to the immutable `max-age=31536000` lifetime because `immutable` objects carry no `must-revalidate`; this is an accepted risk (FR-013; decisions #9; spec Assumptions).
 **Visitor sees**: The image ceases to appear on public gallery pages and the home page after purge and warm. Visitors who have the derivative URLs cached in their browser may continue to load them for up to 1 year; this caveat is an accepted risk documented in the risk register (FR-013; spec Assumptions).
@@ -578,7 +579,7 @@ slug is cosmetic—a stale slug triggers a 301 redirect to the current one (D-14
 **Visitor sees**: Nothing. The gallery is private and does not appear in any public listing, feed, or sitemap (FR-011; D-14).
 
 ### L-11: Gallery made public
-**Records**: The Gallery `visibility` changes to `"public"`; `site.homeCards` gains the gallery's `card` at the position given by `site.homeOrder` (data-model Gallery, Owner; D-14; FR-009).
+**Records**: Refused when the gallery's `items` is empty: the owner is told the gallery needs at least one image, and nothing changes (Constitution II.6). Otherwise the Gallery `visibility` changes to `"public"`; `site.homeCards` gains the gallery's `card` at the position given by `site.homeOrder` (data-model Gallery, Owner; D-14; FR-009).
 **Storage**: No storage operations. Derivatives for all member images are already in `public/` (D-07).
 **Pages and caches**: The gallery page and the home page are purged and re-warmed at the edge (D-16; decisions #15; R-01). The gallery page changes from `noindex` to indexable. A failed purge is bounded by the 1-day HTML edge TTL (D-16; decisions #15).
 **Visitor sees**: The gallery and its images appear on the home page and the gallery page after purge and warm, within at most 1 day if purge fails (D-16; FR-011).
@@ -682,8 +683,8 @@ slug is cosmetic—a stale slug triggers a 301 redirect to the current one (D-14
 **Mechanism**: D-13 derives the cover from items[0] when pinnedCover is null (data-model Gallery). L-14 (Gallery reordered) recomputes the GalleryCard and triggers a D-16 purge of the home page and the gallery page.
 
 ### E-16: Gallery has no images
-**Outcome**: The home card renders empty (no cover, no dimensions) and the gallery page shows no images. Neither crashes nor leaves broken markup.
-**Mechanism**: D-13 specifies that when items is empty the cover is null and the GalleryCard's cover fields are null (data-model GalleryCard). D-15 server-renders the page with a null-safe cover path and no `<picture>` element when coverImageId is absent.
+**Outcome**: Visitors never see it (Constitution II.6, amended 4.2.0). An empty gallery is left out of the home page even when its visibility is public, and its page answers 404 "Not found" whatever its visibility. The owner cannot make an empty gallery public: the publish action refuses and says the gallery needs at least one image. A public gallery whose last image is removed or deleted stays public, is hidden until it holds an image again, and reappears in its `homeOrder` position without being republished.
+**Mechanism**: D-13 still computes the GalleryCard with a null cover and `imageCount` 0 for an empty gallery, but `site.homeCards` holds only public galleries with `imageCount` ≥ 1, so the home page stays one read (IV.9). The gallery route checks `items` after its one gallery read and returns the D-15 not-found page with `noindex`; the photo route already returns 404 for any image not in `items`. The publish precondition belongs to the L-11 action (feature 009); until then the seed manifest refuses a public gallery with no photos.
 
 ### E-17: Owner deletes an image by mistake
 **Outcome**: There is no trash and no undo through the site. The image is permanently gone. Recovery is re-uploading from local exports. Its gallery memberships, positions, title, and caption are lost.
@@ -717,6 +718,7 @@ can only be checked once the resource exists.
 | II.3 | D-14, D-07: 128-bit base32 ids; content-hash derivative names | integration test: ids are 26-char base32 and differ across titles | designed |
 | II.4 | D-14: `/g/{id}/{slug}`, stale slug 301s to current | integration test: renamed gallery old URL returns 301 to new URL | designed |
 | II.5 | D-14, D-13: galleries default private; upload and edit never change visibility | integration test: new gallery and confirmed batch leave visibility private | designed |
+| II.6 | D-13, D-14, D-15, E-16, L-11: `homeCards` holds only public galleries with images; an empty gallery's page is 404; publish refuses an empty gallery | integration test: empty public gallery absent from `/` and its page 404; seed manifest rejects a public gallery with no photos; publish refusal test with the L-11 action (009) | designed |
 | III.1 | D-07: masters in the `private` R2 bucket, no public access, no route serves them | config check: `private` bucket has no custom domain and no r2.dev URL; route inventory has no master route | designed |
 | III.9 | D-07, D-08, D-19: private bucket, bucket-scoped Object Read and Write token from configuration, presigned PUT per object for 15 minutes or less, r2.dev disabled | integration test: a presigned URL allows only PUT on its own key and expires; config check: token scope and bucket public-access settings; markup assertion that no credential or S3 endpoint appears in served HTML or script | designed |
 | III.10 | Feature 006 seed: dev-machine preparation, then the seed validates every derivative with the structure parser and MetadataExtractor before upload, reads the allowlist with the server extractor, and refuses non-development targets | integration test: a derivative with an Exif chunk or wrong dimensions is rejected and not uploaded; seed exits non-zero unless the environment is Development, the public bucket name starts with `gallery-dev-`, and the database name ends with `_dev` | designed |

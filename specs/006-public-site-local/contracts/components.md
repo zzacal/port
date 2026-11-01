@@ -11,7 +11,7 @@ must pass **unmodified**. A failure there means the change is wrong, not the tes
 | `Picture` | `string? TransitionId` | Adds `id="p-{TransitionId}"` to the root `.pic` div. Nothing else changes. |
 | `Tile` | `string? TransitionId` | Passed to `Picture`. |
 | `Tile` | `string? PreloadSrcSet`, `string? PreloadSizes` | Adds `data-preload-srcset`/`data-preload-sizes` to the root `<a>`. |
-| `Tile` | `Image` may be null when `EmptyTitle` is set: `string? EmptyTitle` | Renders `<a class="tile tile-empty" href>` with an empty `<div class="cell">` (page background) and `<Title Text=EmptyTitle>` (E-16). `Image` loses `[EditorRequired]`; a null `Image` without `EmptyTitle` throws `ArgumentException`. |
+| `Tile` | `Image` may be null when `EmptyTitle` is set: `string? EmptyTitle` (AMENDED (constitution 4.2.0, II.6): no public page renders it any more; kept for the admin builder in 009) | Renders `<a class="tile tile-empty" href>` with an empty `<div class="cell">` (page background) and `<Title Text=EmptyTitle>` (E-16). `Image` loses `[EditorRequired]`; a null `Image` without `EmptyTitle` throws `ArgumentException`. |
 | `ContactSheetItem` | record gains `string? Title = null`, `string? TransitionId = null`, `string? PreloadSrcSet = null`, `string? PreloadSizes = null`; `Image` becomes `ImageView?` | ContactSheet passes them to Tile. Existing two-argument constructions compile unchanged. |
 | `SoloViewer` | `string? Caption` | Renders `<p class="solo-caption">{Caption}</p>` after `<Title>`, before `<MetadataBar>`. |
 | `SoloViewer` | `string? TransitionId`, `string? PrefetchUrls` | `TransitionId` goes to Picture. `PrefetchUrls` becomes `data-prefetch` on `<article class="solo">`. |

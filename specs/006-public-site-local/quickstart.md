@@ -47,8 +47,8 @@ ASPNETCORE_ENVIRONMENT=Development dotnet run --project src/Gallery.Web --artifa
 
 Open http://localhost:5090/ and check:
 
-- the home grid of dated galleries plus "Coming soon", which shows an empty cell. "Unlisted" is
-  absent.
+- the home grid of dated galleries. "Unlisted" and the empty "Coming soon" draft are absent
+  (II.6: an empty gallery is never shown).
 - open a gallery, then a photo: caption (first photo), camera line, previous/next.
 - open the "Unlisted" address from Mongo or the seed output: it renders, and the page source has
   `noindex`.

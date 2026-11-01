@@ -42,7 +42,8 @@
 - It adds the required cases (FR-016):
   - `unlisted`: private, titled "Unlisted", with the first 3 photos of the day with the most
     photos.
-  - `coming-soon`: public, titled "Coming soon", with no photos.
+  - `coming-soon`: ~~public~~ private (AMENDED (constitution 4.2.0, II.6):), titled "Coming soon", with no photos.
+- Validation also rejects a public gallery with no photos (exit 3, II.6).
   - The first photo of the second dated gallery is also appended to the first dated gallery.
   - The first photo of the first dated gallery gets the caption "First light of the series."
 - It runs jq to validate the JSON before writing.

@@ -487,7 +487,8 @@ output for metadata.
   - the photo page adds two `link[rel=prefetch]` after load, and none with Save-Data emulated
   - the `view-transition-name` computed on the tile picture and the solo picture match
   - a JS-disabled walk home → gallery → photo → next → back works (SC-009)
-  - the empty "Coming soon" card renders without layout break
+  - the empty "Coming soon" card renders without layout break (AMENDED (constitution 4.2.0, II.6): empty galleries are no
+    longer shown; superseded by the II.6 checks in verify.sh and PublicRoutesTests)
 
 ## Phase 8: Polish and evidence
 

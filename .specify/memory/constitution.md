@@ -1,26 +1,27 @@
 <!--
 Sync Impact Report
-- Version change: 4.0.0 → 4.1.0 (MINOR)
-- Rationale: Feature 006 seeds the owner's own photos into the dev site before upload (008)
-  exists. III.2 and IV.6 required every derivative to come from the authenticated admin client at
-  upload time, with no path for seeded content. Rule III.10 adds a narrow exemption: seeded
-  development content may be prepared on the owner's machine, but only if it passes the same
-  server-side validation as uploads (III.5–III.7, two independent readers), meets the upload
-  limits, and never reaches production storage. No guarantee is withdrawn: the validation that is
-  the entire protection against leaking metadata (III rationale) now applies to seeded files too.
-  IV.19 wording clarified: an Early Hint is owed for critical CSS only when it is fetched rather
-  than inlined (inlined CSS has nothing to hint; PATCH-level, folded into this MINOR).
-- Modified principles: III. Published Images Leak Nothing (rule 10 added; rule 2 and IV.6 point to
-  it). IV. Performance (rule 19 clarified).
+- Version change: 4.1.0 → 4.2.0 (MINOR)
+- Rationale: owner directive (2026-10-31, feature 006 review): "We should not show any empty
+  galleries. On the admin side, galleries should not be able to be made public unless they have
+  at least one image." II.6 added. II.2 previously said "Public galleries appear on the home
+  page" unconditionally; it now defers to II.6 for empty galleries. No protection is withdrawn:
+  private stays unlisted, and II.6 adds a guarantee for visitors and a publish precondition for
+  the owner. A public gallery that becomes empty is hidden rather than switched to private, so
+  visibility still changes only by the owner's action (II.5).
+- Modified principles: II. Anonymous Public Viewing, Owner-Controlled Visibility (rule 2 reworded,
+  rule 6 added, rationale extended).
 - Added sections: none. Removed sections: none.
 - Templates requiring updates: none (templates read the constitution at runtime).
-- Prior specs swept: specs/006-public-site-local (plan Constitution Check and Complexity Tracking,
-  spec FR-029). No earlier spec relied on the unclarified IV.19 text.
-- Deferred TODOs: none
+- Prior specs swept: specs/006-public-site-local (spec edge case, FR-016; data-model card note;
+  contracts/seed.md coming-soon; tasks T031/T034 text annotated). Design record: E-16, L-08, L-09,
+  L-11, homeCards (content model), traceability II.6.
+- Deferred TODOs: the publish refusal itself ships with the admin publish action (feature 009);
+  until then the seed manifest enforces it (a public gallery with no photos fails validation).
 - History: 1.0.0 initial ratification. 1.1.0 perceived performance, private = unlisted. 2.0.0
   client-generated derivatives with server validation. 3.0.0 Azure Blob replaced R2, masters kept,
   $10 metered cap (2026-10-27). 4.0.0 images on Cloudflare R2, managed-identity guarantee
-  withdrawn, III.9 added (2026-10-30).
+  withdrawn, III.9 added (2026-10-30). 4.1.0 III.10 seeded dev content under two-reader
+  validation; IV.19 clarified (2026-10-31).
 -->
 
 # Gallery Constitution
@@ -50,7 +51,8 @@ accepted, documented risk that design MAY close with an optional claim token.
 ### II. Anonymous Public Viewing, Owner-Controlled Visibility
 
 1. Visitors MUST NOT need an account, cookie consent, or sign-in to view anything public.
-2. Every gallery is either public or private. Public galleries appear on the home page.
+2. Every gallery is either public or private. Public galleries that hold at least one image
+   appear on the home page (rule 6).
    Private galleries MUST NOT appear on the home page, in any public listing, feed, or sitemap,
    and their pages MUST be marked non-indexable — but MUST remain reachable by direct link.
    A listing served from an edge cache MAY show a gallery for up to the cache lifetime after it
@@ -60,10 +62,17 @@ accepted, documented risk that design MAY close with an optional claim token.
 4. Changing a gallery's title MUST NOT break links already shared.
 5. Only the owner decides what is visible; nothing becomes public as a side effect of upload,
    tagging, or editing.
+6. Visitors MUST never be shown an empty gallery. A gallery MUST hold at least one image to be
+   made public; the owner's publish action MUST refuse otherwise, saying why. A public gallery that
+   becomes empty (its last image removed or deleted) stays public but MUST be left out of the home
+   page and every public listing until it holds an image again, and the page of any empty gallery,
+   public or private, MUST answer as not found. Its visibility is not changed on the owner's
+   behalf (rule 5).
 
-Rationale: private doubles as draft and as share-by-link. Private means unlisted, not secret:
-it is not access control, and nothing private-but-sensitive belongs on this site. Opaque ids are
-kept because they are what make links survive renames.
+Rationale: private doubles as draft and as share-by-link. An empty gallery is a draft by
+definition, so it is never listed or shown even when its visibility says public. Private means
+unlisted, not secret: it is not access control, and nothing private-but-sensitive belongs on this
+site. Opaque ids are kept because they are what make links survive renames.
 
 ### III. Published Images Leak Nothing
 
@@ -273,4 +282,4 @@ These are binding inputs to every plan:
   place, not silently edited.
 - Every plan and analyze pass verifies compliance and cites principles by number.
 
-**Version**: 4.1.0 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-10-31
+**Version**: 4.2.0 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-10-31

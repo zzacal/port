@@ -55,6 +55,10 @@ thumb 640 px, and the full image at 1440 px (`shots/photo-nojs-1440.png`).
 
 ## Empty gallery card (E-16)
 
+> **AMENDED (constitution 4.2.0, II.6):** superseded. Empty galleries are no longer shown at all; the measurement below
+> records the behaviour before the amendment.
+
+
 "Coming soon" renders as `a.tile.tile-empty` with title text "Coming soon". Its cell is 411×308.25
 px, identical to the neighbouring image cells, so the grid row keeps its height.
 
