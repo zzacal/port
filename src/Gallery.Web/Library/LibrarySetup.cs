@@ -20,11 +20,13 @@ public static class LibrarySetup
         s.AddScoped<ImageService>();
         s.TryAddScoped<IObjectDeleter, ImageStoreObjectDeleter>(); // TryAdd: a test `configure` replacement wins
         s.AddScoped<ImageDeleteService>();
+        s.AddScoped<LibraryReader>();
         return s;
     }
 
     public static RouteGroupBuilder MapLibrary(this RouteGroupBuilder admin)
     {
+        admin.MapLibraryEndpoints();
         return admin;
     }
 }

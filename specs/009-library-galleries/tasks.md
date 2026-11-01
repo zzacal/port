@@ -482,14 +482,14 @@ from `AddAsync` (no second add path); `DeleteAsync` called from `DeleteManyAsync
 `src/Gallery.Web/Components/Molecules/SelectionBar.razor`,
 `tests/Gallery.Web.Tests/{LibraryComponentAdditionsTests,LibraryPageTests,LibraryEditTests,LibraryFlowTests,LibraryAccessTests}.cs`.
 
-- [ ] T028 [US1] Create `src/Gallery.Web/Library/LibraryReader.cs` (research R-04):
+- [X] T028 [US1] Create `src/Gallery.Web/Library/LibraryReader.cs` (research R-04):
   `PageAsync(page)` with the four timed reads (`db.library.page`, `db.library.count`,
   `db.galleries.list`, `db.site.order`), excluding tombstoned images, sorted
   `{createdAt:-1,_id:-1}`, `PageSize` per page, a page past the end → the last page. Each tile
   carries the status line (FR-007 copy), the gallery and public-gallery counts, and the View href
   `/g/{gid}/{slug}/{iid}` of the first gallery in `homeOrder` holding it (or null). `GalleryRef`
   list in home order for the picker.
-- [ ] T029 [US1] Create `src/Gallery.Web/Library/LibraryEndpoints.cs` with every POST route of
+- [X] T029 [US1] Create `src/Gallery.Web/Library/LibraryEndpoints.cs` with every POST route of
   contracts/http.md (L2–L5, G2–G4, B2–B6) and GET L1, calling the Batch C services only:
   - `OpaqueId.IsValid` on `{gid}`/`{iid}` or 404;
   - forms read only when `HasFormContentType`; a bare POST is "no fields" (never
@@ -500,7 +500,7 @@ from `AddAsync` (no second add path); `DeleteAsync` called from `DeleteManyAsync
   - G4 with `from=list|builder` redirects to that page.
   G1 and B1 GET are added by Batch E; until then G4/B-route refusals re-render through a minimal
   `role="status"` page in this file, replaced by E.
-- [ ] T030 [P] [US1] Component additions K1, K2, K5 (contracts/components.md), as attribute or
+- [X] T030 [P] [US1] Component additions K1, K2, K5 (contracts/components.md), as attribute or
   RenderFragment EXPRESSIONS, never new `@if` blocks beside existing markup:
   `Switch.FormId`/`Value`; `Input.Required`/`Pattern`; `SelectionBar.Render`/`SelectAllLabel`/
   `Limit`. Write `tests/Gallery.Web.Tests/LibraryComponentAdditionsTests.cs` (HTML-decoded,
@@ -509,7 +509,7 @@ from `AddAsync` (no second add path); `DeleteAsync` called from `DeleteManyAsync
   `required` attribute at all, `Checked=false` → no `checked` attribute at all (and no
   `checked="False"`), `Render=true Count=0` → the bar carries `hidden`. Then run
   `UiPagesUnchangedTests` and `AtomComponentTests`/`MoleculeComponentTests` UNMODIFIED: green.
-- [ ] T031 [US1] Create `src/Gallery.Web/Admin/Pages/LibraryPage.razor` exactly per
+- [X] T031 [US1] Create `src/Gallery.Web/Admin/Pages/LibraryPage.razor` exactly per
   contracts/components.md C1 (hidden forms, ContactSheet 4/3/1, `SelectMark` overlay, caption row
   with status, Edit and View, SelectionBar with `Limit=@PageSize`, the gallery picker dialog with
   the public note, the bulk `DangerConfirm`, the side panel with bound Title/Caption inputs whose
@@ -517,7 +517,7 @@ from `AddAsync` (no second add path); `DeleteAsync` called from `DeleteManyAsync
   `AdminAssets.UrlFor("admin-assets/library.js")` module script). With `?open`, the panel's Save
   is Primary and the bar's "Add to gallery…" is Secondary. Acceptance criteria UI-1, UI-2,
   UI-3, UI-4, UI-7 and UI-8.
-- [ ] T032 [US1] Write `tests/Gallery.Web.Tests/LibraryPageTests.cs`:
+- [X] T032 [US1] Write `tests/Gallery.Web.Tests/LibraryPageTests.cs`:
   - FR-002: the owner bar's Library link carries `aria-current="page"` and Galleries does not;
   - 101 uploaded images: page 1 holds 100 newest first, page 2 holds 1, `?page=9` renders page 2;
   - empty library: "No photos yet." with the `/admin/upload` link;
@@ -536,7 +536,7 @@ from `AddAsync` (no second add path); `DeleteAsync` called from `DeleteManyAsync
     (case-insensitive, outside attribute names) with a fresh, untitled-looking upload;
   - FR-011: the picker lists galleries in home order with "· Public|Private · n photos"; public
     options carry "Visitors will see these photos once they're added."; private ones do not.
-- [ ] T033 [US2] Write `tests/Gallery.Web.Tests/LibraryEditTests.cs` (US2, FR-009/FR-010):
+- [X] T033 [US2] Write `tests/Gallery.Web.Tests/LibraryEditTests.cs` (US2, FR-009/FR-010):
   - L2 title+caption → 303 `saved=1`; GET `?open={iid}` shows the stored values in the inputs
     (title `value`, caption textarea body) and "Saved";
   - blank, whitespace-only and 201-char titles and a 2001-char caption → 422 with the reason in
@@ -551,7 +551,7 @@ from `AddAsync` (no second add path); `DeleteAsync` called from `DeleteManyAsync
   - the panel's gallery list links each holding gallery's builder; delete copy "It is in 2
     galleries. This removes it from every gallery and deletes the original file. It can't be
     undone." ("It is in no gallery." for 0).
-- [ ] T034 [US1] Write `tests/Gallery.Web.Tests/LibraryFlowTests.cs` (US1 path, SC-001):
+- [X] T034 [US1] Write `tests/Gallery.Web.Tests/LibraryFlowTests.cs` (US1 path, SC-001):
   40 uploaded images → (1) L3 `gallery=new newTitle=Coast` with the 40 ids → 303 to the builder
   and `?added=40`; (2) B3 reorder moving the 4th first; (3) G4 `public=on` without `confirm` → 200
   with the publish warning copy and visibility still private; (4) G4 with `confirm=1` → 303. That
@@ -559,7 +559,7 @@ from `AddAsync` (no second add path); `DeleteAsync` called from `DeleteManyAsync
   moved photo as cover; library tiles say "In 1 gallery · public in 1"; the recorder holds exactly
   P-MEMBERS ∪ P-VIS for these steps; L3 of the same 40 plus 5 new → "5 added · 40 were already
   in Coast" via the 303 query and the rendered status. InvariantChecker after each step.
-- [ ] T035 [US1] **[SAFETY]** Write `tests/Gallery.Web.Tests/LibraryAccessTests.cs` (FR-001, I.3,
+- [X] T035 [US1] **[SAFETY]** Write `tests/Gallery.Web.Tests/LibraryAccessTests.cs` (FR-001, I.3,
   I.6): a theory over all 15 routes of contracts/http.md (L1–L5, G1–G4, B1–B6; G1/B1 skipped with
   a reason until Batch E lands, then enabled by E in T040): without a session GET → 302
   `/admin/signin` and POST → 401; with a session and NO antiforgery token every POST → 400 with a
@@ -568,7 +568,7 @@ from `AddAsync` (no second add path); `DeleteAsync` called from `DeleteManyAsync
 
 **Parent task after Batch D**:
 
-- [ ] T036 [US1] (high tier, parent) Stated requirement change, FR-001 (contracts/http.md "Changed
+- [X] T036 [US1] (high tier, parent) Stated requirement change, FR-001 (contracts/http.md "Changed
   existing test"): in `tests/Gallery.Web.Tests/AdminAccessTests.cs`, rename
   `Owner_GetAdminUpload_returns_200_and_library_still_404` to
   `Owner_GetAdminUpload_and_library_return_200`; assert 200 for `/admin/upload` and
@@ -661,13 +661,13 @@ Runs in parallel with Batch G (disjoint files).
 `tests/Gallery.Web.Tests/RemoveSeededTests.cs`. It does NOT edit `Program.cs` or anything under
 `Seed/` (T047 wires and deletes). Runs after Batch C, in parallel with Batch E.
 
-- [ ] T044 [US6] **[SAFETY]** Create `src/Gallery.Web/Maintenance/DevTargetGuard.cs`:
+- [X] T044 [US6] **[SAFETY]** Create `src/Gallery.Web/Maintenance/DevTargetGuard.cs`:
   `static IReadOnlyList<string> Check(string environment, StorageOptions s, MongoOptions m)` with
   the three checks of contracts/removal-command.md, phrased as `SeedCommand` phrases them today
   (read `Seed/SeedCommand.cs` lines 95–105). Until T047 deletes `SeedCommand`, the two copies
   coexist; T047 removes the old one, and T052's source guard keeps it from coming back.
   An empty list means pass.
-- [ ] T045 [US6] **[SAFETY]** Create `src/Gallery.Web/Maintenance/RemoveSeededCommand.cs` exactly
+- [X] T045 [US6] **[SAFETY]** Create `src/Gallery.Web/Maintenance/RemoveSeededCommand.cs` exactly
   per contracts/removal-command.md: `public static Task<int> RunAsync(string[] args, TextWriter
   output, IDictionary<string,string?>? overrides = null)`; configuration sources in the contracted
   order with overrides last; the environment is the configuration key `ASPNETCORE_ENVIRONMENT`
@@ -688,7 +688,7 @@ Runs in parallel with Batch G (disjoint files).
   test host's services.
   The selection filter is exactly `{seedKey:{$exists:true, $nin:[null,""]}}` on both collections.
   Timed as `maintenance.remove-seeded`; logs `owner.action seeded.remove`.
-- [ ] T046 [US6] **[SAFETY]** Write `tests/Gallery.Web.Tests/RemoveSeededTests.cs`
+- [X] T046 [US6] **[SAFETY]** Write `tests/Gallery.Web.Tests/RemoveSeededTests.cs`
   (`[Collection("s3")]` + MongoFixture; each fact opens its own database
   `new MongoClient(mongo.ConnectionString).GetDatabase($"gallery_rs_{Guid.NewGuid():N}_dev")`
   (MongoFixture stays unmodified), buckets `gallery-dev-*` created on S3Proxy; `ASPNETCORE_ENVIRONMENT` passed through overrides, never by mutating the process

@@ -1,0 +1,150 @@
+@* 009 library page (contracts/components.md C1, contracts/http.md L1). Server-rendered from the 005
+   components; library.js (Batch F) drives the selection bar, the picker and the bulk confirm.
+   Owner UI rules: every tile links to its public photo page when one exists (UI-1); the select
+   mark is the only control over the photo and the status/Edit/View row sits under the title (UI-2);
+   one filled action per state (UI-3); deletes are outlined Danger (UI-4); limits come from
+   LibraryOptions (UI-7); no validation nags (UI-8). *@
+@using Gallery.Web.Components
+@using Gallery.Web.Components.Atoms
+@using Gallery.Web.Components.Molecules
+@using Gallery.Web.Components.Organisms
+@using Gallery.Web.Components.Templates
+@using Gallery.Web.Library
+
+<AdminLayout Title="Library" Current="AdminPage.Library" ViewHref="/" SignOut="@Model.Csrf" Aside="@PanelFragment">
+    <section class="lib">
+        <form id="lib-delete" method="post" action="/admin/library/delete" hidden>@Token<input type="hidden" name="page" value="@Data.Page"></form>
+        @if (Open is not null)
+        {
+            <form id="lib-del-one" method="post" action="@($"/admin/library/images/{Open.Image.Id}/delete")" hidden>@Token<input type="hidden" name="page" value="@Data.Page"></form>
+        }
+        <h1 class="lib-heading">Library</h1>
+        @if (Model.Status is not null)
+        {
+            <p class="lib-result" role="status">@Model.Status</p>
+        }
+        @if (Data.Total == 0)
+        {
+            <p class="lib-empty">No photos yet. <a href="/admin/upload">Upload photos</a></p>
+        }
+        else
+        {
+            <ContactSheet Large="4" Medium="3" Small="1">
+                @for (var i = 0; i < Data.Tiles.Count; i++)
+                {
+                    var tile = Data.Tiles[i];
+                    <Tile Image="tile.Image" Sizes="@GridSizes" CssClass="lib-tile"
+                          Priority="@(i < 4 ? PicturePriority.High : PicturePriority.Lazy)"
+                          Overlay="@MarkFor(tile)" Caption="@RowFor(tile)" />
+                }
+            </ContactSheet>
+            <SelectionBar Render="true" Count="0" Total="@Data.Tiles.Count" SelectAllLabel="Select all on this page" Limit="@Model.Options.PageSize">
+                <Button Variant="@AddVariant" Type="button" Name="action" Value="add">Add to gallery&#x2026;</Button>
+                <Button Variant="ButtonVariant.Danger" Type="button" Name="action" Value="delete">Delete&#x2026;</Button>
+            </SelectionBar>
+            <div class="lib-bulk-delete" hidden>
+                <DangerConfirm Action="Delete" Target="0 photos"
+                               Consequence="This removes them from every gallery and deletes the original files. It can't be undone."
+                               ConfirmLabel="Delete photos" FormId="lib-delete" />
+            </div>
+            <Pager PrevHref="@PrevHref" NextHref="@NextHref" />
+            <p class="lib-pages">Page @Data.Page of @Data.TotalPages</p>
+            <dialog id="lib-picker" class="lib-picker" aria-labelledby="lib-picker-h">
+                <form id="lib-select" method="post" action="/admin/library/add">
+                    @Token<input type="hidden" name="page" value="@Data.Page">
+                    <h2 id="lib-picker-h">Add to gallery</h2>
+                    <fieldset class="lib-options">
+                        <legend class="vh">Gallery</legend>
+                        @foreach (var g in Data.Galleries)
+                        {
+                            <label class="lib-option">
+                                <input type="radio" name="gallery" value="@g.Id" />
+                                <span class="lib-option-text">@g.Title · @(g.IsPublic ? "Public" : "Private") · @g.PhotoCount @(g.PhotoCount == 1 ? "photo" : "photos")</span>@NoteFor(g)
+                            </label>
+                        }
+                        <label class="lib-option">
+                            <input type="radio" name="gallery" value="new" />
+                            <span class="lib-option-text">New gallery</span>
+                        </label>
+                        <Input Label="New gallery title" Name="newTitle" Required="true" Pattern="@TitlePattern" MaxLength="@Model.Options.TitleMax" />
+                    </fieldset>
+                    <div class="lib-picker-actions">
+                        <Button Variant="ButtonVariant.Primary">Add</Button>
+                        <Button Variant="ButtonVariant.Quiet" Type="button" Name="action" Value="cancel">Cancel</Button>
+                    </div>
+                </form>
+            </dialog>
+        }
+        <script type="module" src="@Model.ScriptUrl"></script>
+    </section>
+</AdminLayout>
+
+@code {
+    [Parameter, EditorRequired] public LibraryPageModel Model { get; set; } = default!;
+
+    /// <summary>The single-line title rule the server applies (not whitespace-only, FR-010).</summary>
+    public const string TitlePattern = @".*\S.*";
+
+    private static readonly string GridSizes = Gallery.Core.Images.Sizes.ForGrid(4, 3, 1);
+
+    private LibraryPageData Data => Model.Data;
+    private LibraryTile? Open => Data.Open;
+
+    /// <summary>With the side panel open its Save is the one primary, so the bar's Add is demoted (decisions row 46).</summary>
+    private ButtonVariant AddVariant => Open is null ? ButtonVariant.Primary : ButtonVariant.Secondary;
+
+    private string? PrevHref => Data.Page > 1 ? $"?page={Data.Page - 1}" : null;
+    private string? NextHref => Data.Page < Data.TotalPages ? $"?page={Data.Page + 1}" : null;
+
+    private RenderFragment Token => @<input type="hidden" name="@Model.Csrf.FieldName" value="@Model.Csrf.Value">;
+
+    private static RenderFragment? NoteFor(GalleryRef g) => g.IsPublic
+        ? @<span class="lib-note">Visitors will see these photos once they're added.</span>
+        : null;
+
+    private RenderFragment MarkFor(LibraryTile tile) =>
+        @<div class="pos-tl"><SelectMark Label="@($"Select {tile.Image.Title}")" Name="ids" Value="@tile.Image.Id" FormId="lib-select" /></div>;
+
+    private RenderFragment RowFor(LibraryTile tile) =>
+        @<div class="lib-row"><span class="lib-status">@tile.Status</span><TextLink Href="@($"?page={Data.Page}&open={tile.Image.Id}")">Edit</TextLink>@ViewFor(tile.ViewHref)</div>;
+
+    private static RenderFragment? ViewFor(string? href) => href is null
+        ? null
+        : @<TextLink Href="@href">View &#x2197;</TextLink>;
+
+    private RenderFragment? PanelFragment => Open is null ? null : Panel(Open);
+
+    private RenderFragment Panel(LibraryTile open) =>
+        @<form id="lib-edit" class="lib-edit" method="post" action="@($"/admin/library/images/{open.Image.Id}")">
+            @Token<input type="hidden" name="page" value="@Data.Page">
+            <SidePanel Heading="Photo" FormId="lib-edit" State="@(Model.Saved ? SaveState.Saved : SaveState.Idle)" Danger="@DangerFor(open)">
+                <Input Label="Title" Name="title" Value="@Model.EditTitle" MaxLength="@Model.Options.TitleMax" Required="true" Pattern="@TitlePattern" />
+                <Input Label="Caption" Name="caption" Multiline="true" Value="@Model.EditCaption" MaxLength="@Model.Options.CaptionMax" />
+                <div class="lib-in">
+                    <h3>In galleries</h3>
+                    @GalleriesOf(open)
+                </div>
+                @ViewFor(open.ViewHref)
+            </SidePanel>
+        </form>;
+
+    private static RenderFragment GalleriesOf(LibraryTile open) => open.Galleries.Count == 0
+        ? @<p class="lib-none">Not in a gallery</p>
+        : @<ul class="lib-galleries">@foreach (var g in open.Galleries)
+            {
+                <li><a href="@($"/admin/galleries/{g.Id}")">@g.Title</a></li>
+            }</ul>;
+
+    private static RenderFragment DangerFor(LibraryTile open) =>
+        @<DangerConfirm Action="Delete photo" Target="@open.Image.Title" Consequence="@DeleteConsequence(open.GalleryCount)"
+                        ConfirmLabel="Delete photo" FormId="lib-del-one" />;
+
+    /// <summary>contracts/components.md "delete confirm (one)".</summary>
+    public static string DeleteConsequence(int galleries) =>
+        (galleries switch
+        {
+            0 => "It is in no gallery.",
+            1 => "It is in 1 gallery.",
+            _ => $"It is in {galleries} galleries.",
+        }) + " This removes it from every gallery and deletes the original file. It can't be undone.";
+}

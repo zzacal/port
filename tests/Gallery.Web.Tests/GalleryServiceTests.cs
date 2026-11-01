@@ -199,6 +199,52 @@ public class GalleryServiceTests(S3ProxyFixture s3, MongoFixture mongo) : IClass
         SetEq([Gp(gid, "order"), Pp(gid, "order", ids[0]), Pp(gid, "order", ids[1]), Pp(gid, "order", ids[2])], purgedOk);
     }
 
+    // ── home order (G3) ──────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task Home_reorder_needs_the_exact_set_and_purges_home_only_when_listed_order_changes()
+    {
+        await using var h = await NewHostAsync();
+        var imgs = await ImagesAsync(h, 2);
+        var a = await CreateAsync(h, "Alpha");
+        var b = await CreateAsync(h, "Beta");
+        var p = await CreateAsync(h, "Private");
+        await Gs(h, s => s.AddAsync(a, [imgs[0].Id]));
+        await Gs(h, s => s.AddAsync(b, [imgs[1].Id]));
+        await Gs(h, s => s.PublishAsync(a, true));
+        await Gs(h, s => s.PublishAsync(b, true));
+        await h.SettleAsync();
+
+        async Task<List<string>> OrderAsync() =>
+            (await h.Db.GetCollection<BsonDocument>("site").Find(new BsonDocument("_id", "site")).FirstAsync())
+                ["homeOrder"].AsBsonArray.Select(v => v.AsString).ToList();
+        Assert.Equal(new[] { a, b, p }, (await OrderAsync()).ToArray());
+
+        // Missing one id, or a duplicate: stale, nothing stored, nothing purged.
+        var missing = await Gs(h, s => s.ReorderHomeAsync([b, a]));
+        var dup = await Gs(h, s => s.ReorderHomeAsync([b, a, a]));
+        Assert.Equal((OperationStatus.Stale, 409), (missing.Status, missing.StatusCode));
+        Assert.Equal("The gallery list changed in another tab. Reload to see the current order.", missing.Reason);
+        Assert.Equal(OperationStatus.Stale, dup.Status);
+        Assert.Equal(new[] { a, b, p }, (await OrderAsync()).ToArray());
+        Assert.Empty(await h.SettleAsync());
+
+        // Moving only the private gallery changes no listed order: stored, no purge.
+        var privateOnly = await Gs(h, s => s.ReorderHomeAsync([p, a, b]));
+        Assert.Equal(OperationStatus.Ok, privateOnly.Status);
+        Assert.Equal(new[] { p, a, b }, (await OrderAsync()).ToArray());
+        Assert.Empty(await h.SettleAsync());
+
+        // Swapping the listed galleries: stored, home purged, home cards follow the new order.
+        var swap = await Gs(h, s => s.ReorderHomeAsync([p, b, a]));
+        Assert.Equal(OperationStatus.Ok, swap.Status);
+        Assert.Equal(new[] { p, b, a }, (await OrderAsync()).ToArray());
+        SetEq([Home], await h.SettleAsync());
+        var cards = (await h.Db.GetCollection<SiteDoc>("site").Find(s => s.Id == "site")
+            .Project<SiteDoc>(Builders<SiteDoc>.Projection.Include(s => s.HomeCards)).FirstAsync()).HomeCards;
+        Assert.Equal(new[] { b, a }, cards.Select(c => c.GalleryId).ToArray());
+    }
+
     [Fact]
     public async Task Removing_the_pinned_cover_clears_the_pin_and_the_card_falls_back_to_the_first_item()
     {

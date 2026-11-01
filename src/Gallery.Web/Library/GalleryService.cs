@@ -32,6 +32,7 @@ public sealed class GalleryService
 {
     public const string EmptyPublishReason = "Add a photo before making this gallery public";
     public const string StaleOrderReason = "This gallery changed in another tab. Reload to see the current order.";
+    public const string StaleHomeOrderReason = "The gallery list changed in another tab. Reload to see the current order.";
     public const string NotAMemberReason = "That photo is not in this gallery.";
 
     private readonly IMongoDatabase _db;
@@ -255,6 +256,48 @@ public sealed class GalleryService
         {
             OpTiming.Log(_log, "db.gallery.update", 0, "stale");
             return OperationResult.Stale(StaleOrderReason);
+        }
+    }
+
+    /// <summary>
+    /// G3 (decisions row 5; tasks.md Batch D blocker, parent): <paramref name="ids"/> must be exactly
+    /// the current <c>homeOrder</c> set (same members, no duplicates), and the write is filtered on
+    /// the array read, so a change in another tab answers <see cref="OperationStatus.Stale"/> and
+    /// stores nothing. P-ORDER purges <c>/</c> only when the order of LISTED galleries changed.
+    /// </summary>
+    public async Task<OperationResult> ReorderHomeAsync(IReadOnlyList<string> ids)
+    {
+        var site = await _timer.Time("db.site.order", async () =>
+            (BsonDocument?)await _site.Find(Builders<BsonDocument>.Filter.Eq("_id", SiteProjector.SiteId))
+                .Project(Builders<BsonDocument>.Projection.Include("homeOrder")).FirstOrDefaultAsync());
+        var current = site is not null && site.TryGetValue("homeOrder", out var ho) && ho.IsBsonArray
+            ? ho.AsBsonArray.Select(v => v.AsString).ToList()
+            : [];
+
+        var exact = ids.Count == current.Count
+                    && ids.Distinct(StringComparer.Ordinal).Count() == ids.Count
+                    && ids.ToHashSet(StringComparer.Ordinal).SetEquals(current);
+        if (!exact) return Stale();
+        if (ids.SequenceEqual(current, StringComparer.Ordinal)) return OperationResult.Ok();
+
+        await Indexes.EnsureOnceAsync(_db);
+        var galleries = await _timer.Time("db.gallery.load", () =>
+            _galleries.Find(Builders<GalleryDoc>.Filter.In(g => g.Id, current)).ToListAsync());
+        var scope = Begin("gallery.order");
+        scope.TouchOrder(current, ids, galleries.Select(GallerySnapshot.From).ToList());
+        var r = await _timer.Time("db.site.order", () => _site.UpdateOneAsync(
+            Builders<BsonDocument>.Filter.Eq("_id", SiteProjector.SiteId)
+                & Builders<BsonDocument>.Filter.Eq("homeOrder", new BsonArray(current)),
+            Builders<BsonDocument>.Update.Set("homeOrder", new BsonArray(ids))));
+        if (r.MatchedCount == 0) return Stale();
+
+        await scope.CompleteAsync();
+        return OperationResult.Ok();
+
+        OperationResult Stale()
+        {
+            OpTiming.Log(_log, "db.site.order", 0, "stale");
+            return OperationResult.Stale(StaleHomeOrderReason);
         }
     }
 

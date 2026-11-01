@@ -1,0 +1,52 @@
+/* 009 library page (contracts/components.md C1). Overlay wrappers and captions are authored here,
+   so they carry this page's scope; Tile's own elements need ::deep. No @media: the grid's column
+   counts come from ContactSheet. */
+.lib-heading { margin: 0 0 var(--space-s); font-size: var(--type-brand); }
+.lib-result { margin: 0 0 var(--space-s); font-size: var(--type-body); }
+.lib-empty { font-size: var(--type-body); color: var(--color-muted); }
+.lib-pages { margin: var(--space-s) 0 0; font-size: var(--type-caption); color: var(--color-muted); text-align: center; }
+
+/* UI-2: only the select mark sits over the photo; status, Edit and View sit under the title. */
+.pos-tl { position: absolute; top: 8px; left: 8px; }
+.lib-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: center;
+    gap: 4px 12px;
+    margin-top: 4px;
+    font-size: var(--type-caption);
+}
+.lib-status { color: var(--color-muted); }
+
+/* Picker dialog */
+.lib-picker {
+    max-width: 32rem;
+    width: calc(100% - 2 * var(--space-s));
+    border: 1px solid var(--color-rule);
+    border-radius: 6px;
+    background: var(--color-bg);
+    color: var(--color-text);
+    padding: var(--space-m);
+}
+.lib-picker h2 { margin: 0 0 var(--space-s); font-size: var(--type-body); }
+.lib-options { border: 0; margin: 0; padding: 0; display: grid; gap: 8px; }
+.lib-option { display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; align-items: baseline; font-size: var(--type-body); }
+.lib-note { grid-column: 2; font-size: var(--type-caption); color: var(--color-muted); }
+.lib-picker-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: var(--space-s); }
+.vh {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Side panel content */
+.lib-in h3 { margin: var(--space-s) 0 4px; font-size: var(--type-caption); color: var(--color-muted); font-weight: normal; }
+.lib-galleries { margin: 0; padding-left: 1.2em; font-size: var(--type-body); }
+.lib-none { margin: 0; font-size: var(--type-body); color: var(--color-muted); }

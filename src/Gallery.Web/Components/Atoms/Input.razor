@@ -3,11 +3,11 @@
     <label for="@Id">@Label</label>
     @if (Multiline)
     {
-        <textarea id="@Id" name="@Name" maxlength="@MaxLength" aria-invalid="@AriaInvalid" aria-describedby="@Id-foot" rows="@Rows">@Value</textarea>
+        <textarea id="@Id" name="@Name" maxlength="@MaxLength" aria-invalid="@AriaInvalid" aria-describedby="@Id-foot" rows="@Rows" required="@Required">@Value</textarea>
     }
     else
     {
-        <input id="@Id" name="@Name" value="@Value" maxlength="@MaxLength" aria-invalid="@AriaInvalid" aria-describedby="@Id-foot" />
+        <input id="@Id" name="@Name" value="@Value" maxlength="@MaxLength" aria-invalid="@AriaInvalid" aria-describedby="@Id-foot" required="@Required" pattern="@Pattern" />
     }
     <div class="field-foot" id="@Id-foot">
         <span class="@MsgClass">@MsgText</span>
@@ -27,6 +27,12 @@
     [Parameter] public string? Hint { get; set; }
     [Parameter] public SaveState State { get; set; } = SaveState.Idle;
     [Parameter] public int Rows { get; set; } = 4;
+
+    /// <summary>009 K2: the bare <c>required</c> attribute; false renders no attribute at all.</summary>
+    [Parameter] public bool Required { get; set; }
+
+    /// <summary>009 K2: <c>pattern</c> on the single-line input (e.g. <c>.*\S.*</c>); null renders none.</summary>
+    [Parameter] public string? Pattern { get; set; }
 
     private string Id => "f-" + Name;
 

@@ -143,6 +143,12 @@ public sealed class OperationScope
     /// <summary>Public object keys actually deleted (P-DELETE files).</summary>
     public void AddDeletedKeys(IEnumerable<string> keys) => _deletedKeys.UnionWith(keys);
 
+    private (IReadOnlyList<string> Before, IReadOnlyList<string> After, IReadOnlyList<GallerySnapshot> Galleries)? _order;
+
+    /// <summary>P-ORDER (G3): the home order changed from <paramref name="before"/> to <paramref name="after"/>.</summary>
+    public void TouchOrder(IReadOnlyList<string> before, IReadOnlyList<string> after, IReadOnlyList<GallerySnapshot> galleries) =>
+        _order = (before, after, galleries);
+
     /// <summary>
     /// Rebuilds the card of each existing gallery in <paramref name="galleryIds"/> with
     /// <see cref="CardBuilder.Build"/> (one read of the galleries, one of their covers, one write per
@@ -230,6 +236,8 @@ public sealed class OperationScope
         }
         if (members.Count > 0 || _deletedKeys.Count > 0)
             sets.Add(PurgeSets.Delete(members, _deletedKeys, _bases));
+        if (_order is { } o)
+            sets.Add(PurgeSets.Order(o.Before, o.After, o.Galleries, _bases));
 
         var set = PurgeSet.Union(_bases, sets);
         if (set.IsEmpty) return;
