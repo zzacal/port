@@ -6,6 +6,7 @@ outputs:
   tests/fixtures/orientation-6.jpg   400x200 JPEG, EXIF Orientation=6
   tests/fixtures/gps-camera.jpg      400x200 JPEG, EXIF Make/Model/GPS
   tests/fixtures/not-a-jpeg.jpg      64 bytes PNG header (not a JPEG)
+  tests/fixtures/camera-subifd.jpg   400x200 JPEG, Make/Model/LensModel in the Exif SubIFD only
 """
 import os
 import struct
@@ -149,6 +150,39 @@ def build_tiff_gps_camera():
     return header + ifd0 + make_data + gps_ifd + lat_data + lon_data
 
 
+def build_tiff_camera_subifd():
+    """
+    Big-endian TIFF shaped like the owner's Leica/Fujifilm exports: IFD0 holds ONLY the ExifOffset
+    pointer; Make, Model and LensModel live in the Exif SubIFD.
+      IFD0:    ExifOffset (0x8769) -> SubIFD
+      SubIFD:  Make="SUBCAM", Model="S2 PRO", LensModel="SUBLENS 35"
+    """
+    #   0..7:   header
+    #   8..9:   IFD0 count
+    #  10..21:  IFD0 entry (ExifOffset)
+    #  22..25:  IFD0 next
+    #  26..27:  SubIFD count
+    #  28..63:  SubIFD entries 3 x 12
+    #  64..67:  SubIFD next
+    #  68..74:  "SUBCAM\0"      (7 bytes)
+    #  75..81:  "S2 PRO\0"      (7 bytes)
+    #  82..92:  "SUBLENS 35\0"  (11 bytes)
+    header = b"MM\x00\x2a\x00\x00\x00\x08"
+    sub_off, make_off, model_off, lens_off = 26, 68, 75, 82
+    ifd0 = (struct.pack(">H", 1)
+            + pack_be_ifd_entry(0x8769, 4, 1, struct.pack(">I", sub_off))
+            + b"\x00\x00\x00\x00")
+    sub = (struct.pack(">H", 3)
+           + pack_be_ifd_entry(0x010F, 2, 7, struct.pack(">I", make_off))
+           + pack_be_ifd_entry(0x0110, 2, 7, struct.pack(">I", model_off))
+           + pack_be_ifd_entry(0xA434, 2, 11, struct.pack(">I", lens_off))
+           + b"\x00\x00\x00\x00")
+    data = b"SUBCAM\x00" + b"S2 PRO\x00" + b"SUBLENS 35\x00"
+    tiff = header + ifd0 + sub + data
+    assert len(header + ifd0) == sub_off and len(header + ifd0 + sub) == make_off
+    return tiff
+
+
 # ---------------------------------------------------------------------------
 # Build base JPEG (400×200, red with blue box in top-left)
 # ---------------------------------------------------------------------------
@@ -201,6 +235,13 @@ def main():
         size_gps = len(out_gps)
         print(f"  gps-camera.jpg:    {size_gps} bytes")
         assert size_gps < 20 * 1024, f"too large: {size_gps}"
+
+        # 4. camera-subifd.jpg: Make/Model in the Exif SubIFD, as real camera exports do
+        out_sub = inject_app1(base_clean, build_tiff_camera_subifd())
+        with open(os.path.join(FIXTURES, "camera-subifd.jpg"), "wb") as f:
+            f.write(out_sub)
+        print(f"  camera-subifd.jpg: {len(out_sub)} bytes")
+        assert len(out_sub) < 20 * 1024
 
         # 3. not-a-jpeg.jpg: 64-byte PNG signature + padding
         png_sig = b"\x89PNG\r\n\x1a\n"

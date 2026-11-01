@@ -241,21 +241,6 @@ public sealed class Seeder
                 if (camera.Iso is not null)         cameraDoc["iso"]       = camera.Iso.Value;
             }
 
-            var setDoc = new BsonDocument
-            {
-                ["_id"] = imageId,
-                ["seedKey"] = name,
-                ["sourceHash"] = photoJson.SourceHash,
-                ["title"] = title,
-                ["width"] = photoJson.Width,
-                ["height"] = photoJson.Height,
-                ["placeholder"] = placeholderDoc,
-                ["derivatives"] = derivatives,
-                ["createdAt"] = createdAt,
-            };
-            if (caption is not null) setDoc["caption"] = caption;
-            if (cameraDoc is not null) setDoc["camera"] = cameraDoc;
-
             var filter = Builders<BsonDocument>.Filter.Eq("seedKey", name);
             var update = Builders<BsonDocument>.Update
                 .SetOnInsert("_id", imageId)

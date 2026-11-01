@@ -43,6 +43,31 @@ public class CameraFieldsTests
         Assert.Equal("T1", exif.Model);
     }
 
+    /// <summary>
+    /// Owner report: the Camera field was missing on every seeded photo. The owner's Leica and
+    /// Fujifilm exports store Make/Model in the Exif SubIFD, not IFD0 (the only place the reader
+    /// looked; gps-camera.jpg has them in IFD0, so the test above stayed green). This fixture
+    /// reproduces that layout: IFD0 holds only the ExifOffset pointer.
+    /// </summary>
+    [Fact]
+    public void Read_extracts_Make_Model_and_Lens_stored_in_the_SubIFD()
+    {
+        var path = Path.Combine(Render.RepoRoot, "tests", "fixtures", "camera-subifd.jpg");
+        using (var probe = OpenFixture(path))
+        {
+            var dirs = MetadataExtractor.ImageMetadataReader.ReadMetadata(probe);
+            Assert.False(dirs.OfType<ExifIfd0Directory>().Single().ContainsTag(ExifDirectoryBase.TagMake),
+                "precondition: Make must NOT be in IFD0 for this fixture");
+        }
+
+        using var fs = OpenFixture(path);
+        var exif = CameraFields.Read(fs);
+        Assert.NotNull(exif);
+        Assert.Equal("SUBCAM", exif.Make);
+        Assert.Equal("S2 PRO", exif.Model);
+        Assert.Equal("SUBLENS 35", exif.Lens);
+    }
+
     [Fact]
     public void Serialized_Exif_contains_no_gps_latitude_longitude_altitude()
     {
