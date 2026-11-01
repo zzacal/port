@@ -592,7 +592,7 @@ and the page re-renders only), `LibraryComponentAdditionsTests.cs` (appended fac
 `tests/Gallery.Web.Tests/{GalleryListTests,PublishRefusalTests,BuilderTests,LibraryDeleteTests}.cs`.
 Runs in parallel with Batch G (disjoint files).
 
-- [ ] T037 [US4] Component additions K3, K4, K6 (contracts/components.md) as expressions, never
+- [X] T037 [US4] Component additions K3, K4, K6 (contracts/components.md) as expressions, never
   new `@if` blocks: `VisibilityToggle.DisabledReason` (and the K1 `FormId`/`Value="on"`
   pass-through), `CoverMarker.ImageId`/`UnpinFormId`, and the `GalleryBuilder` K6 parameters.
   Append to `LibraryComponentAdditionsTests.cs`: each default render byte-identical; K6 renders,
@@ -602,19 +602,19 @@ Runs in parallel with Batch G (disjoint files).
   input has NO `checked` attribute, `DisabledReason=null` → NO `disabled` attribute, and the
   reason text is absent; `DisabledReason` set → `disabled` and the exact reason. Run
   `UiPagesUnchangedTests`, `OrganismComponentTests` and `OrganismStatePageTests` UNMODIFIED: green.
-- [ ] T038 [US3] Create `src/Gallery.Web/Admin/Pages/GalleriesPage.razor` exactly per
+- [X] T038 [US3] Create `src/Gallery.Web/Admin/Pages/GalleriesPage.razor` exactly per
   contracts/components.md C2 and map G1 GET. Acceptance criteria UI-1 (View only when the gallery
   has photos; Edit to the builder), UI-2 (status, handle, switch, View, Edit in `.gal-row` under
   the title; the owner bar marks Galleries `aria-current="page"`, FR-002), UI-3 ("New gallery"
   is the one primary; Secondary while a publish warning is shown;
   the dialog's Create is the primary only while the dialog is open), UI-5.
-- [ ] T039 [US4] Create `src/Gallery.Web/Admin/Pages/GalleryPage.razor` exactly per
+- [X] T039 [US4] Create `src/Gallery.Web/Admin/Pages/GalleryPage.razor` exactly per
   contracts/components.md C3 and map B1 GET (404 for an unknown gallery). Acceptance criteria
   UI-1 (`View gallery` and per-tile `View ↗` when it has photos, else "Back to galleries"), UI-2,
   UI-3 (Save is the primary; demoted in the PublishWarning state), UI-4 (`Delete gallery…` is
   Danger, Remove is Quiet with no confirmation), UI-7 (title/description limits from
   `LibraryOptions`), UI-8.
-- [ ] T040 [US3] Write `tests/Gallery.Web.Tests/GalleryListTests.cs` (US3, FR-018–FR-020,
+- [X] T040 [US3] Write `tests/Gallery.Web.Tests/GalleryListTests.cs` (US3, FR-018–FR-020,
   FR-029–FR-032): G3 reorder stores public and private galleries alike; the recorder holds `/`
   only when the listed relative order changed (decisions row 32); a stale G3 → 409 with "The
   gallery list changed in another tab. Reload to see the current order."; G2 → 303 to the builder,
@@ -628,14 +628,14 @@ Runs in parallel with Batch G (disjoint files).
   has no `checked` attribute, the empty card's switch has `disabled` and "Add a photo before
   making this gallery public" while a non-empty card's has no `disabled` attribute. Enable the
   G1/B1 cases in `LibraryAccessTests.cs`.
-- [ ] T041 [US3] **[SAFETY]** Write `tests/Gallery.Web.Tests/PublishRefusalTests.cs` (II.6,
+- [X] T041 [US3] **[SAFETY]** Write `tests/Gallery.Web.Tests/PublishRefusalTests.cs` (II.6,
   SC-006, FR-030): on an empty private gallery, G4 with `public=on&confirm=1&from=list`, with
   `public=on` only, and as a bare POST (`PostBareAsync`, then also with only the CSRF header) each
   answer 409 with the exact reason in `role="status"`; after each the stored visibility is
   `private`, `/` is byte-identical to before, and the recorder has zero calls. Race: a gallery with
   one photo whose `beforePublishWrite` seam empties `items` → 409, still private. The empty card
   in G1 and the empty builder render the switch `disabled` with the reason.
-- [ ] T042 [US4] Write `tests/Gallery.Web.Tests/BuilderTests.cs` (US4, FR-021–FR-028), each step
+- [X] T042 [US4] Write `tests/Gallery.Web.Tests/BuilderTests.cs` (US4, FR-021–FR-028), each step
   followed by `InvariantChecker` and an exact recorder set: no pin, moving a photo first makes it
   the home-card cover; Make cover pins (the control shows "Cover" and "Unpin"), Unpin returns to
   "Cover · first photo"; removing the pinned cover clears the pin and keeps the image in the
@@ -646,7 +646,7 @@ Runs in parallel with Batch G (disjoint files).
   `deleted=1`, page 404, images still in the library and their other galleries, one `owner.action
   gallery.delete {gid}` line (FR-050); the empty builder
   shows "No photos in this gallery yet." with the library link.
-- [ ] T043 [US5] Write `tests/Gallery.Web.Tests/LibraryDeleteTests.cs` (US5, FR-013/FR-014): L5 →
+- [X] T043 [US5] Write `tests/Gallery.Web.Tests/LibraryDeleteTests.cs` (US5, FR-013/FR-014): L5 →
   303 `deleted=1&leftovers=0`, the image gone everywhere, one `owner.action image.delete {iid}`
   line (FR-050); L4 of 3 with one failing key (the T026
   `IObjectDeleter` override) → 303 `deleted=3&leftovers=1` and the rendered status "3 deleted · 1

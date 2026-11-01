@@ -1,9 +1,12 @@
 @* Admin cover-marker molecule (feature 005): pinned/automatic/unpinned cover tag with action. *@
+@* 009 K4: with ImageId set, "Make cover" submits name="image" value="{ImageId}" on FormId; with
+   UnpinFormId set, "Unpin" submits that form (no image field = unpin). Expressions only, so the
+   default render is byte-identical. *@
 <div class="cover-marker">
     @if (State == CoverState.Pinned)
     {
         <span class="cover-tag">Cover</span>
-        <Button Variant="ButtonVariant.Quiet" Type="button" AriaLabel="Unpin cover" FormId="@FormId">Unpin</Button>
+        <Button Variant="ButtonVariant.Quiet" Type="@(UnpinFormId is null ? "button" : "submit")" AriaLabel="Unpin cover" FormId="@(UnpinFormId ?? FormId)">Unpin</Button>
     }
     else if (State == CoverState.Automatic)
     {
@@ -11,7 +14,7 @@
     }
     else
     {
-        <Button Variant="ButtonVariant.Quiet" Type="button" AriaLabel="@($"Make {ImageTitle} the cover")" FormId="@FormId">Make cover</Button>
+        <Button Variant="ButtonVariant.Quiet" Type="@(ImageId is null ? "button" : "submit")" AriaLabel="@($"Make {ImageTitle} the cover")" FormId="@FormId" Name="@(ImageId is null ? null : "image")" Value="@ImageId">Make cover</Button>
     }
 </div>
 
@@ -19,4 +22,10 @@
     [Parameter] public CoverState State { get; set; }
     [Parameter] public string ImageTitle { get; set; } = "";
     [Parameter] public string? FormId { get; set; }
+
+    /// <summary>009 K4: the image this marker pins; null leaves "Make cover" a plain button.</summary>
+    [Parameter] public string? ImageId { get; set; }
+
+    /// <summary>009 K4: the hidden unpin form "Unpin" submits; null leaves it a plain button.</summary>
+    [Parameter] public string? UnpinFormId { get; set; }
 }

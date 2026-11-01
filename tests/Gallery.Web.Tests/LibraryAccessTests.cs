@@ -16,13 +16,11 @@ namespace Gallery.Web.Tests;
 ///     <c>galleries</c> and <c>site</c> is identical before and after;</item>
 ///   <item>every response carries <c>Cache-Control: no-store</c> and <c>X-Robots-Tag: noindex</c>.</item>
 /// </list>
-/// G1 and B1 (the gallery pages, Batch E) are skipped until T040 enables them.
+/// G1 and B1 (the gallery pages) were enabled by Batch E (T040).
 /// </summary>
 [Collection("s3")]
 public class LibraryAccessTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixture<MongoFixture>
 {
-    private const string BatchE = "G1/B1 GET pages land with Batch E (T038/T039); T040 enables these cases.";
-
     /// <summary>Route id → (method, path template). {gid}/{iid} are replaced with the host's real ids.</summary>
     private static readonly Dictionary<string, (string Method, string Path)> Routes = new()
     {
@@ -50,8 +48,7 @@ public class LibraryAccessTests(S3ProxyFixture s3, MongoFixture mongo) : IClassF
         Assert.Equal(["L1", "L2", "L3", "L4", "L5", "G1", "G2", "G3", "G4", "B1", "B2", "B3", "B4", "B5", "B6"], Routes.Keys.ToList());
     }
 
-    public static TheoryData<string> Enabled() =>
-        new(Routes.Keys.Where(k => k is not ("G1" or "B1")));
+    public static TheoryData<string> Enabled() => new(Routes.Keys);
 
     private sealed record Ctx(LibraryHost Host, string Gid, string Iid);
 
@@ -199,7 +196,7 @@ public class LibraryAccessTests(S3ProxyFixture s3, MongoFixture mongo) : IClassF
         AssertAdminHeaders(resp, route);
     }
 
-    [Theory(Skip = BatchE)]
+    [Theory]
     [InlineData("G1")]
     [InlineData("B1")]
     public async Task Batch_E_pages_are_owner_only(string route)

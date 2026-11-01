@@ -1,13 +1,16 @@
 @* Admin visibility-toggle molecule (feature 005): switch to publish/unpublish a gallery, with publish warning. *@
 @* While the publish warning is up the switch shows the requested state (on), per contract. *@
-<Switch Label="Public" Name="public" Checked="@(Public || Warning)" Hint="@Hint" />
+@* 009 K3: FormId also reaches the Switch (form="…" value="on"), "Make public" then posts confirm=1,
+   and DisabledReason disables the switch and replaces the hint with the reason. All as expressions,
+   so the default render is byte-identical. *@
+<Switch Label="Public" Name="public" Checked="@(Public || Warning)" Hint="@(DisabledReason ?? Hint)" Disabled="@(DisabledReason is not null)" FormId="@FormId" Value="@(FormId is null ? null : "on")" />
 @if (Warning)
 {
     <div class="publish-warning" role="alert">
         <span class="bang" aria-hidden="true">!</span>
         <p>Make &#x201C;@GalleryTitle&#x201D; public? It will be listed on the home page with its @PhotoCount photos, and anyone can see them.</p>
         <div class="actions">
-            <Button Variant="ButtonVariant.Primary" FormId="@FormId">Make public</Button>
+            <Button Variant="ButtonVariant.Primary" FormId="@FormId" Name="@(FormId is null ? null : "confirm")" Value="@(FormId is null ? null : "1")">Make public</Button>
             <Button Variant="ButtonVariant.Quiet" Type="button" FormId="@FormId">Keep private</Button>
         </div>
     </div>
@@ -19,6 +22,12 @@
     [Parameter] public int PhotoCount { get; set; }
     [Parameter] public bool Warning { get; set; }
     [Parameter] public string? FormId { get; set; }
+
+    /// <summary>
+    /// 009 K3: when set the switch renders <c>disabled</c> and this text replaces the hint
+    /// (e.g. "Add a photo before making this gallery public"). Null leaves the toggle unchanged.
+    /// </summary>
+    [Parameter] public string? DisabledReason { get; set; }
 
     private string Hint => Public
         ? "Public: listed on the home page."

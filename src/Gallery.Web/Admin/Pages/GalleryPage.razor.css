@@ -1,0 +1,4 @@
+/* 009 gallery builder page (contracts/components.md C3). The builder organism owns its layout;
+   this page only styles the status line the organism renders above the grid. */
+.gb ::deep .b-status { margin: 0 0 var(--space-s); font-size: var(--type-body); }
+.gb ::deep reorder-grid { display: block; }

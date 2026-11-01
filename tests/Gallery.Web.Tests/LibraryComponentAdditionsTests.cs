@@ -1,7 +1,10 @@
 using System.Net;
 using System.Text.RegularExpressions;
+using Gallery.Core.Images;
+using Gallery.Web.Components;
 using Gallery.Web.Components.Atoms;
 using Gallery.Web.Components.Molecules;
+using Gallery.Web.Components.Organisms;
 
 namespace Gallery.Web.Tests;
 
@@ -169,5 +172,220 @@ public class LibraryComponentAdditionsTests
         Assert.Equal(2, button.Count);
         Assert.Contains("btn btn-quiet", button[1]);
         Assert.Contains("type=\"button\"", button[1]);
+    }
+    // ── K3 VisibilityToggle.FormId / DisabledReason (009 T037) ───────────────
+
+    private const string Reason = "Add a photo before making this gallery public";
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public async Task VisibilityToggle_defaults_render_byte_identical_to_omitted_parameters(bool isPublic, bool warning)
+    {
+        var omitted = await Render.Html<VisibilityToggle>(new { Public = isPublic, GalleryTitle = "Coast", PhotoCount = 3, Warning = warning });
+        var defaults = await Render.Html<VisibilityToggle>(new Dictionary<string, object?>
+        {
+            ["Public"] = isPublic, ["GalleryTitle"] = "Coast", ["PhotoCount"] = 3, ["Warning"] = warning,
+            ["FormId"] = null, ["DisabledReason"] = null,
+        });
+        Assert.Equal(omitted, defaults);
+    }
+
+    [Fact]
+    public async Task VisibilityToggle_FormId_reaches_the_switch_with_value_on_and_Make_public_posts_confirm()
+    {
+        var html = D(await Render.Html<VisibilityToggle>(new { Public = false, GalleryTitle = "Coast", PhotoCount = 3, Warning = true, FormId = "gal-vis-x" }));
+        var input = Tag(html, "input", "role=\"switch\"");
+        Assert.Matches("\\sform=\"gal-vis-x\"", input);
+        Assert.Matches("\\svalue=\"on\"", input);
+        var make = Regex.Match(html, "<button\\b[^>]*>\\s*Make public\\s*</button>").Value;
+        Assert.Matches("\\sform=\"gal-vis-x\"", make);
+        Assert.Matches("\\sname=\"confirm\"", make);
+        Assert.Matches("\\svalue=\"1\"", make);
+        Assert.Contains("type=\"submit\"", make);
+    }
+
+    [Fact]
+    public async Task VisibilityToggle_Public_false_and_no_DisabledReason_render_no_checked_no_disabled_and_no_reason()
+    {
+        var html = D(await Render.Html<VisibilityToggle>(new { Public = false, GalleryTitle = "Coast", PhotoCount = 3, FormId = "f" }));
+        var input = Tag(html, "input", "role=\"switch\"");
+        Assert.False(HasAttr(input, "checked"), input);
+        Assert.False(HasAttr(input, "disabled"), input);
+        Assert.DoesNotContain("checked=\"False\"", html, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("disabled=\"False\"", html, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(Reason, html);
+
+        var on = Tag(D(await Render.Html<VisibilityToggle>(new { Public = true, GalleryTitle = "Coast", PhotoCount = 3, FormId = "f" })),
+            "input", "role=\"switch\"");
+        Assert.True(HasAttr(on, "checked"), on);
+        Assert.False(HasAttr(on, "disabled"), on);
+    }
+
+    [Fact]
+    public async Task VisibilityToggle_DisabledReason_disables_the_switch_and_replaces_the_hint_with_the_reason()
+    {
+        var html = D(await Render.Html<VisibilityToggle>(new { Public = false, GalleryTitle = "Empty", PhotoCount = 0, FormId = "f", DisabledReason = Reason }));
+        var input = Tag(html, "input", "role=\"switch\"");
+        Assert.True(HasAttr(input, "disabled"), input);
+        Assert.DoesNotContain("disabled=\"True\"", input, StringComparison.OrdinalIgnoreCase);
+        Assert.False(HasAttr(input, "checked"), input);
+        var hint = Regex.Match(html, "<p class=\"hint\"[^>]*>([^<]*)</p>");
+        Assert.True(hint.Success, html);
+        Assert.Equal(Reason, hint.Groups[1].Value);
+        Assert.DoesNotContain("Private: not listed anywhere.", html);
+    }
+
+    // ── K4 CoverMarker.ImageId / UnpinFormId ─────────────────────────────────
+
+    [Theory]
+    [InlineData(CoverState.Pinned)]
+    [InlineData(CoverState.Automatic)]
+    [InlineData(CoverState.Unpinned)]
+    public async Task CoverMarker_defaults_render_byte_identical_to_omitted_parameters(CoverState state)
+    {
+        var omitted = await Render.Html<CoverMarker>(new { State = state, ImageTitle = "Pier" });
+        var defaults = await Render.Html<CoverMarker>(new Dictionary<string, object?>
+        {
+            ["State"] = state, ["ImageTitle"] = "Pier", ["ImageId"] = null, ["UnpinFormId"] = null,
+        });
+        Assert.Equal(omitted, defaults);
+    }
+
+    [Fact]
+    public async Task CoverMarker_ImageId_makes_Make_cover_submit_the_image_and_UnpinFormId_makes_Unpin_submit_its_form()
+    {
+        var make = Regex.Match(D(await Render.Html<CoverMarker>(new { State = CoverState.Unpinned, ImageTitle = "Pier", FormId = "b-cover", ImageId = "img1" })),
+            "<button\\b[^>]*>Make cover</button>").Value;
+        Assert.Matches("\\stype=\"submit\"", make);
+        Assert.Matches("\\sform=\"b-cover\"", make);
+        Assert.Matches("\\sname=\"image\"", make);
+        Assert.Matches("\\svalue=\"img1\"", make);
+
+        var unpin = Regex.Match(D(await Render.Html<CoverMarker>(new { State = CoverState.Pinned, ImageTitle = "Pier", FormId = "b-cover", ImageId = "img1", UnpinFormId = "b-unpin" })),
+            "<button\\b[^>]*>Unpin</button>").Value;
+        Assert.Matches("\\stype=\"submit\"", unpin);
+        Assert.Matches("\\sform=\"b-unpin\"", unpin);
+        Assert.False(HasAttr(unpin, "name"), unpin);
+        Assert.False(HasAttr(unpin, "value"), unpin);
+    }
+
+    // ── K6 GalleryBuilder ────────────────────────────────────────────────────
+
+    private static IReadOnlyList<ImageView> Three => Render.Samples.Landscape.Take(3).ToList();
+
+    [Theory]
+    [InlineData(BuilderState.Rest)]
+    [InlineData(BuilderState.PublishWarning)]
+    [InlineData(BuilderState.Empty)]
+    public async Task GalleryBuilder_defaults_render_byte_identical_to_omitted_parameters(BuilderState state)
+    {
+        var items = state == BuilderState.Empty ? (IReadOnlyList<ImageView>)[] : Three;
+        var omitted = await Render.Html<GalleryBuilder>(new { Title = "Coast", Items = items, State = state, PinnedIndex = (int?)1 });
+        var defaults = await Render.Html<GalleryBuilder>(new Dictionary<string, object?>
+        {
+            ["Title"] = "Coast", ["Items"] = items, ["State"] = state, ["PinnedIndex"] = (int?)1,
+            ["ItemIds"] = null, ["RemoveFormId"] = null, ["CoverFormId"] = null, ["UnpinFormId"] = null,
+            ["OrderFormId"] = null, ["PhotoHrefBase"] = null, ["PublicDisabledReason"] = null,
+            ["TitleMax"] = null, ["DescriptionMax"] = null, ["Status"] = null,
+        });
+        Assert.Equal(omitted, defaults);
+    }
+
+    private static Task<string> K6Async(string? photoHrefBase = "/g/gid/coast", string? reason = null, bool isPublic = false) =>
+        Render.Html<GalleryBuilder>(new Dictionary<string, object?>
+        {
+            ["Title"] = "Coast", ["Items"] = Three, ["State"] = BuilderState.Rest, ["PinnedIndex"] = (int?)1, ["Public"] = isPublic,
+            ["ItemIds"] = (IReadOnlyList<string>)["id-a", "id-b", "id-c"], ["FormId"] = "b-panel",
+            ["RemoveFormId"] = "b-remove", ["CoverFormId"] = "b-cover", ["UnpinFormId"] = "b-unpin", ["OrderFormId"] = "b-order",
+            ["PhotoHrefBase"] = photoHrefBase, ["PublicDisabledReason"] = reason, ["TitleMax"] = 50, ["DescriptionMax"] = 70,
+        });
+
+    private static List<string> Tiles(string html) =>
+        Regex.Matches(html, "<div class=\"tile[^\"]*\"[^>]*>").Select(m => LibraryHtml.Element(html, "div", m.Index)).ToList();
+
+    [Fact]
+    public async Task GalleryBuilder_K6_row_under_each_title_holds_handle_cover_remove_and_view_in_order()
+    {
+        var html = D(await K6Async());
+        var tiles = Tiles(html);
+        Assert.Equal(3, tiles.Count);
+        var ids = new[] { "id-a", "id-b", "id-c" };
+        for (var i = 0; i < 3; i++)
+        {
+            var tile = tiles[i];
+            var row = LibraryHtml.Blocks(tile, "div", "b-ctl").Single();
+            var cell = LibraryHtml.Blocks(tile, "div", "cell").Single();
+            Assert.True(tile.IndexOf(cell, StringComparison.Ordinal) + cell.Length <= tile.IndexOf(row, StringComparison.Ordinal), "row must be under the cell");
+            Assert.True(tile.IndexOf("class=\"title\"", StringComparison.Ordinal) < tile.IndexOf(row, StringComparison.Ordinal), "row must be under the title");
+            Assert.DoesNotContain("pos-", tile);
+            Assert.DoesNotContain("class=\"overlay\"", tile);
+
+            var handle = row.IndexOf("class=\"handle\"", StringComparison.Ordinal);
+            var cover = row.IndexOf("class=\"cover-marker\"", StringComparison.Ordinal);
+            var remove = Regex.Match(row, "<button\\b[^>]*>Remove</button>");
+            var view = Regex.Match(row, "<a class=\"text-link\" href=\"([^\"]*)\"[^>]*>View ↗</a>");
+            Assert.True(handle >= 0 && cover > handle && remove.Success && remove.Index > cover && view.Success && view.Index > remove.Index, row);
+
+            Assert.Contains("btn btn-quiet", remove.Value);
+            Assert.Matches("\\stype=\"submit\"", remove.Value);
+            Assert.Matches("\\sform=\"b-remove\"", remove.Value);
+            Assert.Matches("\\sname=\"image\"", remove.Value);
+            Assert.Matches($"\\svalue=\"{ids[i]}\"", remove.Value);
+            Assert.Equal($"/g/gid/coast/{ids[i]}", view.Groups[1].Value);
+        }
+        // K4 through K6: the pinned tile unpins on b-unpin, the others pin their own id on b-cover.
+        Assert.Matches("<button\\b[^>]*form=\"b-unpin\"[^>]*>Unpin</button>", tiles[1]);
+        Assert.Matches("<button\\b[^>]*form=\"b-cover\"[^>]*name=\"image\"[^>]*value=\"id-a\"[^>]*>Make cover</button>", tiles[0]);
+        Assert.Matches("<button\\b[^>]*form=\"b-cover\"[^>]*name=\"image\"[^>]*value=\"id-c\"[^>]*>Make cover</button>", tiles[2]);
+        // The grid sits in <reorder-grid data-form="b-order">.
+        var open = html.IndexOf("<reorder-grid data-form=\"b-order\">", StringComparison.Ordinal);
+        Assert.True(open >= 0 && open < html.IndexOf("class=\"cs ", StringComparison.Ordinal) && html.IndexOf("</reorder-grid>", StringComparison.Ordinal) > open, html);
+    }
+
+    [Fact]
+    public async Task GalleryBuilder_K6_without_PhotoHrefBase_has_no_View_link_and_no_reorder_wrapper_without_OrderFormId()
+    {
+        var html = D(await K6Async(photoHrefBase: null));
+        Assert.DoesNotContain("View ↗", html);
+        Assert.DoesNotContain("/g/", html.Replace("View gallery", ""));
+        var plain = D(await Render.Html<GalleryBuilder>(new { Title = "Coast", Items = Three }));
+        Assert.DoesNotContain("reorder-grid", plain);
+        Assert.DoesNotContain(">Remove<", plain);
+    }
+
+    [Fact]
+    public async Task GalleryBuilder_K6_inputs_get_required_pattern_and_the_limits_and_the_toggle_gets_K3()
+    {
+        var html = D(await K6Async(reason: Reason));
+        var title = Tag(html, "input", "name=\"title\"");
+        Assert.True(HasAttr(title, "required"), title);
+        Assert.Contains("pattern=\".*\\S.*\"", title);
+        Assert.Contains("maxlength=\"50\"", title);
+        var desc = Tag(html, "textarea", "name=\"description\"");
+        Assert.Contains("maxlength=\"70\"", desc);
+        Assert.False(HasAttr(desc, "required"), desc);
+
+        var sw = Tag(html, "input", "role=\"switch\"");
+        Assert.True(HasAttr(sw, "disabled"), sw);
+        Assert.False(HasAttr(sw, "checked"), sw);
+        Assert.Contains(Reason, html);
+    }
+
+    [Fact]
+    public async Task GalleryBuilder_K6_FALSE_cases_Public_false_has_no_checked_and_no_reason_has_no_disabled()
+    {
+        var html = D(await K6Async(reason: null, isPublic: false));
+        var sw = Tag(html, "input", "role=\"switch\"");
+        Assert.False(HasAttr(sw, "checked"), sw);
+        Assert.False(HasAttr(sw, "disabled"), sw);
+        Assert.DoesNotContain("checked=\"False\"", html, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("disabled=\"False\"", html, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(Reason, html);
+
+        var pub = Tag(D(await K6Async(reason: null, isPublic: true)), "input", "role=\"switch\"");
+        Assert.True(HasAttr(pub, "checked"), pub);
+        Assert.False(HasAttr(pub, "disabled"), pub);
     }
 }

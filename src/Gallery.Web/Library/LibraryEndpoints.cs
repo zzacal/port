@@ -1,10 +1,16 @@
 using System.Net;
 using Gallery.Core.Ids;
+using Gallery.Core.Images;
 using Gallery.Web.Admin.Pages;
 using Gallery.Web.Components;
+using Gallery.Web.Data;
+using Gallery.Web.Observability;
+using Gallery.Web.Site;
+using Gallery.Web.Storage;
 using Gallery.Web.Upload;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Http.HttpResults;
+using MongoDB.Driver;
 
 namespace Gallery.Web.Library;
 
@@ -23,8 +29,54 @@ public sealed record LibraryPageModel(
     string? EditTitle = null,
     string? EditCaption = null);
 
+/// <summary>One card of the gallery list (contracts/components.md C2).</summary>
+/// <param name="Cover">The card's cover (the gallery title as its title), or null for a gallery with no photos.</param>
+public sealed record GalleryRow(GalleryRef Gallery, ImageView? Cover)
+{
+    public bool HasPhotos => Gallery.PhotoCount > 0;
+
+    /// <summary>The C2 status line.</summary>
+    public string Status => (Gallery.IsPublic, HasPhotos) switch
+    {
+        (true, true) => "Public",
+        (true, false) => "Public · hidden until it has a photo",
+        (false, true) => "Private",
+        (false, false) => "Private · no photos",
+    };
+}
+
+/// <summary>What the gallery list (C2, G1) renders, built by <see cref="LibraryEndpoints"/>.</summary>
+/// <param name="WarningGid">The gallery whose publish warning is shown (G4 without confirm), or null.</param>
+public sealed record GalleriesPageModel(
+    IReadOnlyList<GalleryRow> Rows,
+    LibraryOptions Options,
+    FormToken Csrf,
+    string LibraryScriptUrl,
+    string ReorderScriptUrl,
+    string? Status = null,
+    string? WarningGid = null);
+
+/// <summary>What the gallery builder (C3, B1) renders, built by <see cref="LibraryEndpoints"/>.</summary>
+/// <param name="Items">The member images in gallery order (as views).</param>
+/// <param name="Warning">The G4 publish warning is shown (no write yet).</param>
+/// <param name="EditTitle">The title input's value (the submitted one after a refused save, else stored).</param>
+public sealed record GalleryPageModel(
+    GalleryDoc Gallery,
+    IReadOnlyList<ImageView> Items,
+    LibraryOptions Options,
+    FormToken Csrf,
+    string LibraryScriptUrl,
+    string ReorderScriptUrl,
+    string? Status = null,
+    bool Warning = false,
+    string? EditTitle = null,
+    string? EditDescription = null)
+{
+    public bool HasPhotos => Items.Count > 0;
+}
+
 /// <summary>
-/// The 009 owner routes of contracts/http.md: L1–L5, G2–G4 and B2–B6 (tasks.md T029). Mapped by
+/// The 009 owner routes of contracts/http.md: L1–L5, G1–G4 and B1–B6 (tasks.md T029, T038, T039). Mapped by
 /// <see cref="LibrarySetup.MapLibrary"/> on the protected <c>/admin</c> group, so every route
 /// inherits the owner policy and <c>AdminAntiforgeryFilter</c>. Handlers only call the services
 /// (<see cref="GalleryService"/>, <see cref="ImageService"/>, <see cref="ImageDeleteService"/>,
@@ -35,8 +87,8 @@ public sealed record LibraryPageModel(
 /// <item>success → 303 with the contracted status query; a refusal re-renders the page with the
 ///   contracted status code and the reason in <c>role="status"</c>, and nothing is stored.</item>
 /// </list>
-/// G1 and B1 (the gallery pages) belong to Batch E; until then G/B refusals re-render through the
-/// minimal <see cref="StatusPage"/> below.
+/// G1 and B1 render the gallery list (C2) and the builder (C3); G/B refusals and the publish warning
+/// re-render those pages with the contracted status code.
 /// </summary>
 public static class LibraryEndpoints
 {
@@ -51,10 +103,12 @@ public static class LibraryEndpoints
         admin.MapPost("/library/delete", (Delegate)BulkDelete);                               // L4
         admin.MapPost("/library/images/{iid}/delete", DeleteImage);                           // L5
 
+        admin.MapMethods("/galleries", ["GET", "HEAD"], (Delegate)Galleries);                 // G1
         admin.MapPost("/galleries", (Delegate)CreateGallery);                                 // G2
         admin.MapPost("/galleries/order", (Delegate)ReorderGalleries);                        // G3
         admin.MapPost("/galleries/{gid}/visibility", Visibility);                             // G4
 
+        admin.MapMethods("/galleries/{gid}", ["GET", "HEAD"], BuilderPage);                   // B1
         admin.MapPost("/galleries/{gid}", SaveGallery);                                       // B2
         admin.MapPost("/galleries/{gid}/order", ReorderGallery);                              // B3
         admin.MapPost("/galleries/{gid}/cover", Cover);                                       // B4
@@ -152,41 +206,58 @@ public static class LibraryEndpoints
             : SeeOther($"{LibraryPath}?page={page}&deleted={r.Deleted}&leftovers={r.Leftovers}");
     }
 
+    // ── G1 GET /admin/galleries ──────────────────────────────────────────────
+
+    private static Task<IResult> Galleries(HttpContext ctx, LibraryReader reader, IMongoDatabase db, OpTimer timer,
+        StorageOptions storage, LibraryOptions options, IAntiforgery antiforgery, AdminAssets assets) =>
+        RenderGalleriesAsync(ctx, reader, db, timer, storage, options, antiforgery, assets, 200,
+            GalleriesStatusFromQuery(ctx.Request.Query));
+
     // ── G2 POST /admin/galleries ─────────────────────────────────────────────
 
-    private static async Task<IResult> CreateGallery(HttpContext ctx, GalleryService galleries, IAntiforgery antiforgery)
+    private static async Task<IResult> CreateGallery(HttpContext ctx, GalleryService galleries, LibraryReader reader,
+        IMongoDatabase db, OpTimer timer, StorageOptions storage, LibraryOptions options, IAntiforgery antiforgery, AdminAssets assets)
     {
         var form = await FormAsync(ctx);
         var r = await galleries.CreateAsync(Field(form, "title"));
         return r.IsOk
             ? SeeOther($"{GalleriesPath}/{r.GalleryId}")
-            : StatusPage(ctx, antiforgery, r.StatusCode, "Galleries", r.Reason ?? "", GalleriesPath);
+            : await RenderGalleriesAsync(ctx, reader, db, timer, storage, options, antiforgery, assets, r.StatusCode, r.Reason);
     }
 
     // ── G3 POST /admin/galleries/order ──────────────────────────────────────
 
-    private static async Task<IResult> ReorderGalleries(HttpContext ctx, GalleryService galleries, IAntiforgery antiforgery)
+    private static async Task<IResult> ReorderGalleries(HttpContext ctx, GalleryService galleries, LibraryReader reader,
+        IMongoDatabase db, OpTimer timer, StorageOptions storage, LibraryOptions options, IAntiforgery antiforgery, AdminAssets assets)
     {
         var form = await FormAsync(ctx);
         var r = await galleries.ReorderHomeAsync(Ids(form, "order"));
         return r.IsOk
             ? SeeOther($"{GalleriesPath}?ordered=1")
-            : StatusPage(ctx, antiforgery, r.StatusCode, "Galleries", r.Reason ?? "", GalleriesPath);
+            : await RenderGalleriesAsync(ctx, reader, db, timer, storage, options, antiforgery, assets, r.StatusCode, r.Reason);
     }
 
     // ── G4 POST /admin/galleries/{gid}/visibility ────────────────────────────
 
-    private static async Task<IResult> Visibility(string gid, HttpContext ctx, GalleryService galleries, IAntiforgery antiforgery)
+    private static async Task<IResult> Visibility(string gid, HttpContext ctx, GalleryService galleries, LibraryReader reader,
+        IMongoDatabase db, OpTimer timer, StorageOptions storage, LibraryOptions options, IAntiforgery antiforgery, AdminAssets assets)
     {
         if (!OpaqueId.IsValid(gid)) return Results.NotFound();
         var form = await FormAsync(ctx);
         var wantPublic = form["public"] == "on";
         var confirmed = form["confirm"] == "1";
-        var from = form["from"] == "list" ? "list" : "builder";
-        var back = from == "list" ? GalleriesPath : $"{GalleriesPath}/{gid}";
+        var fromList = form["from"] == "list";
+        var back = fromList ? GalleriesPath : $"{GalleriesPath}/{gid}";
 
         var gallery = await galleries.LoadAsync(gid);
         if (gallery is null) return Results.NotFound();
+
+        // A refusal or the publish warning re-renders the page the request came from.
+        Task<IResult> Page(int status, string? reason, bool warning) => fromList
+            ? RenderGalleriesAsync(ctx, reader, db, timer, storage, options, antiforgery, assets, status, reason,
+                warning ? gid : null)
+            : RenderBuilderAsync(ctx, galleries, db, timer, storage, options, antiforgery, assets, gid, status, reason,
+                warning);
 
         if (wantPublic)
         {
@@ -196,8 +267,8 @@ public static class LibraryEndpoints
             {
                 OperationStatus.Ok => SeeOther($"{back}?visibility=public"),
                 OperationStatus.NotFound => Results.NotFound(),
-                OperationStatus.NeedsConfirm => PublishWarningPage(ctx, antiforgery, gid, gallery.Title, gallery.Items.Count, from, back),
-                _ => StatusPage(ctx, antiforgery, r.StatusCode, gallery.Title, r.Reason ?? "", back),
+                OperationStatus.NeedsConfirm => await Page(200, null, warning: true),
+                _ => await Page(r.StatusCode, r.Reason, warning: false),
             };
         }
 
@@ -206,7 +277,7 @@ public static class LibraryEndpoints
             // Nothing to unpublish. An empty private gallery answers the empty refusal whatever was
             // sent (contracts/http.md G4, [SAFETY]); a non-empty one is already private (no write).
             return gallery.Items.Count == 0
-                ? StatusPage(ctx, antiforgery, 409, gallery.Title, GalleryService.EmptyPublishReason, back)
+                ? await Page(409, GalleryService.EmptyPublishReason, warning: false)
                 : SeeOther($"{back}?visibility=private");
         }
 
@@ -214,40 +285,58 @@ public static class LibraryEndpoints
         return u.Status == OperationStatus.NotFound ? Results.NotFound() : SeeOther($"{back}?visibility=private");
     }
 
+    // ── B1 GET /admin/galleries/{gid} ────────────────────────────────────────
+
+    private static Task<IResult> BuilderPage(string gid, HttpContext ctx, GalleryService galleries, IMongoDatabase db,
+        OpTimer timer, StorageOptions storage, LibraryOptions options, IAntiforgery antiforgery, AdminAssets assets) =>
+        !OpaqueId.IsValid(gid)
+            ? Task.FromResult(Results.NotFound())
+            : RenderBuilderAsync(ctx, galleries, db, timer, storage, options, antiforgery, assets, gid, 200,
+                BuilderStatusFromQuery(ctx.Request.Query));
+
     // ── B2 POST /admin/galleries/{gid} ───────────────────────────────────────
 
-    private static async Task<IResult> SaveGallery(string gid, HttpContext ctx, GalleryService galleries, IAntiforgery antiforgery)
+    private static async Task<IResult> SaveGallery(string gid, HttpContext ctx, GalleryService galleries, IMongoDatabase db,
+        OpTimer timer, StorageOptions storage, LibraryOptions options, IAntiforgery antiforgery, AdminAssets assets)
     {
         if (!OpaqueId.IsValid(gid)) return Results.NotFound();
         var form = await FormAsync(ctx);
-        var r = await galleries.UpdateTextAsync(gid, Field(form, "title"), Field(form, "description"));
-        return Builder(ctx, antiforgery, gid, r, $"{GalleriesPath}/{gid}?saved=1");
+        var title = Field(form, "title");
+        var description = Field(form, "description");
+        var r = await galleries.UpdateTextAsync(gid, title, description);
+        return await Builder(ctx, galleries, db, timer, storage, options, antiforgery, assets, gid, r,
+            $"{GalleriesPath}/{gid}?saved=1", title, description);
     }
 
     // ── B3 POST /admin/galleries/{gid}/order ─────────────────────────────────
 
-    private static async Task<IResult> ReorderGallery(string gid, HttpContext ctx, GalleryService galleries, IAntiforgery antiforgery)
+    private static async Task<IResult> ReorderGallery(string gid, HttpContext ctx, GalleryService galleries, IMongoDatabase db,
+        OpTimer timer, StorageOptions storage, LibraryOptions options, IAntiforgery antiforgery, AdminAssets assets)
     {
         if (!OpaqueId.IsValid(gid)) return Results.NotFound();
         var form = await FormAsync(ctx);
         var r = await galleries.ReorderAsync(gid, Ids(form, "order"));
-        return Builder(ctx, antiforgery, gid, r, $"{GalleriesPath}/{gid}?ordered=1");
+        return await Builder(ctx, galleries, db, timer, storage, options, antiforgery, assets, gid, r,
+            $"{GalleriesPath}/{gid}?ordered=1");
     }
 
     // ── B4 POST /admin/galleries/{gid}/cover ─────────────────────────────────
 
-    private static async Task<IResult> Cover(string gid, HttpContext ctx, GalleryService galleries, IAntiforgery antiforgery)
+    private static async Task<IResult> Cover(string gid, HttpContext ctx, GalleryService galleries, IMongoDatabase db,
+        OpTimer timer, StorageOptions storage, LibraryOptions options, IAntiforgery antiforgery, AdminAssets assets)
     {
         if (!OpaqueId.IsValid(gid)) return Results.NotFound();
         var form = await FormAsync(ctx);
         var image = Field(form, "image");
         var r = await galleries.SetCoverAsync(gid, string.IsNullOrEmpty(image) ? null : image);
-        return Builder(ctx, antiforgery, gid, r, $"{GalleriesPath}/{gid}");
+        return await Builder(ctx, galleries, db, timer, storage, options, antiforgery, assets, gid, r,
+            $"{GalleriesPath}/{gid}");
     }
 
     // ── B5 POST /admin/galleries/{gid}/remove ────────────────────────────────
 
-    private static async Task<IResult> Remove(string gid, HttpContext ctx, GalleryService galleries, IAntiforgery antiforgery)
+    private static async Task<IResult> Remove(string gid, HttpContext ctx, GalleryService galleries, IMongoDatabase db,
+        OpTimer timer, StorageOptions storage, LibraryOptions options, IAntiforgery antiforgery, AdminAssets assets)
     {
         if (!OpaqueId.IsValid(gid)) return Results.NotFound();
         var form = await FormAsync(ctx);
@@ -260,7 +349,8 @@ public static class LibraryEndpoints
                 : SeeOther($"{GalleriesPath}/{gid}?removed=0");
         }
         var r = await galleries.RemoveAsync(gid, image);
-        return Builder(ctx, antiforgery, gid, r, $"{GalleriesPath}/{gid}?removed={r.Removed}");
+        return await Builder(ctx, galleries, db, timer, storage, options, antiforgery, assets, gid, r,
+            $"{GalleriesPath}/{gid}?removed={r.Removed}");
     }
 
     // ── B6 POST /admin/galleries/{gid}/delete ────────────────────────────────
@@ -283,9 +373,8 @@ public static class LibraryEndpoints
         var data = await reader.PageAsync(page, open);
         if (statusFromQuery) status = StatusFromQuery(ctx.Request.Query, data.Galleries);
 
-        var tokens = antiforgery.GetAndStoreTokens(ctx);
         var model = new LibraryPageModel(
-            data, options, new FormToken(tokens.FormFieldName, tokens.RequestToken!),
+            data, options, Token(ctx, antiforgery),
             assets.UrlFor(AdminAssets.LibraryScriptPath),
             status, saved && data.Open is not null,
             editTitle ?? data.Open?.Image.Title,
@@ -296,6 +385,89 @@ public static class LibraryEndpoints
             [nameof(LibraryPage.Model)] = model,
         })
         { StatusCode = statusCode };
+    }
+
+    /// <summary>
+    /// The gallery list (C2): every gallery in home order (<see cref="LibraryReader.GalleriesAsync"/>,
+    /// two reads) plus one <c>db.galleries.list</c> read of the stored cards for the covers.
+    /// </summary>
+    private static async Task<IResult> RenderGalleriesAsync(
+        HttpContext ctx, LibraryReader reader, IMongoDatabase db, OpTimer timer, StorageOptions storage,
+        LibraryOptions options, IAntiforgery antiforgery, AdminAssets assets, int statusCode, string? status,
+        string? warningGid = null)
+    {
+        var refs = await reader.GalleriesAsync();
+        var cards = await timer.Time("db.galleries.list", () => db.GetCollection<GalleryDoc>("galleries")
+            .Find(FilterDefinition<GalleryDoc>.Empty)
+            .Project<GalleryDoc>(Builders<GalleryDoc>.Projection.Include(g => g.Id).Include(g => g.Card))
+            .ToListAsync(), isDbRead: true);
+        var cardOf = cards.Where(g => g.Card is not null).ToDictionary(g => g.Id, g => g.Card!, StringComparer.Ordinal);
+
+        var url = PublicEndpoints.MakeUrl(storage);
+        var rows = refs
+            .Select(g => new GalleryRow(g,
+                g.PhotoCount > 0 && cardOf.TryGetValue(g.Id, out var card) && card.Cover is not null
+                    ? Site.ViewMapper.ToCard(card, url).Image
+                    : null))
+            .ToList();
+
+        var model = new GalleriesPageModel(
+            rows, options, Token(ctx, antiforgery),
+            assets.UrlFor(AdminAssets.LibraryScriptPath),
+            assets.UrlFor(AdminAssets.ReorderScriptPath),
+            status, warningGid);
+
+        return new RazorComponentResult<GalleriesPage>(new Dictionary<string, object?>
+        {
+            [nameof(GalleriesPage.Model)] = model,
+        })
+        { StatusCode = statusCode };
+    }
+
+    /// <summary>
+    /// The builder (C3): the gallery (<c>db.gallery.load</c>) and its live member images in gallery
+    /// order (one owner image read, <c>db.library.page</c>; tombstoned images are left out). An
+    /// unknown gallery is 404.
+    /// </summary>
+    private static async Task<IResult> RenderBuilderAsync(
+        HttpContext ctx, GalleryService galleries, IMongoDatabase db, OpTimer timer, StorageOptions storage,
+        LibraryOptions options, IAntiforgery antiforgery, AdminAssets assets, string gid, int statusCode, string? status,
+        bool warning = false, string? editTitle = null, string? editDescription = null)
+    {
+        var gallery = await galleries.LoadAsync(gid);
+        if (gallery is null) return Results.NotFound();
+
+        var docs = gallery.Items.Count == 0
+            ? []
+            : await timer.Time("db.library.page", () => db.GetCollection<ImageDoc>("images")
+                .Find(Builders<ImageDoc>.Filter.In(i => i.Id, gallery.Items) & Builders<ImageDoc>.Filter.Exists(i => i.DeletingAt, false))
+                .ToListAsync(), isDbRead: true);
+        var byId = docs.ToDictionary(d => d.Id, StringComparer.Ordinal);
+        var url = PublicEndpoints.MakeUrl(storage);
+        var items = gallery.Items
+            .Where(byId.ContainsKey)
+            .Select(id => Site.ViewMapper.ToView(byId[id], url))
+            .ToList();
+
+        var model = new GalleryPageModel(
+            gallery, items, options, Token(ctx, antiforgery),
+            assets.UrlFor(AdminAssets.LibraryScriptPath),
+            assets.UrlFor(AdminAssets.ReorderScriptPath),
+            status, warning,
+            editTitle ?? gallery.Title,
+            editDescription ?? gallery.Description);
+
+        return new RazorComponentResult<GalleryPage>(new Dictionary<string, object?>
+        {
+            [nameof(GalleryPage.Model)] = model,
+        })
+        { StatusCode = statusCode };
+    }
+
+    private static FormToken Token(HttpContext ctx, IAntiforgery antiforgery)
+    {
+        var tokens = antiforgery.GetAndStoreTokens(ctx);
+        return new FormToken(tokens.FormFieldName, tokens.RequestToken!);
     }
 
     /// <summary>The PRG status line (contracts/components.md C1 "Status text").</summary>
@@ -321,45 +493,45 @@ public static class LibraryEndpoints
         return null;
     }
 
-    private static IResult Builder(HttpContext ctx, IAntiforgery antiforgery, string gid, OperationResult r, string ok) =>
+    /// <summary>The gallery list's PRG status line (G2–G4, B6 redirects).</summary>
+    public static string? GalleriesStatusFromQuery(IQueryCollection q)
+    {
+        if (q["ordered"] == "1") return "Order saved";
+        if (VisibilityStatus(q) is { } v) return v;
+        if (q["deleted"] == "1") return "Gallery deleted";
+        if (q["deleted"] == "0") return "That gallery was already deleted.";
+        return null;
+    }
+
+    /// <summary>The builder's PRG status line (L3 new gallery, B2–B5, G4 redirects).</summary>
+    public static string? BuilderStatusFromQuery(IQueryCollection q)
+    {
+        if (q["saved"] == "1") return "Saved";
+        if (q["ordered"] == "1") return "Order saved";
+        if (int.TryParse(q["added"], out var added)) return $"{added} added";
+        if (q["removed"] == "1") return "Removed from this gallery";
+        return VisibilityStatus(q);
+    }
+
+    private static string? VisibilityStatus(IQueryCollection q) => q["visibility"].ToString() switch
+    {
+        "public" => "The gallery is public",
+        "private" => "The gallery is private",
+        _ => null,
+    };
+
+    /// <summary>A builder POST's outcome: 303 on success, 404 unknown, else the builder re-rendered with the reason.</summary>
+    private static async Task<IResult> Builder(
+        HttpContext ctx, GalleryService galleries, IMongoDatabase db, OpTimer timer, StorageOptions storage,
+        LibraryOptions options, IAntiforgery antiforgery, AdminAssets assets, string gid, OperationResult r, string ok,
+        string? editTitle = null, string? editDescription = null) =>
         r.Status switch
         {
             OperationStatus.Ok => SeeOther(ok),
             OperationStatus.NotFound => Results.NotFound(),
-            _ => StatusPage(ctx, antiforgery, r.StatusCode, "Gallery", r.Reason ?? "", $"{GalleriesPath}/{gid}"),
+            _ => await RenderBuilderAsync(ctx, galleries, db, timer, storage, options, antiforgery, assets, gid,
+                r.StatusCode, r.Reason, editTitle: editTitle, editDescription: editDescription),
         };
-
-    /// <summary>
-    /// The minimal owner page for G/B refusals until Batch E's gallery pages exist (tasks.md T029):
-    /// the reason in <c>role="status"</c> and a link back. No script.
-    /// </summary>
-    private static IResult StatusPage(HttpContext ctx, IAntiforgery antiforgery, int status, string heading, string reason, string back) =>
-        Html(status, heading, $"<p role=\"status\">{E(reason)}</p><p><a href=\"{E(back)}\">Back</a></p>");
-
-    /// <summary>The G4 publish warning (no write), with a form that re-posts it confirmed.</summary>
-    private static IResult PublishWarningPage(HttpContext ctx, IAntiforgery antiforgery, string gid, string title, int photos,
-        string from, string back)
-    {
-        var tokens = antiforgery.GetAndStoreTokens(ctx);
-        var body =
-            $"<p role=\"status\">Make “{E(title)}” public? It will be listed on the home page with its {photos} photos, and anyone can see them.</p>" +
-            $"<form method=\"post\" action=\"{GalleriesPath}/{gid}/visibility\">" +
-            $"<input type=\"hidden\" name=\"{E(tokens.FormFieldName)}\" value=\"{E(tokens.RequestToken!)}\">" +
-            "<input type=\"hidden\" name=\"public\" value=\"on\"><input type=\"hidden\" name=\"confirm\" value=\"1\">" +
-            $"<input type=\"hidden\" name=\"from\" value=\"{from}\">" +
-            "<button class=\"btn btn-primary\" type=\"submit\">Make public</button></form>" +
-            $"<p><a href=\"{E(back)}\">Keep private</a></p>";
-        return Html(200, title, body);
-    }
-
-    private static IResult Html(int status, string heading, string body) =>
-        Results.Content(
-            "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>" + E(heading) +
-            "</title><meta name=\"robots\" content=\"noindex\"></head><body class=\"admin\"><main class=\"admin-main\"><h1>" +
-            E(heading) + "</h1>" + body + "</main></body></html>",
-            "text/html; charset=utf-8", statusCode: status);
-
-    private static string E(string s) => WebUtility.HtmlEncode(s);
 
     // ── request helpers ──────────────────────────────────────────────────────
 
