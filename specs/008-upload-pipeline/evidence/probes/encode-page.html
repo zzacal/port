@@ -1,0 +1,32 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>p008 probe</title>
+<pre id="log"></pre>
+<script type="module">
+const log = (s) => { document.getElementById('log').textContent += s + '\n'; };
+const w = new Worker('worker.js', { type: 'module' });
+const jobs = [
+  { url: 'orientation-6.jpg', name: 'orient6' },
+  { url: 'gps-camera.jpg', name: 'gps' },
+  { url: 'big.jpg', name: 'big' },
+];
+const results = [];
+let i = 0;
+let blocked = 0, last = performance.now();
+const tick = setInterval(() => { const n = performance.now(); if (n - last > 200) blocked++; last = n; }, 50);
+w.onmessage = async (e) => {
+  const r = e.data;
+  if (r.ok) {
+    for (const o of r.out) {
+      await fetch('/save/' + o.name, { method: 'POST', body: o.bytes });
+    }
+    log(JSON.stringify({ name: r.name, src: r.src, color: r.color, timings: r.timings,
+      out: r.out.map(o => [o.name, o.w, o.h, o.bytes.byteLength]) }));
+  } else log(JSON.stringify(r));
+  results.push(r.ok);
+  if (++i < jobs.length) w.postMessage(jobs[i]);
+  else { clearInterval(tick); log('MAINTHREAD_STALLS ' + blocked); log('DONE'); window.__done = true; }
+};
+w.onerror = (e) => { log('WORKER_ERROR ' + e.message); window.__done = true; };
+w.postMessage(jobs[0]);
+</script>
