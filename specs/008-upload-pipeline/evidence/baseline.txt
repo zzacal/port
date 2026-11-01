@@ -21,3 +21,8 @@ Byte-identity guards that pin pre-change output (must pass UNMODIFIED in every l
 Other existing suites named by the tasks.md rules (also UNMODIFIED): StorageTests, SeederTests,
 AdminAccessTests (sole stated exception: Owner_GetAdminUpload_returns_404, edited by T035 only),
 OrganismComponentTests.
+
+== T053 final gate (parent, after dotnet clean) ==
+build -warnaserror: 0 warnings, 0 errors
+tests: Gallery.Core.Tests 104, Gallery.Web.Tests 675 (total 779; baseline 497 -> +282)
+head before commit: 2c8b394

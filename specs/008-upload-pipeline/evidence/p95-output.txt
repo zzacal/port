@@ -1,0 +1,9 @@
+== specs/008-upload-pipeline/evidence/upload-timings.log
+format: plain message lines
+PASS SC-006 op.timing s3.presign n=120 p95=0.22 ms <= 200
+PASS SC-007 op.timing upload.validate n=40 p95=39.52 ms <= 2000
+PASS SC-008 upload.confirmed count>=40 n=1 p95=403.13 ms <= 60000
+n/a  SC-009 op.timing browser.total n=0 (owner live run)
+PASS SC-010 http.request GET /admin/upload 200 n=30 p95=7.35 ms <= 500
+
+ALL PASS

@@ -673,7 +673,7 @@ completes, with no browser.
 
 ## Phase 9: Polish, guards, evidence (high tier unless noted)
 
-- [ ] T046 **[SAFETY]** Write `tests/Gallery.Web.Tests/UploadSecretScanTests.cs` (FR-043, SC-012,
+- [X] T046 **[SAFETY]** Write `tests/Gallery.Web.Tests/UploadSecretScanTests.cs` (FR-043, SC-012,
   plan item 4). With an owner `UploadHost` and a registered item:
   - collect the bodies of `/admin/upload`, `/admin/upload/state`, the U3 and U4 JSON responses,
     and every file under `wwwroot/admin-assets/` (recursively);
@@ -682,14 +682,14 @@ completes, with no browser.
     `R2Fixture`'s configuration. Compare in memory, and the failure message names only the file or
     route, never the value.
   It may run in parallel with Batch G (it owns only this file).
-- [ ] T047 [P] Write `tests/Gallery.Web.Tests/UploadSourceGuardTests.cs`:
+- [X] T047 [P] Write `tests/Gallery.Web.Tests/UploadSourceGuardTests.cs`:
   - (III.8) no `*.cs` under `src/Gallery.Web` references `SixLabors`, `SkiaSharp`,
     `System.Drawing` or `ImageDecoder`, and `Gallery.Web.csproj` gains no package;
   - (C3) `upload.js` and `upload-worker.js` contain none of `innerHTML`, `outerHTML`,
     `insertAdjacentHTML`, `document.write`;
   - (IV.22) GET `/` and a gallery and photo page of the seeded shape contain no `/admin-assets`;
   - (FR-033) no file under `src/Gallery.Web/Upload/` contains `Purge` or `Warm`.
-- [ ] T048 Write `specs/008-upload-pipeline/evidence/p95.sh` (contracts/log-events.md). Input is
+- [X] T048 Write `specs/008-upload-pipeline/evidence/p95.sh` (contracts/log-events.md). Input is
   either the plain message lines of the test log or the JSON console log (convert with
   `jq -r '.Message'`). For each SC row it prints n, p95 and PASS/FAIL:
   - SC-006 `op.timing s3.presign` ≤ 200;
@@ -701,7 +701,7 @@ completes, with no browser.
   n=0 for SC-006/007/008/010 is a FAIL. An empty or unreadable log is a FAIL. Test it on three
   synthetic logs in `evidence/p95-selftest/` (plain, JSON, wrong format), which must give pass,
   pass and FAIL. Commit those logs. It can be written while Batch A runs.
-- [ ] T049 Timing evidence. Write `tests/Gallery.Web.Tests/UploadTimingEvidenceTests.cs`
+- [X] T049 Timing evidence. Write `tests/Gallery.Web.Tests/UploadTimingEvidenceTests.cs`
   (`[Trait("Category","Evidence")]`):
   - one `UploadHost` registers 40 photos with the fixture master, drives U4/PUT/U7 for each with
     the committed 320 sizes, and confirms;
@@ -712,7 +712,7 @@ completes, with no browser.
   specs/008-upload-pipeline/evidence/upload-timings.log | tee
   specs/008-upload-pipeline/evidence/p95-output.txt`. SC-006, 007, 008 and 010 must PASS with
   non-zero n.
-- [ ] T050 Write `specs/008-upload-pipeline/evidence/verify.sh`, the **live-server curl
+- [X] T050 Write `specs/008-upload-pipeline/evidence/verify.sh`, the **live-server curl
   walkthrough** (quickstart Part B; tee to `verify-output.txt`), modelled on 007's:
   1. The build and test gates.
   2. Start a throwaway S3Proxy container (stopped by id at exit) and use a fresh Mongo database
@@ -735,15 +735,15 @@ completes, with no browser.
      listing); one `http.request` line per call in the captured server log
      (`evidence/verify-run.log`).
   Print presigned URLs with their query values redacted. `pkill` appears nowhere in the script.
-- [ ] T051 Run `bash specs/008-upload-pipeline/evidence/verify.sh | tee
+- [X] T051 Run `bash specs/008-upload-pipeline/evidence/verify.sh | tee
   specs/008-upload-pipeline/evidence/verify-output.txt` on the merged tree. Force-add
   `evidence/*.log` (`git add -f`) after grepping it for 32+-character tokens and redacting them.
   Write `evidence/live-walkthrough.md`: the automated walkthrough's observations, and a pointer to
   OWNER-ONLY O-02 for the real-browser and R2 part.
-- [ ] T052 Fold every executor `decisions_made` entry into `decisions.md` as numbered rows.
+- [X] T052 Fold every executor `decisions_made` entry into `decisions.md` as numbered rows.
   Reject any that contradict the contracts, keep backward-compatibility shims out, and note each
   rejection in the row.
-- [ ] T053 Update `docs/roadmap.md` 008 with a status line: what was delivered, the evidence
+- [X] T053 Update `docs/roadmap.md` 008 with a status line: what was delivered, the evidence
   paths, and what is not delivered until the OWNER-ONLY section runs (SC-009, Safari/iOS, R2
   copy-if-match, the lifecycle rule). Then run `dotnet clean`, build with `-warnaserror` (0
   warnings) and the full suite green. Record the new test count in `evidence/baseline.txt`.

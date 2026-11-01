@@ -1,0 +1,80 @@
+Now listening on: http://127.0.0.1:63478
+Application started. Press Ctrl+C to shut down.
+op.timing s3.presign 1.14 ok
+op.timing s3.presign 2.24 ok
+op.timing s3.presign 3.34 ok
+op.timing s3.presign 4.44 ok
+op.timing s3.presign 5.54 ok
+op.timing s3.presign 6.64 ok
+op.timing s3.presign 7.74 ok
+op.timing s3.presign 8.84 ok
+op.timing s3.presign 9.94 ok
+op.timing s3.presign 10.04 ok
+op.timing s3.presign 11.14 ok
+op.timing s3.presign 12.24 ok
+op.timing s3.presign 13.34 ok
+op.timing s3.presign 14.44 ok
+op.timing s3.presign 15.54 ok
+op.timing s3.presign 16.64 ok
+op.timing s3.presign 17.74 ok
+op.timing s3.presign 18.84 ok
+op.timing s3.presign 19.94 ok
+op.timing s3.presign 20.04 ok
+http.request POST /admin/upload/items 200 35.12 2
+op.timing upload.validate 110.5 ok
+http.request POST /admin/upload/items/{itemId}/complete 200 130.1 1
+op.timing upload.validate 120.5 ok
+http.request POST /admin/upload/items/{itemId}/complete 200 140.1 1
+op.timing upload.validate 130.5 ok
+http.request POST /admin/upload/items/{itemId}/complete 200 150.1 1
+op.timing upload.validate 140.5 ok
+http.request POST /admin/upload/items/{itemId}/complete 200 160.1 1
+op.timing upload.validate 150.5 ok
+http.request POST /admin/upload/items/{itemId}/complete 200 170.1 1
+op.timing upload.validate 160.5 ok
+http.request POST /admin/upload/items/{itemId}/complete 200 180.1 1
+op.timing upload.validate 170.5 ok
+http.request POST /admin/upload/items/{itemId}/complete 200 190.1 1
+op.timing upload.validate 180.5 ok
+http.request POST /admin/upload/items/{itemId}/complete 200 200.1 1
+op.timing upload.validate 190.5 ok
+http.request POST /admin/upload/items/{itemId}/complete 200 210.1 1
+op.timing upload.validate 200.5 ok
+http.request POST /admin/upload/items/{itemId}/complete 200 220.1 1
+op.timing upload.validate 980.25 rejected
+upload.rejected b0000000001 i0000000001 640.webp 640.webp: EXIF chunk
+upload.confirmed b0000000002 2 210.4
+upload.confirmed b0000000001 40 5123.4
+op.timing upload.confirm 5120.9 ok
+http.request GET /admin/upload 200 21.7 1
+http.request GET /admin/upload 200 22.7 1
+http.request GET /admin/upload 200 23.7 1
+http.request GET /admin/upload 200 24.7 1
+http.request GET /admin/upload 200 25.7 1
+http.request GET /admin/upload 200 26.7 1
+http.request GET /admin/upload 200 27.7 1
+http.request GET /admin/upload 200 28.7 1
+http.request GET /admin/upload 200 29.7 1
+http.request GET /admin/upload 200 30.7 1
+http.request GET /admin/upload 200 31.7 1
+http.request GET /admin/upload 200 32.7 1
+http.request GET /admin/upload 200 33.7 1
+http.request GET /admin/upload 200 34.7 1
+http.request GET /admin/upload 200 35.7 1
+http.request GET /admin/upload 200 36.7 1
+http.request GET /admin/upload 200 37.7 1
+http.request GET /admin/upload 200 38.7 1
+http.request GET /admin/upload 200 39.7 1
+http.request GET /admin/upload 200 40.7 1
+http.request GET /admin/upload 200 41.7 1
+http.request GET /admin/upload 200 42.7 1
+http.request GET /admin/upload 200 43.7 1
+http.request GET /admin/upload 200 44.7 1
+http.request GET /admin/upload 200 45.7 1
+http.request GET /admin/upload 200 46.7 1
+http.request GET /admin/upload 200 47.7 1
+http.request GET /admin/upload 200 48.7 1
+http.request GET /admin/upload 200 49.7 1
+http.request GET /admin/upload 200 50.7 1
+http.request GET /admin/upload/state 200 900.1 1
+http.request GET /admin/upload 302 1.2 0

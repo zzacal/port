@@ -95,6 +95,14 @@ OAuth client with a localhost redirect URI.
 
 ### 008 Upload pipeline into the library
 
+**Status: implemented on branch `008-upload-pipeline`, not merged (2026-11-01, unattended run;
+defaults in `specs/008-upload-pipeline/decisions.md`).** Evidence:
+`specs/008-upload-pipeline/evidence/` (verify.sh live walkthrough ALL PASS, p95.sh SC-006/007/008/010
+PASS on the 40-photo log, non-vacuity.sh, browser tests for the worker path). Not delivered until
+the owner's post-build live checks (008 tasks.md OWNER-ONLY): SC-009 browser timing and the
+Safari/iOS run, the R2 test suite including copy-if-match on real R2, and the 7-day lifecycle rule
+on `gallery-dev-private` `staging/`.
+
 The browser derivative worker, presigned R2 intake, server validation, the batch lifecycle, and
 the upload batch page. Confirmed images land in the library.
 

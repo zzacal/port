@@ -1,0 +1,37 @@
+PASS gate build: 0 warnings, 0 errors (artifacts/exec-p2)
+PASS gate tests: 777 passed in 2 assemblies (filter: Category!=Evidence)
+PASS setup S3Proxy 13e33b840cbb on :63043, buckets pub/priv created; Mongo db gallery-verify-008-1793528505
+PASS setup app pid 89410 on https://localhost:5092, fake provider pid 89409 on http://127.0.0.1:5093
+PASS signin POST /admin/signin 302 to the fake provider: http://127.0.0.1:5093/authorize?client_id=<v>&redirect_uri=<v>&response_type=<v>&scope=<v>&code_challenge=<v>&code_challenge_method=<v>&response_mode=<v>&nonce=<v>&prompt=<v>&state=<v>&x-client-SKU=<v>&x-client-ver=<v>
+PASS signin POST /signin-oidc 302 to /admin; GET /admin/upload 200 with data-csrf
+PASS U1 /admin/upload no-store, no presigned URL in the page
+PASS U2 /admin/upload/state 200 no-store, batch null
+PASS assets /admin-assets/upload.js?v=c2328d45 200 public, max-age=31536000, immutable
+PASS csrf POST /admin/upload/items without X-CSRF-TOKEN 400
+PASS limits register body of 231412 bytes 413 (too-large)
+PASS U3 register 2 photos 200, batch 47dvjc2cobvxfatd3tlpbkmj2y, accepted 2, refused 0
+     presigned http://localhost:63043/priv/staging/47dvjc2cobvxfatd3tlpbkmj2y/wnsr6tytozevz5cv6k34uigq3e/zukxb6uzexlgn7bxuyxxwhratu/master.jpg?X-Amz-Expires=900&X-Amz-Algorithm=<v>&X-Amz-Credential=<v>&X-Amz-Date=<v>&X-Amz-SignedHeaders=content-type%3Bhost&X-Amz-Signature=<v>
+     presigned http://localhost:63043/priv/staging/47dvjc2cobvxfatd3tlpbkmj2y/wnsr6tytozevz5cv6k34uigq3e/zukxb6uzexlgn7bxuyxxwhratu/320.avif?X-Amz-Expires=899&X-Amz-Algorithm=<v>&X-Amz-Credential=<v>&X-Amz-Date=<v>&X-Amz-SignedHeaders=content-type%3Bhost&X-Amz-Signature=<v>
+     presigned http://localhost:63043/priv/staging/47dvjc2cobvxfatd3tlpbkmj2y/wnsr6tytozevz5cv6k34uigq3e/zukxb6uzexlgn7bxuyxxwhratu/320.webp?X-Amz-Expires=899&X-Amz-Algorithm=<v>&X-Amz-Credential=<v>&X-Amz-Date=<v>&X-Amz-SignedHeaders=content-type%3Bhost&X-Amz-Signature=<v>
+PASS flow IMG_0001.jpg: PUT master 200, U4 200 ladder [320], PUT avif+webp 200, U7 200 succeeded
+     presigned http://localhost:63043/priv/staging/47dvjc2cobvxfatd3tlpbkmj2y/qtkybfp653ogl7rdvxukeozi7i/lc5a3kjmrub2rrw23bxlxthb7e/master.jpg?X-Amz-Expires=900&X-Amz-Algorithm=<v>&X-Amz-Credential=<v>&X-Amz-Date=<v>&X-Amz-SignedHeaders=content-type%3Bhost&X-Amz-Signature=<v>
+     presigned http://localhost:63043/priv/staging/47dvjc2cobvxfatd3tlpbkmj2y/qtkybfp653ogl7rdvxukeozi7i/lc5a3kjmrub2rrw23bxlxthb7e/200.avif?X-Amz-Expires=899&X-Amz-Algorithm=<v>&X-Amz-Credential=<v>&X-Amz-Date=<v>&X-Amz-SignedHeaders=content-type%3Bhost&X-Amz-Signature=<v>
+     presigned http://localhost:63043/priv/staging/47dvjc2cobvxfatd3tlpbkmj2y/qtkybfp653ogl7rdvxukeozi7i/lc5a3kjmrub2rrw23bxlxthb7e/200.webp?X-Amz-Expires=899&X-Amz-Algorithm=<v>&X-Amz-Credential=<v>&X-Amz-Date=<v>&X-Amz-SignedHeaders=content-type%3Bhost&X-Amz-Signature=<v>
+PASS flow Harbour at dusk.jpg: PUT master 200, U4 200 ladder [200], PUT avif+webp 200, U7 200 succeeded
+PASS FR-044 all 6 presigned URLs sign exactly content-type;host
+PASS U2 state after U7: 2 of 2 succeeded
+PASS U10 confirm 200, count 2, redirect /admin/upload?confirmed=47dvjc2cobvxfatd3tlpbkmj2y
+PASS SC-003 staging/47dvjc2cobvxfatd3tlpbkmj2y/ held 6 objects before confirm, 0 after; masters/ 2, public bucket 4 (2 photos x avif+webp)
+PASS U1 result page: "2 photos added to your library"
+PASS FR-037 17 app requests (readiness probe of / included), 17 http.request lines, same method+status sequence
+PASS FR-038 6 x 'op.timing s3.presign'
+PASS FR-038 4 x 'op.timing upload.master-check'
+PASS FR-038 2 x 'op.timing upload.validate'
+PASS FR-038 1 x 'op.timing upload.confirm'
+PASS FR-038 2 x 'op.timing browser.decode-orient'
+PASS FR-038 1 x 'upload.confirmed 47dvjc2cobvxfatd3tlpbkmj2y 2'
+     specs/008-upload-pipeline/evidence/verify-run.log: 123 lines, 0 distinct 32+-character tokens (redact before committing)
+PASS secrets no presigned URL or credential value in specs/008-upload-pipeline/evidence/verify-run.log
+     no Warning/Error entries in the log
+
+ALL PASS
