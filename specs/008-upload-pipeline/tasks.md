@@ -786,7 +786,7 @@ line when the owner runs them.
 - [X] O-01 Cloudflare dashboard: lifecycle rule on `gallery-dev-private`, deleting `staging/`
   objects 7 days after creation (spec Assumptions owner prerequisite 2, D-11 backstop). Optional:
   `masters/` to Infrequent Access after 30 days.
-- [ ] O-02 (JPEG part done by the owner 2026-11-01, decisions row 74) The skipped roadmap spike (decisions row 6), as quickstart Part C steps 1–5. On
+- [ ] O-02 (JPEG part done by the owner 2026-11-01, decisions row 74; Safari and iOS Safari backburnered by the owner 2026-11-01, decisions row 75) The skipped roadmap spike (decisions row 6), as quickstart Part C steps 1–5. On
   `https://localhost:5081`, in Chrome, Safari macOS and iOS Safari: 40 real exports, an 18–20 MB
   JPEG, an EXIF-rotated photo, a HEIC and a renamed PNG. Capture `evidence/live-run.log` (commit a
   redacted copy) and run `p95.sh` on it for SC-006/007 (R2)/008/009/010. Record per browser: the

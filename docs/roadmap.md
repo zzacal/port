@@ -101,8 +101,10 @@ defaults in `specs/008-upload-pipeline/decisions.md`).** Evidence:
 PASS on the 40-photo log, non-vacuity.sh, browser tests for the worker path). Not delivered until
 the owner's post-build live checks (008 tasks.md OWNER-ONLY). Done by the owner 2026-11-01: the
 7-day lifecycle rule (O-01), the R2 test suite (O-03), staging empty after confirm on R2 (O-04),
-and a JPEG live browser run (part of O-02). Still open in O-02: SC-009 browser timing, the
-Safari/iOS run, the HEIC/PNG refusals and the measured derivative sizes.
+and a JPEG live browser run (part of O-02). Still open in O-02: SC-009 browser timing (Chrome),
+the HEIC/PNG refusals and the measured derivative sizes. Backburnered by the owner (2026-11-01):
+the Safari macOS and iOS Safari runs, including iOS memory behaviour; D-09 stays as decided until
+they run.
 
 The browser derivative worker, presigned R2 intake, server validation, the batch lifecycle, and
 the upload batch page. Confirmed images land in the library.
