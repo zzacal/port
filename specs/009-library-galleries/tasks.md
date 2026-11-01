@@ -881,7 +881,7 @@ Runs in parallel with Batch G (disjoint files).
   specs/009-library-galleries/evidence/p95.sh specs/009-library-galleries/evidence/library-timings.log
   | tee specs/009-library-galleries/evidence/p95-output.txt`. SC-002, SC-003 and SC-005 must PASS
   with non-zero n. A miss is reported with the measured p95 in decisions.md (row 22), never hidden.
-- [ ] T058 Write `specs/009-library-galleries/evidence/verify.sh`, the **live-server curl
+- [X] T058 Write `specs/009-library-galleries/evidence/verify.sh`, the **live-server curl
   walkthrough** (tee to `verify-output.txt`), modelled on 008's `evidence/verify.sh`:
   1. The build and test gates.
   2. A throwaway S3Proxy container (stopped by id at exit) with buckets `gallery-dev-public-verify`
@@ -900,7 +900,7 @@ Runs in parallel with Batch G (disjoint files).
      `Mongo:Database=gallery_verify` (no `_dev`) → exit 4 and nothing changed.
   6. Check the captured server log (`evidence/verify-run.log`): one `http.request` per call and
      `edge.purge … log-only … skipped` after each public change. `pkill` appears nowhere.
-- [ ] T059 Run `bash specs/009-library-galleries/evidence/verify.sh | tee
+- [X] T059 Run `bash specs/009-library-galleries/evidence/verify.sh | tee
   specs/009-library-galleries/evidence/verify-output.txt` on the merged tree. Force-add
   `evidence/*.log` (`git add -f`) after grepping them for 32+-character tokens and redacting.
   Write `evidence/live-walkthrough.md` with the automated observations and a pointer to OWNER-ONLY

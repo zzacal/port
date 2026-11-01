@@ -283,3 +283,14 @@ Seed-consumer inventory (T047 step 0 grep at 27eef20, 134 lines):
     .gitignore:319:**/*.DesktopClient/ModelManifest.xml
     .gitignore:321:**/*.Server/ModelManifest.xml
     .gitignore:491:# Prepared derivatives of dev-pictures (local only; regenerate with scripts/prepare-photos.sh)
+
+== T059 final gate (subagent, after dotnet clean; head 606f367 + evidence files only) ==
+dotnet clean Gallery.slnx --artifacts-path artifacts
+build -warnaserror: 0 Warning(s), 0 Error(s)
+tests (full suite, no filter, --blame-hang-timeout 120s):
+  Gallery.Core.Tests  Passed 104, Failed 0, Skipped 0
+  Gallery.Web.Tests   Passed 904, Failed 0, Skipped 0
+  Total 1008 (baseline 779 -> +229), exit 0
+The run rewrites sc006-callbacks.log (007), upload-timings.log (008) and library-timings.log (009);
+all three were restored with git checkout afterwards.
+verify.sh (T058): ALL PASS, 53 PASS lines (gates there: 1005 passed with Category!=Evidence).
