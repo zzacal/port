@@ -332,7 +332,9 @@ public class SeederWithS3Tests : IClassFixture<MongoFixture>
                 Galleries =
                 [
                     new ManifestGallery { Key = "g-full", Title = "Full Gallery", Visibility = "public", Photos = [photo1Name, photo2Name] },
-                    new ManifestGallery { Key = "g-empty", Title = "Empty Gallery", Visibility = "public", Photos = [] },
+                    new ManifestGallery { Key = "g-empty", Title = "Empty Gallery", Visibility = "private", Photos = [] },
+                    // Public, but every photo is missing from .dev-prepared, so it ends up empty (II.6).
+                    new ManifestGallery { Key = "g-unmatched", Title = "Unmatched", Visibility = "public", Photos = ["not-prepared.jpg"] },
                 ],
                 Photos = new Dictionary<string, ManifestPhoto>
                 {
@@ -357,6 +359,11 @@ public class SeederWithS3Tests : IClassFixture<MongoFixture>
             Assert.True(empty.Contains("card"), "Empty gallery should have a card");
             var emptyCard = empty["card"].AsBsonDocument;
             Assert.False(emptyCard.Contains("cover"), "Empty gallery card should have no cover");
+
+            // II.6: only public galleries that hold an image are listed on the home page.
+            var site = await db.GetCollection<BsonDocument>("site").Find(FilterDefinition<BsonDocument>.Empty).SingleAsync();
+            var listed = site["homeCards"].AsBsonArray.Select(c => c["title"].AsString).ToList();
+            Assert.Equal(["Full Gallery"], listed);
         }
         finally { if (Directory.Exists(tmpDir)) Directory.Delete(tmpDir, true); }
     }

@@ -30,6 +30,30 @@ public class ManifestTests
         Assert.Empty(errors);
     }
 
+    /// <summary>Constitution II.6: a gallery must hold at least one image to be public.</summary>
+    [Fact]
+    public void Public_gallery_with_no_photos_is_an_error()
+    {
+        var path = WriteManifest("""
+            { "galleries": [ { "key": "coming-soon", "title": "Coming soon", "visibility": "public", "photos": [] } ], "photos": {} }
+            """);
+        var (_, errors) = ManifestLoader.Load(path);
+        var e = Assert.Single(errors);
+        Assert.Contains("coming-soon", e);
+        Assert.Contains("at least one photo", e);
+    }
+
+    [Fact]
+    public void Private_gallery_with_no_photos_is_allowed()
+    {
+        var path = WriteManifest("""
+            { "galleries": [ { "key": "draft", "visibility": "private", "photos": [] } ], "photos": {} }
+            """);
+        var (manifest, errors) = ManifestLoader.Load(path);
+        Assert.NotNull(manifest);
+        Assert.Empty(errors);
+    }
+
     [Fact]
     public void Missing_visibility_defaults_to_private()
     {

@@ -56,8 +56,10 @@ wait_up "$BASE/" || { fail start "app did not start on :5090"; exit 1; }
 
 home=$(curl -s "$BASE/")
 pubids=$(mongo 'db.galleries.find({visibility:"public"}).forEach(g=>print(g._id+" "+g.slug))')
-privids=$(mongo 'db.galleries.find({visibility:{$ne:"public"}}).forEach(g=>print(g._id+" "+g.slug+" "+(g.items[0]||"")))')
+# Non-empty private galleries: reachable by link, noindex. Empty ones are covered by the II.6 check.
+privids=$(mongo 'db.galleries.find({visibility:{$ne:"public"},"items.0":{$exists:true}}).forEach(g=>print(g._id+" "+g.slug+" "+g.items[0]))')
 privtitles=$(mongo 'db.galleries.find({visibility:{$ne:"public"}}).forEach(g=>print(g.title))')
+emptyids=$(mongo 'db.galleries.find({"items.0":{$exists:false}}).forEach(g=>print(g._id+" "+g.slug+" "+g.title))')
 
 # SC-002 private galleries
 bad=""
@@ -74,6 +76,17 @@ done <<< "$privids"
 while read -r t; do [ -n "$t" ] && echo "$home" | grep -qF ">$t<" && bad="$bad title:$t"; done <<< "$privtitles"
 np=$(echo "$privids" | grep -c .)
 [ -z "$bad" ] && [ "$np" -ge 1 ] && pass SC-002 "$np private gallery: not on /, noindex header+meta on gallery and photo page" || fail SC-002 "private=$np $bad"
+# II.6 empty galleries: never on /, page is 404 (whatever the visibility); no empty tile anywhere
+bad=""
+while read -r id slug title; do
+  [ -z "$id" ] && continue
+  echo "$home" | grep -q "$id" && bad="$bad listed:$id"
+  echo "$home" | grep -qF ">$title<" && bad="$bad title:$title"
+  code=$(curl -s -o /dev/null -w '%{http_code}' "$BASE/g/$id/$slug"); [ "$code" = 404 ] || bad="$bad /g/$id/$slug($code)"
+done <<< "$emptyids"
+echo "$home" | grep -q 'tile-empty' && bad="$bad tile-empty-on-home"
+ne=$(echo "$emptyids" | grep -c .)
+[ -z "$bad" ] && [ "$ne" -ge 1 ] && pass II.6 "$ne empty gallery: not on /, page 404, no empty tile" || fail II.6 "empty=$ne $bad"
 # negative case: public pages are indexable
 read -r pid pslug <<< "$(echo "$pubids" | head -1)"
 h=$(curl -s -D - -o /tmp/006-p.html "$BASE/g/$pid/$pslug")

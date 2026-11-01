@@ -125,12 +125,13 @@ galleries.append({
     "photos": unlisted_photos,
 })
 
-# FR-016: add "coming-soon" (public, no photos)
+# FR-016: add "coming-soon" (no photos). Private: a gallery needs at least one photo to be public
+# (constitution II.6), so the empty test case is a draft that must never be shown.
 galleries.append({
     "key": "coming-soon",
     "title": "Coming soon",
     "description": None,
-    "visibility": "public",
+    "visibility": "private",
     "cover": None,
     "photos": [],
 })

@@ -1,10 +1,11 @@
 PASS gate build: 0 warnings, 0 errors
-PASS gate tests: 385 passed in 2 assemblies
+PASS gate tests: 390 passed in 2 assemblies
 PASS SC-006 reseed: uploaded 0, 105 documents unchanged
 PASS SC-011 check-metadata.sh: 1116 prepared files clean
 PASS SC-011 seed second reader (DerivativeValidator): rejected 0
 PASS SC-011 images: 0 location field names
 PASS SC-002 1 private gallery: not on /, noindex header+meta on gallery and photo page
+PASS II.6 1 empty gallery: not on /, page 404, no empty tile
 PASS SC-002 public gallery page carries no noindex
 PASS SC-007 1116 distinct image URLs, all on https://img-dev.zacal.me/ (data: placeholders excluded)
 PASS SC-007 5 sampled image HEADs: Cache-Control immutable

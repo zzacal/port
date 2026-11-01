@@ -481,6 +481,41 @@ public class PublicRoutesTests(MongoFixture mongo) : IAsyncLifetime
         return count;
     }
 
+    // ── II.6: visitors never see an empty gallery ────────────────────────────────
+    // The seeded site doc deliberately still lists the empty public gallery: the home page must
+    // drop it even when the stored listing is stale, and its page must 404.
+
+    [Fact]
+    public async Task Empty_public_gallery_is_not_on_the_home_page()
+    {
+        var html = await _client!.GetStringAsync("/");
+        Assert.DoesNotContain(GalleryEmptyId, html);
+        Assert.DoesNotContain("Coming Soon", html);
+        Assert.DoesNotContain("tile-empty", html);
+        Assert.Contains("Autumn Walk", html); // the non-empty public galleries are still listed
+    }
+
+    [Fact]
+    public async Task Empty_gallery_page_is_not_found_whatever_its_visibility()
+    {
+        await _db!.GetCollection<Gallery.Web.Data.GalleryDoc>("galleries").InsertOneAsync(new Gallery.Web.Data.GalleryDoc
+        {
+            Id = "hhhhhhhhhhhhhhhhhhhhhhhh22", SeedKey = "empty-priv", Slug = "draft", Title = "Draft",
+            Visibility = "private", Items = [], Card = MakeCard("hhhhhhhhhhhhhhhhhhhhhhhh22", "draft", "Draft"),
+            UpdatedAt = DateTime.UtcNow,
+        });
+        foreach (var path in new[] { $"/g/{GalleryEmptyId}/coming-soon", "/g/hhhhhhhhhhhhhhhhhhhhhhhh22/draft" })
+        {
+            var resp = await _client!.GetAsync(path);
+            Assert.Equal(System.Net.HttpStatusCode.NotFound, resp.StatusCode);
+            Assert.Contains("Not found", await resp.Content.ReadAsStringAsync());
+            Assert.Equal("noindex", resp.Headers.GetValues("X-Robots-Tag").Single());
+        }
+        // /g/{id} must not redirect into a page that 404s
+        var shortResp = await _client!.GetAsync($"/g/{GalleryEmptyId}");
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, shortResp.StatusCode);
+    }
+
     // ── IV.12/IV.13/IV.17: every predictive fetch names what the destination will show ─────
     // The browser picks from <picture> by its FIRST supported <source> (AVIF), using that source's
     // srcset and sizes. A preload is reused only if it resolves to the same URL, so it must carry

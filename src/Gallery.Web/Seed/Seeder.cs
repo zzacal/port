@@ -468,7 +468,7 @@ public sealed class Seeder
 
         // ── Step 5f: update site document ──
         // homeOrder = all gallery IDs in manifest order (public and private)
-        // homeCards = cards for public galleries in homeOrder
+        // homeCards = cards for public galleries in homeOrder that hold at least one image (II.6)
         var siteCol = _db.GetCollection<BsonDocument>("site");
 
         // Re-query galleries to get final state
@@ -490,7 +490,8 @@ public sealed class Seeder
             homeOrder.Add(gid);
 
             var visibility = ManifestLoader.EffectiveVisibility(mg);
-            if (visibility == "public" && gDoc.Contains("card"))
+            // II.6: an empty gallery is never listed, even when public.
+            if (visibility == "public" && gDoc.Contains("card") && gDoc["card"].AsBsonDocument.Contains("cover"))
                 homeCards.Add(gDoc["card"].AsBsonDocument);
         }
 

@@ -86,6 +86,10 @@ public static partial class ManifestLoader
             if (vis != "public" && vis != "private")
                 errors.Add($"Gallery key \"{g.Key}\": visibility must be \"public\" or \"private\", got \"{g.Visibility}\"");
 
+            // II.6: a gallery must hold at least one photo to be public
+            if (vis == "public" && g.Photos.Count == 0)
+                errors.Add($"Gallery key \"{g.Key}\": a public gallery needs at least one photo (make it private, or add photos)");
+
             // Cover not in photos
             if (g.Cover is not null && !g.Photos.Contains(g.Cover))
                 errors.Add($"Gallery key \"{g.Key}\": cover \"{g.Cover}\" is not in photos list");

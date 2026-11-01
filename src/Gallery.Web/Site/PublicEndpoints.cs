@@ -28,7 +28,10 @@ public static class PublicEndpoints
             {
                 var site = await reader.HomeAsync();
                 var url = MakeUrl(store);
+                // II.6: never list an empty gallery. The seed already keeps them out of homeCards;
+                // filtering here too means a stale listing cannot show one either.
                 var cards = site?.HomeCards
+                    .Where(c => c.Cover is not null)
                     .Select(c => ViewMapper.ToCard(c, url))
                     .ToList() ?? [];
 
@@ -54,7 +57,7 @@ public static class PublicEndpoints
             try
             {
                 var gallery = await reader.GalleryAsync(id, forPhoto: false);
-                if (gallery is null)
+                if (gallery is null || gallery.Items.Count == 0) // II.6: an empty gallery is not shown
                     return NotFoundResult();
 
                 return (IResult)new ShortPolicyRedirectResult($"/g/{id}/{gallery.Slug}");
@@ -74,16 +77,14 @@ public static class PublicEndpoints
             try
             {
                 var gallery = await reader.GalleryAsync(id, forPhoto: false);
-                if (gallery is null)
+                if (gallery is null || gallery.Items.Count == 0) // II.6: an empty gallery is not shown
                     return NotFoundResult();
 
                 if (gallery.Slug != slug)
                     return (IResult)new ShortPolicyRedirectResult($"/g/{id}/{gallery.Slug}");
 
                 var url = MakeUrl(store);
-                var imageDocs = gallery.Items.Count > 0
-                    ? await reader.ImagesAsync(gallery.Items, full: false)
-                    : (IReadOnlyList<ImageDoc>)[];
+                var imageDocs = await reader.ImagesAsync(gallery.Items, full: false);
 
                 var noIndex = gallery.Visibility != "public";
                 var items = imageDocs.Select(img =>

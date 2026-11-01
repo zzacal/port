@@ -191,7 +191,7 @@
       "key": "coming-soon",
       "title": "Coming soon",
       "description": null,
-      "visibility": "public",
+      "visibility": "private",
       "cover": null,
       "photos": []
     }
