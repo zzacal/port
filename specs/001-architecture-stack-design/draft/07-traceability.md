@@ -12,7 +12,7 @@ can only be checked once the resource exists.
 | I.3 | D-04: every non-owner identity is refused and receives no session cookie | integration test: second identity gets 403 and no `Set-Cookie` | designed |
 | I.4 | D-04: no route writes `site` after the claim; recovery is a datastore operation | integration test: route inventory shows no claim-reset endpoint | designed |
 | I.5 | D-04, D-12: claim event logged with `sub`, client IP from `CF-Connecting-IP`, timestamp | log query: claim event present with all three fields | designed |
-| I.6 | D-06: built-in antiforgery on forms, required header token on JSON admin endpoints | integration test: admin POST without token is rejected | designed |
+| I.6 | D-06: explicit antiforgery validation filter on every non-safe `/admin` request, token from form field or `X-CSRF-TOKEN` header | integration test: admin POST without token is rejected, with and without an owner session (007 AdminAccessTests I-4) | designed |
 | II.1 | D-15: public pages need no account, cookie, or consent | integration test: anonymous GET of every public route returns 200 with no `Set-Cookie` | designed |
 | II.2 | D-14, D-16: private galleries absent from home, listings, sitemap; `noindex`; reachable by link; purge on change, 1-day TTL bound | integration test: private gallery absent from listings and carries `noindex`; L-12 | designed |
 | II.3 | D-14, D-07: 128-bit base32 ids; content-hash derivative names | integration test: ids are 26-char base32 and differ across titles | designed |
