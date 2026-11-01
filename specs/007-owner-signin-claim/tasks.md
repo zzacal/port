@@ -49,13 +49,13 @@ the story's own test file.
 
 ## Phase 1: Setup (high tier, before dispatch)
 
-- [ ] T001 Add the package with the CLI:
+- [X] T001 Add the package with the CLI:
   `dotnet add src/Gallery.Web package Microsoft.AspNetCore.Authentication.OpenIdConnect --version 10.0.14`.
   Build and test green; record the test count in `specs/007-owner-signin-claim/evidence/baseline.txt`.
-- [ ] T002 In `src/Gallery.Web/Properties/launchSettings.json` rename profile `http` to `https`
+- [X] T002 In `src/Gallery.Web/Properties/launchSettings.json` rename profile `http` to `https`
   and set `applicationUrl` to `https://localhost:5081;http://localhost:5080` (research R-09,
   decisions #6, #9). Nothing else in the file changes.
-- [ ] T003 Add `Action<WebApplicationBuilder>? configure = null` as a third optional parameter of
+- [X] T003 Add `Action<WebApplicationBuilder>? configure = null` as a third optional parameter of
   `AppBuilder.Build` in `src/Gallery.Web/AppBuilder.cs`, invoked right after the overrides are
   added. Existing callers are unchanged. Purpose: tests add a log-capturing provider (T037).
 
@@ -376,7 +376,7 @@ identical with and without it.
   `LogLines` (the formatted messages, one per line, no JSON, in the order logged) to
   `specs/007-owner-signin-claim/evidence/sc006-callbacks.log`. It stays in the default test run
   (it takes seconds), so the file is regenerated on every gate.
-- [ ] T032 Fold every executor `decisions_made` entry into `specs/007-owner-signin-claim/decisions.md`
+- [X] T032 Fold every executor `decisions_made` entry into `specs/007-owner-signin-claim/decisions.md`
   as numbered rows; reject any that contradict the contracts.
 - [ ] T033 Live walkthrough with real Google (owner at the keyboard, high tier guiding):
   quickstart.md steps 1–10 on `https://localhost:5081`, log captured to `evidence/live-run.log`;
