@@ -236,9 +236,16 @@ public sealed class AdminHost : IAsyncDisposable
     /// <summary>
     /// Mints a session cookie using the app's own TicketDataFormat.
     /// </summary>
-    public string MintSession(string sub, DateTimeOffset issued, DateTimeOffset expires)
+    public string MintSession(string sub, DateTimeOffset issued, DateTimeOffset expires) =>
+        MintSession(_app, sub, issued, expires);
+
+    /// <summary>
+    /// Mints an owner session for any hosted app with that app's own TicketDataFormat. Shared by
+    /// AdminHost and UploadBrowserFixture so there is one implementation.
+    /// </summary>
+    public static string MintSession(WebApplication app, string sub, DateTimeOffset issued, DateTimeOffset expires)
     {
-        var options = _app.Services
+        var options = app.Services
             .GetRequiredService<IOptionsMonitor<CookieAuthenticationOptions>>()
             .Get("owner");
 

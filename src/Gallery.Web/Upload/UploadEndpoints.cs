@@ -16,7 +16,7 @@ using MongoDB.Driver;
 namespace Gallery.Web.Upload;
 
 /// <summary>
-/// The 008 upload endpoints on the protected <c>/admin</c> group (contracts/http.md U1–U5, U7, U10).
+/// The 008 upload endpoints on the protected <c>/admin</c> group (contracts/http.md U1–U11).
 /// They inherit <c>RequireAuthorization("owner")</c> and <c>AdminAntiforgeryFilter</c> from the
 /// group. Shared rules: path ids must pass <see cref="OpaqueId.IsValid"/> (else 404); an item
 /// outside the OPEN batch is 404; <c>confirm-in-progress</c>, <c>stale-attempt</c> and
@@ -72,6 +72,16 @@ public static partial class UploadEndpoints
         admin.MapPost("/upload/confirm", (Delegate)Confirm)
             .WithMetadata(new RequestSizeLimitAttribute(SmallBodyLimit));
 
+        // U6, U8, U9 and U11 (Batch F).
+        admin.MapPost("/upload/items/{itemId}/fail", Fail)
+            .WithMetadata(new RequestSizeLimitAttribute(SmallBodyLimit));
+        admin.MapPost("/upload/items/{itemId}/restart", Restart)
+            .WithMetadata(new RequestSizeLimitAttribute(SmallBodyLimit));
+        admin.MapPost("/upload/items/{itemId}/delete", Delete)
+            .WithMetadata(new RequestSizeLimitAttribute(SmallBodyLimit));
+        admin.MapPost("/upload/discard", (Delegate)Discard)
+            .WithMetadata(new RequestSizeLimitAttribute(SmallBodyLimit));
+
         return admin;
     }
 
@@ -81,6 +91,7 @@ public static partial class UploadEndpoints
     public sealed record RegisterRequest(List<RegisterFile>? Files);
     public sealed record AttemptRequest(string? AttemptId);
     public sealed record ProgressRequest(string? AttemptId, string? State, int Percent);
+    public sealed record FailRequest(string? AttemptId, string? Reason);
     public sealed record PlaceholderInput(string? Color, string? Preview);
     public sealed record TimingInput(string? Op, double Ms);
 
@@ -266,19 +277,7 @@ public static partial class UploadEndpoints
             .Set("items.$.heartbeatAt", d.Now));
         if (!updated) return StaleAttempt();
 
-        var sizes = new List<object>();
-        foreach (var w in Ladder.For(master.Width))
-        {
-            var avif = await d.Images.PresignPutAsync(d.Priv, StagingKeys.Size(b, item.ItemId, a, w, "avif"), "image/avif", d.Options.PresignExpiry);
-            var webp = await d.Images.PresignPutAsync(d.Priv, StagingKeys.Size(b, item.ItemId, a, w, "webp"), "image/webp", d.Options.PresignExpiry);
-            sizes.Add(new
-            {
-                w,
-                avif = new { url = avif, contentType = "image/avif" },
-                webp = new { url = webp, contentType = "image/webp" },
-            });
-        }
-
+        var sizes = await PresignSizesAsync(d, b, item.ItemId, a, master.Width);
         return Results.Json(new { width = master.Width, height = master.Height, sizes });
     }
 
@@ -569,6 +568,203 @@ public static partial class UploadEndpoints
 
     private static IResult BatchNotFound() =>
         Error(404, "not-found", "That batch isn't open.");
+
+    // ── U6 POST /admin/upload/items/{itemId}/fail ────────────────────────────
+
+    /// <summary>Fallback stored when the page sends an empty (or all-control-character) reason.</summary>
+    public const string ClientFailedDefault = "failed while preparing";
+
+    /// <summary>
+    /// A client-side failure (contracts/http.md U6): the item must be effectively active; it becomes
+    /// <c>failed</c> with the page's reason, control characters stripped and capped at 200
+    /// characters. The attempt's staged files are KEPT until Restart or Delete (L-02).
+    /// </summary>
+    private static async Task<IResult> Fail(string itemId, HttpContext ctx)
+    {
+        var d = Deps.For(ctx);
+        var (body, batch, item, fail) = await ResolveAsync<FailRequest>(itemId, ctx, d, b => b.AttemptId);
+        if (fail is not null) return fail;
+        if (!IsActive(d.Effective(item!))) return NotActive();
+
+        var updated = await d.Store.UpdateItemAsync(batch!.Id, item!.ItemId, item.AttemptId, Builders<BatchDoc>.Update
+            .Set("items.$.state", ItemStates.Failed)
+            .Set("items.$.reason", SanitiseReason(body!.Reason))
+            .Set("items.$.heartbeatAt", d.Now));
+        return updated ? Results.NoContent() : StaleAttempt();
+    }
+
+    /// <summary>Control characters stripped, trimmed, capped at 200 characters; never empty.</summary>
+    public static string SanitiseReason(string? reason)
+    {
+        if (string.IsNullOrEmpty(reason)) return ClientFailedDefault;
+        var sb = new StringBuilder(reason.Length);
+        foreach (var ch in reason)
+            if (!char.IsControl(ch))
+                sb.Append(ch);
+        var s = sb.ToString().Trim();
+        if (s.Length > MaxReasonChars) s = s[..MaxReasonChars].TrimEnd();
+        return s.Length == 0 ? ClientFailedDefault : s;
+    }
+
+    // ── U8 POST /admin/upload/items/{itemId}/restart ─────────────────────────
+
+    /// <summary>
+    /// Restart (contracts/http.md U8, data-model L-03): effective failed or interrupted only. A new
+    /// attempt id; a stored master is copied server-side to the new attempt with if-match on its
+    /// recorded ETag; the old attempt prefix is deleted; the item is reset to queued. When the
+    /// master is not stored, or its staged copy is gone (a rejection or a refused confirm deleted
+    /// it) or changed, the page is asked for the file again (<c>needsFile</c>).
+    /// </summary>
+    private static async Task<IResult> Restart(string itemId, HttpContext ctx)
+    {
+        var d = Deps.For(ctx);
+        var (_, batch, item, fail) = await ResolveAsync<AttemptRequest>(itemId, ctx, d, b => b.AttemptId);
+        if (fail is not null) return fail;
+        if (d.Effective(item!) is not (ItemStates.Failed or ItemStates.Interrupted)) return NotActive();
+
+        var b = batch!.Id;
+        var old = item!.AttemptId;
+        var next = OpaqueId.NewId();
+        var master = await CarryMasterAsync(d, b, item, next);
+
+        var updated = await d.Store.UpdateItemAsync(b, item.ItemId, old, Builders<BatchDoc>.Update
+            .Set("items.$.attemptId", next)
+            .Set("items.$.state", ItemStates.Queued)
+            .Set("items.$.percent", 0)
+            .Set("items.$.reason", (string?)null)
+            .Set("items.$.stored", new List<string>())
+            .Set("items.$.validated", (ValidatedDoc?)null)
+            .Set("items.$.master", master)
+            .Set("items.$.heartbeatAt", d.Now));
+        if (!updated)
+        {
+            // Another request restarted or removed the item first: drop what this one staged.
+            await d.Images.DeletePrefixAsync(d.Priv, StagingKeys.AttemptPrefix(b, item.ItemId, next), d.Log);
+            return StaleAttempt();
+        }
+
+        await d.Images.DeletePrefixAsync(d.Priv, StagingKeys.AttemptPrefix(b, item.ItemId, old), d.Log);
+
+        if (master is null)
+        {
+            var url = await d.Images.PresignPutAsync(
+                d.Priv, StagingKeys.Master(b, item.ItemId, next), "image/jpeg", d.Options.PresignExpiry);
+            return Results.Json(new
+            {
+                attemptId = next,
+                needsFile = true,
+                fileName = item.FileName,
+                master = new { url, contentType = "image/jpeg" },
+            });
+        }
+
+        return Results.Json(new
+        {
+            attemptId = next,
+            needsFile = false,
+            fileName = item.FileName,
+            sizes = await PresignSizesAsync(d, b, item.ItemId, next, master.Width),
+        });
+    }
+
+    /// <summary>
+    /// Copies the stored master to the new attempt (if-match on the recorded ETag) and returns the
+    /// master record for the new key, or null when there is nothing to carry over.
+    /// </summary>
+    private static async Task<MasterDoc?> CarryMasterAsync(Deps d, string batchId, BatchItemDoc item, string next)
+    {
+        if (item.Master is null) return null;
+        var from = StagingKeys.Master(batchId, item.ItemId, item.AttemptId);
+        var to = StagingKeys.Master(batchId, item.ItemId, next);
+
+        var (exists, _, _) = await d.Images.HeadAsync(d.Priv, from);
+        if (!exists) return null;
+        var outcome = await d.Images.CopyIfMatchAsync(d.Priv, from, d.Priv, to, item.Master.Etag,
+            "image/jpeg", ConfirmService.MasterCacheControl);
+        if (outcome != CopyOutcome.Copied) return null;
+
+        // Record the copy's own ETag, so U7's re-check compares against the object at the new key.
+        var (copied, length, etag) = await d.Images.HeadAsync(d.Priv, to);
+        if (!copied || etag is null || length != item.Master.Length) return null;
+        return new MasterDoc { Length = length, Etag = etag, Width = item.Master.Width, Height = item.Master.Height };
+    }
+
+    // ── U9 POST /admin/upload/items/{itemId}/delete ──────────────────────────
+
+    /// <summary>
+    /// Delete (contracts/http.md U9, L-04): any state, idempotent for the open batch. An
+    /// <c>attemptId</c>, when sent, must be current (409 stale-attempt). The item is
+    /// <c>$pull</c>ed and its whole <c>staging/{b}/{i}/</c> prefix (all attempts) deleted. An item
+    /// that is already gone from the open batch answers 204 again and its prefix is swept again.
+    /// </summary>
+    private static async Task<IResult> Delete(string itemId, HttpContext ctx)
+    {
+        if (!OpaqueId.IsValid(itemId)) return NotFound();
+        var d = Deps.For(ctx);
+        var (body, bad) = await ReadAsync<AttemptRequest>(ctx);
+        if (bad is not null) return bad;
+
+        var batch = await d.Store.GetOpenAsync();
+        if (batch is null) return NotFound();
+        if (batch.ConfirmStartedAt is not null) return ConfirmInProgress();
+
+        var item = batch.Items.FirstOrDefault(i => i.ItemId == itemId);
+        if (item is not null && !string.IsNullOrEmpty(body!.AttemptId)
+            && !string.Equals(body.AttemptId, item.AttemptId, StringComparison.Ordinal))
+            return StaleAttempt();
+
+        if (item is not null)
+            await d.Store.PullItemAsync(batch.Id, itemId);
+        await d.Images.DeletePrefixAsync(d.Priv, StagingKeys.ItemPrefix(batch.Id, itemId), d.Log);
+        return Results.NoContent();
+    }
+
+    // ── U11 POST /admin/upload/discard ───────────────────────────────────────
+
+    /// <summary>
+    /// Discard (contracts/http.md U11, L-06): the open, not-confirming batch becomes
+    /// <c>discarded</c> and its whole <c>staging/{batchId}/</c> prefix is deleted. The state change
+    /// comes first, so a Confirm can never start on a batch whose files are being removed.
+    /// </summary>
+    private static async Task<IResult> Discard(HttpContext ctx)
+    {
+        var d = Deps.For(ctx);
+        var (body, bad) = await ReadAsync<BatchRequest>(ctx);
+        if (bad is not null) return bad;
+        if (!OpaqueId.IsValid(body!.BatchId)) return BatchNotFound();
+
+        var batch = await d.Store.GetOpenAsync();
+        if (batch is null || batch.Id != body.BatchId) return BatchNotFound();
+        if (batch.ConfirmStartedAt is not null) return ConfirmInProgress();
+
+        if (!await d.Store.MarkDiscardedAsync(batch.Id))
+        {
+            var now = await d.Store.GetByIdAsync(batch.Id);
+            return now is { State: BatchStates.Open, ConfirmStartedAt: not null } ? ConfirmInProgress() : BatchNotFound();
+        }
+
+        await d.Images.DeletePrefixAsync(d.Priv, StagingKeys.BatchPrefix(batch.Id), d.Log);
+        d.Log.LogInformation("upload.discarded {batch} {count}", batch.Id, batch.Items.Count);
+        return Results.Json(new { redirect = "/admin/upload" });
+    }
+
+    /// <summary>Presigned PUTs for every ladder width of <paramref name="width"/> (U4 and U8 shape).</summary>
+    private static async Task<List<object>> PresignSizesAsync(Deps d, string batchId, string itemId, string attemptId, int width)
+    {
+        var sizes = new List<object>();
+        foreach (var w in Ladder.For(width))
+        {
+            var avif = await d.Images.PresignPutAsync(d.Priv, StagingKeys.Size(batchId, itemId, attemptId, w, "avif"), "image/avif", d.Options.PresignExpiry);
+            var webp = await d.Images.PresignPutAsync(d.Priv, StagingKeys.Size(batchId, itemId, attemptId, w, "webp"), "image/webp", d.Options.PresignExpiry);
+            sizes.Add(new
+            {
+                w,
+                avif = new { url = avif, contentType = "image/avif" },
+                webp = new { url = webp, contentType = "image/webp" },
+            });
+        }
+        return sizes;
+    }
 
     // ── shared ───────────────────────────────────────────────────────────────
 

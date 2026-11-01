@@ -530,7 +530,7 @@ completes, with no browser.
 **Owns**: `UploadEndpoints.cs` (U6, U8, U9, U11 additions),
 `tests/Gallery.Web.Tests/{UploadIntakeTests,UploadLifecycleTests,UploadResumeTests,UploadAccessTests}.cs`.
 
-- [ ] T036 [US3] Write `tests/Gallery.Web.Tests/UploadIntakeTests.cs` (US3 AS-4/5, FR-005):
+- [X] T036 [US3] Write `tests/Gallery.Web.Tests/UploadIntakeTests.cs` (US3 AS-4/5, FR-005):
   - register with a `type:"image/png"` entry, a `size:20971521` entry and an empty name → each is
     refused with the exact contract string while the valid entries are accepted in the same call;
   - a batch of 95 plus 10 → 5 accepted and 5 "batch is full (100 photos)";
@@ -540,7 +540,7 @@ completes, with no browser.
     JPEG", item `failed`, attempt prefix empty;
   - a staged master over `MaxFileBytes` (host override `Upload:MaxFileBytes=1000`) → 422 with the
     size reason.
-- [ ] T037 [US4] Implement in `UploadEndpoints.cs`, exactly per contracts/http.md, through
+- [X] T037 [US4] Implement in `UploadEndpoints.cs`, exactly per contracts/http.md, through
   `BatchStore` and `DeletePrefixAsync` (FR-011–FR-013, FR-036):
   - U6 `fail` (reason ≤ 200 chars, control chars stripped);
   - U8 `restart` (new attemptId; master `CopyIfMatchAsync` to the new attempt when `master` is
@@ -548,7 +548,7 @@ completes, with no browser.
   - U9 `delete` (`$pull`, item prefix deleted, idempotent);
   - U11 `discard` (batch prefix deleted, `discarded`, `upload.discarded {batch} {count}`).
   All four answer 409 `confirm-in-progress` while confirming.
-- [ ] T038 [US4] Write `tests/Gallery.Web.Tests/UploadLifecycleTests.cs`:
+- [X] T038 [US4] Write `tests/Gallery.Web.Tests/UploadLifecycleTests.cs`:
   - U6 → `failed` with the reason, other items untouched (FR-017);
   - restart with a stored master → `needsFile:false`, sizes returned, the master present under
     the new attempt, the old attempt prefix empty, and the old attemptId on U5 → 409; a PUT to an
@@ -563,7 +563,7 @@ completes, with no browser.
   - `ImageStore.TryDeleteAsync` with a throwing delegate logs exactly one
     `upload.cleanup_failed {key} {error}` with the exception type name and does not throw
     (decisions row 44).
-- [ ] T039 [US5] Write `tests/Gallery.Web.Tests/UploadResumeTests.cs` (SC-005, FR-008, FR-010):
+- [X] T039 [US5] Write `tests/Gallery.Web.Tests/UploadResumeTests.cs` (SC-005, FR-008, FR-010):
   - with a batch of items in queued, processing, uploading and succeeded, advance `Clock` by 121 s
     → U2 and the page show `interrupted` for exactly the first three and `succeeded` for the
     fourth;
@@ -571,7 +571,7 @@ completes, with no browser.
   - Restart works on it;
   - two registers from two `UploadHost` clients (same session) → one batch id;
   - while a batch is open, `/` and a gallery page are byte-identical to a no-batch run (US5 AS-4).
-- [ ] T040 [US1] **[SAFETY]** Write `tests/Gallery.Web.Tests/UploadAccessTests.cs` (FR-001, I.3,
+- [X] T040 [US1] **[SAFETY]** Write `tests/Gallery.Web.Tests/UploadAccessTests.cs` (FR-001, I.3,
   I.6, plan item 5). It is a theory over every U2–U11 route and method:
   - without a session, GET → 302 `/admin/signin` and POST → 401;
   - with a session and NO `X-CSRF-TOKEN` → 400 for every POST, with the batch document unchanged;
@@ -605,7 +605,7 @@ completes, with no browser.
 `tests/Gallery.Web.Tests/UploadBrowserTests.cs`. It does not edit `BrowserSiteFixture.cs` or
 `S3ProxyFixture.cs`.
 
-- [ ] T042 [US1] Write `src/Gallery.Web/wwwroot/admin-assets/upload-worker.js` exactly per
+- [X] T042 [US1] Write `src/Gallery.Web/wwwroot/admin-assets/upload-worker.js` exactly per
   contracts/components.md C5 and research R-02:
   - relative imports of the vendored factories, with options from each package's `meta.js`
     defaults (AVIF quality 50 speed 6; WebP quality 75 method 4; preview WebP quality 40);
@@ -615,7 +615,7 @@ completes, with no browser.
   - timings named exactly as listed in the Rules;
   - `bitmap.close()` in `finally`;
   - any error (incl. `RangeError`) → `{ok:false, reason}`.
-- [ ] T043 [US1] Write `src/Gallery.Web/wwwroot/admin-assets/upload.js` exactly per
+- [X] T043 [US1] Write `src/Gallery.Web/wwwroot/admin-assets/upload.js` exactly per
   contracts/components.md C4 (steps 1–8):
   - pick-time refusal by the first 3 bytes, the size, and the remaining capacity, with the exact
     strings;
@@ -626,7 +626,7 @@ completes, with no browser.
   - Restart, Delete, Discard and Confirm per steps 5–7;
   - `X-CSRF-TOKEN` and `credentials:"same-origin"` on every app call.
   Header comment: how footer counts are replaced by structure (C3 Templates).
-- [ ] T044 [US1] Create `tests/Gallery.Web.Tests/Fixtures/UploadBrowserFixture.cs`
+- [X] T044 [US1] Create `tests/Gallery.Web.Tests/Fixtures/UploadBrowserFixture.cs`
   (`[CollectionDefinition("upload-browser")]`), following references/browser-verification.md:
   - its own Mongo database (MongoFixture container) and its own S3Proxy container configured per
     T041's result;
@@ -638,7 +638,7 @@ completes, with no browser.
   - headless Chrome via `Channel="chrome"`, with the T041 flags if the fallback applies;
   - a fixture guard test: GET `/admin/upload` in the browser shows `upload-batch` without
     `hidden` after load.
-- [ ] T045 [US1] Write `tests/Gallery.Web.Tests/UploadBrowserTests.cs`
+- [X] T045 [US1] Write `tests/Gallery.Web.Tests/UploadBrowserTests.cs`
   (`[Trait("Category","Browser")]`, `[Collection("upload-browser")]`):
   - `Worker_path_two_photos_reach_ready_and_confirm` (US1 AS-2/4/6, FR-014): set the file input to
     `orientation-6.jpg` and `gps-camera.jpg`; wait (≤ 60 s) for 2 tiles in `state-succeeded`;
