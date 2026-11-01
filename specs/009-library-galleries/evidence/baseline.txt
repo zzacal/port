@@ -1,0 +1,285 @@
+009 T001 baseline (2026-11-01, unattended run)
+
+Head: bbadc165dbf4548fa212d943263a7a5aec6a6622 (bbadc16; src/ and tests/ are byte-identical to 27eef20: 'git diff --quiet 27eef20 bbadc16 -- src tests' exits 0)
+
+Build: dotnet clean + dotnet build Gallery.slnx -warnaserror --artifacts-path artifacts
+  Warning count: 0 (Build succeeded, 0 Warning(s), 0 Error(s))
+
+Test: dotnet test Gallery.slnx --no-build --artifacts-path artifacts --blame-hang-timeout 120s
+  Passed!  - Failed:     0, Passed:   104, Skipped:     0, Total:   104, Duration: 122 ms - Gallery.Core.Tests.dll (net10.0)
+  Passed!  - Failed:     0, Passed:   675, Skipped:     0, Total:   675, Duration: 1 m 22 s - Gallery.Web.Tests.dll (net10.0)
+  Total: 779 (104 + 675), 0 failed, 0 skipped
+  The run rewrites specs/007-owner-signin-claim/evidence/sc006-callbacks.log and
+  specs/008-upload-pipeline/evidence/upload-timings.log; both are restored with git checkout before every commit.
+
+Byte-identity guards pinning pre-change output (must pass UNMODIFIED):
+  tests/Gallery.Web.Tests/PublicOutputUnchangedTests.cs
+  tests/Gallery.Web.Tests/UiPagesUnchangedTests.cs
+  tests/Gallery.Web.Tests/OrganismStatePageTests.cs
+
+Checkpoint rule: 'git diff --stat 27eef20 -- tests/' may show only NEW files and the files named in T036 and T047.
+
+Files under tests/ at 27eef20 (git ls-files tests, 99 files):
+  tests/Gallery.Core.Tests/AdminTokensTests.cs
+  tests/Gallery.Core.Tests/ExifFormatTests.cs
+  tests/Gallery.Core.Tests/Gallery.Core.Tests.csproj
+  tests/Gallery.Core.Tests/GalleryNavTests.cs
+  tests/Gallery.Core.Tests/LadderTests.cs
+  tests/Gallery.Core.Tests/OpaqueIdTests.cs
+  tests/Gallery.Core.Tests/ServerTimingTests.cs
+  tests/Gallery.Core.Tests/SizesTests.cs
+  tests/Gallery.Core.Tests/SlugTests.cs
+  tests/Gallery.Core.Tests/SrcSetTests.cs
+  tests/Gallery.Core.Tests/TokenMediaAgreementTests.cs
+  tests/Gallery.Core.Tests/TokensTests.cs
+  tests/Gallery.Web.Tests/AdminAccessTests.cs
+  tests/Gallery.Web.Tests/AllPagesTests.cs
+  tests/Gallery.Web.Tests/AtomComponentTests.cs
+  tests/Gallery.Web.Tests/AtomMoleculeStatePageTests.cs
+  tests/Gallery.Web.Tests/AtomPageTests.cs
+  tests/Gallery.Web.Tests/BatchStoreTests.cs
+  tests/Gallery.Web.Tests/BrowserTests.cs
+  tests/Gallery.Web.Tests/CameraFieldsTests.cs
+  tests/Gallery.Web.Tests/ClaimRaceTests.cs
+  tests/Gallery.Web.Tests/ComponentAdditionsTests.cs
+  tests/Gallery.Web.Tests/ContainerParserTests.cs
+  tests/Gallery.Web.Tests/DerivativeValidatorTests.cs
+  tests/Gallery.Web.Tests/EffectiveStateTests.cs
+  tests/Gallery.Web.Tests/Fixtures/AdminHost.cs
+  tests/Gallery.Web.Tests/Fixtures/BrowserSiteFixture.cs
+  tests/Gallery.Web.Tests/Fixtures/EncodedFixtures.cs
+  tests/Gallery.Web.Tests/Fixtures/FakeGoogle.cs
+  tests/Gallery.Web.Tests/Fixtures/MongoFixture.cs
+  tests/Gallery.Web.Tests/Fixtures/MutableTimeProvider.cs
+  tests/Gallery.Web.Tests/Fixtures/R2Fixture.cs
+  tests/Gallery.Web.Tests/Fixtures/S3ProxyFixture.cs
+  tests/Gallery.Web.Tests/Fixtures/UploadBrowserFixture.cs
+  tests/Gallery.Web.Tests/Fixtures/UploadFixtures.cs
+  tests/Gallery.Web.Tests/Fixtures/UploadHost.cs
+  tests/Gallery.Web.Tests/Gallery.Web.Tests.csproj
+  tests/Gallery.Web.Tests/Guards.cs
+  tests/Gallery.Web.Tests/GuardsStripStyle.cs
+  tests/Gallery.Web.Tests/IndexTests.cs
+  tests/Gallery.Web.Tests/LayoutFontCssTests.cs
+  tests/Gallery.Web.Tests/ManifestTests.cs
+  tests/Gallery.Web.Tests/MasterCheckTests.cs
+  tests/Gallery.Web.Tests/MoleculeComponentTests.cs
+  tests/Gallery.Web.Tests/MoleculePageTests.cs
+  tests/Gallery.Web.Tests/OpTimerTests.cs
+  tests/Gallery.Web.Tests/OrganismComponentTests.cs
+  tests/Gallery.Web.Tests/OrganismPageTests.cs
+  tests/Gallery.Web.Tests/OrganismStatePageTests.cs
+  tests/Gallery.Web.Tests/OwnerClaimTests.cs
+  tests/Gallery.Web.Tests/OwnerSessionTests.cs
+  tests/Gallery.Web.Tests/OwnerWriteGuardTests.cs
+  tests/Gallery.Web.Tests/PageComponentTests.cs
+  tests/Gallery.Web.Tests/PictureLayoutCssTests.cs
+  tests/Gallery.Web.Tests/PublicOutputUnchangedTests.cs
+  tests/Gallery.Web.Tests/PublicRoutesTests.cs
+  tests/Gallery.Web.Tests/R2ScopeTests.cs
+  tests/Gallery.Web.Tests/RefusalTests.cs
+  tests/Gallery.Web.Tests/Render.cs
+  tests/Gallery.Web.Tests/SeedCommandTests.cs
+  tests/Gallery.Web.Tests/SeederTests.cs
+  tests/Gallery.Web.Tests/SignInComponentTests.cs
+  tests/Gallery.Web.Tests/SignInTimingEvidenceTests.cs
+  tests/Gallery.Web.Tests/StorageTests.cs
+  tests/Gallery.Web.Tests/TemplatePageTests.cs
+  tests/Gallery.Web.Tests/TileContactSheetAdditionsTests.cs
+  tests/Gallery.Web.Tests/UiOwnerOnlyTests.cs
+  tests/Gallery.Web.Tests/UiPagesUnchangedTests.cs
+  tests/Gallery.Web.Tests/UploadAccessTests.cs
+  tests/Gallery.Web.Tests/UploadBrowserTests.cs
+  tests/Gallery.Web.Tests/UploadComponentAdditionsTests.cs
+  tests/Gallery.Web.Tests/UploadConfirmTests.cs
+  tests/Gallery.Web.Tests/UploadFlowTests.cs
+  tests/Gallery.Web.Tests/UploadIntakeTests.cs
+  tests/Gallery.Web.Tests/UploadLifecycleTests.cs
+  tests/Gallery.Web.Tests/UploadPageTests.cs
+  tests/Gallery.Web.Tests/UploadResumeTests.cs
+  tests/Gallery.Web.Tests/UploadSecretScanTests.cs
+  tests/Gallery.Web.Tests/UploadSeedCoexistenceTests.cs
+  tests/Gallery.Web.Tests/UploadSourceGuardTests.cs
+  tests/Gallery.Web.Tests/UploadStorageTests.cs
+  tests/Gallery.Web.Tests/UploadTimingEvidenceTests.cs
+  tests/Gallery.Web.Tests/UploadValidatorTests.cs
+  tests/Gallery.Web.Tests/ViewMapperTests.cs
+  tests/fixtures/camera-subifd.jpg
+  tests/fixtures/gps-camera.jpg
+  tests/fixtures/not-a-jpeg.jpg
+  tests/fixtures/orientation-6.jpg
+  tests/fixtures/upload/fixture-6000x4000.jpg
+  tests/fixtures/upload/gps-320.avif
+  tests/fixtures/upload/gps-320.webp
+  tests/fixtures/upload/gps-cwebp.webp
+  tests/fixtures/upload/gps-placeholder.webp
+  tests/fixtures/upload/gps-sips.avif
+  tests/fixtures/upload/icc.webp
+  tests/fixtures/upload/orient6-200.avif
+  tests/fixtures/upload/orient6-200.webp
+  tests/fixtures/upload/orient6-placeholder.webp
+  tests/fixtures/upload/placeholder-exif.webp
+
+Seed-consumer inventory (T047 step 0 grep at 27eef20, 134 lines):
+  grep -rn -E "Seeder|SeedCommand|Manifest\b|PhotoJson|seed-manifest|prepare-photos|Gallery\.Web\.Seed|EnsureSeedKeyIndexesAsync|\"seed\"" src tests scripts .gitignore
+  Per file:
+     3 .gitignore
+     1 scripts/prepare-photos.sh
+     1 scripts/seed-manifest.sh
+     2 src/Gallery.Web/Program.cs
+     1 src/Gallery.Web/Seed/CameraFields.cs
+     1 src/Gallery.Web/Seed/DerivativeValidator.cs
+    10 src/Gallery.Web/Seed/Manifest.cs
+     8 src/Gallery.Web/Seed/PhotoJson.cs
+     5 src/Gallery.Web/Seed/SeedCommand.cs
+    17 src/Gallery.Web/Seed/Seeder.cs
+     2 src/Gallery.Web/Ui/SampleCatalog.cs
+     1 src/Gallery.Web/Upload/ConfirmService.cs
+     1 src/Gallery.Web/Upload/MasterCheck.cs
+     1 src/Gallery.Web/Upload/UploadValidator.cs
+     1 tests/Gallery.Web.Tests/CameraFieldsTests.cs
+     1 tests/Gallery.Web.Tests/DerivativeValidatorTests.cs
+     1 tests/Gallery.Web.Tests/Fixtures/BrowserSiteFixture.cs
+    14 tests/Gallery.Web.Tests/ManifestTests.cs
+     5 tests/Gallery.Web.Tests/OwnerClaimTests.cs
+     3 tests/Gallery.Web.Tests/OwnerWriteGuardTests.cs
+    11 tests/Gallery.Web.Tests/SeedCommandTests.cs
+    32 tests/Gallery.Web.Tests/SeederTests.cs
+     5 tests/Gallery.Web.Tests/UploadConfirmTests.cs
+     6 tests/Gallery.Web.Tests/UploadSeedCoexistenceTests.cs
+     1 tests/Gallery.Web.Tests/UploadValidatorTests.cs
+  Lines:
+    src/Gallery.Web/Ui/SampleCatalog.cs:24:        var manifest = JsonSerializer.Deserialize<Manifest>(stream, JsonOptions)
+    src/Gallery.Web/Ui/SampleCatalog.cs:54:    private sealed record Manifest(List<Photo> Photos);
+    src/Gallery.Web/Seed/Manifest.cs:5:namespace Gallery.Web.Seed;
+    src/Gallery.Web/Seed/Manifest.cs:7:// ── Manifest model ────────────────────────────────────────────────────────────
+    src/Gallery.Web/Seed/Manifest.cs:25:public sealed class Manifest
+    src/Gallery.Web/Seed/Manifest.cs:48:    public static (Manifest? manifest, IReadOnlyList<string> errors) Load(string path)
+    src/Gallery.Web/Seed/Manifest.cs:51:            return (null, [$"Manifest file not found: {path}"]);
+    src/Gallery.Web/Seed/Manifest.cs:53:        Manifest manifest;
+    src/Gallery.Web/Seed/Manifest.cs:57:            manifest = JsonSerializer.Deserialize<Manifest>(json, _opts)
+    src/Gallery.Web/Seed/Manifest.cs:58:                       ?? new Manifest();
+    src/Gallery.Web/Seed/Manifest.cs:62:            return (null, [$"Manifest JSON parse error: {ex.Message}"]);
+    src/Gallery.Web/Seed/Manifest.cs:69:    public static IReadOnlyList<string> Validate(Manifest manifest)
+    src/Gallery.Web/Seed/PhotoJson.cs:4:namespace Gallery.Web.Seed;
+    src/Gallery.Web/Seed/PhotoJson.cs:9:public sealed class PhotoJsonDerivative
+    src/Gallery.Web/Seed/PhotoJson.cs:19:/// Represents the photo.json file written by prepare-photos.sh in .dev-prepared/{sourceHash}/.
+    src/Gallery.Web/Seed/PhotoJson.cs:21:public sealed class PhotoJson
+    src/Gallery.Web/Seed/PhotoJson.cs:29:    [JsonPropertyName("derivatives")]  public List<PhotoJsonDerivative> Derivatives { get; set; } = [];
+    src/Gallery.Web/Seed/PhotoJson.cs:32:public static class PhotoJsonLoader
+    src/Gallery.Web/Seed/PhotoJson.cs:39:    public static PhotoJson Load(string path)
+    src/Gallery.Web/Seed/PhotoJson.cs:42:        return JsonSerializer.Deserialize<PhotoJson>(json, _opts)
+    src/Gallery.Web/Seed/Seeder.cs:8:namespace Gallery.Web.Seed;
+    src/Gallery.Web/Seed/Seeder.cs:20:    int UnmatchedManifest,
+    src/Gallery.Web/Seed/Seeder.cs:26:/// Seeder: reconciles the manifest + prepared photos into Mongo and S3 (public bucket only).
+    src/Gallery.Web/Seed/Seeder.cs:29:public sealed class Seeder
+    src/Gallery.Web/Seed/Seeder.cs:35:    private readonly Manifest _manifest;
+    src/Gallery.Web/Seed/Seeder.cs:43:    public Seeder(
+    src/Gallery.Web/Seed/Seeder.cs:44:        Manifest manifest,
+    src/Gallery.Web/Seed/Seeder.cs:64:        // Key: sourceName (from photo.json), Value: (sourceHash, PhotoJson, directory path)
+    src/Gallery.Web/Seed/Seeder.cs:65:        var prepared = new Dictionary<string, (string hash, PhotoJson photo, string dir)>(StringComparer.OrdinalIgnoreCase);
+    src/Gallery.Web/Seed/Seeder.cs:73:                var photoJson = PhotoJsonLoader.Load(photoJsonPath);
+    src/Gallery.Web/Seed/Seeder.cs:85:        var unmatchedManifest = manifestPhotoNames.Where(n => !prepared.ContainsKey(n)).ToList();
+    src/Gallery.Web/Seed/Seeder.cs:88:        foreach (var n in unmatchedManifest)
+    src/Gallery.Web/Seed/Seeder.cs:103:        // Map: sourceName → (camera Exif, PhotoJson, already validated)
+    src/Gallery.Web/Seed/Seeder.cs:104:        var validatedPhotos = new Dictionary<string, (Gallery.Core.Images.Exif? camera, PhotoJson photo, string dir)>(StringComparer.OrdinalIgnoreCase);
+    src/Gallery.Web/Seed/Seeder.cs:516:            UnmatchedManifest: unmatchedManifest.Count,
+    src/Gallery.Web/Seed/Seeder.cs:536:    private Task EnsureIndexesAsync(CancellationToken ct) => EnsureSeedKeyIndexesAsync(_db, ct);
+    src/Gallery.Web/Seed/Seeder.cs:543:    public static async Task EnsureSeedKeyIndexesAsync(IMongoDatabase db, CancellationToken ct = default)
+    src/Gallery.Web/Seed/SeedCommand.cs:8:namespace Gallery.Web.Seed;
+    src/Gallery.Web/Seed/SeedCommand.cs:14:public static class SeedCommand
+    src/Gallery.Web/Seed/SeedCommand.cs:118:                await @out.WriteLineAsync($"Manifest error: {err}");
+    src/Gallery.Web/Seed/SeedCommand.cs:130:        var seeder = new Seeder(
+    src/Gallery.Web/Seed/SeedCommand.cs:148:        await @out.WriteLineAsync($"unmatched manifest: {summary.UnmatchedManifest}");
+    src/Gallery.Web/Seed/DerivativeValidator.cs:6:namespace Gallery.Web.Seed;
+    src/Gallery.Web/Seed/CameraFields.cs:5:namespace Gallery.Web.Seed;
+    src/Gallery.Web/Upload/MasterCheck.cs:3:using Gallery.Web.Seed;
+    src/Gallery.Web/Upload/UploadValidator.cs:4:using Gallery.Web.Seed;
+    src/Gallery.Web/Upload/ConfirmService.cs:78:        var lazy = SeedKeyIndexEnsured.GetOrAdd(key, _ => new Lazy<Task>(() => Gallery.Web.Seed.Seeder.EnsureSeedKeyIndexesAsync(db)));
+    src/Gallery.Web/Program.cs:1:if (args.Length > 0 && args[0] == "seed")
+    src/Gallery.Web/Program.cs:3:    return await Gallery.Web.Seed.SeedCommand.RunAsync(args, Console.Out);
+    tests/Gallery.Web.Tests/ManifestTests.cs:1:using Gallery.Web.Seed;
+    tests/Gallery.Web.Tests/ManifestTests.cs:10:    private static string WriteManifest(string json)
+    tests/Gallery.Web.Tests/ManifestTests.cs:20:        var path = WriteManifest("""
+    tests/Gallery.Web.Tests/ManifestTests.cs:37:        var path = WriteManifest("""
+    tests/Gallery.Web.Tests/ManifestTests.cs:49:        var path = WriteManifest("""
+    tests/Gallery.Web.Tests/ManifestTests.cs:60:        var path = WriteManifest("""
+    tests/Gallery.Web.Tests/ManifestTests.cs:88:        var path = WriteManifest("""
+    tests/Gallery.Web.Tests/ManifestTests.cs:104:        var path = WriteManifest("""
+    tests/Gallery.Web.Tests/ManifestTests.cs:117:        var path = WriteManifest("""
+    tests/Gallery.Web.Tests/ManifestTests.cs:130:        var path = WriteManifest("""
+    tests/Gallery.Web.Tests/ManifestTests.cs:144:        var path = WriteManifest($$"""
+    tests/Gallery.Web.Tests/ManifestTests.cs:158:        var path = WriteManifest($$"""
+    tests/Gallery.Web.Tests/ManifestTests.cs:172:        var path = WriteManifest($$"""
+    tests/Gallery.Web.Tests/ManifestTests.cs:185:        var path = WriteManifest("""
+    tests/Gallery.Web.Tests/SeederTests.cs:2:using Gallery.Web.Seed;
+    tests/Gallery.Web.Tests/SeederTests.cs:12:/// T031: SeederTests — integration tests using MongoFixture + S3ProxyFixture.
+    tests/Gallery.Web.Tests/SeederTests.cs:17:public class SeederWithS3Tests : IClassFixture<MongoFixture>
+    tests/Gallery.Web.Tests/SeederTests.cs:22:    public SeederWithS3Tests(MongoFixture mongo, S3ProxyFixture s3)
+    tests/Gallery.Web.Tests/SeederTests.cs:141:    private Manifest MakeManifest(string photo1Name, string photo2Name, bool includePrivate = true) => new()
+    tests/Gallery.Web.Tests/SeederTests.cs:168:            var manifest = MakeManifest(photo1Name, photo2Name);
+    tests/Gallery.Web.Tests/SeederTests.cs:169:            var seeder = new Seeder(manifest, preparedRoot, "/dev/null", NewStore(), db, NullLogger.Instance, _s3.StorageOptions.PublicBucket!);
+    tests/Gallery.Web.Tests/SeederTests.cs:176:            Assert.Equal(0, summary.UnmatchedManifest);
+    tests/Gallery.Web.Tests/SeederTests.cs:218:            var manifest = MakeManifest(photo1Name, photo2Name, includePrivate: false);
+    tests/Gallery.Web.Tests/SeederTests.cs:222:            var seeder1 = new Seeder(manifest, preparedRoot, "/dev/null", store, db, NullLogger.Instance, _s3.StorageOptions.PublicBucket!);
+    tests/Gallery.Web.Tests/SeederTests.cs:231:            var seeder2 = new Seeder(manifest, preparedRoot, "/dev/null", store, db, NullLogger.Instance, _s3.StorageOptions.PublicBucket!);
+    tests/Gallery.Web.Tests/SeederTests.cs:260:            var fullManifest = MakeManifest(photo1Name, photo2Name, includePrivate: true);
+    tests/Gallery.Web.Tests/SeederTests.cs:264:            var seeder1 = new Seeder(fullManifest, preparedRoot, "/dev/null", store, db, NullLogger.Instance, _s3.StorageOptions.PublicBucket!);
+    tests/Gallery.Web.Tests/SeederTests.cs:268:            var reducedManifest = new Manifest
+    tests/Gallery.Web.Tests/SeederTests.cs:273:            var seeder2 = new Seeder(reducedManifest, preparedRoot, "/dev/null", store, db, NullLogger.Instance, _s3.StorageOptions.PublicBucket!);
+    tests/Gallery.Web.Tests/SeederTests.cs:299:            // Manifest has extra photo not in prepared; prepared has photo2 not in manifest
+    tests/Gallery.Web.Tests/SeederTests.cs:300:            var manifest = new Manifest
+    tests/Gallery.Web.Tests/SeederTests.cs:305:            var seeder = new Seeder(manifest, preparedRoot, "/dev/null", NewStore(), db, NullLogger.Instance, _s3.StorageOptions.PublicBucket!);
+    tests/Gallery.Web.Tests/SeederTests.cs:308:            Assert.Equal(1, summary.UnmatchedManifest);   // "not-prepared.jpg" not in prepared
+    tests/Gallery.Web.Tests/SeederTests.cs:330:            var manifest = new Manifest
+    tests/Gallery.Web.Tests/SeederTests.cs:346:            var seeder = new Seeder(manifest, preparedRoot, "/dev/null", NewStore(), db, NullLogger.Instance, _s3.StorageOptions.PublicBucket!);
+    tests/Gallery.Web.Tests/SeederTests.cs:384:            var manifest = MakeManifest(photo1Name, photo2Name, includePrivate: false);
+    tests/Gallery.Web.Tests/SeederTests.cs:387:            var seeder1 = new Seeder(manifest, preparedRoot, "/dev/null", NewStore(), db, NullLogger.Instance, _s3.StorageOptions.PublicBucket!);
+    tests/Gallery.Web.Tests/SeederTests.cs:397:            var seeder2 = new Seeder(manifest, preparedRoot, "/dev/null", NewStore(), db, NullLogger.Instance, _s3.StorageOptions.PublicBucket!);
+    tests/Gallery.Web.Tests/SeederTests.cs:420:            var manifest = MakeManifest(photo1Name, photo2Name, includePrivate: false);
+    tests/Gallery.Web.Tests/SeederTests.cs:434:            var seeder = new Seeder(manifest, preparedRoot, "/dev/null", NewStore(), db, NullLogger.Instance, _s3.StorageOptions.PublicBucket!);
+    tests/Gallery.Web.Tests/SeederTests.cs:460:            var photo1Json = System.Text.Json.JsonSerializer.Deserialize<PhotoJson>(
+    tests/Gallery.Web.Tests/SeederTests.cs:502:            var manifest = MakeManifest(photo1Name, photo2Name, includePrivate: false);
+    tests/Gallery.Web.Tests/SeederTests.cs:504:            var seeder = new Seeder(manifest, preparedRoot, "/dev/null", store, db, NullLogger.Instance, _s3.StorageOptions.PublicBucket!);
+    tests/Gallery.Web.Tests/SeederTests.cs:535:            var photo = System.Text.Json.JsonSerializer.Deserialize<PhotoJson>(File.ReadAllText(jsonPath),
+    tests/Gallery.Web.Tests/SeederTests.cs:549:            var manifest = new Manifest
+    tests/Gallery.Web.Tests/SeederTests.cs:553:            var summary = await new Seeder(manifest, preparedRoot, "/dev/null", NewStore(), db, NullLogger.Instance, bucket).SeedAsync();
+    tests/Gallery.Web.Tests/UploadValidatorTests.cs:1:using Gallery.Web.Seed;
+    tests/Gallery.Web.Tests/OwnerClaimTests.cs:2:using Gallery.Web.Seed;
+    tests/Gallery.Web.Tests/OwnerClaimTests.cs:264:/// Uses a real Seeder + S3 proxy, same pattern as SeederWithS3Tests.
+    tests/Gallery.Web.Tests/OwnerClaimTests.cs:299:            var manifest = new Manifest
+    tests/Gallery.Web.Tests/OwnerClaimTests.cs:315:            var seeder1 = new Seeder(manifest, tmpDir, "/dev/null", store, db, NullLogger.Instance, _s3.StorageOptions.PublicBucket!);
+    tests/Gallery.Web.Tests/OwnerClaimTests.cs:332:            var seeder2 = new Seeder(manifest, tmpDir, "/dev/null", store, db, NullLogger.Instance, _s3.StorageOptions.PublicBucket!);
+    tests/Gallery.Web.Tests/SeedCommandTests.cs:1:using Gallery.Web.Seed;
+    tests/Gallery.Web.Tests/SeedCommandTests.cs:6:/// T032: SeedCommand tests (L4, no containers needed).
+    tests/Gallery.Web.Tests/SeedCommandTests.cs:9:public class SeedCommandTests
+    tests/Gallery.Web.Tests/SeedCommandTests.cs:38:        var exit = await SeedCommand.RunAsync(["seed"], config, output);
+    tests/Gallery.Web.Tests/SeedCommandTests.cs:52:        var exit = await SeedCommand.RunAsync(["seed"], config, output);
+    tests/Gallery.Web.Tests/SeedCommandTests.cs:63:        var exit = await SeedCommand.RunAsync(["seed"], config, output);
+    tests/Gallery.Web.Tests/SeedCommandTests.cs:75:        var exit = await SeedCommand.RunAsync(["seed"], config, output);
+    tests/Gallery.Web.Tests/SeedCommandTests.cs:87:        var exit = await SeedCommand.RunAsync(["seed"], config, output);
+    tests/Gallery.Web.Tests/SeedCommandTests.cs:100:        var exit = await SeedCommand.RunAsync(
+    tests/Gallery.Web.Tests/SeedCommandTests.cs:101:            ["seed", "--manifest", "/nonexistent/path/manifest.json"],
+    tests/Gallery.Web.Tests/SeedCommandTests.cs:112:        var root = SeedCommand.FindRepoRoot();
+    tests/Gallery.Web.Tests/UploadConfirmTests.cs:7:using Gallery.Web.Seed;
+    tests/Gallery.Web.Tests/UploadConfirmTests.cs:572:            var manifest = new Manifest
+    tests/Gallery.Web.Tests/UploadConfirmTests.cs:578:            var seeder = new Seeder(manifest, tmpDir, "/dev/null", store, Db(host), NullLogger.Instance, _s3.StorageOptions.PublicBucket!);
+    tests/Gallery.Web.Tests/UploadConfirmTests.cs:605:            var manifest = new Manifest
+    tests/Gallery.Web.Tests/UploadConfirmTests.cs:611:            await new Seeder(manifest, tmpDir, "/dev/null", store, Db(host), NullLogger.Instance, _s3.StorageOptions.PublicBucket!).SeedAsync();
+    tests/Gallery.Web.Tests/UploadSeedCoexistenceTests.cs:2:using Gallery.Web.Seed;
+    tests/Gallery.Web.Tests/UploadSeedCoexistenceTests.cs:15:/// Seeder construction as <see cref="SeederWithS3Tests"/>.
+    tests/Gallery.Web.Tests/UploadSeedCoexistenceTests.cs:73:            var manifest = new Manifest
+    tests/Gallery.Web.Tests/UploadSeedCoexistenceTests.cs:78:            var seeder = new Seeder(manifest, tmpDir, "/dev/null", NewStore(), db, NullLogger.Instance, _s3.StorageOptions.PublicBucket!);
+    tests/Gallery.Web.Tests/UploadSeedCoexistenceTests.cs:115:            var manifest = new Manifest
+    tests/Gallery.Web.Tests/UploadSeedCoexistenceTests.cs:120:            var seeder = new Seeder(manifest, tmpDir, "/dev/null", NewStore(), db, NullLogger.Instance, _s3.StorageOptions.PublicBucket!);
+    tests/Gallery.Web.Tests/OwnerWriteGuardTests.cs:5:/// claim in <c>Data/OwnerStore.cs</c>, plus the seed's insert-only nulls in <c>Seed/Seeder.cs</c>.
+    tests/Gallery.Web.Tests/OwnerWriteGuardTests.cs:33:                    (rel == "Gallery.Web/Seed/Seeder.cs" && line.Contains("SetOnInsert(", StringComparison.Ordinal));
+    tests/Gallery.Web.Tests/OwnerWriteGuardTests.cs:39:            "Owner fields named outside OwnerStore.cs / Seeder SetOnInsert (I.4):\n" + string.Join("\n", violations));
+    tests/Gallery.Web.Tests/DerivativeValidatorTests.cs:1:using Gallery.Web.Seed;
+    tests/Gallery.Web.Tests/Fixtures/BrowserSiteFixture.cs:141:    // A distinct 1600x1200 image per index, encoded like scripts/prepare-photos.sh.
+    tests/Gallery.Web.Tests/CameraFieldsTests.cs:1:using Gallery.Web.Seed;
+    scripts/prepare-photos.sh:2:# scripts/prepare-photos.sh
+    scripts/seed-manifest.sh:2:# scripts/seed-manifest.sh
+    .gitignore:319:**/*.DesktopClient/ModelManifest.xml
+    .gitignore:321:**/*.Server/ModelManifest.xml
+    .gitignore:491:# Prepared derivatives of dev-pictures (local only; regenerate with scripts/prepare-photos.sh)

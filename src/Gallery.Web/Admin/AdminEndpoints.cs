@@ -2,6 +2,7 @@ using Gallery.Web.Admin.Auth;
 using Gallery.Web.Admin.Pages;
 using Gallery.Web.Components;
 using Gallery.Web.Data;
+using Gallery.Web.Library;
 using Gallery.Web.Site;
 using Gallery.Web.Storage;
 using Gallery.Web.Upload;
@@ -173,6 +174,9 @@ public static class AdminEndpoints
 
         // 008 upload routes: inherit owner auth + anti-forgery; must stay before the H6 catch-all
         admin.MapUpload();
+
+        // 009 library and gallery routes: inherit owner auth + anti-forgery; must stay before the H6 catch-all
+        admin.MapLibrary();
 
         // H6: Catch-all — any unmatched /admin/** returns 404 (after auth + CSRF)
         admin.MapMethods("{**rest}", ["GET", "HEAD", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],

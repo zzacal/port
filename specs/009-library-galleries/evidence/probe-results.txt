@@ -42,3 +42,22 @@ P4  Cloudflare purge API facts (fetched docs, 2026-11-01; no real Cloudflare cal
     https://developers.cloudflare.com/api/resources/cache/methods/purge/ - "POST
       /zones/{zone_id}/purge_cache ... files: Full URLs ... Accepted Permissions: Cache Purge";
       rate-limit error code 1134 "Unable to purge, rate limit reached". Fetch: OK
+
+P2b Origin output cache, settled by test (009 T002, tests/Gallery.Web.Tests/OutputCacheEvictionTests.cs)
+    host:    AdminHost.CreateAsync with Site:OutputCache=true; one public gallery with two images.
+    before:  RED, written and run before any source change (head bbadc16, src identical to 27eef20):
+               Home_second_GET_is_served_from_the_output_cache
+                 Assert.Equal() Failure: Values differ / Expected: 1 / Actual: 2   (op.timing db.site.read)
+               Gallery_and_photo_second_GET_is_served_from_the_output_cache
+                 Assert.Equal() Failure: Values differ / Expected: 1 / Actual: 2   (op.timing db.gallery.read)
+             Both requests returned 200 first, so the failure is the read-count assertion, not an
+             exception. The P2 suspicion is confirmed: the 006 "public-page" policy never applied,
+             because no public endpoint carried CacheOutput() and no base policy exists.
+    fix:     PublicEndpoints attaches .CacheOutput(PublicCache.PolicyName) to "/", "/g/{id}/{slug}"
+             and "/g/{id}/{slug}/{imageId}" when Site:OutputCache is true (not the /g/{id} short
+             route; the default policy caches 200 only, so no 301/404). PublicCache.PageTag(path) =
+             "page:{path}", added by StatusAndHeadersResult beside the "public-page" tag.
+    after:   GREEN, all three facts, including Evicting_a_page_tag_drops_only_that_page.
+    break:   commenting out the PageTag line in StatusAndHeadersResult turned the eviction fact RED:
+               Assert.Equal() Failure: Values differ / Expected: 2 / Actual: 1  (db.gallery.read after evict)
+             then restored (file touched) and green again.

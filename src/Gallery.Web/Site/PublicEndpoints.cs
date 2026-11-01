@@ -22,7 +22,7 @@ public static class PublicEndpoints
         string[] verbs = ["GET", "HEAD"];
 
         // Home
-        app.MapMethods("/", verbs, async (ContentReader reader, StorageOptions storage) =>
+        var home = app.MapMethods("/", verbs, async (ContentReader reader, StorageOptions storage) =>
         {
             try
             {
@@ -69,7 +69,7 @@ public static class PublicEndpoints
         });
 
         // Gallery page
-        app.MapMethods("/g/{id}/{slug}", verbs, async (string id, string slug, ContentReader reader, StorageOptions storage) =>
+        var galleryPage = app.MapMethods("/g/{id}/{slug}", verbs, async (string id, string slug, ContentReader reader, StorageOptions storage) =>
         {
             if (!OpaqueId.IsValid(id))
                 return NotFoundResult();
@@ -117,7 +117,7 @@ public static class PublicEndpoints
         });
 
         // Photo page
-        app.MapMethods("/g/{id}/{slug}/{imageId}", verbs, async (string id, string slug, string imageId, ContentReader reader, StorageOptions storage) =>
+        var photoPage = app.MapMethods("/g/{id}/{slug}/{imageId}", verbs, async (string id, string slug, string imageId, ContentReader reader, StorageOptions storage) =>
         {
             if (!OpaqueId.IsValid(id) || !OpaqueId.IsValid(imageId))
                 return NotFoundResult();
@@ -183,6 +183,16 @@ public static class PublicEndpoints
                 return TypedResults.Text("Something went wrong", statusCode: 500);
             }
         });
+
+        // 009 T002 (research R-07): the 006 policy only applies to endpoints that carry it, so the
+        // three page routes attach it explicitly. The /g/{id} short route is not cached, and the
+        // policy's default rules cache only 200 responses (never a 301 or 404).
+        if (siteOptions.OutputCache)
+        {
+            home.CacheOutput(PublicCache.PolicyName);
+            galleryPage.CacheOutput(PublicCache.PolicyName);
+            photoPage.CacheOutput(PublicCache.PolicyName);
+        }
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────
@@ -278,7 +288,10 @@ file sealed class StatusAndHeadersResult(
         {
             var cacheFeature = httpContext.Features.Get<IOutputCacheFeature>();
             if (cacheFeature is not null)
+            {
                 cacheFeature.Context.Tags.Add(cachePolicyName);
+                cacheFeature.Context.Tags.Add(Gallery.Web.Site.PublicCache.PageTag(httpContext.Request.Path));
+            }
         }
 
         await inner.ExecuteAsync(httpContext);

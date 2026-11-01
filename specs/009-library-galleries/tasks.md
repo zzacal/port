@@ -129,7 +129,7 @@ From speckit-orchestration "Post-implement UI review", applied to every owner pa
 
 ## Phase 1: Setup (high tier, parent, before any dispatch)
 
-- [ ] T001 Run the baseline gate (`dotnet build … -warnaserror`, `dotnet test …`) on 27eef20.
+- [X] T001 Run the baseline gate (`dotnet build … -warnaserror`, `dotnet test …`) on 27eef20.
   Write to `specs/009-library-galleries/evidence/baseline.txt`: the head hash, the warning count,
   the test count per assembly (expected 779 in total), the list of every file under `tests/`
   (`git ls-files tests`), the byte-identity guards that pin pre-change output
@@ -137,7 +137,7 @@ From speckit-orchestration "Post-implement UI review", applied to every owner pa
   seed-consumer inventory of T047 as found by the grep in T047 step 0. Every later checkpoint runs
   `git diff --stat 27eef20 -- tests/` and accepts changes only to NEW files and to the files named
   in T036 and T047.
-- [ ] T002 **Output-cache check, the FIRST implement task** (plan Risks R-07, decisions row 23,
+- [X] T002 **Output-cache check, the FIRST implement task** (plan Risks R-07, decisions row 23,
   research R-07). Write `tests/Gallery.Web.Tests/OutputCacheEvictionTests.cs`
   (`[Collection("mongo")]`). The host is `AdminHost.CreateAsync` with the override
   `Site:OutputCache=true`. It inserts one public gallery with two images directly, with the
@@ -163,7 +163,7 @@ From speckit-orchestration "Post-implement UI review", applied to every owner pa
   - Public markup does not change. `PublicRoutesTests`, `PublicOutputUnchangedTests`,
     `AdminAccessTests` and `BrowserTests` stay green UNMODIFIED.
   - Append a DEFAULT row to decisions.md stating which branch was taken.
-- [ ] T003 **[SAFETY]** The shared-file seam (owner gate inheritance, I.3/I.6). Create:
+- [X] T003 **[SAFETY]** The shared-file seam (owner gate inheritance, I.3/I.6). Create:
   - `src/Gallery.Web/Library/LibrarySetup.cs` with `public static IServiceCollection
     AddLibrary(this IServiceCollection s, IConfiguration c)` (empty body) and
     `public static RouteGroupBuilder MapLibrary(this RouteGroupBuilder admin)` (returns `admin`);
