@@ -99,9 +99,10 @@ OAuth client with a localhost redirect URI.
 defaults in `specs/008-upload-pipeline/decisions.md`).** Evidence:
 `specs/008-upload-pipeline/evidence/` (verify.sh live walkthrough ALL PASS, p95.sh SC-006/007/008/010
 PASS on the 40-photo log, non-vacuity.sh, browser tests for the worker path). Not delivered until
-the owner's post-build live checks (008 tasks.md OWNER-ONLY): SC-009 browser timing and the
-Safari/iOS run, the R2 test suite including copy-if-match on real R2, and the 7-day lifecycle rule
-on `gallery-dev-private` `staging/`.
+the owner's post-build live checks (008 tasks.md OWNER-ONLY). Done by the owner 2026-11-01: the
+7-day lifecycle rule (O-01), the R2 test suite (O-03), staging empty after confirm on R2 (O-04),
+and a JPEG live browser run (part of O-02). Still open in O-02: SC-009 browser timing, the
+Safari/iOS run, the HEIC/PNG refusals and the measured derivative sizes.
 
 The browser derivative worker, presigned R2 intake, server validation, the batch lifecycle, and
 the upload batch page. Confirmed images land in the library.
@@ -116,6 +117,13 @@ the upload batch page. Confirmed images land in the library.
     built and tested inside 008 (FR-041). First Chrome data point: probe P4 (decisions row 36).
 
 ### 009 Library and gallery management
+
+**Status: implemented on branch `009-library-galleries` (built on 008), not merged (2026-11-01,
+unattended run; defaults in `specs/009-library-galleries/decisions.md`).** Evidence:
+`specs/009-library-galleries/evidence/` (verify.sh ALL PASS, re-run after rebasing onto 008's
+owner-check commits; full suite 1008/1008; non-vacuity.sh 14/14). Not delivered until the owner's
+post-build checks (009 tasks.md OWNER-ONLY O-01..O-04): dev-zone purge token, the one-time
+remove-seeded run on dev, the live browser walkthrough, and the R2 delete tests.
 
 The library page (titles, captions, bulk actions, delete), the gallery list, and the gallery
 builder. This includes visibility, ordering, covers, and purge plus warm on every public change.
