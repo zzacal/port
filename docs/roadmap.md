@@ -49,7 +49,7 @@ place, so both targets exercise the same code.
 
 ### 006 Walking skeleton: public site, local
 
-**Status: done, pending owner review (2026-10-31).** Evidence: `specs/006-public-site-local/evidence/`
+**Status: done, merged to main 2026-10-31 (558465e).** Evidence: `specs/006-public-site-local/evidence/`
 (verify.sh 21/21 PASS, p95.sh SC-003/SC-004 PASS, browser.md, seed-run.txt, r2-tests.txt).
 Changed in clarify: the seed uses the owner's photos from `dev-pictures/` through a committed
 manifest rather than the 003 sample set. Not delivered: the forwarded-headers setup (PC.9). The
