@@ -4,6 +4,7 @@ using Gallery.Web.Components;
 using Gallery.Web.Data;
 using Gallery.Web.Site;
 using Gallery.Web.Storage;
+using Gallery.Web.Upload;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -169,6 +170,9 @@ public static class AdminEndpoints
             await ctx.SignOutAsync(AuthSetup.OwnerScheme);
             return Results.Redirect("/admin/signin");
         });
+
+        // 008 upload routes: inherit owner auth + anti-forgery; must stay before the H6 catch-all
+        admin.MapUpload();
 
         // H6: Catch-all — any unmatched /admin/** returns 404 (after auth + CSRF)
         admin.MapMethods("{**rest}", ["GET", "HEAD", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],

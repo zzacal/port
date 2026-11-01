@@ -6,6 +6,8 @@ using Gallery.Web.Site;
 using Gallery.Web.Storage;
 using Gallery.Web.Styles;
 using Gallery.Web.Ui;
+using Gallery.Web.Upload;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using MongoDB.Driver;
 
 namespace Gallery.Web;
@@ -81,6 +83,10 @@ public static class AppBuilder
 
         // ── Output cache ─────────────────────────────────────────────────────
         builder.Services.AddPublicOutputCache();
+
+        // ── Upload pipeline (008; all registrations live in UploadSetup) ─────
+        builder.Services.AddUpload(builder.Configuration);
+        builder.Services.TryAddSingleton(TimeProvider.System);
         // ── Build ────────────────────────────────────────────────────────────
         var app = builder.Build();
 
@@ -103,8 +109,16 @@ public static class AppBuilder
         {
             OnPrepareResponse = ctx =>
             {
-                if (ctx.Context.Request.Path.StartsWithSegments("/samples"))
+                var request = ctx.Context.Request;
+                if (request.Path.StartsWithSegments("/samples"))
                     ctx.Context.Response.Headers.CacheControl = "public, max-age=31536000, immutable";
+                // 008 R-12: vendored and content-versioned (?v=) admin assets are immutable;
+                // bare /admin-assets URLs revalidate so new markup never pairs with an old script.
+                else if (request.Path.StartsWithSegments("/admin-assets"))
+                    ctx.Context.Response.Headers.CacheControl =
+                        request.Path.StartsWithSegments("/admin-assets/vendor") || request.Query.ContainsKey("v")
+                            ? "public, max-age=31536000, immutable"
+                            : "no-cache";
             },
         });
 

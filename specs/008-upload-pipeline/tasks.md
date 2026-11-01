@@ -81,12 +81,12 @@ files it names. Tests are written in the same batch as the code they guard.
 
 ## Phase 1: Setup (high tier, parent, before any dispatch)
 
-- [ ] T001 Run the baseline gate (`dotnet build … -warnaserror`, `dotnet test …`) on 47de295.
+- [X] T001 Run the baseline gate (`dotnet build … -warnaserror`, `dotnet test …`) on 47de295.
   Write the build warning count, the test count per assembly, and the head hash to
   `specs/008-upload-pipeline/evidence/baseline.txt`. Also list there the test classes that pin
   pre-change output (`PublicOutputUnchangedTests`, `UiPagesUnchangedTests`) so later batches know
   which byte-identity guards apply.
-- [ ] T002 Write `scripts/vendor-encoders.sh` (research R-01). For each of `@jsquash/avif@2.1.1`,
+- [X] T002 Write `scripts/vendor-encoders.sh` (research R-01). For each of `@jsquash/avif@2.1.1`,
   `@jsquash/webp@1.5.0` and `thumbhash@0.1.1` it must: curl the registry tarball, check
   `shasum -a 512` (base64) against the full `dist.integrity` string written into the script, and
   `tar -x` only the named members into
@@ -94,7 +94,7 @@ files it names. Tests are written in the same batch as the code they guard.
   Write `VENDORED.md` (package, version, source URL, integrity, license, the MIT notice for
   thumbhash, the regenerate command). Exit non-zero on any mismatch. Run it and commit its output.
   Expected files are as in quickstart Part A.
-- [ ] T003 Copy the probe outputs into `tests/fixtures/upload/` (`gps-sips.avif`,
+- [X] T003 Copy the probe outputs into `tests/fixtures/upload/` (`gps-sips.avif`,
   `gps-cwebp.webp`, `gps-320.avif`, `gps-320.webp`, `gps-placeholder.webp`, `orient6-200.avif`,
   `orient6-200.webp`, `orient6-placeholder.webp`). Write `scripts/fixtures/upload-fixtures.sh`,
   which regenerates the generated bad cases from `tests/fixtures/gps-camera.jpg` with `cwebp`
@@ -104,7 +104,7 @@ files it names. Tests are written in the same batch as the code they guard.
   - `fixture-6000x4000.jpg`: a synthetic large JPEG (`sips -z`) for the 2560 ladder.
   Run it and commit the outputs. Structural AVIF cases (second `av01` item, `iref`, `irot`,
   `colr prof`, `avis` brand) are built in test code by T018, not as files.
-- [ ] T004 **[SAFETY]** The shared-file seam (plan item 5). Create
+- [X] T004 **[SAFETY]** The shared-file seam (plan item 5). Create
   `src/Gallery.Web/Upload/UploadSetup.cs` with
   `public static IServiceCollection AddUpload(this IServiceCollection s, IConfiguration c)`, an
   empty body for now, and `public static RouteGroupBuilder MapUpload(this RouteGroupBuilder admin)`,
@@ -119,7 +119,7 @@ files it names. Tests are written in the same batch as the code they guard.
     `RequireAuthorization("owner")` and `AdminAntiforgeryFilter`.
   Gate: build green, all existing tests green unmodified. From now on no executor edits these two
   files.
-- [ ] T005 Edit `docs/roadmap.md`, section "008 Upload pipeline into the library". Replace the
+- [X] T005 Edit `docs/roadmap.md`, section "008 Upload pipeline into the library". Replace the
   "Before `/speckit-plan`" spike bullet's status with: "Spike skipped by the owner (008
   decisions row 6). Deferred to the owner's post-build live tests (008 tasks.md, OWNER-ONLY O-02);
   the GPS fixtures and reader checks it named are built and tested inside 008 (FR-041). First

@@ -99,10 +99,13 @@ The browser derivative worker, presigned R2 intake, server validation, the batch
 the upload batch page. Confirmed images land in the library.
 
 - D-08, D-09, D-10, D-11, L-01 to L-06, E-03 to E-11, and R-07.
-- **Before `/speckit-plan`**: spike the jSquash AVIF encode of a 20 MB JPEG on Safari, iOS, and
+- **Before `/speckit-plan`**: ~~spike the jSquash AVIF encode of a 20 MB JPEG on Safari, iOS, and
   Chrome (memory and time, E-05). Also build the GPS-injected AVIF and WebP fixtures and confirm
   that MetadataExtractor and the structure parsers both reject them. Measure the real ThumbHash
-  and derivative sizes (section 10). A failed spike reopens D-09 or D-10 before planning.
+  and derivative sizes (section 10). A failed spike reopens D-09 or D-10 before planning.~~
+  - Status: Spike skipped by the owner (008 decisions row 6). Deferred to the owner's post-build
+    live tests (008 tasks.md, OWNER-ONLY O-02); the GPS fixtures and reader checks it named are
+    built and tested inside 008 (FR-041). First Chrome data point: probe P4 (decisions row 36).
 
 ### 009 Library and gallery management
 
