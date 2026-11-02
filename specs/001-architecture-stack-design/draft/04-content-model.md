@@ -12,7 +12,7 @@ this document after the claim (I.4).
 | claimedAt | datetime? | |
 | claimedIp | string? | Taken from CF-Connecting-IP (I.5, PC.9). |
 | homeOrder | id[] | Every gallery id, public and private, in the owner's manual order. Private galleries keep their position so publishing restores them in place. |
-| homeCards | GalleryCard[] | Denormalized cards for the public galleries in `homeOrder` that hold at least one image (II.6), so the home page is one read (IV.9). |
+| homeCards | GalleryCard[] | Denormalized cards for the public galleries in `homeOrder` that hold at least one image (II.6), so the galleries listing `/g` is one read (IV.9). |
 
 ### Image (collection `images`)
 

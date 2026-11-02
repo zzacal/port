@@ -1,0 +1,10 @@
+SELFTEST OK   pass-plain.log: exit 0
+SELFTEST OK   pass-json.log: exit 0
+SELFTEST OK   home-1-read.log: exit 1, FAIL SC-005 home reads
+SELFTEST OK   listing-0-reads.log: exit 1, FAIL SC-005 listing reads
+SELFTEST OK   listing-2-reads.log: exit 1, FAIL SC-005 listing reads
+SELFTEST OK   photo-p95-60.log: exit 1, FAIL SC-006 photo time
+SELFTEST OK   gallery-99-lines.log: exit 2, FAIL SC-005 gallery reads
+SELFTEST OK   empty.log: exit 1, FAIL missing, unreadable or empty log
+
+SELFTEST ALL OK

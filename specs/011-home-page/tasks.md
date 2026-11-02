@@ -273,7 +273,7 @@ measures, with no exception. Run it at all five widths, then commit.
   - Add a test-hosted capture writing `evidence/home-timings.log` (the `NavTimingEvidenceTests`
     pattern; parent-owned edit to add `/` and `/g`, Class A).
   - Run it and tee to `p95-output.txt`. SC-006: `/` p95 < 50 ms.
-- [ ] T023 [P] VII.2 design-record update in `specs/001-architecture-stack-design/draft/`:
+- [X] T023 [P] VII.2 design-record update in `specs/001-architecture-stack-design/draft/`:
   - `02c` D-13: the listing is the single read
   - `02d`:
     - D-15: pages list
