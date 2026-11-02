@@ -1,0 +1,23 @@
+OK 02c-decisions-content.md: 1x 'On the home page, galleries are ordered manually by the owner;'
+OK 02c-decisions-content.md: 1x "onto the site document's `homeCards` array so the home page is a singl"
+OK 02c-decisions-content.md: 1x 'Denormalization satisfies the single-read home-page constraint (data-m'
+OK 02d-decisions-delivery.md: 1x 'The home page renders from the denormalized `site.homeCards` in one da'
+OK 02d-decisions-delivery.md: 1x 'A page exists for the home page and for every gallery with at least on'
+OK 02d-decisions-delivery.md: 1x '**Choice**: The home page (gallery cards) and the gallery page (image '
+OK 02d-decisions-delivery.md: 1x 'home is 3 / 3 / 1 and gallery'
+OK 02d-decisions-delivery.md: 1x 'the gallery title on home, the image title'
+OK 02d-decisions-delivery.md: 1x '(3 on home, 4 in a gallery)'
+OK 02d-decisions-delivery.md: 1x 'and the breadcrumb row is always 44 px tall.'
+OK 02d-decisions-delivery.md: 1x "over the home page's first cover."
+OK 02d-decisions-delivery.md: 1x '- **Gallery list**: the home grid,'
+OK 05-lifecycle.md: 15x 'the home page'
+OK 05-lifecycle.md: 2x 'The home page'
+OK 05-lifecycle.md: 1x 'home-card'
+OK 05-lifecycle.md: 4x 'home card'
+OK 06-edge-cases.md: 5x 'the home page'
+OK 06-edge-cases.md: 1x 'home card'
+OK 04-content-model.md: 1x 'that hold at least one image (II.6), so the home page is one read (IV.'
+OK 07-traceability.md: 1x 'private galleries absent from home, listings, sitemap;'
+OK 07-traceability.md: 1x 'empty public gallery absent from `/` and its page 404;'
+OK 07-traceability.md: 1x 'markup/header assertion: home page issues one datastore read (`op.timi'
+wrote 6 drafts

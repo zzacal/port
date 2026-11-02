@@ -24,7 +24,7 @@ public class GalleryServiceTests(S3ProxyFixture s3, MongoFixture mongo) : IClass
 
     private static string Gp(string gid, string slug) => LibraryHost.Page(PurgeSets.GalleryPath(gid, slug));
     private static string Pp(string gid, string slug, string iid) => LibraryHost.Page(PurgeSets.PhotoPath(gid, slug, iid));
-    private static readonly string Home = LibraryHost.Page("/");
+    private static readonly string Home = LibraryHost.Page("/g");
 
     private static void SetEq(IEnumerable<string> expected, IEnumerable<string> actual) =>
         Assert.Equal(expected.Distinct().Order(StringComparer.Ordinal).ToArray(), actual.Order(StringComparer.Ordinal).ToArray());
@@ -130,7 +130,7 @@ public class GalleryServiceTests(S3ProxyFixture s3, MongoFixture mongo) : IClass
 
         Assert.Equal((40, 0), (r1.Added, r1.Skipped));
         Assert.Equal(first, (await GalleryAsync(h, gid)).Items);
-        // Private gallery that gained a page: its page and every photo page; not listed → no "/".
+        // Private gallery that gained a page: its page and every photo page; not listed → no "/g".
         SetEq(first.Select(i => Pp(gid, "harbour", i)).Append(Gp(gid, "harbour")), purged1);
 
         // The 5 overlapping ids sit in the middle of the second request.

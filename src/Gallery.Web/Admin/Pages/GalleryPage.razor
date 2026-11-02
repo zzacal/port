@@ -27,7 +27,7 @@
             @Token
             <GalleryBuilder Title="@(Model.EditTitle ?? G.Title)" Description="@Model.EditDescription" Public="@IsPublic" PublicChecked="@Model.EditPublic"
                             Items="@Model.Items" ItemIds="@ItemIds" State="@State" PinnedIndex="@PinnedIndex"
-                            ViewHref="@(PhotoHrefBase ?? "/")" ShowView="@Model.HasPhotos" FormId="b-panel"
+                            ViewHref="@(PhotoHrefBase ?? "/g")" ShowView="@Model.HasPhotos" FormId="b-panel"
                             RemoveFormId="b-remove" CoverFormId="b-cover" UnpinFormId="b-unpin" OrderFormId="b-order"
                             DeleteFormId="b-delete"
                             PhotoHrefBase="@PhotoHrefBase" PublicDisabledReason="@GalleriesPage.DisabledReasonFor(Ref)"

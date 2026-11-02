@@ -1,0 +1,17 @@
+testing /Users/zzacal/repos/gallery (pid 71454)
+PASS GET / 200
+PASS / has nav.nav--home
+PASS / links Galleries to /g
+PASS / has no ContactSheet element
+PASS / has Server-Timing
+PASS GET /g 200
+PASS /g lists tiles (11)
+PASS /g has Server-Timing
+PASS GET /g/ 301 -> /g
+PASS breadcrumb root on home is Home
+PASS breadcrumb root on listing is Home
+PASS breadcrumb root on gallery is Home
+PASS breadcrumb root on photo is Home
+PASS breadcrumb root on missing is Home
+
+ALL PASS

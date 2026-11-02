@@ -14,6 +14,11 @@ content is removed in this feature." Owns L-07 to L-17, E-12, E-14 to E-18, R-03
 D-23 Library, Gallery list and Gallery builder pages, the D-16 purge and warm, the II.6 publish
 refusal, and the removal of the seeded sample content.
 
+> **AMENDED by feature 011-home-page (constitution 4.5.0, 2026-11-02)**: `/` is now a home page
+> that links to the galleries, and the gallery grid moved to `/g` as the galleries listing. Where
+> this spec says "home page" or "home grid" for the grid of gallery cards, read "galleries
+> listing (`/g`)"; its requirements apply there unchanged. "Home order" keeps its name. FR-033 and SC-007 are annotated in place.
+
 ## Clarifications
 
 ### Session 2026-11-01
@@ -406,7 +411,7 @@ command again reports nothing to remove.
 - **FR-033**: A public gallery that becomes empty MUST stay public, be left out of the home page
   and every listing, and answer not found, until it holds a photo again, when it reappears at its
   position without republishing (II.6, E-16). Its visibility is never changed on the owner's
-  behalf (II.5).
+  behalf (II.5). **AMENDED by 011**: "home page" here means the galleries listing at `/g`.
 - **FR-034**: Nothing becomes visible to visitors except by the owner making a gallery public or
   adding photos to a gallery that is already public. Uploading, editing titles and captions,
   creating galleries and reordering MUST NOT change any visibility (II.5).
@@ -520,7 +525,7 @@ command again reports nothing to remove.
   change, from the timing events.
 - **SC-006**: Zero empty galleries are listed or answer with a page, and zero attempts to make an
   empty gallery public succeed, including requests sent without the page.
-- **SC-007**: The home page is exactly one datastore read after every operation in the test suite.
+- **SC-007**: The home page is exactly one datastore read after every operation in the test suite. **AMENDED by 011**: "home page" here means the galleries listing at `/g`.
 - **SC-008**: After any image delete, zero public files still referenced by a remaining image are
   deleted, and zero files of the deleted image remain except logged failures.
 - **SC-009**: After every operation in the test suite, zero mismatches exist between gallery

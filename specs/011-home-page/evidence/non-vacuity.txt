@@ -1,0 +1,10 @@
+PASS (a) / handler given a HomeAsync() read -> T014(b) -> red:   Failed Gallery.Web.Tests.HomePageTests.Home_reads_nothing_and_listing_reads_the_site_once |  Assert.Equal() Failure: Values differ Expected: 0 
+PASS (b) listing II.6 cover filter removed -> T014(c) -> red:   Failed Gallery.Web.Tests.HomePageTests.Listing_shows_exactly_the_listed_galleries_in_home_order |  Assert.DoesNotContain() Failure: Sub-string found  ↓ (pos 5519) 
+PASS (c) ListingPath set to "/" -> T014(f) -> red:   Failed Gallery.Web.Tests.HomePageTests.No_purge_set_ever_contains_the_home_page |  Assert.Equal() Failure: Strings differ  ↓ (pos 1) 
+PASS (d1) Trails.Under links another gallery -> T005 -> red:   Failed Gallery.Web.Tests.TrailsTests.Under_links_only_home_listing_and_its_own_tail(tail: |  links outside {/, /g, own tail}: /g/zz/other 
+PASS (d2) Trails.Under links another gallery -> T018 (private trail) -> red:   Failed Gallery.Web.Tests.TrailRoutesTests.A_private_gallery_trail_links_no_other_gallery |  /g/zdudnywju2ehrkot22gdxtkwxe/private: crumb links /g/zz/other /g/zdudnywju2ehrkot22gdxtkwxe/private/ddddddddddddddddddddddddd2: crumb links /g/zz/other 
+PASS (e) a "Galleries" literal in NotFoundPage.razor -> T019 -> red:   Failed Gallery.Web.Tests.TrailSourceGuardTests.Trail_labels_are_literal_only_in_Trails_cs |  trail label literals outside Site/Trails.cs: Site/Pages/NotFoundPage.razor:4: "Galleries" 
+PASS (f) nav--home font-size var(--type-brand) -> T020(d) -> red:   Failed Gallery.Web.Tests.HomeBrowserTests.Home_link_is_centred_unscrolled_largest_and_tappable(width: 768, height: 900) |  2 failure(s): 768x900: (d) link font-size 16px, expected 48px 
+restored: build clean
+
+ALL PASS

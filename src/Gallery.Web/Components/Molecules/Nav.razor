@@ -1,4 +1,4 @@
-<nav class="nav" aria-label="Site">
+<nav class="@NavClass" aria-label="Site">
     <ul>
         @foreach (var item in Items)
         {
@@ -18,4 +18,9 @@
 
 @code {
     [Parameter, EditorRequired] public IReadOnlyList<NavItem> Items { get; set; } = [];
+
+    /// <summary>011 (contracts/components.md C2): the home page's big, centred links. Unset renders as before.</summary>
+    [Parameter] public bool Home { get; set; }
+
+    private string NavClass => Home ? "nav nav--home" : "nav";
 }

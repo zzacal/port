@@ -688,7 +688,7 @@ public sealed class LibraryBrowserTests(LibraryBrowserFixture fx)
         var gid = await site.GalleryAsync("Coast", ids, publish: true);
         var slug = (await site.GalleryDocAsync(gid)).Slug;
 
-        foreach (var path in new[] { "/", $"/g/{gid}/{slug}", $"/g/{gid}/{slug}/{ids[0]}" })
+        foreach (var path in new[] { "/", "/g", $"/g/{gid}/{slug}", $"/g/{gid}/{slug}/{ids[0]}" })
         {
             var ctx = await site.NewContextAsync();
             var page = await ctx.NewPageAsync();

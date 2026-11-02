@@ -11,6 +11,11 @@ browser derivative worker, presigned R2 intake, server validation, the batch lif
 upload batch page. Confirmed images land in the library." Owns D-08, D-09, D-10, D-11, L-01 to
 L-06, E-03 to E-11, R-07, the D-23 "Upload batch" page, and III.9 presigned uploads.
 
+> **AMENDED by feature 011-home-page (constitution 4.5.0, 2026-11-02)**: `/` is now a home page
+> that links to the galleries, and the gallery grid moved to `/g` as the galleries listing. Where
+> this spec says "home page" or "home grid" for the grid of gallery cards, read "galleries
+> listing (`/g`)"; its requirements apply there unchanged. "Home order" keeps its name. SC-004 is annotated in place.
+
 ## Clarifications
 
 ### Session 2026-11-01
@@ -439,7 +444,7 @@ one open batch exists.
 - **SC-003**: After a confirm or a discard, zero staged files remain for that batch, confirmed by
   listing staging storage.
 - **SC-004**: The public home page and every public gallery page are byte-identical before and after
-  a confirmed batch.
+  a confirmed batch. **AMENDED by 011**: "home page" here means the galleries listing at `/g`.
 - **SC-005**: After the browser stops mid-batch and the owner returns more than 2 minutes later,
   100% of ready photos are still ready and 100% of unfinished photos show as interrupted.
 - **SC-006**: Issuing an upload permission takes at most 200 ms at the 95th percentile, from the

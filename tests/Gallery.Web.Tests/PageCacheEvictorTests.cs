@@ -44,7 +44,7 @@ public class PageCacheEvictorTests(MongoFixture mongo)
         await using var host = await AdminHost.CreateAsync(mongo, extraOverrides: CacheOn);
         await InsertPublicGalleryAsync(host);
 
-        await GetOk(host, "/");
+        await GetOk(host, "/g");
         await GetOk(host, GalleryPath);
         await GetOk(host, PhotoPath);
         Assert.Equal(1, Count(host, "db.site.read"));
@@ -56,12 +56,12 @@ public class PageCacheEvictorTests(MongoFixture mongo)
 
         await GetOk(host, GalleryPath);
         await GetOk(host, PhotoPath);
-        await GetOk(host, "/");
+        await GetOk(host, "/g");
         Assert.Equal(3, Count(host, "db.gallery.read")); // the gallery page only was re-read
         Assert.Equal(1, Count(host, "db.site.read"));
 
-        await EvictAsync(host, "/", PhotoPath);
-        await GetOk(host, "/");
+        await EvictAsync(host, "/g", PhotoPath);
+        await GetOk(host, "/g");
         await GetOk(host, PhotoPath);
         await GetOk(host, GalleryPath);
         Assert.Equal(2, Count(host, "db.site.read"));
@@ -74,13 +74,13 @@ public class PageCacheEvictorTests(MongoFixture mongo)
         await using var host = await AdminHost.CreateAsync(mongo, extraOverrides: CacheOn);
         await InsertPublicGalleryAsync(host);
 
-        await GetOk(host, "/");
+        await GetOk(host, "/g");
         await GetOk(host, GalleryPath);
 
         await EvictAsync(host, "/g/nope/nothing", "/g/nope/nothing/x");
         await EvictAsync(host);
 
-        await GetOk(host, "/");
+        await GetOk(host, "/g");
         await GetOk(host, GalleryPath);
         Assert.Equal(1, Count(host, "db.site.read"));
         Assert.Equal(1, Count(host, "db.gallery.read"));

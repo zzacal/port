@@ -166,7 +166,7 @@ public class BuilderTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixture
         Assert.Equal($"/admin/galleries/{gid}?saved=1&visibility=public", save.Headers.Location?.ToString());
         var g = await GalleryHtml.LoadAsync(h, gid);
         Assert.Equal(("Coastline", "coastline", "Winter walks.", "public"), (g.Title, g.Slug, g.Description, g.Visibility));
-        // P-VIS ∪ P-RENAME in one flush (ONE edge call): every page under both slugs and "/".
+        // P-VIS ∪ P-RENAME in one flush (ONE edge call): every page under both slugs and "/g".
         await h.EdgeIdleAsync();
         Assert.Single(h.Recorder.Purges);
         GalleryHtml.SetEq(
@@ -338,7 +338,7 @@ public class BuilderTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixture
         Assert.Empty(bDoc.GalleryIds);
         Assert.Equal(a, await HomeCoverAsync(h, gid));
 
-        // Remove c, then the last photo a: still public, gone from "/", its page 404.
+        // Remove c, then the last photo a: still public, gone from "/g", its page 404.
         Assert.Equal(HttpStatusCode.SeeOther, (await h.PostFormAsync($"/admin/galleries/{gid}/remove", [F("image", c)])).StatusCode);
         GalleryHtml.SetEq([Gp(gid, "coast"), Pp(gid, "coast", a), Pp(gid, "coast", c), Home], await h.SettleAsync());
         Assert.Equal(HttpStatusCode.SeeOther, (await h.PostFormAsync($"/admin/galleries/{gid}/remove", [F("image", a)])).StatusCode);

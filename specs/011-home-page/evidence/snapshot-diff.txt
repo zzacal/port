@@ -1,0 +1,8 @@
+SAME 006/tokens.html
+SAME 006/molecules/nav.html
+SAME 006/molecules/breadcrumb.html
+SAME 006/organisms/site-header.html
+SAME 006/templates/public-layout.html
+SAME 005/PublicLayoutPage.html
+
+ALL EQUAL

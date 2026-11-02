@@ -180,7 +180,7 @@ public class UploadResumeTests : IClassFixture<MongoFixture>, IAsyncLifetime
             Builders<SiteDoc>.Update.Set(d => d.HomeOrder, [galId]).Set(d => d.HomeCards, [card]).Set(d => d.UpdatedAt, DateTime.UtcNow),
             new UpdateOptions { IsUpsert = true });
 
-        string[] paths = ["/", $"/g/{galId}/autumn-walk", $"/g/{galId}/autumn-walk/{imgId}"];
+        string[] paths = ["/", "/g", $"/g/{galId}/autumn-walk", $"/g/{galId}/autumn-walk/{imgId}"];
 
         async Task<List<string>> BodiesAsync()
         {
@@ -195,7 +195,7 @@ public class UploadResumeTests : IClassFixture<MongoFixture>, IAsyncLifetime
         }
 
         var noBatch = await BodiesAsync();
-        Assert.Contains("Autumn Walk", noBatch[0]);
+        Assert.Contains("Autumn Walk", noBatch[1]); // 011: the listing is paths[1], "/g"
 
         // An open batch with an active, a succeeded and an interrupted item.
         await UploadApi.RegisterOneAsync(host, "a.jpg", 1000);

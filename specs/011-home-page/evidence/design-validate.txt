@@ -1,0 +1,24 @@
+PASS C1 12 headings in order
+PASS C2.keys 17 area keys each exactly once
+PASS C2.fields D=25 Area=25 Status=25 Choice=25 Rationale=25 Alternatives=25 Pivot cost=25
+PASS C2.status values valid
+PASS C2.pivot values valid
+PASS C2.given given entries cite Constitution
+PASS C3 4 diagrams with mermaid
+PASS C4.titles 17 lifecycle entries in order
+PASS C4.fields  Records=17 Storage=17 Pages and caches=17 Visitor sees=17
+PASS C5 19 edge cases x2 fields
+PASS C6.ids 68 rule ids exactly once
+PASS C6.status all statuses valid
+PASS C6.verif IV.5, IV.11-22 use markup/header or browser verification
+PASS C7 cost table ok; metered=$1.00 < $7
+PASS C8 R=7 Failure=7 Detection=7 Recovery=7 Reversal cost=7
+PASS C9 no banned strings
+---
+failures: 0
+
+## grep -n -i 'home page' docs/design.md (reviewed hit by hit)
+152:n the galleries listing (`/g`; feature 011 moved it off the home page), galleries are ordered manually by the owner; within a gal
+168:he denormalized `site.homeCards` in one datastore read; the home page (`/`) renders fixed links with no read (amended by feature 
+176:ed by feature 011: the listing's purge address is `/g`; the home page `/` shows fixed links, so no owner change purges it. Purge 
+216:1 (specs/011-home-page/contracts/components.md): `/` is the home page, `PublicLayout` with the `Fill` option (main fills the spac

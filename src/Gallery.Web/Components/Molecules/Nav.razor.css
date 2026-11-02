@@ -16,3 +16,32 @@
     color: var(--color-text);
     font-weight: 600;
 }
+
+/* The home links box fills main and centres its list, so main's first box starts at the normal
+   chrome gap (IX.1) and the centring space lives inside the component (C1 remediation). */
+.nav--home {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav--home ul {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-m);
+}
+
+.nav--home a {
+    display: inline-block;
+    min-height: var(--tap);
+    padding: 0 var(--space-s);
+    color: var(--color-text);
+    font-size: var(--type-display);
+    line-height: 1.2;
+}
+
+.nav--home a:hover,
+.nav--home a:focus-visible {
+    text-decoration: underline;
+}

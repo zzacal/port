@@ -54,7 +54,7 @@ public class PurgeSetTests
     {
         var set = PurgeSets.Members(G("g1", "s", "public", "a", "b", "c"), G("g1", "s", "public", "a", "b", "c", "e"), Bases);
         // 010 E1 rule 4 (stated change, decisions row 27): every photo page shows "N / total".
-        Eq(P("/", "/g/g1/s", "/g/g1/s/a", "/g/g1/s/b", "/g/g1/s/c", "/g/g1/s/e"), set.Pages);
+        Eq(P("/g", "/g/g1/s", "/g/g1/s/a", "/g/g1/s/b", "/g/g1/s/c", "/g/g1/s/e"), set.Pages);
         Assert.Empty(set.Files);
     }
 
@@ -62,7 +62,7 @@ public class PurgeSetTests
     public void P_MEMBERS_remove_purges_the_removed_photo_and_both_neighbours()
     {
         var set = PurgeSets.Members(G("g1", "s", "public", "a", "b", "c"), G("g1", "s", "public", "a", "c"), Bases);
-        Eq(P("/", "/g/g1/s", "/g/g1/s/a", "/g/g1/s/b", "/g/g1/s/c"), set.Pages);
+        Eq(P("/g", "/g/g1/s", "/g/g1/s/a", "/g/g1/s/b", "/g/g1/s/c"), set.Pages);
         Assert.Empty(set.Files);
     }
 
@@ -70,7 +70,7 @@ public class PurgeSetTests
     public void P_MEMBERS_reorder_purges_only_photos_whose_neighbours_changed()
     {
         var set = PurgeSets.Members(G("g1", "s", "public", "a", "b", "c", "d"), G("g1", "s", "public", "b", "a", "c", "d"), Bases);
-        Eq(P("/", "/g/g1/s", "/g/g1/s/a", "/g/g1/s/b", "/g/g1/s/c"), set.Pages);
+        Eq(P("/g", "/g/g1/s", "/g/g1/s/a", "/g/g1/s/b", "/g/g1/s/c"), set.Pages);
     }
 
     [Fact]
@@ -78,15 +78,15 @@ public class PurgeSetTests
     {
         var b = new GallerySnapshot("g1", "s", "public", ["a", "b"]);
         var a = new GallerySnapshot("g1", "s", "public", ["a", "b"], PinnedCover: "b");
-        Eq(P("/", "/g/g1/s"), PurgeSets.Members(b, a, Bases).Pages);
-        Eq(P("/", "/g/g1/s"), PurgeSets.Members(a, b, Bases).Pages); // unpin
+        Eq(P("/g", "/g/g1/s"), PurgeSets.Members(b, a, Bases).Pages);
+        Eq(P("/g", "/g/g1/s"), PurgeSets.Members(a, b, Bases).Pages); // unpin
     }
 
     [Fact]
     public void P_MEMBERS_a_gallery_emptied_by_the_change_is_still_purged()
     {
         var set = PurgeSets.Members(G("g1", "s", "public", "a"), G("g1", "s", "public"), Bases);
-        Eq(P("/", "/g/g1/s", "/g/g1/s/a"), set.Pages);
+        Eq(P("/g", "/g/g1/s", "/g/g1/s/a"), set.Pages);
 
         var priv = PurgeSets.Members(G("g1", "s", "private", "a"), G("g1", "s", "private"), Bases);
         Eq(P("/g/g1/s", "/g/g1/s/a"), priv.Pages);
@@ -104,7 +104,7 @@ public class PurgeSetTests
     public void P_MEMBERS_first_photo_into_an_empty_public_gallery_lists_it_on_home()
     {
         var set = PurgeSets.Members(G("g1", "s", "public"), G("g1", "s", "public", "a"), Bases);
-        Eq(P("/", "/g/g1/s", "/g/g1/s/a"), set.Pages);
+        Eq(P("/g", "/g/g1/s", "/g/g1/s/a"), set.Pages);
     }
 
     // ── P-VIS ────────────────────────────────────────────────────────────────
@@ -114,7 +114,7 @@ public class PurgeSetTests
     {
         var priv = G("g1", "s", "private", "a", "b");
         var pub = G("g1", "s", "public", "a", "b");
-        var expected = P("/", "/g/g1/s", "/g/g1/s/a", "/g/g1/s/b");
+        var expected = P("/g", "/g/g1/s", "/g/g1/s/a", "/g/g1/s/b");
         Eq(expected, PurgeSets.Visibility(priv, pub, Bases).Pages);
         Eq(expected, PurgeSets.Visibility(pub, priv, Bases).Pages);
         Assert.Empty(PurgeSets.Visibility(priv, pub, Bases).Files);
@@ -126,7 +126,7 @@ public class PurgeSetTests
     public void P_RENAME_purges_every_page_under_both_slugs_and_home()
     {
         var set = PurgeSets.Rename(G("g1", "old", "public", "a", "b"), G("g1", "new", "public", "a", "b"), Bases);
-        Eq(P("/", "/g/g1/old", "/g/g1/old/a", "/g/g1/old/b", "/g/g1/new", "/g/g1/new/a", "/g/g1/new/b"), set.Pages);
+        Eq(P("/g", "/g/g1/old", "/g/g1/old/a", "/g/g1/old/b", "/g/g1/new", "/g/g1/new/a", "/g/g1/new/b"), set.Pages);
     }
 
     [Fact]
@@ -140,7 +140,7 @@ public class PurgeSetTests
     public void P_RENAME_to_the_same_slug_gives_one_slugs_paths_only()
     {
         var set = PurgeSets.Rename(G("g1", "s", "public", "a", "b"), G("g1", "s", "public", "a", "b"), Bases);
-        Eq(P("/", "/g/g1/s", "/g/g1/s/a", "/g/g1/s/b"), set.Pages);
+        Eq(P("/g", "/g/g1/s", "/g/g1/s/a", "/g/g1/s/b"), set.Pages);
     }
 
     // ── P-DESC ───────────────────────────────────────────────────────────────
@@ -166,7 +166,7 @@ public class PurgeSetTests
     public void P_ORDER_purges_home_when_listed_order_changes()
     {
         var set = PurgeSets.Order(["g1", "g2", "g3", "g4"], ["g2", "g1", "g3", "g4"], Three, Bases);
-        Eq(P("/"), set.Pages);
+        Eq(P("/g"), set.Pages);
         Assert.Empty(set.Files);
     }
 
@@ -183,7 +183,7 @@ public class PurgeSetTests
     [Fact]
     public void P_GDELETE_purges_every_page_before_and_home_when_listed()
     {
-        Eq(P("/", "/g/g1/s", "/g/g1/s/a", "/g/g1/s/b"), PurgeSets.GalleryDelete(G("g1", "s", "public", "a", "b"), Bases).Pages);
+        Eq(P("/g", "/g/g1/s", "/g/g1/s/a", "/g/g1/s/b"), PurgeSets.GalleryDelete(G("g1", "s", "public", "a", "b"), Bases).Pages);
         Eq(P("/g/g1/s", "/g/g1/s/a"), PurgeSets.GalleryDelete(G("g1", "s", "private", "a"), Bases).Pages);
         Assert.True(PurgeSets.GalleryDelete(G("g1", "s", "public"), Bases).IsEmpty);
     }
@@ -194,7 +194,7 @@ public class PurgeSetTests
     public void P_TEXT_purges_gallery_and_photo_page_in_each_gallery_plus_home_for_a_listed_cover()
     {
         var galleries = new[] { G("g1", "s", "public", "a", "b"), G("g2", "t", "private", "c", "a") };
-        Eq(P("/", "/g/g1/s", "/g/g1/s/a", "/g/g2/t", "/g/g2/t/a"), PurgeSets.Text("a", galleries, Bases).Pages);
+        Eq(P("/g", "/g/g1/s", "/g/g1/s/a", "/g/g2/t", "/g/g2/t/a"), PurgeSets.Text("a", galleries, Bases).Pages);
     }
 
     [Fact]
@@ -204,7 +204,7 @@ public class PurgeSetTests
         Eq(P("/g/g1/s", "/g/g1/s/b"), PurgeSets.Text("b", notCover, Bases).Pages);
 
         var pinned = new[] { new GallerySnapshot("g1", "s", "public", ["a", "b"], PinnedCover: "b") };
-        Eq(P("/", "/g/g1/s", "/g/g1/s/b"), PurgeSets.Text("b", pinned, Bases).Pages);
+        Eq(P("/g", "/g/g1/s", "/g/g1/s/b"), PurgeSets.Text("b", pinned, Bases).Pages);
 
         var privateCover = new[] { G("g2", "t", "private", "a") };
         Eq(P("/g/g2/t", "/g/g2/t/a"), PurgeSets.Text("a", privateCover, Bases).Pages);
@@ -230,7 +230,7 @@ public class PurgeSetTests
             ["a-320.avif", "a-320.webp", "a-640.avif"],
             Bases);
 
-        Eq(P("/", "/g/g1/s", "/g/g1/s/a", "/g/g1/s/b", "/g/g2/t", "/g/g2/t/a"), set.Pages);
+        Eq(P("/g", "/g/g1/s", "/g/g1/s/a", "/g/g1/s/b", "/g/g2/t", "/g/g2/t/a"), set.Pages);
         Eq(F("a-320.avif", "a-320.webp", "a-640.avif"), set.Files);
     }
 
@@ -251,8 +251,8 @@ public class PurgeSetTests
         var one = PurgeSets.Members(G("g1", "s", "public", "a"), G("g1", "s", "public", "a", "b"), Bases);
         var two = PurgeSets.Members(G("g1", "s", "public", "a", "b"), G("g1", "s", "public", "a", "b", "c"), Bases);
         var union = PurgeSet.Union(Bases, [one, two]);
-        Eq(P("/", "/g/g1/s", "/g/g1/s/a", "/g/g1/s/b", "/g/g1/s/c"), union.Pages);
-        Eq(["/", "/g/g1/s", "/g/g1/s/a", "/g/g1/s/b", "/g/g1/s/c"], union.PagePaths);
+        Eq(P("/g", "/g/g1/s", "/g/g1/s/a", "/g/g1/s/b", "/g/g1/s/c"), union.Pages);
+        Eq(["/g", "/g/g1/s", "/g/g1/s/a", "/g/g1/s/b", "/g/g1/s/c"], union.PagePaths);
     }
 
     [Fact]

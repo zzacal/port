@@ -23,7 +23,7 @@ public class ImageDeleteTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
 {
     private static string Gp(string gid, string slug) => LibraryHost.Page(PurgeSets.GalleryPath(gid, slug));
     private static string Pp(string gid, string slug, string iid) => LibraryHost.Page(PurgeSets.PhotoPath(gid, slug, iid));
-    private static readonly string Home = LibraryHost.Page("/");
+    private static readonly string Home = LibraryHost.Page("/g");
 
     private static void SetEq(IEnumerable<string> expected, IEnumerable<string> actual) =>
         Assert.Equal(expected.Distinct().Order(StringComparer.Ordinal).ToArray(), actual.Order(StringComparer.Ordinal).ToArray());

@@ -1,0 +1,12 @@
+== specs/011-home-page/evidence/home-timings.log
+format: plain message lines
+PASS SC-005 home reads n=100 every db_reads == 0
+PASS SC-005 listing reads n=100 every db_reads == 1
+PASS SC-005 gallery reads n=100 every db_reads <= 2
+PASS SC-005 photo reads n=100 every db_reads <= 2
+PASS SC-006 home time n=100 p95=0.13 ms < 50
+PASS SC-006 listing time n=100 p95=0.70 ms < 50
+PASS SC-006 gallery time n=100 p95=2.89 ms < 50
+PASS SC-006 photo time n=100 p95=1.89 ms < 50
+
+ALL PASS

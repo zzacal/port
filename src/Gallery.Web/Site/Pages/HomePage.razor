@@ -1,13 +1,7 @@
-<PublicLayout Title="Gallery" Enhance="true" Crumbs="Crumbs">
-    @if (Cards.Count > 0)
-    {
-        <ContactSheet Items="Cards" Large="3" Medium="3" Small="1" />
-    }
+<PublicLayout Title="Gallery" Enhance="true" Fill="true" Crumbs="Trails.Home">
+    <Nav Items="Links" Home="true" />
 </PublicLayout>
 
 @code {
-    [Parameter] public IReadOnlyList<ContactSheetItem> Cards { get; set; } = [];
-
-    // 010 owner review 2: home is the trail's root, the current page, not a link.
-    private static readonly IReadOnlyList<Crumb> Crumbs = [new("Galleries")];
+    private static readonly IReadOnlyList<NavItem> Links = [new(Trails.ListingLabel, Trails.ListingHref)];
 }

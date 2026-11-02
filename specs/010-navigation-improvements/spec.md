@@ -11,6 +11,11 @@ terrible" report and the navigation study delivered in conversation on 2026-11-0
 recommended first set (ideas 1, 2, 3, 4, 6, 8, 11, 13) is the scope; the rest are listed as out of
 scope below.
 
+> **AMENDED by feature 011-home-page (constitution 4.5.0, 2026-11-02)**: `/` is now a home page
+> that links to the galleries, and the gallery grid moved to `/g` as the galleries listing. Where
+> this spec says "home page" or "home grid" for the grid of gallery cards, read "galleries
+> listing (`/g`)"; its requirements apply there unchanged. "Home order" keeps its name. The breadcrumb root is now "Home" (011 FR-011, FR-012).
+
 ## Clarifications
 
 ### Session 2026-11-01

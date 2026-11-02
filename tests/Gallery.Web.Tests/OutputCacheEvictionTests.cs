@@ -33,14 +33,14 @@ public class OutputCacheEvictionTests(MongoFixture mongo)
     }
 
     [Fact]
-    public async Task Home_second_GET_is_served_from_the_output_cache()
+    public async Task Listing_second_GET_is_served_from_the_output_cache()
     {
         await using var host = await AdminHost.CreateAsync(mongo, extraOverrides: CacheOn);
         await InsertPublicGalleryAsync(host);
 
-        var first = await host.GetAsync("/");
+        var first = await host.GetAsync("/g");
         Assert.Equal(System.Net.HttpStatusCode.OK, first.StatusCode);
-        var second = await host.GetAsync("/");
+        var second = await host.GetAsync("/g");
         Assert.Equal(System.Net.HttpStatusCode.OK, second.StatusCode);
 
         Assert.Equal(1, Count(host, "db.site.read"));
@@ -71,7 +71,7 @@ public class OutputCacheEvictionTests(MongoFixture mongo)
         await InsertPublicGalleryAsync(host);
 
         var galleryPath = $"/g/{GalleryId}/{Slug}";
-        Assert.Equal(System.Net.HttpStatusCode.OK, (await host.GetAsync("/")).StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.OK, (await host.GetAsync("/g")).StatusCode);
         Assert.Equal(System.Net.HttpStatusCode.OK, (await host.GetAsync(galleryPath)).StatusCode);
         Assert.Equal(1, Count(host, "db.site.read"));
         Assert.Equal(1, Count(host, "db.gallery.read"));
@@ -80,7 +80,7 @@ public class OutputCacheEvictionTests(MongoFixture mongo)
         await store.EvictByTagAsync(PublicCache.PageTag(galleryPath), CancellationToken.None);
 
         Assert.Equal(System.Net.HttpStatusCode.OK, (await host.GetAsync(galleryPath)).StatusCode);
-        Assert.Equal(System.Net.HttpStatusCode.OK, (await host.GetAsync("/")).StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.OK, (await host.GetAsync("/g")).StatusCode);
         Assert.Equal(2, Count(host, "db.gallery.read"));
         Assert.Equal(1, Count(host, "db.site.read"));
     }

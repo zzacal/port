@@ -1,7 +1,11 @@
 <UiLayout Title="Nav">
     <Specimen Label="Default"><Nav Items="Items" /></Specimen>
+    <Specimen Label="Home, one link"><Nav Items="HomeOne" Home="true" /></Specimen>
+    <Specimen Label="Home, three links (sample data)"><Nav Items="HomeThree" Home="true" /></Specimen>
 </UiLayout>
 
 @code {
     private static readonly IReadOnlyList<NavItem> Items = [new("Galleries", "/", Current: true)];
+    private static readonly IReadOnlyList<NavItem> HomeOne = [new("Galleries", "#")];
+    private static readonly IReadOnlyList<NavItem> HomeThree = [new("Galleries", "#"), new("About", "#"), new("Contact", "#")];
 }

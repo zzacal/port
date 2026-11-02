@@ -149,6 +149,20 @@ areas and Left/Right/Escape; listed galleries end with previous/next gallery lin
 header drops its duplicate link; the library status links the first gallery. Amends D-17, D-21,
 section 4 (Gallery `nav`) and L-07 to L-17 (P-NAV and counter purges).
 
+### 011 Home page
+
+**Status: implemented on branch `011-home-page` (stacked on 010), not merged; defaults and
+stated test changes in `specs/011-home-page/decisions.md`.** Evidence: `specs/011-home-page/evidence/`
+(verify.sh ALL PASS live, 12 of 14 checks FAIL on the pre-011 build; p95.sh ALL PASS: `/` 0 reads
+p95 0.13 ms, `/g` exactly 1 read; snapshot-diff.sh ALL EQUAL; non-vacuity.sh 7/7; design record
+validate 0 failures; full suite 108 + 1107 passed, 1 skipped). O-01 and O-02 passed (owner, 2026-11-02): the
+click on Galleries activates the prerendered `/g` (activationStart 228.7 ms; decisions row 25).
+
+`/` is a home page whose only content is a large, centred "Galleries" link; the grid moved
+unchanged to `/g` (`/g/` redirects there); every public breadcrumb starts at Home. Amends D-13,
+D-15, D-16, D-20, D-21, D-23, the content model's `homeCards` row, the lifecycle "Pages and
+caches" lines, E-16, and the II.2/II.6/IV.9 traceability rows.
+
 ### Hosting (number assigned when it starts)
 
 Choose and provision the host, then deploy, once the owner has a subscription or account only

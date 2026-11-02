@@ -128,12 +128,12 @@ public class UploadSourceGuardTests(MongoFixture mongo)
             Builders<SiteDoc>.Update.Set(d => d.HomeOrder, [galId]).Set(d => d.HomeCards, [card]).Set(d => d.UpdatedAt, DateTime.UtcNow),
             new UpdateOptions { IsUpsert = true });
 
-        foreach (var path in new[] { "/", $"/g/{galId}/autumn-walk", $"/g/{galId}/autumn-walk/{imgId}" })
+        foreach (var path in new[] { "/", "/g", $"/g/{galId}/autumn-walk", $"/g/{galId}/autumn-walk/{imgId}" })
         {
             var resp = await host.GetAsync(path);
             Assert.True(resp.StatusCode == HttpStatusCode.OK, $"{path} answered {(int)resp.StatusCode}");
             var html = await resp.Content.ReadAsStringAsync();
-            Assert.Contains("Autumn Walk", html);
+            if (path != "/") Assert.Contains("Autumn Walk", html); // 011: "/" shows links only
             Assert.False(html.Contains("/admin-assets", StringComparison.Ordinal), $"{path} references /admin-assets");
         }
     }
