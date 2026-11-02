@@ -14,8 +14,8 @@ srcfiles() { find "$S" \( -name '*.razor' -o -name '*.cs' -o -name '*.razor.css'
 # ── K1 one tap rule (UI-2) ────────────────────────────────────────────────────
 n=$(cssfiles | xargs grep -l '\.text-link\.tap' | wc -l | tr -d ' ')
 chk "K1 the .text-link.tap rule exists in exactly one stylesheet ($n)" '[ "$n" = 1 ] && grep -q "\.text-link\.tap" $S/Components/Atoms/TextLink.razor.css'
-others=$(cssfiles | grep -v 'Atoms/TextLink.razor.css' | xargs grep -nE 'min-height: *44px|line-height: *44px' || true)
-chk "UI-2 no min-height/line-height 44px outside TextLink.razor.css" '[ -z "$others" ]'
+others=$(cssfiles | xargs grep -nE '44px' || true)
+chk "UI-2 the tap size is the one Tokens.Tap value: no literal 44px in any stylesheet" '[ -z "$others" ] && grep -q "public const int Tap = 44;" src/Gallery.Core/Design/Tokens.cs'
 [ -n "$others" ] && echo "$others"
 chk "K1 TextLink renders text-link tap only when Tap" 'grep -q "\"text-link tap\" : \"text-link\"" $S/Components/Atoms/TextLink.razor'
 
@@ -35,6 +35,10 @@ chk "B1 Breadcrumb marks the current page" 'grep -q "aria-current=\"page\"" $S/C
 chk "B6 OwnerBar has no PrimaryAction and a fixed View site link" '! grep -q "PrimaryAction" $S/Components/Organisms/OwnerBar.razor $S/Components/Templates/AdminLayout.razor && grep -q "View site ↗" $S/Components/Organisms/OwnerBar.razor'
 chk "B6 no admin page passes ViewHref to AdminLayout" '! grep -h "<AdminLayout" $S/Admin/Pages/*.razor | grep -q "ViewHref"'
 chk "B6 New gallery sits in a PageHeading" 'grep -q "<PageHeading Text=\"Galleries\" Actions=\"@NewGallery\"" $S/Admin/Pages/GalleriesPage.razor'
+chk "IX constitution 4.4.0 has principle IX" 'grep -q "^### IX. Visual Consistency Through Shared Containers" .specify/memory/constitution.md && grep -q "Version\*\*: 4.4.0" .specify/memory/constitution.md'
+chk "IX.3 breadcrumb row is a fixed tap height" 'grep -q "min-height: var(--tap)" $S/Components/Molecules/Breadcrumb.razor.css'
+chk "IX.2 both layouts zero the first content margin" 'grep -q ".public-main > ::deep :first-child" $S/Components/Templates/PublicLayout.razor.css && grep -q ".admin-main > ::deep :first-child" $S/Components/Templates/AdminLayout.razor.css'
+chk "IX.2 no public page sets a top margin on its head" '! grep -qE "margin: var\(--space-[sml]\) auto" $S/Site/Pages/GalleryPage.razor.css'
 chk "B6 no Back to galleries in admin" '! grep -rq "Back to galleries" $S/Admin $S/Components/Organisms'
 
 # ── K6/K7 header and key handler ──────────────────────────────────────────────

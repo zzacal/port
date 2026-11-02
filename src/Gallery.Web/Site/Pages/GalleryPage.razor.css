@@ -1,6 +1,6 @@
 .gallery-head {
     max-width: 960px;
-    margin: var(--space-m) auto var(--space-s);
+    margin: 0 auto var(--space-s); /* IX.2: no top margin; PublicLayout owns the gap under the header */
     padding: 0 var(--space-s);
     text-align: center;
 }

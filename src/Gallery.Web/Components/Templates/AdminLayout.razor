@@ -24,7 +24,11 @@
 @code {
     [Parameter, EditorRequired] public string Title { get; set; } = "";
     [Parameter] public AdminPage? Current { get; set; }
-    /// <summary>010 owner review 1 (B6): the breadcrumb under the owner bar, on pages with a parent.</summary>
+    /// <summary>
+    /// The breadcrumb under the owner bar. Constitution IX: the layout draws it on every page with the
+    /// bar, so the content starts at the same height everywhere. Null shows the section's own name
+    /// (or the page title) as the one, current, item.
+    /// </summary>
     [Parameter] public IReadOnlyList<Crumb>? Crumbs { get; set; }
     [Parameter] public RenderFragment? Aside { get; set; }
     [Parameter] public RenderFragment? ChildContent { get; set; }
@@ -36,5 +40,13 @@
     // One bar on every admin page (010 owner review 1): same links, View site, Sign out; only aria-current differs.
     private RenderFragment Bar => @<OwnerBar Current="@Current" SignOut="@SignOut" />;
 
-    private RenderFragment? CrumbsContent => Crumbs is null || Crumbs.Count == 0 ? null : @<Breadcrumb Items="Crumbs" />;
+    private RenderFragment? CrumbsContent => ShowOwnerBar ? @<Breadcrumb Items="Trail" /> : null;
+
+    private IReadOnlyList<Crumb> Trail => Crumbs is { Count: > 0 } ? Crumbs : [new(Current switch
+    {
+        AdminPage.Upload => "Upload",
+        AdminPage.Library => "Library",
+        AdminPage.Galleries => "Galleries",
+        _ => Title,
+    })];
 }

@@ -62,6 +62,10 @@ can only be checked once the resource exists.
 | VIII.2 | D-02: Universal SSL at the edge, Origin CA at the origin | config check: origin certificate issuer is Cloudflare Origin CA | designed |
 | VIII.3 | Section 8: every metered dimension with free limit, unit price, projection | document review: validate.sh C7 | designed |
 | VIII.4 | Section 8, D-18, D-12: Application Insights 150 MB daily cap | config check: daily cap set on the workspace | designed |
+| IX.1 | D-21, D-23 (amended by 010 owner review 3): shared chrome renders at the same position, height and spacing on every page of a site | automated test: LayoutConsistencyBrowserTests | designed |
+| IX.2 | D-21, D-23: PublicLayout and AdminLayout are each the one container that owns the chrome and the gap under it; pages carry no top margin on their first element | automated test: LayoutConsistencyBrowserTests; grep in 010 evidence/verify.sh | designed |
+| IX.3 | D-21: the breadcrumb row is one tap height (Tokens.Tap) with or without a link | automated test: LayoutConsistencyBrowserTests (home's trail has no link) | designed |
+| IX.4 | 010 decisions row 56: measured browser test over every public and admin page type at narrow and wide widths | automated test: LayoutConsistencyBrowserTests; non-vacuity break 10 | designed |
 | PC.1 | D-01, D-15: .NET 10 minimal APIs, server-rendered HTML, htmx and web components for admin | document review: D-01 and D-15 | deferred:first-build-feature |
 | PC.2 | D-01, D-03: App Service Linux B1; IP allowlist plus Authenticated Origin Pulls | config check: access restrictions list only Cloudflare ranges | deferred:first-build-feature |
 | PC.3 | D-02: Cloudflare proxy, cache, Full (strict) TLS | config check: zone SSL mode is Full (strict) | deferred:first-build-feature |

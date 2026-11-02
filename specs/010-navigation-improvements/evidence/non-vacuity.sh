@@ -11,7 +11,7 @@ SLN="Gallery.slnx"
 TESTS="tests/Gallery.Web.Tests"
 fails=0
 
-FILES="src/Gallery.Web/Components/Molecules/Breadcrumb.razor.css src/Gallery.Web/Components/Molecules/Pager.razor.css src/Gallery.Web/Components/Organisms/OwnerBar.razor src/Gallery.Web/Library/SiteProjector.cs src/Gallery.Web/Site/PublicEndpoints.cs src/Gallery.Web/Library/GalleryService.cs src/Gallery.Web/Library/OperationResult.cs src/Gallery.Web/Edge/PurgeSets.cs src/Gallery.Web/Components/Templates/PublicLayout.razor"
+FILES="src/Gallery.Web/Site/Pages/GalleryPage.razor.css src/Gallery.Web/Components/Molecules/Breadcrumb.razor.css src/Gallery.Web/Components/Molecules/Pager.razor.css src/Gallery.Web/Components/Organisms/OwnerBar.razor src/Gallery.Web/Library/SiteProjector.cs src/Gallery.Web/Site/PublicEndpoints.cs src/Gallery.Web/Library/GalleryService.cs src/Gallery.Web/Library/OperationResult.cs src/Gallery.Web/Edge/PurgeSets.cs src/Gallery.Web/Components/Templates/PublicLayout.razor"
 if [ "${NV_DRYRUN:-0}" != 1 ]; then
   for f in $FILES; do
     git diff --quiet -- "$f" || { echo "ABORT $f has uncommitted changes"; exit 1; }
@@ -91,6 +91,11 @@ brk 8 src/Gallery.Web/Components/Organisms/OwnerBar.razor \
 brk 9 src/Gallery.Web/Components/Molecules/Breadcrumb.razor.css \
   's/justify-content: flex-start;/justify-content: flex-end;/' \
   'FullyQualifiedName~AdminNavBrowserTests.Builder_breadcrumb' 'breadcrumb leaves the page margin'
+
+# (10) constitution IX: a page puts its own top margin back -> the layout consistency guard must catch it.
+brk 10 src/Gallery.Web/Site/Pages/GalleryPage.razor.css \
+  's|margin: 0 auto var\(--space-s\); /\*[^*]*\*/|margin: var(--space-m) auto var(--space-s) !important;|' \
+  'FullyQualifiedName~PublicLayoutConsistencyBrowserTests' 'gallery page pushes its content down'
 
 # (6) keys survive Save-Data: move the key handler after the Save-Data return.
 brk 6 src/Gallery.Web/Components/Templates/PublicLayout.razor \

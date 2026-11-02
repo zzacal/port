@@ -10,6 +10,12 @@ body.public {
     padding-bottom: var(--space-l);
 }
 
+/* IX.2: the layout owns the frame. The gap between the header and a page's content is the same
+   on every page, so no page's first element may push it down with its own top margin. */
+.public-main > ::deep :first-child {
+    margin-top: 0;
+}
+
 @view-transition {
     navigation: auto;
 }

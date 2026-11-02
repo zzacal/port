@@ -1,5 +1,5 @@
 PASS K1 the .text-link.tap rule exists in exactly one stylesheet (1)
-PASS UI-2 no min-height/line-height 44px outside TextLink.razor.css
+PASS UI-2 the tap size is the one Tokens.Tap value: no literal 44px in any stylesheet
 PASS K1 TextLink renders text-link tap only when Tap
 PASS K2 Pager links pass Tap="true" (2)
 PASS B4 Pager side tracks are at least max-content (whole words)
@@ -15,6 +15,10 @@ PASS B1 Breadcrumb marks the current page
 PASS B6 OwnerBar has no PrimaryAction and a fixed View site link
 PASS B6 no admin page passes ViewHref to AdminLayout
 PASS B6 New gallery sits in a PageHeading
+PASS IX constitution 4.4.0 has principle IX
+PASS IX.3 breadcrumb row is a fixed tap height
+PASS IX.2 both layouts zero the first content margin
+PASS IX.2 no public page sets a top margin on its head
 PASS B6 no Back to galleries in admin
 PASS R1 the public header is the breadcrumb (no brand, no nav)
 PASS B2 admin renders the breadcrumb right after the bar

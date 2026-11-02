@@ -66,9 +66,10 @@ public partial class NavComponentTests
         var css = File.ReadAllText(Path.Combine(src, "Gallery.Web", "Components", "Atoms", "TextLink.razor.css"));
         var rule = Regex.Match(css, @"\.text-link\.tap\s*\{([^}]*)\}");
         Assert.True(rule.Success, "the .text-link.tap rule is missing from TextLink.razor.css");
-        Assert.Contains("min-height: 44px;", rule.Groups[1].Value);
-        Assert.Contains("min-width: 44px;", rule.Groups[1].Value);
-        Assert.Contains("line-height: 44px;", rule.Groups[1].Value);
+        // Constitution IX.3 / decisions row 57: the size is the one Tokens.Tap value (--tap, 44 px).
+        Assert.Contains("min-height: var(--tap);", rule.Groups[1].Value);
+        Assert.Contains("min-width: var(--tap);", rule.Groups[1].Value);
+        Assert.Contains("line-height: var(--tap);", rule.Groups[1].Value);
         Assert.Contains("display: inline-block;", rule.Groups[1].Value);
         Assert.Contains("text-overflow: ellipsis;", rule.Groups[1].Value);
 
@@ -80,7 +81,8 @@ public partial class NavComponentTests
         foreach (var file in files)
         {
             var text = File.ReadAllText(file);
-            if (text.Contains("line-height: 44px")) violations.Add($"{file}: line-height: 44px");
+            if (text.Contains("44px")) violations.Add($"{file}: a literal 44px (use var(--tap))");
+            if (text.Contains("line-height: var(--tap)")) violations.Add($"{file}: line-height: var(--tap)");
             foreach (Match m in Regex.Matches(text, @"([^{}]*)\{([^{}]*)\}"))
             {
                 if (!m.Groups[1].Value.Contains(".text-link")) continue;

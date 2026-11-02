@@ -98,6 +98,7 @@ public class TokensTests
         Assert.Contains("SpaceL", names);
         Assert.Contains("SpaceM", names);
         Assert.Contains("SpaceS", names);
+        Assert.Contains("Tap", names);
         Assert.Contains("BreakLarge", names);
         Assert.Contains("BreakMedium", names);
         Assert.Contains("CellRatioW", names);
@@ -110,6 +111,13 @@ public class TokensTests
         Assert.Contains("ColorMuted", names);
         Assert.Contains("ColorRule", names);
         Assert.Contains("FontStack", names);
+    }
+
+    [Fact]
+    public void Tap_is_the_44px_touch_target()
+    {
+        Assert.Equal(44, Tokens.Tap);
+        Assert.Contains("--tap:44px;", Tokens.ToCssRoot());
     }
 
     [Fact]
