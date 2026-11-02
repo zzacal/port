@@ -1,4 +1,5 @@
 using Gallery.Core.Images;
+using Gallery.Web.Components.Molecules;
 using Gallery.Web.Components.Organisms;
 using Gallery.Web.Site.Pages;
 
@@ -46,10 +47,12 @@ public class PageComponentTests
         {
             Title = "September 5",
             NoIndex = false,
-            Items = (IReadOnlyList<ContactSheetItem>)items
+            Items = (IReadOnlyList<ContactSheetItem>)items,
+            Crumbs = (IReadOnlyList<Crumb>)[new("Galleries", "/"), new("September 5")]
         });
-        Assert.Contains("<h1", html);
-        Assert.Contains("September 5", html);
+        // Owner review 4: the breadcrumb names the gallery; the page body has no title.
+        Assert.DoesNotContain("<h1", html);
+        Assert.Matches("aria-current=\"page\"[^>]*><span[^>]*>September 5</span>", html);
         Guards.AssertNoInlineStyle(html);
     }
 

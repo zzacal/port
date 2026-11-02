@@ -44,8 +44,10 @@ public sealed class NavBrowserTests(NavBrowserFixture site)
             if (DateTime.UtcNow > deadline) return $"{Path(page)} (timed out after {ms} ms)";
             await Task.Delay(50);
         }
-        try { await page.WaitForLoadStateAsync(LoadState.Load, new() { Timeout = ms }); }
-        catch (Exception e) when (e is PlaywrightException or TimeoutException) { return $"{Path(page)} (no load event after {ms} ms)"; }
+        // The document's own readyState, not Playwright's lifecycle tracking: Playwright intermittently
+        // misses the load event of a link navigation that has already completed (decisions row 59).
+        try { await page.WaitForFunctionAsync("document.readyState === 'complete'", null, new() { Timeout = ms }); }
+        catch (Exception e) when (e is PlaywrightException or TimeoutException) { return $"{Path(page)} (not loaded after {ms} ms)"; }
         return Path(page);
     }
 
@@ -522,7 +524,8 @@ public sealed class NavBrowserTests(NavBrowserFixture site)
         await page.Locator("nav.gallery-neighbours a[rel=next]").ClickAsync();
         var coast = await site.GalleryPathAsync(NavBrowserFixture.CoastId);
         Assert.Equal(coast, await PathAfter(page, p => p == coast));
-        Assert.Equal("Coast", await page.Locator("h1").InnerTextAsync());
+        // Owner review 4: the gallery's name is the breadcrumb's current item (the page has no h1).
+        Assert.Equal("Coast", await page.Locator(".breadcrumb li[aria-current=page]").InnerTextAsync());
     }
 
     // The same walk from every listed gallery: home → gallery → photo 1 → Next (when there is one)

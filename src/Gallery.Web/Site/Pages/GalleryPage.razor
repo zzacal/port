@@ -1,11 +1,10 @@
 <PublicLayout Title="@Title" NoIndex="@NoIndex" Enhance="true" HeadExtra="_transitions" Crumbs="Crumbs">
-    <header class="gallery-head">
-        <Title Text="@Title" Element="h1" />
-        @if (!string.IsNullOrEmpty(Description))
-        {
-            <p class="gallery-desc">@Description</p>
-        }
-    </header>
+    @* Owner review 4: the breadcrumb names the gallery, so the page shows no title; only the
+       description, when there is one. *@
+    @if (!string.IsNullOrEmpty(Description))
+    {
+        <p class="gallery-desc">@Description</p>
+    }
     @if (Items.Count > 0)
     {
         <ContactSheet Items="Items" Large="4" Medium="3" Small="1" />

@@ -1,11 +1,8 @@
-.gallery-head {
-    max-width: 960px;
-    margin: 0 auto var(--space-s); /* IX.2: no top margin; PublicLayout owns the gap under the header */
-    padding: 0 var(--space-s);
-    text-align: center;
-}
-
+/* Owner review 4: no title block; the description alone sits above the grid. IX.2: no top margin,
+   PublicLayout owns the gap under the header. */
 .gallery-desc {
     max-width: 60ch;
-    margin: 8px auto 0;
+    margin: 0 auto var(--space-s);
+    padding: 0 var(--space-s);
+    text-align: center;
 }
