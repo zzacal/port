@@ -79,7 +79,7 @@ brk 5 src/Gallery.Web/Edge/PurgeSets.cs \
 # (6) keys survive Save-Data: move the key handler after the Save-Data return.
 brk 6 src/Gallery.Web/Components/Templates/PublicLayout.razor \
   's/(document\.addEventListener\(.keydown.*?\n\}\);\n)(.*?if \(navigator\.connection\?\.saveData\) return;\n)/$2$1/s' \
-  'FullyQualifiedName~NavBrowserTests' 'key handler registered after the Save-Data return'
+  'FullyQualifiedName~NavBrowserTests.Keys_work_with_save_data' 'key handler registered after the Save-Data return'
 
 if [ "${NV_DRYRUN:-0}" != 1 ]; then
   dotnet build "$SLN" -warnaserror --artifacts-path "$ART" -nologo -v q >/dev/null 2>&1 \

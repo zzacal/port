@@ -405,7 +405,7 @@ and the new test file `LibraryMembershipTests.cs`.
 **Owns**: new `tests/Gallery.Web.Tests/Fixtures/NavBrowserFixture.cs`, new
 `tests/Gallery.Web.Tests/NavBrowserTests.cs`. `BrowserTests`/`BrowserSiteFixture` are not touched.
 
-- [ ] T036 Write `NavBrowserFixture` (research R-13): Mongo container, image host with hit
+- [X] T036 Write `NavBrowserFixture` (research R-13): Mongo container, image host with hit
   counting and immutable caching, the real app via `AppBuilder.Build` (Development, the app's
   content root, output cache off, as `BrowserSiteFixture` does). Photos are encoded by
   `PhotoEncoder` (T004), 6 distinct sets reused cyclically for 23 image documents. Galleries:
@@ -414,7 +414,7 @@ and the new test file `LibraryMembershipTests.cs`.
   from its service provider; no hand-written card or nav. Expose paths and ids like
   `BrowserSiteFixture`, plus `RenameAsync` and `RemovePhotoAsync` that go through
   `GalleryService`.
-- [ ] T037 [US1] [US2] In `NavBrowserTests.cs`: SC-001 for EVERY photo of the 23-photo gallery
+- [X] T037 [US1] [US2] In `NavBrowserTests.cs`: SC-001 for EVERY photo of the 23-photo gallery
   at 1440×900 and 390×844: open the photo page, click the gallery link, wait for load, assert
   `#p-{id}`'s bounding box lies inside the viewport; repeat once per width with JS off; repeat
   for 3 photos pressing Escape instead of clicking; repeat for 1 photo after hovering the link
@@ -422,7 +422,7 @@ and the new test file `LibraryMembershipTests.cs`.
   parent decision). Old slug after `RenameAsync`: following a stale gallery link still lands on
   the tile. After `RemovePhotoAsync`, the removed photo's anchor URL opens at scrollY 0 with
   status 200.
-- [ ] T038 [US2] In `NavBrowserTests.cs`: SC-003 tap boxes ≥ 44×44 for Previous, Next and the
+- [X] T038 [US2] In `NavBrowserTests.cs`: SC-003 tap boxes ≥ 44×44 for Previous, Next and the
   gallery link (M5), and the gallery neighbour links, at 360, 390, 600, 1024, 1440 px, no two boxes overlapping, centre
   text on one line and horizontally centred within 2 px for middle, first and last photos, with
   gallery titles of 10, 30 and 70 characters (set via `RenameAsync`); the photo's `.stage`
@@ -434,7 +434,7 @@ and the new test file `LibraryMembershipTests.cs`.
   same hit counter); with Save-Data emulated (same init script as
   `BrowserTests.Save_data_suppresses_neighbour_and_hover_fetches`) the keys still work. UI-4:
   no element's text, `title` or `aria-keyshortcuts` mentions an arrow key or Escape.
-- [ ] T039 [US3] [US4] In `NavBrowserTests.cs`: SC-004 with JS off: home → "September 6" →
+- [X] T039 [US3] [US4] In `NavBrowserTests.cs`: SC-004 with JS off: home → "September 6" →
   photo 1 → Next → gallery link (lands on photo 2's tile) → next gallery link → "Coast". SC-007:
   CLS 0 and no horizontal scroll on home, gallery and photo at 1440, 1024, 390 (same observer as
   `BrowserTests`). SC-008: header link hrefs on each page have no duplicate.
@@ -488,6 +488,11 @@ and the new test file `LibraryMembershipTests.cs`.
 
 - [ ] O-01 Quickstart Part C on the owner's own `dotnet watch` (Ctrl+R first; step 2 fills `nav`
   for existing galleries).
+- [ ] O-03 Prerender landing (R-01-a, decisions row 38): in your own Chrome (not automated;
+  Chrome disables prerender under DevTools automation), open a photo of a listed gallery, hover
+  the `← {Gallery}` link for a second, click it. Expected: the gallery opens scrolled to that
+  photo's tile. DevTools > Application > Speculative loads shows whether the page was
+  prerendered. If it opens at the top, the fallback selector in research R-03 is the fix.
 - [ ] O-02 Phone check in Safari/iOS of tap areas and the long-title stacking (backburnered with
   008 O-02 if the owner prefers).
 
