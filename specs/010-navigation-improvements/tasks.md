@@ -127,11 +127,11 @@ batch as the code they guard.
 (only the `RefreshAsync` call site), `src/Gallery.Web/Edge/PurgeSets.cs`, and the new test files
 `NavProjectionTests.cs`, `NavPurgeTests.cs`, `NavSourceGuardTests.cs`.
 
-- [ ] T006 Add `GalleryLinkDoc` (`id`, `slug`, `title`), `GalleryNavDoc` (`prev`, `next`, both
+- [X] T006 Add `GalleryLinkDoc` (`id`, `slug`, `title`), `GalleryNavDoc` (`prev`, `next`, both
   `[BsonIgnoreIfNull]`) and `GalleryDoc.Nav` (`nav`, `[BsonIgnoreIfNull]`) to
   `src/Gallery.Web/Data/Documents.cs`, beside `GalleryCardDoc` (data-model.md). No other field
   changes.
-- [ ] T007 [SAFETY] In `src/Gallery.Web/Library/SiteProjector.cs` add
+- [X] T007 [SAFETY] In `src/Gallery.Web/Library/SiteProjector.cs` add
   `record GalleryLinkTarget(string Id, string Slug)`, `record ProjectionResult(IReadOnlyList<GalleryCardDoc> Cards, IReadOnlyList<GalleryLinkTarget> NavChanged)`,
   a pure `static Dictionary<string, GalleryNavDoc?> Nav(IEnumerable<string> homeOrder, IEnumerable<GalleryDoc> galleries)`
   and `ProjectWithNavAsync()`. `Nav` CALLS `Cards(...)` for the listed sequence and
@@ -142,7 +142,7 @@ batch as the code they guard.
   null vs absent equal) writes `$set nav` or `$unset nav` with NO `updatedAt` change, all inside
   the existing `db.site.project` timer, and returns the changed galleries with their slugs.
   `ProjectAsync()` becomes `(await ProjectWithNavAsync()).Cards` with its signature unchanged.
-- [ ] T008 [SAFETY] Write `tests/Gallery.Web.Tests/NavProjectionTests.cs` (AdminHost or
+- [X] T008 [SAFETY] Write `tests/Gallery.Web.Tests/NavProjectionTests.cs` (AdminHost or
   LibraryHost + Mongo): (a) pure `Nav` over A, B, C public non-empty, P private non-empty, E
   public empty, in homeOrder A, P, B, E, C → A{next B}, B{prev A, next C}, C{prev B}, P null, E
   null, and no nav anywhere names P or E; (b) the only listed gallery gets null; (c) through
@@ -153,10 +153,10 @@ batch as the code they guard.
   (count `op.timing db.site.project` duration only; assert via `updatedAt` and the stored doc
   being unchanged); (e) a nav-only write leaves `updatedAt` unchanged; (f) a private gallery
   with a planted stale `nav` gets it unset by the next projection.
-- [ ] T009 In `src/Gallery.Web/Edge/PurgeSets.cs`: widen `Changed` per contracts/edge.md E1 (rules
+- [X] T009 In `src/Gallery.Web/Edge/PurgeSets.cs`: widen `Changed` per contracts/edge.md E1 (rules
   3 and 4) and add `PurgeSet Nav(IEnumerable<GalleryLinkTarget> navChanged, EdgeBases bases)`
   (gallery paths only). Update the XML comments. Nothing else in the file changes.
-- [ ] T010 In `src/Gallery.Web/Library/OperationResult.cs` (`OperationScope`): call
+- [X] T010 In `src/Gallery.Web/Library/OperationResult.cs` (`OperationScope`): call
   `ProjectWithNavAsync` in `CompleteAsync` and `RefreshAsync`; keep a scope-level set of
   `NavChanged` from every projection (RefreshAsync adds to it); add `PurgeSets.Nav(set)` to the
   union before eviction and the single enqueue. For warm, read the NavChanged galleries missing
@@ -164,14 +164,14 @@ batch as the code they guard.
   `after` values passed to `WarmFiles`. `RefreshAsync`'s public return type stays
   `IReadOnlyList<GalleryCardDoc>`; `ImageDeleteService` needs no change unless it calls the
   projector directly (check; if it does, route it through the scope).
-- [ ] T011 Write `tests/Gallery.Web.Tests/NavPurgeTests.cs`: (a) the E1 table of
+- [X] T011 Write `tests/Gallery.Web.Tests/NavPurgeTests.cs`: (a) the E1 table of
   contracts/edge.md, row by row, against `PurgeSets.Changed`; (b) every row of the "Expected sets
   per owner action" table, through `LibraryHost` with the recorder: set up A, B, C, D listed and
   P private (each with 2 photos), run the action, `SettleAsync()`, and assert the recorder's page
   set EQUALS the union of the pre-010 sets for that action (computed by calling the existing
   `PurgeSets` methods on the snapshots) plus exactly the P-NAV pages in the table; (c) the
   "none" rows add nothing.
-- [ ] T012 [SAFETY] Write `tests/Gallery.Web.Tests/NavSourceGuardTests.cs` (source scan like
+- [X] T012 [SAFETY] Write `tests/Gallery.Web.Tests/NavSourceGuardTests.cs` (source scan like
   `OwnerWriteGuardTests`): in every `src/**/*.cs` outside `bin/obj`, a line containing the
   literal `"nav"` or a match of `\.Nav\b` inside `Update\.(Set|Unset)` or a `Nav =` assignment
   fails unless the file is `Library/SiteProjector.cs` or `Data/Documents.cs`; the public
@@ -180,7 +180,7 @@ batch as the code they guard.
 
 **Batch A gate (parent)**: build `-warnaserror`; full test; then T013.
 
-- [ ] T013 (parent, stated requirement change) Run the full suite after Batch A. Exactly these
+- [X] T013 (parent, stated requirement change) Run the full suite after Batch A. Exactly these
   four facts are expected to fail, each because the 009 expected set lacks pages 010 now purges
   (worked through E1 and E2 during analyze):
   1. `PurgeSetTests.P_MEMBERS_add_purges_gallery_page_added_photo_its_new_neighbour_and_home`
@@ -200,6 +200,9 @@ batch as the code they guard.
   gallery, which has no `nav`). For each of the four: confirm the new set from E1/E2, edit ONLY
   the expected set (and the one rename), and add a decisions.md row with old and new sets. Any
   other failure is a defect in Batch A: send it back.
+  DONE (decisions row 27): the four above plus two the analyze pass missed, both per the P-NAV
+  table: `GalleryListTests.G3_…` (listed swap adds both gallery pages) and
+  `BuilderTests.Removing_photos_…` (unlisting/relisting Coast adds `/g/{later}/later`).
 
 ---
 
@@ -213,23 +216,23 @@ batch as the code they guard.
 `Components/Organisms/SoloViewer.razor`, `Components/Organisms/SiteHeader.razor`, and the new
 test file `NavComponentTests.cs`. Implement contracts/components.md K1–K6 and K8 verbatim.
 
-- [ ] T014 [P] K1: `Tap` parameter and the `.text-link.tap` rule in
+- [X] T014 [P] K1: `Tap` parameter and the `.text-link.tap` rule in
   `src/Gallery.Web/Components/Atoms/TextLink.razor` and `TextLink.razor.css`.
-- [ ] T015 K2: `PagerStack` enum (`None`, `Narrow`, `Always`) in
+- [X] T015 K2: `PagerStack` enum (`None`, `Narrow`, `Always`) in
   `src/Gallery.Web/Components/Molecules/PagerStack.cs`; `Here` and `Stack` parameters, `Tap="true"`
   on both links, and the grid CSS in `Components/Molecules/Pager.razor(.css)`.
-- [ ] T016 [P] K3: `src/Gallery.Web/Components/Molecules/GalleryLink.razor(.css)` with
+- [X] T016 [P] K3: `src/Gallery.Web/Components/Molecules/GalleryLink.razor(.css)` with
   `NarrowChars`, `WideChars`, `Length`, `StackFor`.
-- [ ] T017 K4: `Here` and `Stack` pass-through in
+- [X] T017 K4: `Here` and `Stack` pass-through in
   `src/Gallery.Web/Components/Organisms/SoloViewer.razor`.
-- [ ] T018 [P] K5: `src/Gallery.Web/Components/Molecules/GalleryNeighbour.cs` and
+- [X] T018 [P] K5: `src/Gallery.Web/Components/Molecules/GalleryNeighbour.cs` and
   `GalleryNeighbours.razor(.css)`; renders nothing when both are null.
-- [ ] T019 [P] K8: `src/Gallery.Web/Components/Molecules/MembershipStatus.razor(.css)`.
-- [ ] T020 [P] K6: `src/Gallery.Web/Components/Organisms/SiteHeader.razor` renders no `<nav>`
+- [X] T019 [P] K8: `src/Gallery.Web/Components/Molecules/MembershipStatus.razor(.css)`.
+- [X] T020 [P] K6: `src/Gallery.Web/Components/Organisms/SiteHeader.razor` renders no `<nav>`
   when `NavItems` is empty; `NavItems` defaults to `[]`, not `EditorRequired`; the non-empty
   output is byte-identical to today (check with `UiPagesUnchangedTests` filter
   `organisms/site-header`, which must stay green).
-- [ ] T021 Write `tests/Gallery.Web.Tests/NavComponentTests.cs` (`Render.Html`, decode before
+- [X] T021 Write `tests/Gallery.Web.Tests/NavComponentTests.cs` (`Render.Html`, decode before
   asserting copy): each K-item's exact markup and copy from contracts/components.md; TextLink
   without `Tap` renders `class="text-link"` exactly; Pager with neither `Here` nor `Stack`
   differs from a pre-010 render ONLY by ` tap` (assert by stripping ` tap` and comparing to the

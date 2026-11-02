@@ -1,0 +1,369 @@
+using System.Net;
+using System.Text.RegularExpressions;
+using Gallery.Web.Components.Atoms;
+using Gallery.Web.Components.Molecules;
+using Gallery.Web.Components.Organisms;
+using Gallery.Web.Site.Pages;
+using Gallery.Core.Images;
+using Microsoft.AspNetCore.Components;
+
+namespace Gallery.Web.Tests;
+
+/// <summary>
+/// Feature 010 components (contracts/components.md K1–K6, K8): exact markup and copy, the
+/// unchanged output with every new parameter unset, and the one tap rule (T021).
+/// </summary>
+public partial class NavComponentTests
+{
+    private static readonly string UiBaseline = Path.Combine(
+        Render.RepoRoot, "specs", "006-public-site-local", "evidence", "ui-baseline");
+
+    private static RenderFragment Frag(string text) => b => b.AddContent(0, text);
+
+    private static RenderFragment Markup(string html) => b => b.AddMarkupContent(0, html);
+
+    /// <summary>Drops scoped-CSS attributes and decodes entities, so copy and markup compare plainly.</summary>
+    private static string Bare(string html) => WebUtility.HtmlDecode(ScopeAttr().Replace(html, ""));
+
+    [GeneratedRegex(@" b-[a-z0-9]{10}")]
+    private static partial Regex ScopeAttr();
+
+    private static List<string> Blocks(string html, string pattern)
+        => Regex.Matches(html, pattern, RegexOptions.Singleline).Select(m => m.Value).ToList();
+
+    private static ImageView MakeImage(string id = "img001") => new(
+        Id: id,
+        Title: "Test Image",
+        Width: 1920,
+        Height: 1080,
+        Variants: [new Variant(640, $"https://img.test/{id}.avif", $"https://img.test/{id}.webp")],
+        PlaceholderDataUri: "data:image/webp;base64,AAAA",
+        DominantColor: "#aabbcc",
+        Exif: null
+    );
+
+    // ── K1 TextLink ──────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task TextLink_without_tap_renders_class_text_link_exactly()
+    {
+        var html = await Render.Html<TextLink>(new { Href = "/x", ChildContent = Frag("Edit") });
+        Assert.Equal("<a class=\"text-link\" href=\"/x\">Edit</a>", Bare(html));
+    }
+
+    [Fact]
+    public async Task TextLink_with_tap_renders_class_text_link_tap()
+    {
+        var html = await Render.Html<TextLink>(new { Href = "/x", ChildContent = Frag("Next"), Rel = "next", Tap = true });
+        Assert.Equal("<a class=\"text-link tap\" href=\"/x\" rel=\"next\">Next</a>", Bare(html));
+    }
+
+    [Fact]
+    public void Tap_rule_lives_only_in_TextLink_css()
+    {
+        var src = Path.Combine(Render.RepoRoot, "src");
+        var css = File.ReadAllText(Path.Combine(src, "Gallery.Web", "Components", "Atoms", "TextLink.razor.css"));
+        var rule = Regex.Match(css, @"\.text-link\.tap\s*\{([^}]*)\}");
+        Assert.True(rule.Success, "the .text-link.tap rule is missing from TextLink.razor.css");
+        Assert.Contains("min-height: 44px;", rule.Groups[1].Value);
+        Assert.Contains("min-width: 44px;", rule.Groups[1].Value);
+        Assert.Contains("line-height: 44px;", rule.Groups[1].Value);
+        Assert.Contains("display: inline-block;", rule.Groups[1].Value);
+        Assert.Contains("text-overflow: ellipsis;", rule.Groups[1].Value);
+
+        var violations = new List<string>();
+        var files = Directory.EnumerateFiles(src, "*.razor.css", SearchOption.AllDirectories)
+            .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}")
+                        && !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}")
+                        && Path.GetFileName(f) != "TextLink.razor.css");
+        foreach (var file in files)
+        {
+            var text = File.ReadAllText(file);
+            if (text.Contains("line-height: 44px")) violations.Add($"{file}: line-height: 44px");
+            foreach (Match m in Regex.Matches(text, @"([^{}]*)\{([^{}]*)\}"))
+            {
+                if (!m.Groups[1].Value.Contains(".text-link")) continue;
+                var body = m.Groups[2].Value;
+                if (Regex.IsMatch(body, @"(^|[\s;])min-height\s*:")) violations.Add($"{file}: min-height on .text-link");
+                if (Regex.IsMatch(body, @"(^|[\s;])display\s*:")) violations.Add($"{file}: display on .text-link");
+            }
+        }
+        Assert.True(violations.Count == 0, string.Join("\n", violations));
+    }
+
+    // ── K2 Pager ─────────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task Pager_without_here_or_stack_differs_from_the_pre_010_specimens_only_by_tap()
+    {
+        var baseline = Blocks(await File.ReadAllTextAsync(Path.Combine(UiBaseline, "molecules", "pager.html")),
+            "<nav class=\"pager\".*?</nav>");
+        Assert.Equal(3, baseline.Count);
+
+        var first = await Render.Html<Pager>(new { NextHref = "#" });
+        var middle = await Render.Html<Pager>(new { PrevHref = "#", NextHref = "#" });
+        var last = await Render.Html<Pager>(new { PrevHref = "#" });
+
+        Assert.Equal(baseline, new[] { first, middle, last }.Select(h => h.Replace(" tap", "")).ToList());
+        Assert.Equal(1, Guards.Count(first, "class=\"text-link tap\""));
+        Assert.Equal(2, Guards.Count(middle, "class=\"text-link tap\""));
+        Assert.Equal(1, Guards.Count(last, "class=\"text-link tap\""));
+    }
+
+    [Fact]
+    public async Task Pager_first_photo_renders_no_previous_link()
+    {
+        var html = await Render.Html<Pager>(new { NextHref = "/n" });
+        Assert.DoesNotContain("rel=\"prev\"", html);
+        Assert.DoesNotContain("Previous", html);
+        Assert.Contains("<span class=\"prev\"></span>", Bare(html));
+    }
+
+    [Fact]
+    public async Task Pager_last_photo_renders_no_next_link()
+    {
+        var html = await Render.Html<Pager>(new { PrevHref = "/p" });
+        Assert.DoesNotContain("rel=\"next\"", html);
+        Assert.DoesNotContain(">Next<", html);
+        Assert.Contains("<span class=\"next\"></span>", Bare(html));
+    }
+
+    [Fact]
+    public async Task Pager_one_photo_renders_no_links_at_all()
+    {
+        var html = await Render.Html<Pager>(new { Here = Markup("<b>here</b>") });
+        Assert.DoesNotContain("<a ", html);
+        Assert.Equal(
+            "<nav class=\"pager\" aria-label=\"Image navigation\"><span class=\"prev\"></span><div class=\"here\"><b>here</b></div>\n    <span class=\"next\"></span></nav>",
+            Bare(html));
+    }
+
+    [Fact]
+    public async Task Pager_with_here_renders_the_here_div_between_the_spans()
+    {
+        var html = await Render.Html<Pager>(new { PrevHref = "/p", NextHref = "/n", Here = Markup("<i>centre</i>") });
+        Assert.Equal(
+            "<nav class=\"pager\" aria-label=\"Image navigation\"><span class=\"prev\"><a class=\"text-link tap\" href=\"/p\" rel=\"prev\">Previous</a></span><div class=\"here\"><i>centre</i></div>\n" +
+            "    <span class=\"next\"><a class=\"text-link tap\" href=\"/n\" rel=\"next\">Next</a></span></nav>",
+            Bare(html));
+    }
+
+    [Theory]
+    [InlineData(PagerStack.None, "class=\"pager\"")]
+    [InlineData(PagerStack.Narrow, "class=\"pager pager-stack\"")]
+    [InlineData(PagerStack.Always, "class=\"pager pager-stack pager-stack-all\"")]
+    public async Task Pager_stack_sets_the_nav_class(PagerStack stack, string expected)
+    {
+        var html = await Render.Html<Pager>(new { PrevHref = "/p", NextHref = "/n", Stack = stack });
+        Assert.StartsWith($"<nav {expected} aria-label=\"Image navigation\"", Bare(html));
+    }
+
+    [Fact]
+    public void Pager_css_breakpoint_matches_tokens()
+    {
+        var css = File.ReadAllText(Path.Combine(Render.RepoRoot, "src", "Gallery.Web", "Components", "Molecules", "Pager.razor.css"));
+        Assert.Contains("@media (max-width: 599.98px)", css);
+        Assert.DoesNotContain("min-height", css);
+        Assert.DoesNotContain("line-height", css);
+    }
+
+    // ── K3 GalleryLink ───────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task GalleryLink_renders_back_arrow_title_and_counter()
+    {
+        var html = await Render.Html<GalleryLink>(new { Href = "/g/a/coast#p-img7", Title = "Coast", Index = 3, Total = 23 });
+        Assert.Equal(
+            "<p class=\"gallery-link\"><a class=\"text-link tap\" href=\"/g/a/coast#p-img7\">← Coast</a><span class=\"count\"> · 3 / 23</span></p>",
+            Bare(html));
+        Guards.AssertNoInlineStyle(html);
+    }
+
+    [Fact]
+    public async Task GalleryLink_encodes_the_title()
+    {
+        var html = await Render.Html<GalleryLink>(new { Href = "/g/a/s", Title = "<b>&", Index = 1, Total = 1 });
+        Assert.DoesNotContain("<b>", html);
+        Assert.Contains("&lt;b&gt;&amp;</a>", html);
+    }
+
+    [Fact]
+    public void GalleryLink_length_counts_the_whole_centre_text()
+    {
+        Assert.Equal("← Coast · 3 / 23".Length, GalleryLink.Length("Coast", 3, 23));
+        Assert.Equal(26, GalleryLink.NarrowChars);
+        Assert.Equal(60, GalleryLink.WideChars);
+    }
+
+    [Theory]
+    // "← " + title + " · 1 / 1" = title.Length + 10
+    [InlineData(16, PagerStack.None)]    // 26 chars
+    [InlineData(17, PagerStack.Narrow)]  // 27 chars
+    [InlineData(50, PagerStack.Narrow)]  // 60 chars
+    [InlineData(51, PagerStack.Always)]  // 61 chars
+    public void GalleryLink_StackFor_thresholds(int titleLength, PagerStack expected)
+    {
+        var title = new string('x', titleLength);
+        Assert.Equal(titleLength + 10, GalleryLink.Length(title, 1, 1));
+        Assert.Equal(expected, GalleryLink.StackFor(title, 1, 1));
+    }
+
+    // ── K4 SoloViewer ────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task SoloViewer_without_here_or_stack_differs_from_the_pre_010_specimens_only_by_tap()
+    {
+        var baseline = Blocks(await File.ReadAllTextAsync(Path.Combine(UiBaseline, "organisms", "solo-viewer.html")),
+            "<article class=\"solo\".*?</article>");
+        Assert.Equal(2, baseline.Count);
+
+        var landscape = await Render.Html<SoloViewer>(new { Image = Render.Samples.Landscape[0], PrevHref = "#", NextHref = "#" });
+        var portrait = await Render.Html<SoloViewer>(new { Image = Render.Samples.PartialExifPortrait, PrevHref = "#" });
+
+        Assert.Equal(baseline, new[] { landscape, portrait }.Select(h => h.Replace(" tap", "")).ToList());
+        Assert.Equal(2, Guards.Count(landscape, "class=\"text-link tap\""));
+    }
+
+    [Fact]
+    public async Task SoloViewer_passes_here_and_stack_through_to_the_pager()
+    {
+        var html = await Render.Html<SoloViewer>(new
+        {
+            Image = MakeImage(),
+            PrevHref = "/p",
+            NextHref = "/n",
+            Here = Markup("<i>centre</i>"),
+            Stack = PagerStack.Narrow,
+        });
+        var bare = Bare(html);
+        Assert.Contains("<nav class=\"pager pager-stack\" aria-label=\"Image navigation\">", bare);
+        Assert.Contains("</span><div class=\"here\"><i>centre</i></div>", bare);
+        Guards.AssertNoInlineStyle(html);
+    }
+
+    [Fact]
+    public async Task PhotoPage_without_gallery_href_renders_no_gallery_link_and_does_not_throw()
+    {
+        var html = await Render.Html<PhotoPage>(new { Image = MakeImage(), GalleryTitle = "G", NoIndex = false, PrevHref = "/p" });
+        Assert.DoesNotContain("gallery-link", html);
+        Assert.DoesNotContain("class=\"here\"", html);
+        Assert.Contains("<nav class=\"pager\"", html);
+        Guards.AssertNoInlineStyle(html);
+    }
+
+    // ── K5 GalleryNeighbours ─────────────────────────────────────────────────
+
+    [Fact]
+    public async Task GalleryNeighbours_with_both_null_renders_nothing()
+    {
+        var html = await Render.Html<GalleryNeighbours>(new { Prev = (GalleryNeighbour?)null, Next = (GalleryNeighbour?)null });
+        Assert.Equal("", html);
+    }
+
+    [Fact]
+    public async Task GalleryNeighbours_with_both_renders_arrows_titles_and_rel()
+    {
+        var html = await Render.Html<GalleryNeighbours>(new
+        {
+            Prev = new GalleryNeighbour("/g/a/alpine", "alpine"),
+            Next = new GalleryNeighbour("/g/b/birds", "Birds"),
+        });
+        Assert.Equal(
+            "<nav class=\"gallery-neighbours\" aria-label=\"Galleries\"><span class=\"prev\"><a class=\"text-link tap\" href=\"/g/a/alpine\" rel=\"prev\">← alpine</a></span>\n" +
+            "    <span class=\"next\"><a class=\"text-link tap\" href=\"/g/b/birds\" rel=\"next\">Birds →</a></span></nav>",
+            Bare(html));
+        Guards.AssertNoInlineStyle(html);
+    }
+
+    [Fact]
+    public async Task GalleryNeighbours_first_gallery_renders_an_empty_prev_span()
+    {
+        var html = await Render.Html<GalleryNeighbours>(new { Next = new GalleryNeighbour("/g/b/birds", "Birds") });
+        var bare = Bare(html);
+        Assert.Contains("<span class=\"prev\"></span>", bare);
+        Assert.DoesNotContain("rel=\"prev\"", bare);
+        Assert.DoesNotContain("←", bare);
+        Assert.Contains("<a class=\"text-link tap\" href=\"/g/b/birds\" rel=\"next\">Birds →</a>", bare);
+    }
+
+    [Fact]
+    public async Task GalleryNeighbours_last_gallery_renders_an_empty_next_span()
+    {
+        var html = await Render.Html<GalleryNeighbours>(new { Prev = new GalleryNeighbour("/g/a/alpine", "alpine") });
+        var bare = Bare(html);
+        Assert.Contains("<span class=\"next\"></span>", bare);
+        Assert.DoesNotContain("rel=\"next\"", bare);
+        Assert.DoesNotContain("→", bare);
+        Assert.Contains("<a class=\"text-link tap\" href=\"/g/a/alpine\" rel=\"prev\">← alpine</a>", bare);
+    }
+
+    // ── K8 MembershipStatus ──────────────────────────────────────────────────
+
+    [Fact]
+    public async Task MembershipStatus_in_no_gallery_is_plain_text()
+    {
+        var html = await Render.Html<MembershipStatus>(new { FirstId = (string?)null, FirstTitle = (string?)null, Others = 0, Public = 0 });
+        Assert.Equal("Not in a gallery", Bare(html));
+        Assert.DoesNotContain("<", html);
+    }
+
+    [Theory]
+    [InlineData(0, 0, "")]
+    [InlineData(2, 0, " +2")]
+    [InlineData(0, 1, " · public in 1")]
+    [InlineData(2, 1, " +2 · public in 1")]
+    public async Task MembershipStatus_links_the_first_gallery_then_others_then_public(int others, int pub, string suffix)
+    {
+        var html = await Render.Html<MembershipStatus>(new { FirstId = "g1", FirstTitle = "Alpine", Others = others, Public = pub });
+        Assert.Equal($"<a class=\"text-link\" href=\"/admin/galleries/g1\">Alpine</a>{suffix}", Bare(html));
+        Assert.StartsWith("<a ", html);
+        Assert.DoesNotContain("<span", html);
+        Assert.Equal(1, Guards.Count(html, "<a "));
+    }
+
+    // ── K6 SiteHeader ────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task SiteHeader_with_no_items_has_no_nav()
+    {
+        var html = await Render.Html<SiteHeader>(new { SiteName = "Gallery", NavItems = Array.Empty<NavItem>() });
+        Assert.DoesNotContain("<nav", html);
+        Assert.Equal(1, Guards.Count(html, "<a "));
+        Assert.Contains("<a class=\"brand\" href=\"/\">Gallery</a>", Bare(html));
+    }
+
+    [Fact]
+    public async Task SiteHeader_without_the_items_parameter_has_no_nav()
+    {
+        var html = await Render.Html<SiteHeader>(new { SiteName = "Gallery" });
+        Assert.DoesNotContain("<nav", html);
+    }
+
+    [Fact]
+    public async Task SiteHeader_with_items_matches_the_pre_010_specimen()
+    {
+        var baseline = Blocks(await File.ReadAllTextAsync(Path.Combine(UiBaseline, "organisms", "site-header.html")),
+            "<header class=\"site-header\".*?</header>");
+        var html = await Render.Html<SiteHeader>(new { SiteName = "Gallery", NavItems = new[] { new NavItem("Galleries", "/") } });
+        Assert.Equal(baseline.Single(), html);
+    }
+
+    // ── UI-4: no key hints ───────────────────────────────────────────────────
+
+    [Fact]
+    public async Task No_component_mentions_keys()
+    {
+        var htmls = new[]
+        {
+            await Render.Html<Pager>(new { PrevHref = "/p", NextHref = "/n", Here = Markup("x"), Stack = PagerStack.Always }),
+            await Render.Html<GalleryLink>(new { Href = "/g", Title = "T", Index = 1, Total = 2 }),
+            await Render.Html<GalleryNeighbours>(new { Prev = new GalleryNeighbour("/a", "A"), Next = new GalleryNeighbour("/b", "B") }),
+        };
+        foreach (var html in htmls)
+        {
+            Assert.DoesNotContain("aria-keyshortcuts", html);
+            Assert.DoesNotContain("title=", html);
+            Assert.DoesNotMatch("(?i)arrow|escape|\\bkey", html);
+        }
+    }
+}

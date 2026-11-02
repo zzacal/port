@@ -140,8 +140,8 @@ public class GalleryServiceTests(S3ProxyFixture s3, MongoFixture mongo) : IClass
 
         Assert.Equal((35, 5), (r2.Added, r2.Skipped));
         Assert.Equal(first.Concat(fresh).ToList(), (await GalleryAsync(h, gid)).Items);
-        // Changed = the 35 added + the old last photo (its next neighbour changed).
-        SetEq(fresh.Append(first[39]).Select(i => Pp(gid, "harbour", i)).Append(Gp(gid, "harbour")), purged2);
+        // 010 E1 rule 4 (stated change, decisions row 27): the count changed, so every photo page.
+        SetEq(first.Concat(fresh).Select(i => Pp(gid, "harbour", i)).Append(Gp(gid, "harbour")), purged2);
         foreach (var i in imgs)
             Assert.Equal(new[] { gid }, (await h.Images.Find(x => x.Id == i.Id).FirstAsync()).GalleryIds.ToArray());
     }
@@ -239,7 +239,8 @@ public class GalleryServiceTests(S3ProxyFixture s3, MongoFixture mongo) : IClass
         var swap = await Gs(h, s => s.ReorderHomeAsync([p, b, a]));
         Assert.Equal(OperationStatus.Ok, swap.Status);
         Assert.Equal(new[] { p, b, a }, (await OrderAsync()).ToArray());
-        SetEq([Home], await h.SettleAsync());
+        // 010 P-NAV (stated change, decisions row 27): both listed galleries swap neighbours.
+        SetEq([Home, Gp(a, "alpha"), Gp(b, "beta")], await h.SettleAsync());
         var cards = (await h.Db.GetCollection<SiteDoc>("site").Find(s => s.Id == "site")
             .Project<SiteDoc>(Builders<SiteDoc>.Projection.Include(s => s.HomeCards)).FirstAsync()).HomeCards;
         Assert.Equal(new[] { b, a }, cards.Select(c => c.GalleryId).ToArray());
@@ -272,7 +273,8 @@ public class GalleryServiceTests(S3ProxyFixture s3, MongoFixture mongo) : IClass
         Assert.Equal(a, g.Card!.Cover!.ImageId);
         Assert.Equal(2, g.Card.ImageCount);
         Assert.Empty((await h.Images.Find(x => x.Id == c).FirstAsync()).GalleryIds);
-        SetEq([Gp(gid, "pinned"), Pp(gid, "pinned", b), Pp(gid, "pinned", c)], purged);
+        // 010 E1 rule 4 (stated change, decisions row 27): the count changed, so a's page too.
+        SetEq([Gp(gid, "pinned"), Pp(gid, "pinned", a), Pp(gid, "pinned", b), Pp(gid, "pinned", c)], purged);
 
         // Idempotent: removing a non-member answers 0 and purges nothing.
         var again = await Gs(h, s => s.RemoveAsync(gid, c));

@@ -1,6 +1,7 @@
 @* Solo image view: thumbnail-first layering (IV.15), photo letterboxed in a viewport-bounded
    stage, then title, metadata, and previous/next. The photo is not a link (III.1).
-   New parameters 006: Caption, TransitionId, PrefetchUrls. When unset output is byte-identical.
+   New parameters 006: Caption, TransitionId, PrefetchUrls; 010: Here, Stack (passed to Pager).
+   When unset output is byte-identical.
    Branch bodies are unindented: Razor emits whitespace verbatim. *@
 <article class="solo" data-prefetch="@PrefetchUrls">
     <div class="stage">
@@ -9,7 +10,7 @@
     <div class="caption">
         <Title Text="@Image.Title" Element="h1" />@CaptionContent
         <MetadataBar Exif="Image.Exif" />
-        <Pager PrevHref="@PrevHref" NextHref="@NextHref" />
+        <Pager PrevHref="@PrevHref" NextHref="@NextHref" Here="Here" Stack="Stack" />
     </div>
 </article>
 
@@ -20,6 +21,10 @@
     [Parameter] public string? Caption { get; set; }
     [Parameter] public string? TransitionId { get; set; }
     [Parameter] public string? PrefetchUrls { get; set; }
+
+    /// <summary>Feature 010 (K4): passed through to Pager.</summary>
+    [Parameter] public RenderFragment? Here { get; set; }
+    [Parameter] public PagerStack Stack { get; set; } = PagerStack.None;
 
     private RenderFragment? CaptionContent => Caption is not null
         ? b => b.AddMarkupContent(0, $"<p class=\"solo-caption\">{System.Web.HttpUtility.HtmlEncode(Caption)}</p>")

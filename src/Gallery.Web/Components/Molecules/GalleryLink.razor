@@ -1,0 +1,23 @@
+@* The way back from a photo to its tile in the gallery, with the photo's position (feature 010, K3). *@
+<p class="gallery-link"><TextLink Href="@Href" Tap="true">← @Title</TextLink><span class="count"> · @Index / @Total</span></p>
+
+@code {
+    [Parameter, EditorRequired] public string Href { get; set; } = "";
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+
+    /// <summary>1-based position of the photo in its gallery.</summary>
+    [Parameter, EditorRequired] public int Index { get; set; }
+    [Parameter, EditorRequired] public int Total { get; set; }
+
+    public const int NarrowChars = 26;
+    public const int WideChars = 60;
+
+    public static int Length(string title, int index, int total) => $"← {title} · {index} / {total}".Length;
+
+    public static PagerStack StackFor(string title, int index, int total) => Length(title, index, total) switch
+    {
+        > WideChars => PagerStack.Always,
+        > NarrowChars => PagerStack.Narrow,
+        _ => PagerStack.None,
+    };
+}

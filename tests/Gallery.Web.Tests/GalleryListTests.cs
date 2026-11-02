@@ -286,11 +286,12 @@ public class GalleryListTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         Assert.Equal([p, a, b], await GalleryHtml.HomeOrderAsync(h));
         Assert.Empty(await h.SettleAsync());
 
-        // Swapping the listed galleries: stored, "/" only.
+        // Swapping the listed galleries: stored, "/" plus both gallery pages (010 P-NAV, stated
+        // change, decisions row 27: their neighbour links swap).
         var r2 = await Order(p, b, a);
         Assert.Equal(HttpStatusCode.SeeOther, r2.StatusCode);
         Assert.Equal([p, b, a], await GalleryHtml.HomeOrderAsync(h));
-        GalleryHtml.SetEq([GalleryHtml.Home], await h.SettleAsync());
+        GalleryHtml.SetEq([GalleryHtml.Home, GalleryHtml.Gp(a, "alpha"), GalleryHtml.Gp(b, "bravo")], await h.SettleAsync());
 
         // Stale (another tab added a gallery): 409 with the reason, nothing stored, nothing purged.
         var stale = await Order(a, b);

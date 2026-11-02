@@ -1,9 +1,13 @@
 <header class="site-header">
     <Brand Name="@SiteName" />
-    <Nav Items="NavItems" />
+    @NavFragment
 </header>
 
 @code {
     [Parameter, EditorRequired] public string SiteName { get; set; } = "";
-    [Parameter, EditorRequired] public IReadOnlyList<NavItem> NavItems { get; set; } = [];
+
+    /// <summary>Feature 010 (K6): empty renders no nav element at all (the public site's header).</summary>
+    [Parameter] public IReadOnlyList<NavItem> NavItems { get; set; } = [];
+
+    private RenderFragment? NavFragment => NavItems.Count == 0 ? null : @<Nav Items="NavItems" />;
 }
