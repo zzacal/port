@@ -42,6 +42,7 @@ An Image exists only after its batch is confirmed. It has no state field (FR-017
 | items | id[] | Image ids in the owner's order. Membership and position are the same thing. |
 | pinnedCover | id? | Must be an element of `items`. Cleared if that image leaves the gallery. |
 | card | GalleryCard | Recomputed whenever `items`, `pinnedCover`, or a member image changes. |
+| nav | `{ prev?, next? }`? | Amended by feature 010. The previous and next LISTED galleries in `homeOrder` (`{ id, slug, title }` each), so the gallery page shows them with its existing read. Written only by the site projection that already runs after every owner write (single writer, guarded by a source scan); absent on any gallery that is not listed (private, or public with no items), never naming an unlisted gallery (II.2), and absent when the gallery has no neighbour. A nav-only change does not touch `updatedAt`. |
 | updatedAt | datetime | |
 
 ### GalleryCard

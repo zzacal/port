@@ -287,7 +287,7 @@ Quality floors carried from the constitution
 - Previous/next gallery comes from the home order that already drives the home page, so the gallery
   page can know its neighbours without an extra datastore read. If that turns out false, the
   read bound in FR-015 wins and planning must find another way (for example storing neighbours
-  with the gallery).
+  with the gallery). Neighbours are stored per gallery by the projector (plan research R-01).
 - Component-first order (owner question, 2026-11-01): the component changes and their catalogue
   states come first inside this feature, then the pages are wired, then browser tests. There is no
   separate catalogue feature.

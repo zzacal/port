@@ -1,0 +1,147 @@
+# 010 baseline (tasks.md T001)
+head: a5094a7 (docs(010): analyze remediation)
+build: dotnet build Gallery.slnx -warnaserror --artifacts-path artifacts -> 0 warnings, 0 errors
+test (head, before any 010 file):
+  Gallery.Core.Tests: 104 passed, 0 failed
+  Gallery.Web.Tests:  928 passed, 0 failed
+byte-identity guards pinning current output: PublicOutputUnchangedTests, UiPagesUnchangedTests, OrganismStatePageTests
+baseline timing: evidence/baseline-timings.log (NavTimingEvidenceTests on head code + T003/T004 test files), evidence/p95-baseline.txt (ALL PASS)
+
+## db_reads distribution in baseline-timings.log (route reads count)
+ 100 / 1
+ 100 /g/{id}/{slug} 2
+ 100 /g/{id}/{slug}/{imageId} 2
+
+## git ls-files tests (at a5094a7)
+tests/Gallery.Core.Tests/AdminTokensTests.cs
+tests/Gallery.Core.Tests/ExifFormatTests.cs
+tests/Gallery.Core.Tests/Gallery.Core.Tests.csproj
+tests/Gallery.Core.Tests/GalleryNavTests.cs
+tests/Gallery.Core.Tests/LadderTests.cs
+tests/Gallery.Core.Tests/OpaqueIdTests.cs
+tests/Gallery.Core.Tests/ServerTimingTests.cs
+tests/Gallery.Core.Tests/SizesTests.cs
+tests/Gallery.Core.Tests/SlugTests.cs
+tests/Gallery.Core.Tests/SrcSetTests.cs
+tests/Gallery.Core.Tests/TokenMediaAgreementTests.cs
+tests/Gallery.Core.Tests/TokensTests.cs
+tests/Gallery.Web.Tests/AdminAccessTests.cs
+tests/Gallery.Web.Tests/AllPagesTests.cs
+tests/Gallery.Web.Tests/AtomComponentTests.cs
+tests/Gallery.Web.Tests/AtomMoleculeStatePageTests.cs
+tests/Gallery.Web.Tests/AtomPageTests.cs
+tests/Gallery.Web.Tests/BatchStoreTests.cs
+tests/Gallery.Web.Tests/BrowserTests.cs
+tests/Gallery.Web.Tests/BuilderTests.cs
+tests/Gallery.Web.Tests/CameraFieldsTests.cs
+tests/Gallery.Web.Tests/CardBuilderTests.cs
+tests/Gallery.Web.Tests/ClaimRaceTests.cs
+tests/Gallery.Web.Tests/CloudflareEdgeProviderTests.cs
+tests/Gallery.Web.Tests/ComponentAdditionsTests.cs
+tests/Gallery.Web.Tests/ContainerParserTests.cs
+tests/Gallery.Web.Tests/DerivativeValidatorTests.cs
+tests/Gallery.Web.Tests/EdgeModeTests.cs
+tests/Gallery.Web.Tests/EdgeSecretTests.cs
+tests/Gallery.Web.Tests/EdgeWorkerTests.cs
+tests/Gallery.Web.Tests/EffectiveStateTests.cs
+tests/Gallery.Web.Tests/Fixtures/AdminHost.cs
+tests/Gallery.Web.Tests/Fixtures/BrowserSiteFixture.cs
+tests/Gallery.Web.Tests/Fixtures/EncodedFixtures.cs
+tests/Gallery.Web.Tests/Fixtures/FakeGoogle.cs
+tests/Gallery.Web.Tests/Fixtures/InvariantChecker.cs
+tests/Gallery.Web.Tests/Fixtures/LibraryBrowserFixture.cs
+tests/Gallery.Web.Tests/Fixtures/LibraryHost.cs
+tests/Gallery.Web.Tests/Fixtures/MongoFixture.cs
+tests/Gallery.Web.Tests/Fixtures/MutableTimeProvider.cs
+tests/Gallery.Web.Tests/Fixtures/R2Fixture.cs
+tests/Gallery.Web.Tests/Fixtures/RecordingEdgeProvider.cs
+tests/Gallery.Web.Tests/Fixtures/S3ProxyFixture.cs
+tests/Gallery.Web.Tests/Fixtures/SeedShapes.cs
+tests/Gallery.Web.Tests/Fixtures/UploadBrowserFixture.cs
+tests/Gallery.Web.Tests/Fixtures/UploadFixtures.cs
+tests/Gallery.Web.Tests/Fixtures/UploadHost.cs
+tests/Gallery.Web.Tests/Gallery.Web.Tests.csproj
+tests/Gallery.Web.Tests/GalleryListTests.cs
+tests/Gallery.Web.Tests/GalleryServiceTests.cs
+tests/Gallery.Web.Tests/Guards.cs
+tests/Gallery.Web.Tests/GuardsStripStyle.cs
+tests/Gallery.Web.Tests/ImageDeleteTests.cs
+tests/Gallery.Web.Tests/ImageServiceTests.cs
+tests/Gallery.Web.Tests/IndexTests.cs
+tests/Gallery.Web.Tests/IndexesTests.cs
+tests/Gallery.Web.Tests/InvariantTests.cs
+tests/Gallery.Web.Tests/LayoutFontCssTests.cs
+tests/Gallery.Web.Tests/LibraryAccessTests.cs
+tests/Gallery.Web.Tests/LibraryBrowserTests.cs
+tests/Gallery.Web.Tests/LibraryComponentAdditionsTests.cs
+tests/Gallery.Web.Tests/LibraryDeleteTests.cs
+tests/Gallery.Web.Tests/LibraryEditTests.cs
+tests/Gallery.Web.Tests/LibraryFlowTests.cs
+tests/Gallery.Web.Tests/LibraryPageTests.cs
+tests/Gallery.Web.Tests/LibrarySourceGuardTests.cs
+tests/Gallery.Web.Tests/LibraryStorageTests.cs
+tests/Gallery.Web.Tests/LibraryTileGeometryTests.cs
+tests/Gallery.Web.Tests/LibraryTimingEvidenceTests.cs
+tests/Gallery.Web.Tests/MasterCheckTests.cs
+tests/Gallery.Web.Tests/MembershipRepairTests.cs
+tests/Gallery.Web.Tests/MoleculeComponentTests.cs
+tests/Gallery.Web.Tests/MoleculePageTests.cs
+tests/Gallery.Web.Tests/NewTabLinkTests.cs
+tests/Gallery.Web.Tests/OpTimerTests.cs
+tests/Gallery.Web.Tests/OrganismComponentTests.cs
+tests/Gallery.Web.Tests/OrganismPageTests.cs
+tests/Gallery.Web.Tests/OrganismStatePageTests.cs
+tests/Gallery.Web.Tests/OutputCacheEvictionTests.cs
+tests/Gallery.Web.Tests/OwnerClaimTests.cs
+tests/Gallery.Web.Tests/OwnerSessionTests.cs
+tests/Gallery.Web.Tests/OwnerWriteGuardTests.cs
+tests/Gallery.Web.Tests/PageCacheEvictorTests.cs
+tests/Gallery.Web.Tests/PageComponentTests.cs
+tests/Gallery.Web.Tests/PictureLayoutCssTests.cs
+tests/Gallery.Web.Tests/PublicOutputUnchangedTests.cs
+tests/Gallery.Web.Tests/PublicRoutesTests.cs
+tests/Gallery.Web.Tests/PublishRefusalTests.cs
+tests/Gallery.Web.Tests/PurgeSetTests.cs
+tests/Gallery.Web.Tests/R2ScopeTests.cs
+tests/Gallery.Web.Tests/RefusalTests.cs
+tests/Gallery.Web.Tests/RemoveSeededTests.cs
+tests/Gallery.Web.Tests/Render.cs
+tests/Gallery.Web.Tests/SignInComponentTests.cs
+tests/Gallery.Web.Tests/SignInTimingEvidenceTests.cs
+tests/Gallery.Web.Tests/SiteProjectorTests.cs
+tests/Gallery.Web.Tests/StorageTests.cs
+tests/Gallery.Web.Tests/TemplatePageTests.cs
+tests/Gallery.Web.Tests/TileContactSheetAdditionsTests.cs
+tests/Gallery.Web.Tests/UiOwnerOnlyTests.cs
+tests/Gallery.Web.Tests/UiPagesUnchangedTests.cs
+tests/Gallery.Web.Tests/UploadAccessTests.cs
+tests/Gallery.Web.Tests/UploadBrowserTests.cs
+tests/Gallery.Web.Tests/UploadComponentAdditionsTests.cs
+tests/Gallery.Web.Tests/UploadConfirmTests.cs
+tests/Gallery.Web.Tests/UploadFlowTests.cs
+tests/Gallery.Web.Tests/UploadIntakeTests.cs
+tests/Gallery.Web.Tests/UploadLifecycleTests.cs
+tests/Gallery.Web.Tests/UploadPageTests.cs
+tests/Gallery.Web.Tests/UploadResumeTests.cs
+tests/Gallery.Web.Tests/UploadSecretScanTests.cs
+tests/Gallery.Web.Tests/UploadSeedCoexistenceTests.cs
+tests/Gallery.Web.Tests/UploadSourceGuardTests.cs
+tests/Gallery.Web.Tests/UploadStorageTests.cs
+tests/Gallery.Web.Tests/UploadTimingEvidenceTests.cs
+tests/Gallery.Web.Tests/UploadValidatorTests.cs
+tests/Gallery.Web.Tests/ViewMapperTests.cs
+tests/fixtures/camera-subifd.jpg
+tests/fixtures/gps-camera.jpg
+tests/fixtures/not-a-jpeg.jpg
+tests/fixtures/orientation-6.jpg
+tests/fixtures/upload/fixture-6000x4000.jpg
+tests/fixtures/upload/gps-320.avif
+tests/fixtures/upload/gps-320.webp
+tests/fixtures/upload/gps-cwebp.webp
+tests/fixtures/upload/gps-placeholder.webp
+tests/fixtures/upload/gps-sips.avif
+tests/fixtures/upload/icc.webp
+tests/fixtures/upload/orient6-200.avif
+tests/fixtures/upload/orient6-200.webp
+tests/fixtures/upload/orient6-placeholder.webp
+tests/fixtures/upload/placeholder-exif.webp

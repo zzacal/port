@@ -74,20 +74,20 @@ batch as the code they guard.
 
 ## Phase 1: Setup (parent, before any dispatch)
 
-- [ ] T001 Run the baseline gate on the current head (`dotnet build … -warnaserror`,
+- [X] T001 Run the baseline gate on the current head (`dotnet build … -warnaserror`,
   `dotnet test …`). Write `specs/010-navigation-improvements/evidence/baseline.txt`: head hash,
   warning count, test count per assembly, `git ls-files tests` output, and the byte-identity
   guards that pin current output (`PublicOutputUnchangedTests`, `UiPagesUnchangedTests`,
   `OrganismStatePageTests`). Every later checkpoint runs `git diff --stat <head> -- tests/` and
   accepts changes only to NEW files and to the files named in T004, T013, T025, T035.
-- [ ] T002 Write `specs/010-navigation-improvements/evidence/p95.sh` per
+- [X] T002 Write `specs/010-navigation-improvements/evidence/p95.sh` per
   contracts/log-events.md (six rows, n ≥ 100, `db_reads` rule per route, p95 < 50 ms, plain and
   JSON input as in `specs/009-library-galleries/evidence/p95.sh`, BSD-awk safe: lists passed
   space-separated on one line). Create the six synthetic logs in `evidence/p95-selftest/`
   (pass-plain, pass-json, home-2-reads, photo-p95-60, gallery-99-lines, empty) and save
   `bash p95.sh p95-selftest/*.log` to `evidence/p95-selftest.txt`. Each bad log must fail
   exactly its own row; the two good logs must pass every row.
-- [ ] T003 Write `tests/Gallery.Web.Tests/NavTimingEvidenceTests.cs`
+- [X] T003 Write `tests/Gallery.Web.Tests/NavTimingEvidenceTests.cs`
   (`[Trait("Category","Evidence")]`, `[Collection("s3")]`, modelled on
   `LibraryTimingEvidenceTests`): a `LibraryHost` (output cache off) holding 3 public galleries
   (23, 6, 1 photos, created and filled through `GalleryService`, then published) and 1 private
@@ -98,13 +98,13 @@ batch as the code they guard.
   Run it on the UNCHANGED code with `NAV_TIMINGS_OUT=…/evidence/baseline-timings.log`, then run
   `p95.sh` on it into `evidence/p95-baseline.txt`. All rows must PASS (else stop: the baseline
   itself breaks SC-006 and the owner decides). `git add -f` both files (`*.log` is ignored).
-- [ ] T004 Move `BrowserSiteFixture`'s private photo-encoding code (`EncodePhoto`, `Named`,
+- [X] T004 Move `BrowserSiteFixture`'s private photo-encoding code (`EncodePhoto`, `Named`,
   `Run`, the `Encoded` record, colours and ladder constants) into a new
   `tests/Gallery.Web.Tests/Fixtures/PhotoEncoder.cs` (internal static, same behaviour) and make
   `BrowserSiteFixture` call it. Test infrastructure, not a test: `BrowserTests` must pass
   unmodified and byte-for-byte the same derivative file names must result (compare the fixture's
   image-host file list before and after in one run). Log it as a new decisions.md row.
-- [ ] T005 Design record (VII.2, research R-14): edit `specs/001-architecture-stack-design/draft/`
+- [X] T005 Design record (VII.2, research R-14): edit `specs/001-architecture-stack-design/draft/`
   — `02d-decisions-delivery.md` D-21 (Pager centre slot and `Tap`; new molecules `GalleryLink`,
   `GalleryNeighbours`, `MembershipStatus`; `SiteHeader` with no nav; `PublicLayout` key handler)
   and D-17 (the key handler shares the predictive module, registered before the Save-Data

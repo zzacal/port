@@ -1,0 +1,10 @@
+== baseline-timings.log
+format: plain message lines
+PASS SC-006 home reads n=100 every db_reads <= 1 (exactly 1)
+PASS SC-006 gallery reads n=100 every db_reads <= 2
+PASS SC-006 photo reads n=100 every db_reads <= 2
+PASS SC-006 home time n=100 p95=0.83 ms < 50
+PASS SC-006 gallery time n=100 p95=3.79 ms < 50
+PASS SC-006 photo time n=100 p95=2.81 ms < 50
+
+ALL PASS
