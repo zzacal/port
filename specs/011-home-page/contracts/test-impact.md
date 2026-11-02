@@ -68,6 +68,24 @@ AdminAccessTests 325 and 415 GET `/` only for status or session checks. They are
 | NavBrowserTests.cs | 296–297 `Tap_boxes_stacking_and_centring` | expected links `{"crumb","crumb"}` on photo pages | `{"crumb","crumb","crumb"}` (Home, Galleries, gallery). Every other check is unchanged and must pass at every width and title length (analyze M1). |
 | NavBrowserTests.cs | 603–617 `Header_links_have_no_duplicate_destination` | page list `/`, gallery, photo, 404 | add `/g`. The rule `path == "/" ? 0 links : >0 links, all distinct` is unchanged, and `/g` has exactly one header link (`/`). |
 
+## T002 verification (implement, against f15af6a)
+
+Whole-tree grep of `"/"`, `HomePath`, `"Galleries"`, `HomePage`, `Page("/")`, `GalleryHtml.Home`,
+`HomeRawAsync`, `GetAsync("/")`, `SetEq(`. Every row above was re-read and holds. Additions and
+confirmations:
+
+- GalleryListTests 21/59 are the shared helpers. Retargeting them carries every caller:
+  BuilderTests (22 `Home = GalleryHtml.Home`, 178/192/209/226/351/376 `HomeRawAsync`),
+  PublishRefusalTests (51/65/94/145/156/185/201 `HomeRawAsync`) and GalleryListTests 237–336.
+  Those callers need no edit of their own, only their comments that say `"/"` for the listing.
+- GalleryServiceTests 133 and ImageServiceTests 100 are comments ("no `/`"): they become `/g`.
+- NavRoutesTests 221 (Server-Timing loop over `/`, gallery, photo): Class B, add `/g`, keep `/`.
+- NavRoutesTests 217 already listed; the `== 0` row for `/` is added as stated.
+- Unchanged (not the listing, or status/session only): AdminAccessTests 325/415 (status/session), AdminNavConsistencyTests 98 (admin
+  root "Galleries"), BuilderTests 53 (View site ↗ → `/`), NavComponentTests 212 (`PageHeading`
+  text input), LibraryBrowserFixture 276 and UploadBrowserFixture 234 (cookie URL), PublicRoutesTests
+  293/303 (URL-shape scan), LibraryComponentAdditionsTests 202 (comment).
+
 ## Class D: page component rename
 
 PageComponentTests.cs 23–198 renders `HomePage` with `Cards`. These become `ListingPage`, with
