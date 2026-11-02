@@ -445,14 +445,14 @@ and the new test file `LibraryMembershipTests.cs`.
 
 ## Phase 8: Polish, guards, evidence (parent)
 
-- [ ] T040 Run `NavTimingEvidenceTests` on the finished code (default output path), then
+- [X] T040 Run `NavTimingEvidenceTests` on the finished code (default output path), then
   `p95.sh evidence/nav-timings.log > evidence/p95-output.txt`. All rows PASS and the `db_reads`
   distribution equals the baseline's. A miss is recorded, never tuned (decisions row with the
   measured values). `git add -f` the log.
-- [ ] T041 Grep-verify every [SAFETY] mechanism on the merged tree: the listed filter in
+- [X] T041 Grep-verify every [SAFETY] mechanism on the merged tree: the listed filter in
   `SiteProjector.Nav` (calls `Cards`), the `Visibility == "public"` check before `Nav` in the
   gallery route, `NavSourceGuardTests` present and green.
-- [ ] T042 Diff read of every executor change: no leftover scaffolding, no duplicated logic
+- [X] T042 Diff read of every executor change: no leftover scaffolding, no duplicated logic
   (`Cards`, `Neighbours`, tap rule), no `style=`, no new `<script`, no hint copy for keys (UI-4),
   no `min-height: 44px` outside `TextLink.razor.css` (UI-2).
 - [X] T043 Write `specs/010-navigation-improvements/evidence/verify.sh` (contract-invariant
@@ -461,7 +461,7 @@ and the new test file `LibraryMembershipTests.cs`.
   `<Nav` for non-empty items; catalogue has 34 entries including the three new slugs;
   `ProjectAsync` still exists; `PurgeSets.Nav` is called from `OperationResult.cs`). Run it,
   `tee` to `evidence/verify-output.txt`.
-- [ ] T044 Live walkthrough (Workflow rule): run the built dll on :5094 against the owner's dev
+- [X] T044 Live walkthrough (Workflow rule): run the built dll on :5094 against the owner's dev
   Mongo and R2 read-only (`ASPNETCORE_ENVIRONMENT=Development dotnet artifacts/bin/Gallery.Web/debug/Gallery.Web.dll --contentRoot "$PWD/src/Gallery.Web" --urls https://localhost:5094`);
   curl `/`, one gallery, one photo: 200s, header has one link, photo row shows the gallery link
   and counter. Stop only that pid. Record in `evidence/live-walkthrough.md`.

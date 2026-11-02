@@ -1,0 +1,14 @@
+PASS GET / 200
+   header hrefs on /: 1 href="/"
+PASS header on / has exactly one link, to /
+PASS home lists a gallery: /g/kd5ldmdkuhewvzus2vej6mzuam/september-6
+PASS GET gallery 200
+PASS header on gallery has exactly one link
+NOTE gallery shows no neighbour links (expected until the first owner write after 010 fills nav; quickstart Part C step 2, research R-11)
+PASS GET photo /g/kd5ldmdkuhewvzus2vej6mzuam/september-6/pr32nrf3qzj53432p336xgn73u 200
+PASS photo row links back to /g/kd5ldmdkuhewvzus2vej6mzuam/september-6#p-pr32nrf3qzj53432p336xgn73u
+PASS photo row reads: ← September 6 · 1 / 23
+PASS header on photo has exactly one link
+PASS Server-Timing present on photo
+
+ALL PASS
