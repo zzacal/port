@@ -514,7 +514,7 @@ and the new test file `LibraryMembershipTests.cs`.
 
 - [X] T055 Constitution 4.4.0 principle IX; Breadcrumb row fixed at 44 px; layouts own the gap under
   the chrome; GalleryPage drops its top margin; AdminLayout draws a crumb on every page with the bar.
-- [ ] T056 LayoutConsistencyBrowserTests (public and admin), admin root crumb assertions, snapshots,
+- [X] T056 LayoutConsistencyBrowserTests (public and admin), admin root crumb assertions, snapshots,
   design record, verify.sh, non-vacuity, full gate, commit.
 
 ## OWNER-ONLY: post-build live checks (not part of the automated run)
