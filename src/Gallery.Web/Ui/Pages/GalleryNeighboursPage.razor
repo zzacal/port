@@ -1,0 +1,12 @@
+<UiLayout Title="GalleryNeighbours">
+    <Specimen Label="First gallery"><GalleryNeighbours Next="Medium" /></Specimen>
+    <Specimen Label="Middle gallery"><GalleryNeighbours Prev="Short" Next="Medium" /></Specimen>
+    <Specimen Label="Last gallery"><GalleryNeighbours Prev="Short" /></Specimen>
+    <Specimen Label="Long titles" Width="w-480"><GalleryNeighbours Prev="Long" Next="Medium" /></Specimen>
+</UiLayout>
+
+@code {
+    private static readonly GalleryNeighbour Short = new("#", "Coast walk");
+    private static readonly GalleryNeighbour Medium = new("#", "Alpine lakes and the high pass");
+    private static readonly GalleryNeighbour Long = new("#", "Birds of the northern estuary, photographed through three long winters");
+}

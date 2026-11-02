@@ -260,19 +260,19 @@ full run must be on the expected list in T025 and nowhere else.
 `GalleryNeighboursPage.razor`, `MembershipStatusPage.razor`, the three existing pages named in
 T023 (append only), and the new test file `NavCataloguePageTests.cs`.
 
-- [ ] T022 [P] Create the three catalogue pages with exactly the specimen labels of
+- [X] T022 [P] Create the three catalogue pages with exactly the specimen labels of
   contracts/components.md "Catalogue" (sample titles of 10, 30 and 70 characters; sample
   galleries "Coast", "alpine", "Birds"; hrefs `#`), and append their entries at the end of the
   Molecules block in `src/Gallery.Web/Ui/UiCatalog.cs`.
-- [ ] T023 Append the specimens listed for `PagerPage`, `SiteHeaderPage` and `TextLinkPage` in
+- [X] T023 Append the specimens listed for `PagerPage`, `SiteHeaderPage` and `TextLinkPage` in
   `src/Gallery.Web/Ui/Pages/` AFTER their existing specimens. Do not change an existing
   specimen. Do NOT touch `SoloViewerPage.razor`: `OrganismPageTests` counts its two thumb layers
   and must pass unmodified (SoloViewer's pass-through of `Here`/`Stack` is covered by T021).
-- [ ] T024 Write `tests/Gallery.Web.Tests/NavCataloguePageTests.cs`: each new page renders every
+- [X] T024 Write `tests/Gallery.Web.Tests/NavCataloguePageTests.cs`: each new page renders every
   label in order; `Guards.AssertNoInlineStyle` and `Guards.AssertNoScript` on each; the three
   appended pages contain their new labels after the old ones.
 
-- [ ] T025 (parent, stated requirement change) Snapshot regeneration, verify-before-replace (plan
+- [X] T025 (parent, stated requirement change) Snapshot regeneration, verify-before-replace (plan
   "Test changes" 1–2): copy `specs/005-admin-ui-components/evidence/baseline/` and
   `specs/006-public-site-local/evidence/ui-baseline/` aside; delete exactly the failing snapshots
   (expected: 005 `SoloViewerPage.html`, `PublicLayoutPage.html` only after Batch D, and 006
@@ -299,7 +299,7 @@ Goal: every photo page names its gallery and position and links back to the phot
 Independent test: open a photo directly; the row reads `← {Gallery} · N / total`; the link is
 `/g/{id}/{slug}#p-{imageId}`.
 
-- [ ] T026 [US1] Photo route in `src/Gallery.Web/Site/PublicEndpoints.cs`: compute
+- [X] T026 [US1] Photo route in `src/Gallery.Web/Site/PublicEndpoints.cs`: compute
   `Index = items.IndexOf(imageId) + 1`, `Total = items.Count`,
   `GalleryHref = $"/g/{id}/{slug}#p-{imageId}"`; pass them to `PhotoPage`. No new read; the
   gallery projection for the photo page is unchanged. In `src/Gallery.Web/Site/Pages/PhotoPage.razor`
@@ -313,7 +313,7 @@ Independent test: open a photo directly; the row reads `← {Gallery} · N / tot
 Goal: 44×44 Previous/Next, Left/Right/Escape. Independent test: measure at 390 px; press keys.
 (Tap areas come from Batch B; keys here; measured in Batch F.)
 
-- [ ] T027 [US2] Add the K7 key handler verbatim to the `Enhance` module in
+- [X] T027 [US2] Add the K7 key handler verbatim to the `Enhance` module in
   `src/Gallery.Web/Components/Templates/PublicLayout.razor` as its first statements, before
   `if (navigator.connection?.saveData) return;`. The module stays one `<script type="module">`
   under 30 lines (`PageComponentTests` must pass unmodified).
@@ -323,7 +323,7 @@ Goal: 44×44 Previous/Next, Left/Right/Escape. Independent test: measure at 390 
 Goal: listed galleries end with neighbour links in home order; private galleries end with
 nothing. Independent test: bottom of a listed gallery links the next one by title.
 
-- [ ] T028 [SAFETY] [US3] Gallery route in `src/Gallery.Web/Site/PublicEndpoints.cs`: when
+- [X] T028 [SAFETY] [US3] Gallery route in `src/Gallery.Web/Site/PublicEndpoints.cs`: when
   `gallery.Visibility == "public"` and `gallery.Nav` is not null, map `Nav.Prev`/`Nav.Next` to
   `GalleryNeighbour($"/g/{n.Id}/{n.Slug}", n.Title)`; otherwise pass null for both, whatever the
   document holds. In `src/Gallery.Web/Site/Pages/GalleryPage.razor` add `Prev`/`Next` and render
@@ -332,12 +332,12 @@ nothing. Independent test: bottom of a listed gallery links the next one by titl
 
 ### User Story 4 — A header that doesn't repeat itself (P3)
 
-- [ ] T029 [US4] In `src/Gallery.Web/Components/Templates/PublicLayout.razor` render
+- [X] T029 [US4] In `src/Gallery.Web/Components/Templates/PublicLayout.razor` render
   `<SiteHeader SiteName="Gallery" />` and delete the `_nav` field.
 
 ### Tests for US1–US4
 
-- [ ] T030 [SAFETY] [US3] Write `tests/Gallery.Web.Tests/NavRoutesTests.cs` (LibraryHost +
+- [X] T030 [SAFETY] [US3] Write `tests/Gallery.Web.Tests/NavRoutesTests.cs` (LibraryHost +
   Mongo + recorder; galleries built through `GalleryService`, never with a hand-written `nav`
   EXCEPT case (e)): (a) photo page of photo 4 of 23: the decoded HTML contains
   `← {title}` linked to `/g/{id}/{slug}#p-{imageId}` and ` · 4 / 23`; first and last photos show
@@ -356,7 +356,7 @@ nothing. Independent test: bottom of a listed gallery links the next one by titl
   and then GET every listed gallery's page plus P's: each page's neighbour links (titles and
   hrefs, in order) equal the neighbours of the CURRENT listed home order, and a gallery that is
   not listed shows none. Zero stale links across the run.
-- [ ] T031 [US1] After rename of the gallery (through `GalleryService`), GET the photo page under
+- [X] T031 [US1] After rename of the gallery (through `GalleryService`), GET the photo page under
   the OLD slug: 301 to the new slug (existing behaviour) — and the new page's gallery link uses
   the new slug. Add to `NavRoutesTests.cs`.
 
@@ -376,15 +376,15 @@ in 0, 1 and 3 galleries.
 **Owns**: `src/Gallery.Web/Library/LibraryReader.cs`, `src/Gallery.Web/Admin/Pages/LibraryPage.razor`,
 and the new test file `LibraryMembershipTests.cs`.
 
-- [ ] T032 [US5] In `src/Gallery.Web/Library/LibraryReader.cs` add `GalleryRef? FirstByTitle` as
+- [X] T032 [US5] In `src/Gallery.Web/Library/LibraryReader.cs` add `GalleryRef? FirstByTitle` as
   the LAST positional parameter of `LibraryTile`: the holder with the least `Title` under
   `StringComparer.OrdinalIgnoreCase`, ties by `Id` ordinal, any visibility. No new read.
   `Status`/`StatusLine` stay.
-- [ ] T033 [US5] In `src/Gallery.Web/Admin/Pages/LibraryPage.razor` `RowFor`, replace the
+- [X] T033 [US5] In `src/Gallery.Web/Admin/Pages/LibraryPage.razor` `RowFor`, replace the
   CONTENTS of `<span class="lib-status">` (`@tile.Status`) with the K8 `MembershipStatus` call,
   keeping the span itself in the page, exactly as contracts P3 shows. Nothing else in the row
   changes.
-- [ ] T034 [US5] Write `tests/Gallery.Web.Tests/LibraryMembershipTests.cs` (LibraryHost): photos
+- [X] T034 [US5] Write `tests/Gallery.Web.Tests/LibraryMembershipTests.cs` (LibraryHost): photos
   in 0, 1 and 3 galleries (titles "coast", "Alpine", "birds"; "coast" first in home order, one
   public): 0 → plain `Not in a gallery` with no `<a` inside `lib-status`; 1 → link to
   `/admin/galleries/{id}` with the title; 3 → link to "Alpine" (case-insensitive first, though
@@ -392,7 +392,7 @@ and the new test file `LibraryMembershipTests.cs`.
   is still chosen. SC-009: every tile whose photo is in ≥ 1 gallery has exactly one
   `/admin/galleries/` link inside `lib-status`.
 
-- [ ] T035 (parent, stated requirement change) `LibraryPageTests` lines 172–173 and
+- [X] T035 (parent, stated requirement change) `LibraryPageTests` lines 172–173 and
   `LibraryFlowTests` line 100 read the plain status string for photos in galleries. Change them
   to read the decoded text content of `lib-status` (tags stripped) and update the expected
   strings to the new copy (`Alpha +1`, `Alpha +1 · public in 1`, and for the flow
@@ -455,7 +455,7 @@ and the new test file `LibraryMembershipTests.cs`.
 - [ ] T042 Diff read of every executor change: no leftover scaffolding, no duplicated logic
   (`Cards`, `Neighbours`, tap rule), no `style=`, no new `<script`, no hint copy for keys (UI-4),
   no `min-height: 44px` outside `TextLink.razor.css` (UI-2).
-- [ ] T043 Write `specs/010-navigation-improvements/evidence/verify.sh` (contract-invariant
+- [X] T043 Write `specs/010-navigation-improvements/evidence/verify.sh` (contract-invariant
   greps, both directions: the tap rule exists once; the key handler precedes the Save-Data line
   in `PublicLayout.razor`; `PublicLayout.razor` has no `NavItem`; `SiteHeader` still renders
   `<Nav` for non-empty items; catalogue has 34 entries including the three new slugs;

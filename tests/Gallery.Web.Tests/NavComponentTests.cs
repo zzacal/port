@@ -15,8 +15,9 @@ namespace Gallery.Web.Tests;
 /// </summary>
 public partial class NavComponentTests
 {
+    // The 006 specimens as they were BEFORE 010 (frozen copies; T025 regenerates the live 006 baseline).
     private static readonly string UiBaseline = Path.Combine(
-        Render.RepoRoot, "specs", "006-public-site-local", "evidence", "ui-baseline");
+        Render.RepoRoot, "specs", "010-navigation-improvements", "evidence", "pre-010-specimens");
 
     private static RenderFragment Frag(string text) => b => b.AddContent(0, text);
 
@@ -245,7 +246,8 @@ public partial class NavComponentTests
     public async Task PhotoPage_without_gallery_href_renders_no_gallery_link_and_does_not_throw()
     {
         var html = await Render.Html<PhotoPage>(new { Image = MakeImage(), GalleryTitle = "G", NoIndex = false, PrevHref = "/p" });
-        Assert.DoesNotContain("gallery-link", html);
+        // The element, not the substring: the inline key handler names ".gallery-link a" (K7).
+        Assert.DoesNotContain("class=\"gallery-link\"", html);
         Assert.DoesNotContain("class=\"here\"", html);
         Assert.Contains("<nav class=\"pager\"", html);
         Guards.AssertNoInlineStyle(html);

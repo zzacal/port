@@ -1,0 +1,38 @@
+PASS K1 the .text-link.tap rule exists in exactly one stylesheet (1)
+PASS UI-2 no min-height/line-height 44px outside TextLink.razor.css
+PASS K1 TextLink renders text-link tap only when Tap
+PASS K2 Pager links pass Tap="true" (2)
+PASS K2 PagerStack enum has None, Narrow, Always
+PASS K2 stack breakpoint 599.98px
+PASS K GalleryLink exists and uses the TextLink atom
+PASS K GalleryLink has no raw <a element
+PASS K GalleryNeighbours exists and uses the TextLink atom
+PASS K GalleryNeighbours has no raw <a element
+PASS K MembershipStatus exists and uses the TextLink atom
+PASS K MembershipStatus has no raw <a element
+PASS K3 GalleryLink budgets 26/60
+PASS K7 PublicLayout passes no nav items (no NavItem)
+PASS K7 PublicLayout renders <SiteHeader SiteName="Gallery" />
+PASS K7 key handler (line 20) precedes the Save-Data return (line 25)
+PASS K7 exactly one keydown listener in src
+PASS K6 SiteHeader still renders <Nav for non-empty items
+PASS K6 SiteHeader NavItems not EditorRequired
+PASS UI-4 no aria-keyshortcuts anywhere in src
+PASS Catalogue has 34 entries
+PASS Catalogue has molecules/gallery-link
+PASS Catalogue has molecules/gallery-neighbours
+PASS Catalogue has molecules/membership-status
+PASS ProjectAsync still exists (signature kept)
+PASS ProjectWithNavAsync exists
+PASS [SAFETY] SiteProjector.Nav calls Cards(
+PASS SiteProjector.Nav calls GalleryNav.Neighbours
+PASS PurgeSets.Nav is called from OperationResult.cs
+PASS PurgeSets.Nav defined
+PASS [SAFETY] gallery route checks Visibility == "public" before using Nav
+PASS [SAFETY] NavSourceGuardTests present
+PASS [SAFETY] no nav write outside SiteProjector/Documents
+PASS no style= attribute in 010 components
+PASS no <script in 010 components
+PASS public pages keep one inline module (one <script type="module"> in PublicLayout)
+
+ALL PASS

@@ -12,11 +12,16 @@
     <style>@((MarkupString)Styles.Css)</style>@if (HeadExtra is not null){@HeadExtra}
 </head>
 <body class="public">
-    <SiteHeader SiteName="Gallery" NavItems="_nav" />
+    <SiteHeader SiteName="Gallery" />
     <main class="public-main">@ChildContent</main>@if (Enhance)
 {
     <script type="speculationrules">{"prerender":[{"where":{"href_matches":"/g/*"},"eagerness":"moderate"}]}</script>
     <script type="module">(() => {
+document.addEventListener('keydown', e => {
+const k = { ArrowLeft: 'a[rel=prev]', ArrowRight: 'a[rel=next]', Escape: '.gallery-link a' }[e.key];
+if (!k || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || e.defaultPrevented || e.target.closest?.('input,textarea,select,[contenteditable]')) return;
+document.querySelector('article.solo ' + k)?.click();
+});
 if (navigator.connection?.saveData) return;
 // Fetch through a detached <picture> with the destination's own AVIF <source> (same srcset and
 // sizes), so the browser picks, and caches, exactly the file the destination page then uses.
@@ -49,6 +54,4 @@ window.addEventListener('load', () => {
     [Parameter] public bool NoIndex { get; set; }
     [Parameter] public bool Enhance { get; set; }
     [Parameter] public RenderFragment? HeadExtra { get; set; }
-
-    private static readonly IReadOnlyList<NavItem> _nav = [new("Galleries", "/")];
 }

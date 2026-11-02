@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.RegularExpressions;
 using Gallery.Web.Data;
 using Gallery.Web.Tests.Fixtures;
 using MongoDB.Driver;
@@ -93,11 +94,14 @@ public class LibraryFlowTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         Assert.Contains(moved.Derivatives[0].Avif, home);
         Assert.DoesNotContain(images[0].Derivatives[0].Avif, home);
 
-        // Library tiles say "In 1 gallery · public in 1".
+        // Library tiles say "Coast · public in 1" (010 T035, stated change, decisions row 30: the
+        // status text content, tags stripped, now names the gallery as a link).
         var lib = await LibraryHtml.BodyAsync(await h.GetAsync("/admin/library"));
         foreach (var id in forty)
             Assert.Contains("<span class=\"lib-status\"", LibraryHtml.TileOf(lib, id));
-        Assert.Equal(40, LibraryHtml.Blocks(lib, "div", "lib-tile").Count(t => t.Contains(">In 1 gallery · public in 1<", StringComparison.Ordinal)));
+        static string StatusText(string tile) => Regex.Replace(
+            Regex.Match(tile, "<span class=\"lib-status\"[^>]*>(.*?)</span>").Groups[1].Value, "<[^>]*>", "");
+        Assert.Equal(40, LibraryHtml.Blocks(lib, "div", "lib-tile").Count(t => StatusText(t) == "Coast · public in 1"));
 
         // L3 of the same 40 plus 5 new → "5 added · 40 were already in Coast".
         var again = await h.PostFormAsync("/admin/library/add",

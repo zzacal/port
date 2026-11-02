@@ -1,6 +1,6 @@
 <PublicLayout Title="@($"{Image.Title} — {GalleryTitle}")" NoIndex="@NoIndex" Enhance="true" HeadExtra="_transitions">
     <SoloViewer Image="Image" Caption="@Caption" PrevHref="@PrevHref" NextHref="@NextHref"
-                TransitionId="@Image.Id" PrefetchUrls="@PrefetchUrls" />
+                TransitionId="@Image.Id" PrefetchUrls="@PrefetchUrls" Here="Here" Stack="Stack" />
 </PublicLayout>
 
 @code {
@@ -11,6 +11,22 @@
     [Parameter] public string? PrefetchUrls { get; set; }
     [Parameter] public bool NoIndex { get; set; }
     [Parameter, EditorRequired] public string GalleryTitle { get; set; } = "";
+
+    /// <summary>
+    /// Feature 010 (P1): the way back to the photo's tile, with its 1-based position. Optional:
+    /// null renders no gallery link and the Pager's default stack, exactly as before.
+    /// </summary>
+    [Parameter] public string? GalleryHref { get; set; }
+    [Parameter] public int Index { get; set; }
+    [Parameter] public int Total { get; set; }
+
+    private RenderFragment? Here => GalleryHref is null
+        ? null
+        : @<GalleryLink Href="@GalleryHref" Title="@GalleryTitle" Index="@Index" Total="@Total" />;
+
+    private PagerStack Stack => GalleryHref is null
+        ? PagerStack.None
+        : GalleryLink.StackFor(GalleryTitle, Index, Total);
 
     private RenderFragment _transitions => b =>
     {
