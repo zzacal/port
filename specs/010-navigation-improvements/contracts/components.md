@@ -21,19 +21,28 @@ invented. Rules that apply to every item:
 private string Class => Tap ? "text-link tap" : "text-link";
 ```
 
-CSS added to `TextLink.razor.css` (the one tap rule for the whole site, FR-004):
+CSS added to `TextLink.razor.css`: the ONE tap rule for the whole site (FR-004, UI-2). It also
+carries the ellipsis behaviour, so a consumer never needs a second rule to truncate a long title
+in a tap link (analyze M1):
 
 ```css
 .text-link.tap {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    display: inline-block;
+    box-sizing: border-box;
     min-width: 44px;
     min-height: 44px;
+    max-width: 100%;
     padding-inline: 8px;
-    box-sizing: border-box;
+    line-height: 44px;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 ```
+
+No other file may set `min-height`, `line-height: 44px` or `display` on `.text-link` (T042, T043).
 
 ## K2 `Pager` molecule (changed): tap areas and centre slot
 
@@ -90,8 +99,12 @@ Parameters: `Href` (string, required), `Title` (string, required), `Index` (int,
 `Total` (int, required).
 
 ```html
-<p class="gallery-link"><a class="text-link" href="{Href}">← {Title}</a><span class="count"> · {Index} / {Total}</span></p>
+<p class="gallery-link"><a class="text-link tap" href="{Href}">← {Title}</a><span class="count"> · {Index} / {Total}</span></p>
 ```
+
+The anchor is the `TextLink` atom with `Tap="true"` (analyze M5, owner-approved): the way back
+is the most-used control on a phone, so it gets the same 44 px tap box as Previous and Next. The
+title truncates inside it; the counter never does.
 
 Static members used by the photo page to pick the Pager's `Stack`:
 
@@ -107,19 +120,19 @@ CSS:
 
 ```css
 .gallery-link {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 0;
     margin: 0;
     font-size: var(--type-caption);
     color: var(--color-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
-.gallery-link .text-link { color: var(--color-text); }
+.gallery-link ::deep .text-link { flex: 0 1 auto; color: var(--color-text); }
+.count { flex: none; white-space: nowrap; }
 ```
 
-(`.text-link` here is a descendant inside the same component; the anchor is written directly in
-this component's markup, not through the TextLink atom, so the scoped selector applies. It is
-not a tap link: it sits between two tap areas, and its own height is the row's.)
+(Only colour and flex sizing here; the box, height and ellipsis come from the K1 tap rule.)
 
 ## K4 `SoloViewer` organism (changed)
 
@@ -155,11 +168,9 @@ CSS:
 }
 .prev { justify-self: start; min-width: 0; }
 .next { justify-self: end; min-width: 0; text-align: right; }
-.gallery-neighbours ::deep .text-link { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; line-height: 44px; }
 ```
 
-(The last rule keeps the 44 px height while allowing ellipsis, which `inline-flex` would
-prevent. The browser test measures both boxes.)
+(No rule on the links themselves: the K1 tap rule gives the 44 px box and the ellipsis.)
 
 ## K6 `SiteHeader` organism (changed)
 
@@ -198,9 +209,12 @@ document.querySelector('article.solo ' + k)?.click();
 
 ### P1 Photo page (`Site/Pages/PhotoPage.razor`)
 
-New parameters: `GalleryHref` (string, required), `Index` (int), `Total` (int). Renders
-`SoloViewer` with `Here` = `<GalleryLink Href Title=GalleryTitle Index Total />` and
-`Stack = GalleryLink.StackFor(GalleryTitle, Index, Total)`.
+New parameters, all OPTIONAL (analyze M3): `GalleryHref` (string?, default null), `Index` (int),
+`Total` (int). When `GalleryHref` is null the page passes no `Here` and `Stack.None`, so it
+renders exactly as today and never throws; existing `PageComponentTests` render PhotoPage
+without these parameters and must pass unmodified. When set, it renders `SoloViewer` with
+`Here` = `<GalleryLink Href Title=GalleryTitle Index Total />` and
+`Stack = GalleryLink.StackFor(GalleryTitle, Index, Total)`. The endpoint always sets them.
 
 Endpoint: `GalleryHref = $"/g/{id}/{slug}#p-{imageId}"`; `Index = items.IndexOf(imageId) + 1`;
 `Total = items.Count`. No new read.
@@ -215,21 +229,29 @@ Endpoint: when `gallery.Visibility == "public"` and `gallery.Nav` is not null, m
 
 ### P3 Library tile row (`Admin/Pages/LibraryPage.razor`, `RowFor`)
 
-`<span class="lib-status">@tile.Status</span>` becomes
-`<MembershipStatus FirstId="@tile.FirstByTitle?.Id" FirstTitle="@tile.FirstByTitle?.Title" Others="@(tile.GalleryCount - 1)" Public="@tile.PublicGalleryCount" />` (K8).
-The status remains inside a `span.lib-status` so the 009 tests that read it by class keep
-working for the zero-gallery case.
+The `<span class="lib-status">` element STAYS in `LibraryPage.razor`, and `MembershipStatus`
+renders only its contents (analyze M2). The span must be in the page's own markup so the
+page-scoped `.lib-status { color: var(--color-muted) }` rule still applies:
+
+```razor
+<span class="lib-status"><MembershipStatus FirstId="@tile.FirstByTitle?.Id" FirstTitle="@tile.FirstByTitle?.Title" Others="@(tile.GalleryCount - 1)" Public="@tile.PublicGalleryCount" /></span>
+```
+
+The 009 tests that find the status by `class="lib-status"` keep working.
 
 ## K8 `MembershipStatus` molecule (new, `Components/Molecules/MembershipStatus.razor`)
 
-Parameters: `FirstId` (string?), `FirstTitle` (string?), `Others` (int), `Public` (int). Renders:
+Parameters: `FirstId` (string?), `FirstTitle` (string?), `Others` (int), `Public` (int). It
+renders NO wrapper element, only the contents below:
 
-| Case | Markup (inside `<span class="lib-status">…</span>`) |
+| Case | Rendered contents |
 |---|---|
 | `FirstId` null | `Not in a gallery` |
 | `Others` 0, `Public` 0 | `<a class="text-link" href="/admin/galleries/{FirstId}">{FirstTitle}</a>` |
-| `Others` N>0 | `<a …>{Title}</a> +{N}` |
+| `Others` N>0 | `<a …>{FirstTitle}</a> +{N}` |
 | `Public` M>0 | the above, then ` · public in {M}` |
+
+The link inherits the muted status colour (`TextLink` uses `color: inherit`).
 
 `MembershipStatus` lives in `Components/Molecules/` and takes primitives, not `LibraryTile`
 (components do not depend on `Library/`). It uses the `TextLink` atom (no `Tap`: it is a dense
@@ -257,7 +279,6 @@ verify-before-replace diff):
 | Page | Appended specimens |
 |---|---|
 | `PagerPage` | "With gallery link, middle photo", "With gallery link, first photo", "With gallery link, last photo", "One-photo gallery", "Long gallery title (stacks on small screens)" |
-| `SoloViewerPage` | "With gallery link and position" |
 | `SiteHeaderPage` | "Public site (brand only)" |
 | `TextLinkPage` | "Tap area" |
 

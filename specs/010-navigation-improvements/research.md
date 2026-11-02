@@ -124,11 +124,11 @@ changes).
 ## R-05 Previous/Next tap areas (FR-004, SC-003)
 
 **Decision**: the `TextLink` atom gains an optional `Tap` parameter. When true the link gets a
-second class, `text-link tap`, and ONE rule in `TextLink.razor.css` gives it
-`display:inline-flex; align-items:center; justify-content:center; min-height:44px;
-min-width:44px; padding-inline:8px`. Visible text, colour and size stay exactly as today; only
-the hit box grows. With `Tap` unset the atom's output is byte-identical. `Pager` and
-`GalleryNeighbours` (R-08) pass `Tap="true"`, so both use the same rule. In the Pager the
+second class, `text-link tap`, and ONE rule in `TextLink.razor.css` gives it a 44×44 minimum box
+(`inline-block`, `line-height:44px`, `min-width:44px`, `padding-inline:8px`) plus single-line
+ellipsis, exactly as contracts/components.md K1 gives it. Visible text, colour and size stay
+exactly as today; only the hit box grows. With `Tap` unset the atom's output is byte-identical.
+`Pager`, `GalleryLink` and `GalleryNeighbours` (R-08) pass `Tap="true"`, so all three use the same rule. In the Pager the
 `.prev` link gets `margin-inline-start:-8px` and the `.next` link `margin-inline-end:-8px`, so the
 visible words stay where they are today horizontally. Underline on hover and focus is unchanged.
 

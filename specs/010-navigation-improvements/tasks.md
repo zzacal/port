@@ -103,7 +103,7 @@ batch as the code they guard.
   `tests/Gallery.Web.Tests/Fixtures/PhotoEncoder.cs` (internal static, same behaviour) and make
   `BrowserSiteFixture` call it. Test infrastructure, not a test: `BrowserTests` must pass
   unmodified and byte-for-byte the same derivative file names must result (compare the fixture's
-  image-host file list before and after in one run). Log as decisions row 21.
+  image-host file list before and after in one run). Log it as a new decisions.md row.
 - [ ] T005 Design record (VII.2, research R-14): edit `specs/001-architecture-stack-design/draft/`
   — `02d-decisions-delivery.md` D-21 (Pager centre slot and `Tap`; new molecules `GalleryLink`,
   `GalleryNeighbours`, `MembershipStatus`; `SiteHeader` with no nav; `PublicLayout` key handler)
@@ -180,16 +180,26 @@ batch as the code they guard.
 
 **Batch A gate (parent)**: build `-warnaserror`; full test; then T013.
 
-- [ ] T013 (parent, stated requirement change) Run the full suite after Batch A. The widened
-  `Changed` is expected to break `PurgeSetTests` facts
-  `Changed_is_added_removed_and_neighbour_changed_ids` (if its sets change),
-  `P_MEMBERS_add_purges_gallery_page_added_photo_its_new_neighbour_and_home` (new set
-  `/ , /g/g1/s, …/a, …/b, …/c, …/e`; rename to
-  `P_MEMBERS_add_purges_every_photo_page_when_the_count_changes`),
-  `P_MEMBERS_remove_…` and `Union_…`, and possibly `LibraryFlowTests` line 86 and
-  `EdgeModeTests` line 248. For each failure: confirm from the E1 rules that the new set is
-  right, edit ONLY the expected set, and write the old and new set into decisions.md as a row.
-  Any failure outside these files is a defect in Batch A: send it back.
+- [ ] T013 (parent, stated requirement change) Run the full suite after Batch A. Exactly these
+  four facts are expected to fail, each because the 009 expected set lacks pages 010 now purges
+  (worked through E1 and E2 during analyze):
+  1. `PurgeSetTests.P_MEMBERS_add_purges_gallery_page_added_photo_its_new_neighbour_and_home`
+     (a b c → a b c e): old `/, /g/g1/s, …/c, …/e`; new adds `…/a, …/b` (rule 4). Rename to
+     `P_MEMBERS_add_purges_every_photo_page_when_the_count_changes`.
+  2. `GalleryServiceTests` line 144 (35 photos added to a 40-photo gallery): old
+     `fresh + first[39]` photo pages + gallery page; new = all 75 photo pages + gallery page
+     (rule 4).
+  3. `GalleryServiceTests` line 275 (remove c from a b c): old gallery page + `…/b`, `…/c`; new
+     adds `…/a` (rule 4).
+  4. `GalleryServiceTests` line 242 (home reorder swapping the two listed galleries a, b): old
+     `[Home]`; new `[Home, Gp(a, "alpha"), Gp(b, "beta")]` (P-NAV: both neighbours swap).
+  These were checked and do NOT change: `Changed_is_added_removed_and_neighbour_changed_ids`,
+  `P_MEMBERS_remove_…`, `P_MEMBERS_reorder_…`, `Union_…`, `P_DELETE_…`, `LibraryFlowTests:86`,
+  `EdgeModeTests:248`, every `ImageDeleteTests`/`ImageServiceTests`/`LibraryEditTests` purge set,
+  and the publish/unpublish/delete facts of `GalleryServiceTests` (each has at most one listed
+  gallery, which has no `nav`). For each of the four: confirm the new set from E1/E2, edit ONLY
+  the expected set (and the one rename), and add a decisions.md row with old and new sets. Any
+  other failure is a defect in Batch A: send it back.
 
 ---
 
@@ -226,30 +236,37 @@ test file `NavComponentTests.cs`. Implement contracts/components.md K1–K6 and 
   006 ui-baseline `molecules/pager.html` specimens); first/last/one-photo Pager states render no
   link for the missing side (absent, UI-5); `StackFor` thresholds at 26/27 and 60/61 characters;
   GalleryNeighbours with both null renders an empty string, with one side renders an empty
-  `<span>` for the other; MembershipStatus all four table rows plus a 0-public, 2-others case;
-  SiteHeader with `[]` has no `<nav`; no `style=` anywhere (`Guards.AssertNoInlineStyle`).
+  `<span>` for the other; MembershipStatus all four table rows plus a 0-public, 2-others case,
+  and its output starts with neither `<span` nor any wrapper element (contracts P3/K8);
+  GalleryLink's anchor has `class="text-link tap"` (M5); SoloViewer passes `Here` and `Stack`
+  through (its output contains the `here` div and the stack class when set, and with both unset
+  differs from the 006 `organisms/solo-viewer.html` specimens only by ` tap`); PhotoPage
+  rendered WITHOUT `GalleryHref` renders no `gallery-link` and does not throw (M3);
+  SiteHeader with `[]` has no `<nav`; no `style=` anywhere (`Guards.AssertNoInlineStyle`);
+  `TextLink.razor.css` is the only `.razor.css` under `src/` that sets `min-height`,
+  `line-height: 44px` or `display` on `.text-link` (source scan, M1/UI-2).
 
 **Batch B gate (parent)**: build; NavComponentTests green; every byte-identity failure in the
-full run must be on the expected list in T027 and nowhere else.
+full run must be on the expected list in T025 and nowhere else.
 
 ---
 
 ## Phase 4: Catalogue states, Batch C (one executor, after Batch B, 3 tasks) — FR-012
 
 **Owns**: `src/Gallery.Web/Ui/UiCatalog.cs`, new `src/Gallery.Web/Ui/Pages/GalleryLinkPage.razor`,
-`GalleryNeighboursPage.razor`, `MembershipStatusPage.razor`, the four existing pages named in
+`GalleryNeighboursPage.razor`, `MembershipStatusPage.razor`, the three existing pages named in
 T023 (append only), and the new test file `NavCataloguePageTests.cs`.
 
 - [ ] T022 [P] Create the three catalogue pages with exactly the specimen labels of
   contracts/components.md "Catalogue" (sample titles of 10, 30 and 70 characters; sample
   galleries "Coast", "alpine", "Birds"; hrefs `#`), and append their entries at the end of the
   Molecules block in `src/Gallery.Web/Ui/UiCatalog.cs`.
-- [ ] T023 Append the specimens listed for `PagerPage`, `SoloViewerPage`, `SiteHeaderPage` and
-  `TextLinkPage` in `src/Gallery.Web/Ui/Pages/` AFTER their existing specimens. Do not change an
-  existing specimen. `SoloViewerPage`'s new specimen uses `Samples.Landscape[0]` with a
-  `GalleryLink` of "September 6", 4 of 23.
+- [ ] T023 Append the specimens listed for `PagerPage`, `SiteHeaderPage` and `TextLinkPage` in
+  `src/Gallery.Web/Ui/Pages/` AFTER their existing specimens. Do not change an existing
+  specimen. Do NOT touch `SoloViewerPage.razor`: `OrganismPageTests` counts its two thumb layers
+  and must pass unmodified (SoloViewer's pass-through of `Here`/`Stack` is covered by T021).
 - [ ] T024 Write `tests/Gallery.Web.Tests/NavCataloguePageTests.cs`: each new page renders every
-  label in order; `Guards.AssertNoInlineStyle` and `Guards.AssertNoScript` on each; the four
+  label in order; `Guards.AssertNoInlineStyle` and `Guards.AssertNoScript` on each; the three
   appended pages contain their new labels after the old ones.
 
 - [ ] T025 (parent, stated requirement change) Snapshot regeneration, verify-before-replace (plan
@@ -283,8 +300,10 @@ Independent test: open a photo directly; the row reads `← {Gallery} · N / tot
   `Index = items.IndexOf(imageId) + 1`, `Total = items.Count`,
   `GalleryHref = $"/g/{id}/{slug}#p-{imageId}"`; pass them to `PhotoPage`. No new read; the
   gallery projection for the photo page is unchanged. In `src/Gallery.Web/Site/Pages/PhotoPage.razor`
-  add the parameters and pass `Here` (a `GalleryLink`) and `Stack = GalleryLink.StackFor(...)` to
-  `SoloViewer` (contracts P1).
+  add the parameters as OPTIONAL (`GalleryHref` null by default; null means no `Here` and
+  `Stack.None`, never a throw) and pass `Here` (a `GalleryLink`) and
+  `Stack = GalleryLink.StackFor(...)` to `SoloViewer` (contracts P1). `PageComponentTests` render
+  PhotoPage without these parameters and must pass unmodified.
 
 ### User Story 2 — Step through photos comfortably (P1)
 
@@ -327,7 +346,13 @@ nothing. Independent test: bottom of a listed gallery links the next one by titl
   listed gallery's page links to it; (e) [SAFETY] write a stale `nav` naming A and C directly
   onto the private gallery's document, GET its page, assert no `gallery-neighbours` element;
   (f) header on `/`, a gallery, a photo and a 404 page: the set of header `href`s has no
-  duplicates and is exactly `{"/"}`; (g) `Server-Timing` still present on all three routes.
+  duplicates and is exactly `{"/"}`; (g) `Server-Timing` still present on all three routes;
+  (h) SC-005 end to end (analyze M4): with A, B, C, D listed and P private, perform each owner
+  action of contracts/edge.md "Expected sets" in sequence through `GalleryService` (reorder home,
+  unpublish B, publish P, rename B, delete C, remove B's last photo); after each, `SettleAsync()`
+  and then GET every listed gallery's page plus P's: each page's neighbour links (titles and
+  hrefs, in order) equal the neighbours of the CURRENT listed home order, and a gallery that is
+  not listed shows none. Zero stale links across the run.
 - [ ] T031 [US1] After rename of the gallery (through `GalleryService`), GET the photo page under
   the OLD slug: 301 to the new slug (existing behaviour) — and the new page's gallery link uses
   the new slug. Add to `NavRoutesTests.cs`.
@@ -352,9 +377,10 @@ and the new test file `LibraryMembershipTests.cs`.
   the LAST positional parameter of `LibraryTile`: the holder with the least `Title` under
   `StringComparer.OrdinalIgnoreCase`, ties by `Id` ordinal, any visibility. No new read.
   `Status`/`StatusLine` stay.
-- [ ] T033 [US5] In `src/Gallery.Web/Admin/Pages/LibraryPage.razor` `RowFor`, replace
-  `<span class="lib-status">@tile.Status</span>` with the K8 `MembershipStatus` call from
-  contracts P3. Nothing else in the row changes.
+- [ ] T033 [US5] In `src/Gallery.Web/Admin/Pages/LibraryPage.razor` `RowFor`, replace the
+  CONTENTS of `<span class="lib-status">` (`@tile.Status`) with the K8 `MembershipStatus` call,
+  keeping the span itself in the page, exactly as contracts P3 shows. Nothing else in the row
+  changes.
 - [ ] T034 [US5] Write `tests/Gallery.Web.Tests/LibraryMembershipTests.cs` (LibraryHost): photos
   in 0, 1 and 3 galleries (titles "coast", "Alpine", "birds"; "coast" first in home order, one
   public): 0 → plain `Not in a gallery` with no `<a` inside `lib-status`; 1 → link to
@@ -393,8 +419,8 @@ and the new test file `LibraryMembershipTests.cs`.
   parent decision). Old slug after `RenameAsync`: following a stale gallery link still lands on
   the tile. After `RemovePhotoAsync`, the removed photo's anchor URL opens at scrollY 0 with
   status 200.
-- [ ] T038 [US2] In `NavBrowserTests.cs`: SC-003 tap boxes ≥ 44×44 for Previous and Next (and the
-  gallery neighbour links) at 360, 390, 600, 1024, 1440 px, no two boxes overlapping, centre
+- [ ] T038 [US2] In `NavBrowserTests.cs`: SC-003 tap boxes ≥ 44×44 for Previous, Next and the
+  gallery link (M5), and the gallery neighbour links, at 360, 390, 600, 1024, 1440 px, no two boxes overlapping, centre
   text on one line and horizontally centred within 2 px for middle, first and last photos, with
   gallery titles of 10, 30 and 70 characters (set via `RenameAsync`); the photo's `.stage`
   height equals its pre-010 value (`0.8 * innerHeight`). Keys: Right/Left/Escape navigate;
@@ -468,7 +494,7 @@ and the new test file `LibraryMembershipTests.cs`.
 
 | Req | Tasks |
 |---|---|
-| FR-001 | T016, T017, T026, T030a |
+| FR-001 | T016, T017, T021, T026, T030a |
 | FR-002 | T026, T037 |
 | FR-003 | T016, T026, T030a, T009 (stale counters) |
 | FR-004 | T014, T015, T021, T038 |
@@ -476,7 +502,7 @@ and the new test file `LibraryMembershipTests.cs`.
 | FR-006 | T027, T038 |
 | FR-007 | T007, T018, T028, T030c |
 | FR-008 | T007, T008, T028, T030d–e |
-| FR-009 | T009, T010, T011, T013 |
+| FR-009 | T009, T010, T011, T013, T030h |
 | FR-010 | T020, T029, T030f, T039 |
 | FR-011 | T019, T032, T033, T034 |
 | FR-012 | T022, T023, T024 |
@@ -488,7 +514,7 @@ and the new test file `LibraryMembershipTests.cs`.
 | SC-002 | T030a |
 | SC-003 | T038 |
 | SC-004 | T039 |
-| SC-005 | T011 |
+| SC-005 | T011, T030h |
 | SC-006 | T002, T003, T040 |
 | SC-007 | T039 |
 | SC-008 | T030f, T039 |

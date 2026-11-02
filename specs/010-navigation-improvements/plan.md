@@ -148,7 +148,7 @@ src/Gallery.Web/
 ├── Components/Templates/PublicLayout.razor # no nav items; key handler in the module
 ├── Ui/UiCatalog.cs                         # + 3 entries
 └── Ui/Pages/GalleryLinkPage.razor, GalleryNeighboursPage.razor, MembershipStatusPage.razor  # NEW
-    Ui/Pages/PagerPage, SoloViewerPage, SiteHeaderPage, TextLinkPage .razor            # appended specimens
+    Ui/Pages/PagerPage, SiteHeaderPage, TextLinkPage .razor            # appended specimens
 
 tests/Gallery.Web.Tests/
 ├── Fixtures/NavBrowserFixture.cs           # NEW (research R-13)
@@ -174,19 +174,19 @@ molecules in `Components/Molecules/` (atomic level only, no public/admin split),
    ` tap` class, the Pager wrapper markup, the removed `<nav class="nav" aria-label="Site">…</nav>`,
    appended specimens). Equal after stripping = commit; any residue = stop and escalate.
    Also affected, same procedure: catalogue pages with appended specimens (`TextLinkPage`,
-   `SiteHeaderPage`), and the index (3 new entries). `molecules/nav` and
+   `SiteHeaderPage`), and the index (3 new entries). `SoloViewerPage` gets NO new specimen
+   (analyze H2: `OrganismPageTests` counts its two thumb layers). `molecules/nav` and
    `organisms/site-header`'s existing specimen must stay byte-identical (only appended).
 2. **`IndexTests`**: entry count 31 → 34.
 3. **`TemplatePageTests.SiteHeader_page_renders_brand_and_nav`**: unchanged (the catalogue page
    still shows the "Galleries" specimen first). Public pages lose the nav; any public-route
    assertion on "Galleries" in the header is flipped to assert-absent and named in the task.
-4. **`PurgeSetTests`**: `Changed_is_added_removed_and_neighbour_changed_ids`,
-   `P_MEMBERS_add_…` and `P_MEMBERS_remove_…` and `Union_…` gain the photo pages the widened
-   `Changed` now returns (contracts/edge.md table), and the add test is renamed
-   `P_MEMBERS_add_purges_every_photo_page_when_the_count_changes`. `P_DELETE_…`,
-   `LibraryFlowTests` and `EdgeModeTests` expectations are rechecked against the new rule and
-   updated only where the count changed. Every such edit is listed in tasks.md with the old and
-   new expected set.
+4. **Purge expectations** (analyze H1, worked through the new rules): exactly four facts gain
+   pages. `PurgeSetTests.P_MEMBERS_add_…` (renamed
+   `P_MEMBERS_add_purges_every_photo_page_when_the_count_changes`), `GalleryServiceTests` lines
+   144 and 275 (counter rule), and line 242 (home reorder now also purges both gallery pages,
+   P-NAV). Every other purge expectation was checked and stays. tasks.md T013 lists the old and
+   new sets.
 5. **`SiteProjectorTests`** and `InvariantChecker`: unchanged. The site document gains nothing
    (`nav` lives on galleries), and `ProjectAsync()` keeps its signature: it calls the new
    `ProjectWithNavAsync()` and returns its `.Cards`, so existing callers and tests compile and
