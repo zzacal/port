@@ -1,0 +1,17 @@
+testing /tmp/gallery-pre011 (pid 45772)
+PASS GET / 200
+FAIL / has no nav.nav--home
+FAIL / has no Galleries link to /g
+FAIL / renders a ContactSheet
+PASS / has Server-Timing
+FAIL GET /g 404
+FAIL /g has no tiles
+FAIL /g has no Server-Timing on a 200
+FAIL GET /g/ 404 -> none
+FAIL breadcrumb root on home is 'Galleries'
+FAIL breadcrumb root on listing is 'none'
+FAIL breadcrumb root on gallery is 'none'
+FAIL breadcrumb root on photo is 'none'
+FAIL breadcrumb root on missing is 'Galleries'
+
+12 FAILED

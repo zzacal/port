@@ -1,0 +1,25 @@
+== 1. unstripped, every page must differ
+ok 006/tokens.html differs (6 lines)
+ok 006/molecules/nav.html differs (30 lines)
+ok 006/molecules/breadcrumb.html differs (9 lines)
+ok 006/organisms/site-header.html differs (8 lines)
+ok 006/templates/public-layout.html differs (2 lines)
+ok 005/PublicLayoutPage.html differs (2 lines)
+== 2. intended edits only (want ALL EQUAL)
+SAME 006/tokens.html
+SAME 006/molecules/nav.html
+SAME 006/molecules/breadcrumb.html
+SAME 006/organisms/site-header.html
+SAME 006/templates/public-layout.html
+SAME 005/PublicLayoutPage.html
+
+ALL EQUAL
+== 3. plus stray edits in tokens and site-header (want 2 RESIDUE)
+RESIDUE 006/tokens.html
+SAME 006/molecules/nav.html
+SAME 006/molecules/breadcrumb.html
+RESIDUE 006/organisms/site-header.html
+SAME 006/templates/public-layout.html
+SAME 005/PublicLayoutPage.html
+2 RESIDUE
+SELFTEST PASS

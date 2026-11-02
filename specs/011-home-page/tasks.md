@@ -121,20 +121,20 @@ ContactSheet. GET `/g` lists the same galleries in the same order as the pre-cha
 - `src/Gallery.Web/Ui/Pages/NavPage.razor`
 - `tests/Gallery.Web.Tests/HomePageTests.cs` (new)
 
-- [ ] T006 [US1] `git mv src/Gallery.Web/Site/Pages/HomePage.razor src/Gallery.Web/Site/Pages/ListingPage.razor`,
+- [X] T006 [US1] `git mv src/Gallery.Web/Site/Pages/HomePage.razor src/Gallery.Web/Site/Pages/ListingPage.razor`,
   then apply contracts/components.md C6 (Title "Galleries", `Crumbs="Trails.Listing"`, static
   field removed). Nothing else in the file changes.
-- [ ] T007 [US1] Add `Nav.Home` to `src/Gallery.Web/Components/Molecules/Nav.razor` and append the CSS to
+- [X] T007 [US1] Add `Nav.Home` to `src/Gallery.Web/Components/Molecules/Nav.razor` and append the CSS to
   `Nav.razor.css`, both verbatim from contracts C2. With `Home` unset the output is byte-identical:
   the existing `molecules/nav.html` Default specimen must still match after T014's regeneration
   strip.
-- [ ] T008 [US1] Add `PublicLayout.Fill` (body class, CSS) to
+- [X] T008 [US1] Add `PublicLayout.Fill` (body class, CSS) to
   `src/Gallery.Web/Components/Templates/PublicLayout.razor` and `.razor.css` per contracts C4. Change the
   default trail to `Crumbs ?? Trails.Default` and delete the static `Home` field.
-- [ ] T009 [US1] In the same `PublicLayout.razor`, replace the speculation-rule string with the exact string in
+- [X] T009 [US1] In the same `PublicLayout.razor`, replace the speculation-rule string with the exact string in
   contracts C4. Change nothing else in the script block.
-- [ ] T010 [US1] Write a new `src/Gallery.Web/Site/Pages/HomePage.razor` verbatim from contracts C5.
-- [ ] T011 [US1] [SAFETY] Edit `src/Gallery.Web/Site/PublicEndpoints.cs` per contracts/routes.md:
+- [X] T010 [US1] Write a new `src/Gallery.Web/Site/Pages/HomePage.razor` verbatim from contracts C5.
+- [X] T011 [US1] [SAFETY] Edit `src/Gallery.Web/Site/PublicEndpoints.cs` per contracts/routes.md:
   - MOVE the `/` handler body to `MapMethods("/g", …)` with `ListingPage` and rename
     `ApplyHomeHeaders` → `ApplyListingHeaders`. Keep the II.6 `Cover is not null` filter and the
     single `HomeAsync()` read untouched.
@@ -144,16 +144,16 @@ ContactSheet. GET `/g` lists the same galleries in the same order as the pre-cha
   - Attach `.CacheOutput(PolicyName)` to `/` and `/g`.
   - Gallery page crumbs become `Trails.Under(new(gallery.Title))`.
   - Update the class summary comment's route list.
-- [ ] T012 [US1] Edit `src/Gallery.Web/Edge/PurgeSets.cs` per contracts/edge.md E1: `HomePath` →
+- [X] T012 [US1] Edit `src/Gallery.Web/Edge/PurgeSets.cs` per contracts/edge.md E1: `HomePath` →
   `ListingPath = "/g"` and `Home(..)` → `Listing(..)`, with all uses and doc comments updated. No
   condition changes.
   - Then `grep -rn HomePath src` must be empty.
   - Other `src` files that reference `PurgeSets.HomePath` (GalleryService, ImageDeleteService,
     EdgeWorker if any) are renamed in the same task. List them in your report.
-- [ ] T013 [US1] Admin fallback per contracts C7 in `src/Gallery.Web/Admin/Pages/GalleryPage.razor`.
+- [X] T013 [US1] Admin fallback per contracts C7 in `src/Gallery.Web/Admin/Pages/GalleryPage.razor`.
   Append two specimens to `src/Gallery.Web/Ui/Pages/NavPage.razor` per contracts C2. The Default
   specimen stays first and unchanged.
-- [ ] T014 [US1] Write tests in a NEW `tests/Gallery.Web.Tests/HomePageTests.cs`, `LibraryHost` with
+- [X] T014 [US1] Write tests in a NEW `tests/Gallery.Web.Tests/HomePageTests.cs`, `LibraryHost` with
   listed, private and empty galleries:
   - (a) `/` is 200. It has exactly one `nav.nav--home` holding exactly one `<a href="/g">Galleries</a>`,
     no `contact-sheet` element, `body` class `public fill`, `Cache-Control` = `HtmlPolicy`, and
@@ -197,23 +197,23 @@ data-model.md table.
 - `tests/Gallery.Web.Tests/TrailRoutesTests.cs` (new)
 - `tests/Gallery.Web.Tests/TrailSourceGuardTests.cs` (new)
 
-- [ ] T015 [US2] `src/Gallery.Web/Site/Pages/PhotoPage.razor`: `Crumbs` becomes
+- [X] T015 [US2] `src/Gallery.Web/Site/Pages/PhotoPage.razor`: `Crumbs` becomes
   `GalleryHref is null ? null : Trails.Under(new(GalleryTitle, GalleryHref), new(Image.Title))`.
-- [ ] T016 [US2] `src/Gallery.Web/Site/Pages/NotFoundPage.razor`: `Crumbs="Trails.NotFound"`, and delete the static
+- [X] T016 [US2] `src/Gallery.Web/Site/Pages/NotFoundPage.razor`: `Crumbs="Trails.NotFound"`, and delete the static
   field and its comment.
-- [ ] T017 [US2] Update the catalogue specimens to the Home root in
+- [X] T017 [US2] Update the catalogue specimens to the Home root in
   `src/Gallery.Web/Ui/Pages/BreadcrumbPage.razor` and `SiteHeaderPage.razor`. Replace the
   `new("Galleries", "#")` root with `new("Home", "#"), new("Galleries", "#")` in every trail
   except the "Admin gallery" specimen, which stays (admin roots are unchanged). The SiteHeader
   "Home" specimen becomes `[new("Home")]`.
-- [ ] T018 [US2] [SAFETY] Write `tests/Gallery.Web.Tests/TrailRoutesTests.cs` (`LibraryHost`):
+- [X] T018 [US2] [SAFETY] Write `tests/Gallery.Web.Tests/TrailRoutesTests.cs` (`LibraryHost`):
   - parse `nav.breadcrumb` (label, href) on `/`, `/g`, a listed gallery, its photo and the 404
     page, and assert equality with the data-model.md table
   - for a PRIVATE gallery's page and photo page, assert every crumb href is in
     `{"/", "/g", "/g/{id}/{slug}#p-{imageId}"}`
   - assert Escape still targets the gallery crumb: the photo page has exactly one
     `.breadcrumb a[href*="#p-"]`
-- [ ] T019 [US2] Write `tests/Gallery.Web.Tests/TrailSourceGuardTests.cs` per contracts C3. Scan
+- [X] T019 [US2] Write `tests/Gallery.Web.Tests/TrailSourceGuardTests.cs` per contracts C3. Scan
   `src/Gallery.Web/Site/**/*.cs|*.razor` and `Components/Templates/PublicLayout.razor`. The string
   literals `"Home"` and `"Galleries"` appear only in `Site/Trails.cs`. HomePage and ListingPage
   use `Trails.ListingLabel` per C5 and C6. Collect every violation
@@ -235,7 +235,7 @@ there is no scrollbar, the tap height is ≥ 44, and the font size is 48 px.
 
 **Batch D**: one executor, after Batch C. It owns `tests/Gallery.Web.Tests/HomeBrowserTests.cs` (new).
 
-- [ ] T020 [US3] Write `tests/Gallery.Web.Tests/HomeBrowserTests.cs` on `NavBrowserFixture`, collection
+- [X] T020 [US3] Write `tests/Gallery.Web.Tests/HomeBrowserTests.cs` on `NavBrowserFixture`, collection
   `nav-browser`. Centre-y is measured on the `a` inside `nav.nav--home`. At each width 320, 390, 768, 1280 and 2560 (height 900, and a 390×640 phone
   case):
   - (a) the `nav.nav--home a` rect centre-x is within 2 px of `innerWidth/2`
@@ -255,7 +255,7 @@ measures, with no exception. Run it at all five widths, then commit.
 
 ## Phase 6: Polish and cross-cutting (parent unless marked)
 
-- [ ] T021 Regenerate the snapshots. Snapshots are regenerated on the merged tree by the parent, never by an executor.
+- [X] T021 Regenerate the snapshots. Snapshots are regenerated on the merged tree by the parent, never by an executor.
   - Delete the five `006/ui-baseline` files and `005/baseline/PublicLayoutPage.html` named in
     test-impact.md, run the two snapshot test classes to rewrite them, and delete strays.
   - Write `specs/011-home-page/evidence/snapshot-diff.sh` from 010's `snapshot-diff-review2.sh`
@@ -265,7 +265,7 @@ measures, with no exception. Run it at all five widths, then commit.
     - a temp copy with only the intended edits must report EQUAL
     - a stray edit to `tokens.html` must report RESIDUE
   - Run it on the real regeneration and tee the output to `snapshot-diff.txt`. It must report EQUAL.
-- [ ] T022 [P] Write `specs/011-home-page/evidence/p95.sh` and `p95-selftest.sh` from 010's.
+- [X] T022 [P] Write `specs/011-home-page/evidence/p95.sh` and `p95-selftest.sh` from 010's.
   - Routes `/ /g /g/{id}/{slug} /g/{id}/{slug}/{imageId}`, max reads `0 1 2 2`, compared with `==`
     for the first two.
   - The self-test covers a plain log, an empty log (must fail), an over-limit value (fails its row
@@ -291,7 +291,7 @@ measures, with no exception. Run it at all five widths, then commit.
   `bash specs/001-architecture-stack-design/evidence/assemble.sh` and `validate.sh`, and tee the
   output to `specs/011-home-page/evidence/design-validate.txt`.
   `grep -n "home page" docs/design.md` is reviewed hit by hit.
-- [ ] T024 [P] Write `specs/011-home-page/evidence/verify.sh`, a read-only live check against a
+- [X] T024 [P] Write `specs/011-home-page/evidence/verify.sh`, a read-only live check against a
   `--no-launch-profile --urls http://127.0.0.1:5092` instance started from `artifacts/`, which
   stops only its own PID. Checks:
   - `/` 200 and has `nav--home`
