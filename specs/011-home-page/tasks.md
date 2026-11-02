@@ -304,7 +304,7 @@ measures, with no exception. Run it at all five widths, then commit.
   Prefix every negative grep with a file-exists check. Run it against the pre-011 commit in a
   throwaway worktree first: every new-mechanism check must FAIL there. Then run it on the feature
   tree and tee to `verify-output.txt`.
-- [ ] T025 Non-vacuity. Copy `templates/non-vacuity.sh` (speckit-orchestration skill) to
+- [X] T025 Non-vacuity. Copy `templates/non-vacuity.sh` (speckit-orchestration skill) to
   `specs/011-home-page/evidence/non-vacuity.sh` with one `brk` per [SAFETY] guard:
   - `/` handler given a `HomeAsync()` call → T014(b) red
   - listing II.6 filter removed → T014(c) red
@@ -315,11 +315,11 @@ measures, with no exception. Run it at all five widths, then commit.
   
   Dry-run with `NV_DRYRUN=1`, then do the real run. Each red run must fail on its assertion. Tee
   the output to `non-vacuity.txt`.
-- [ ] T026 Create `specs/011-home-page/decisions.md`. Rows:
+- [X] T026 Create `specs/011-home-page/decisions.md`. Rows:
   - DEFAULT rows for: Nav reuse (R-02), listing title, vertical centring, admin empty-gallery View → `/g` (R-10), the T-IX measure-7 exclusion, and the blocked routing probe (R-03)
   - one STATED-CHANGE row per test file edited in T002/Class A–D
   - every executor `decisions_made`, as accepted or REJECTED rows
-- [ ] T027 Update `docs/roadmap.md` with an 011 entry: status, evidence paths and OWNER-ONLY checks.
+- [X] T027 Update `docs/roadmap.md` with an 011 entry: status, evidence paths and OWNER-ONLY checks.
   Then do a full clean build (`dotnet clean` then `dotnet build -warnaserror`) and run the full
   suite. `git checkout --` any evidence logs the suite regenerates, then commit.
 
