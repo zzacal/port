@@ -22,6 +22,7 @@ public static class Tokens
     public const int TypeCaption = 12;
     public const int TypeBody = 14;
     public const int TypeBrand = 16;
+    public const int TypeDisplay = 48;
 
     // Colours
     public const string ColorBg = "#fff";
@@ -38,7 +39,7 @@ public static class Tokens
     public static string ToCssRoot() =>
         $":root{{--space-l:{SpaceL}px;--space-m:{SpaceM}px;--space-s:{SpaceS}px;--tap:{Tap}px;" +
         $"--cell-ratio:{CellRatioW}/{CellRatioH};" +
-        $"--type-caption:{TypeCaption}px;--type-body:{TypeBody}px;--type-brand:{TypeBrand}px;" +
+        $"--type-caption:{TypeCaption}px;--type-body:{TypeBody}px;--type-brand:{TypeBrand}px;--type-display:{TypeDisplay}px;" +
         $"--color-bg:{ColorBg};--color-text:{ColorText};--color-muted:{ColorMuted};--color-rule:{ColorRule};" +
         $"--color-danger:{ColorDanger};--color-success:{ColorSuccess};--color-surface:{ColorSurface};" +
         $"--font:{FontStack}}}";
@@ -56,6 +57,7 @@ public static class Tokens
         ("Typography",  "TypeCaption", $"{TypeCaption}px"),
         ("Typography",  "TypeBody",    $"{TypeBody}px"),
         ("Typography",  "TypeBrand",   $"{TypeBrand}px"),
+        ("Typography",  "TypeDisplay", $"{TypeDisplay}px"),
         ("Color",       "ColorBg",     ColorBg),
         ("Color",       "ColorText",   ColorText),
         ("Color",       "ColorMuted",  ColorMuted),

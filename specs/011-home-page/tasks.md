@@ -57,7 +57,7 @@ layout test). Each batch writes its tests in the files it names, in the same bat
 
 ## Phase 1: Setup (parent)
 
-- [ ] T001 Record the baseline in `specs/011-home-page/evidence/baseline.txt`:
+- [X] T001 Record the baseline in `specs/011-home-page/evidence/baseline.txt`:
   - `git rev-parse HEAD`
   - the list of `tests/**/*.cs` files
   - the full-suite pass count from `dotnet test Gallery.slnx --artifacts-path artifacts --blame-hang-timeout 120s`
@@ -67,7 +67,7 @@ layout test). Each batch writes its tests in the files it names, in the same bat
     helper `HomeCaptureLibrary` in a new `tests/Gallery.Web.Tests/Fixtures/HomeCaptureLibrary.cs`).
     Save the ContactSheet region (`<div class="cs ` … its closing `</div>`) with scoped ids
     stripped to `specs/011-home-page/evidence/pre-011-listing.html`. Commit it before Batch A.
-- [ ] T002 Test-impact verification pass (parent, by hand) over the WHOLE `tests/` tree.
+- [X] T002 Test-impact verification pass (parent, by hand) over the WHOLE `tests/` tree.
   - Grep `"/"`, `HomePath`, `"Galleries"`, `HomePage`, `Page("/")`, and the shared helpers
     `GalleryListTests.Home`, `HomeRawAsync`, `SetEq(`, `AllPurged`.
   - Read each hit and confirm or correct its class (A/B/C/D) in contracts/test-impact.md.
@@ -75,7 +75,7 @@ layout test). Each batch writes its tests in the files it names, in the same bat
     509/537/543/581; TemplatePageTests 36; AdminAccessTests 228/288/325/415; SiteProjectorTests 128;
     InvariantTests 53; PublicRoutesTests 208/339/525; LibraryEditTests 154–169; PublishRefusalTests 58.
   - Update test-impact.md with the final list before Batch B is dispatched.
-- [ ] T003 Freeze the pre-011 snapshots into `specs/011-home-page/evidence/pre-011-specimens/`
+- [X] T003 Freeze the pre-011 snapshots into `specs/011-home-page/evidence/pre-011-specimens/`
   (copied from `git show HEAD:<path>`):
   - `006/tokens.html`
   - `006/molecules/nav.html`
@@ -89,12 +89,12 @@ layout test). Each batch writes its tests in the files it names, in the same bat
 **Batch A**: one executor. It owns `src/Gallery.Core/Design/Tokens.cs`, `src/Gallery.Web/Site/Trails.cs`,
 `tests/Gallery.Core.Tests/TypeDisplayTests.cs` and `tests/Gallery.Web.Tests/TrailsTests.cs`.
 
-- [ ] T004 [P] Add `TypeDisplay = 48` to `src/Gallery.Core/Design/Tokens.cs`, exactly per contracts/components.md C1
+- [X] T004 [P] Add `TypeDisplay = 48` to `src/Gallery.Core/Design/Tokens.cs`, exactly per contracts/components.md C1
   (const, `ToCssRoot` placement, `All()` row). Test in `tests/Gallery.Core.Tests/TypeDisplayTests.cs`:
   - `--type-display:48px` appears in `ToCssRoot()`, immediately after `--type-brand:16px;`
   - `All()` has the row
   - reflection over `public const int Type*` confirms TypeDisplay is the strict maximum
-- [ ] T005 [P] Create `src/Gallery.Web/Site/Trails.cs` verbatim from contracts/components.md C3. Do not
+- [X] T005 [P] Create `src/Gallery.Web/Site/Trails.cs` verbatim from contracts/components.md C3. Do not
   wire any call site yet. Test in `tests/Gallery.Web.Tests/TrailsTests.cs`:
   - each static trail's (label, href) list equals the data-model.md table exactly
   - [SAFETY] `Under(new("T"))` and `Under(new("G", "/g/x/y#p-1"), new("P"))` yield hrefs that are a
