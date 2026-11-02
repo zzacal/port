@@ -22,7 +22,7 @@
 
     private IReadOnlyList<Crumb>? Crumbs => GalleryHref is null
         ? null
-        : [new("Galleries", "/"), new(GalleryTitle, GalleryHref), new(Image.Title)];
+        : Trails.Under(new Crumb(GalleryTitle, GalleryHref), new Crumb(Image.Title));
 
     private RenderFragment? Here => Total <= 0
         ? null

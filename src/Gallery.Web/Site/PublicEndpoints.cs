@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.OutputCaching;
 namespace Gallery.Web.Site;
 
 /// <summary>
-/// Maps public routes: /, /g/{id}, /g/{id}/{slug}, /g/{id}/{slug}/{imageId}.
+/// Maps public routes: / (home), /g (listing), /g/{id}, /g/{id}/{slug}, /g/{id}/{slug}/{imageId}.
 /// GET and HEAD only. Replaces the Hello World stub from AppBuilder.
 /// </summary>
 public static class PublicEndpoints
@@ -22,9 +22,21 @@ public static class PublicEndpoints
         var siteOptions = app.Services.GetRequiredService<SiteOptions>();
         string[] verbs = ["GET", "HEAD"];
 
-        // Home
-        var home = app.MapMethods("/", verbs, async (ContentReader reader, StorageOptions storage) =>
+        // Home (011, contracts/routes.md): the links page. It reads nothing, so it takes no ContentReader.
+        var home = app.MapMethods("/", verbs, () =>
+            (IResult)new StatusAndHeadersResult(200,
+                headers: new() { ["Cache-Control"] = PublicCache.HtmlPolicy },
+                inner: new RazorComponentResult<HomePage>(new Dictionary<string, object?>()),
+                siteOptions.OutputCache ? PublicCache.PolicyName : null));
+
+        // Listing (011: moved from "/")
+        var listing = app.MapMethods("/g", verbs, async (HttpContext http, ContentReader reader, StorageOptions storage) =>
         {
+            // R-03: routing delivers "/g/" to this endpoint (a separate "/g/" route is ambiguous with
+            // it), so the one canonical address is enforced here, before the read.
+            if (http.Request.Path.Value == "/g/")
+                return (IResult)new ShortPolicyRedirectResult(Trails.ListingHref);
+
             try
             {
                 var site = await reader.HomeAsync();
@@ -36,12 +48,12 @@ public static class PublicEndpoints
                     .Select(c => ViewMapper.ToCard(c, url))
                     .ToList() ?? [];
 
-                IResult result = new RazorComponentResult<HomePage>(new Dictionary<string, object?>
+                IResult result = new RazorComponentResult<ListingPage>(new Dictionary<string, object?>
                 {
-                    [nameof(HomePage.Cards)] = (IReadOnlyList<ContactSheetItem>)cards
+                    [nameof(ListingPage.Cards)] = (IReadOnlyList<ContactSheetItem>)cards
                 });
 
-                return ApplyHomeHeaders(result, cards, siteOptions);
+                return ApplyListingHeaders(result, cards, siteOptions);
             }
             catch (Exception ex) when (IsDataException(ex))
             {
@@ -113,8 +125,8 @@ public static class PublicEndpoints
                     [nameof(GalleryPage.Items)] = (IReadOnlyList<ContactSheetItem>)items,
                     [nameof(GalleryPage.Prev)] = Neighbour(nav?.Prev),
                     [nameof(GalleryPage.Next)] = Neighbour(nav?.Next),
-                    // 010 owner review 1 (B2): links only to "/", so a private gallery's page names no other gallery.
-                    [nameof(GalleryPage.Crumbs)] = (IReadOnlyList<Crumb>)[new("Galleries", "/"), new(gallery.Title)],
+                    // 011 (FR-014): links only to "/" and "/g", so a private gallery's page names no other gallery.
+                    [nameof(GalleryPage.Crumbs)] = Trails.Under(new Crumb(gallery.Title)),
                 });
 
                 return ApplyGalleryHeaders(result, items, noIndex, siteOptions);
@@ -198,11 +210,12 @@ public static class PublicEndpoints
         });
 
         // 009 T002 (research R-07): the 006 policy only applies to endpoints that carry it, so the
-        // three page routes attach it explicitly. The /g/{id} short route is not cached, and the
+        // page routes (011: home and listing too) attach it explicitly. The /g/{id} short route is not cached, and the
         // policy's default rules cache only 200 responses (never a 301 or 404).
         if (siteOptions.OutputCache)
         {
             home.CacheOutput(PublicCache.PolicyName);
+            listing.CacheOutput(PublicCache.PolicyName);
             galleryPage.CacheOutput(PublicCache.PolicyName);
             photoPage.CacheOutput(PublicCache.PolicyName);
         }
@@ -232,7 +245,7 @@ public static class PublicEndpoints
             inner: new RazorComponentResult<NotFoundPage>(new Dictionary<string, object?>()));
     }
 
-    private static IResult ApplyHomeHeaders(IResult inner, List<ContactSheetItem> cards, SiteOptions siteOptions)
+    private static IResult ApplyListingHeaders(IResult inner, List<ContactSheetItem> cards, SiteOptions siteOptions)
     {
         var headers = new Dictionary<string, string>
         {

@@ -12,7 +12,7 @@ namespace Gallery.Web.Tests;
 /// create, bulk add, reorder, pin, unpin, remove, publish, rename, unpublish, bulk delete, gallery
 /// delete, publish refusal and stale reorder. After EVERY step the edge queue drains,
 /// <see cref="InvariantChecker.AssertAsync"/> passes, and a fresh anonymous-cache GET <c>/</c> logs
-/// exactly one <c>http.request GET / 200 {ms} 1</c> line (<c>db_reads</c> = 1). The two refusals
+/// exactly one <c>http.request GET /g 200 {ms} 1</c> line (011: the listing moved to /g) (<c>db_reads</c> = 1). The two refusals
 /// also store nothing.
 /// </summary>
 [Collection("s3")]
@@ -20,7 +20,7 @@ public partial class InvariantTests(S3ProxyFixture s3, MongoFixture mongo) : ICl
 {
     private static KeyValuePair<string, string> F(string k, string v) => new(k, v);
 
-    [GeneratedRegex(@"^http\.request GET / 200 [\d.]+ 1$")]
+    [GeneratedRegex(@"^http\.request GET /g 200 [\d.]+ 1$")]
     private static partial Regex HomeOneRead();
 
     private static async Task<string> DumpAsync(LibraryHost h)
@@ -50,20 +50,20 @@ public partial class InvariantTests(S3ProxyFixture s3, MongoFixture mongo) : ICl
 
         int before;
         lock (h.LogLines) before = h.LogLines.Count;
-        var home = await h.GetAsync("/");
-        Assert.True(home.StatusCode == HttpStatusCode.OK, $"after {step}: GET / answered {(int)home.StatusCode}");
+        var home = await h.GetAsync("/g");
+        Assert.True(home.StatusCode == HttpStatusCode.OK, $"after {step}: GET /g answered {(int)home.StatusCode}");
         var html = WebUtility.HtmlDecode(await home.Content.ReadAsStringAsync());
 
         // The request line is written when the response completes; wait briefly for it.
         List<string> lines = [];
         for (var i = 0; i < 100; i++)
         {
-            lock (h.LogLines) lines = h.LogLines.Skip(before).Where(l => l.StartsWith("http.request GET / ", StringComparison.Ordinal)).ToList();
+            lock (h.LogLines) lines = h.LogLines.Skip(before).Where(l => l.StartsWith("http.request GET /g ", StringComparison.Ordinal)).ToList();
             if (lines.Count > 0) break;
             await Task.Delay(20);
         }
-        Assert.True(lines.Count == 1, $"after {step}: {lines.Count} http.request lines for one GET /");
-        Assert.True(HomeOneRead().IsMatch(lines[0]), $"after {step}: GET / logged '{lines[0]}', expected 200 with db_reads 1");
+        Assert.True(lines.Count == 1, $"after {step}: {lines.Count} http.request lines for one GET /g");
+        Assert.True(HomeOneRead().IsMatch(lines[0]), $"after {step}: GET /g logged '{lines[0]}', expected 200 with db_reads 1");
         return html;
     }
 

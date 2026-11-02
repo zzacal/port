@@ -137,7 +137,7 @@ public class EdgeModeTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixtur
         Assert.NotEmpty(publishLines);
         Assert.All(publishLines, l => Assert.Equal(("gallery.publish", "log-only", "skipped"), (l.Op, l.Mode, l.Outcome)));
         Assert.All(publishLines, l => Assert.Equal(l.Count, l.Addresses.Count));
-        var pvis = new[] { Page("/"), Page($"/g/{gid}/{g.Slug}") }.Concat(items.Select(id => Page($"/g/{gid}/{g.Slug}/{id}")));
+        var pvis = new[] { Page("/g"), Page($"/g/{gid}/{g.Slug}") }.Concat(items.Select(id => Page($"/g/{gid}/{g.Slug}/{id}")));
         Assert.Equal(Sorted(pvis), Sorted(publishLines.SelectMany(l => l.Addresses)));
 
         // G3: reverse the full home order.
@@ -239,7 +239,7 @@ public class EdgeModeTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixtur
 
         var expected = new List<string>
         {
-            LibraryHost.Page("/"),                              // P-VIS
+            LibraryHost.Page("/g"),                             // P-VIS
             LibraryHost.Page($"/g/{gid}/{g.Slug}"),             // P-MEMBERS, P-VIS
             LibraryHost.Page($"/g/{gid}/{g.Slug}/{a.Id}"),
             LibraryHost.Page($"/g/{gid}/{g.Slug}/{b.Id}"),

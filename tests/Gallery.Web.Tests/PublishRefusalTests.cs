@@ -55,7 +55,7 @@ public class PublishRefusalTests(S3ProxyFixture s3, MongoFixture mongo) : IClass
     public async Task An_empty_gallery_is_refused_409_for_every_request_shape_and_nothing_changes()
     {
         await using var h = await LibraryHost.CreateAsync(mongo, s3);
-        // A listed gallery so "/" is not trivially empty.
+        // A listed gallery so the listing "/g" is not trivially empty.
         var ids = await GalleryHtml.ImageIdsAsync(h, 1);
         await GalleryHtml.GalleryAsync(h, "Listed", ids, publish: true);
         var gid = await GalleryHtml.GalleryAsync(h, "Empty", []);

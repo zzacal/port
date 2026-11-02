@@ -155,10 +155,11 @@ public partial class NavRoutesTests(S3ProxyFixture s3, MongoFixture mongo) : ICl
         // crumb landing on the tile; the count in the Pager's centre.
         var html = await HtmlAsync(h, $"/g/{big.Id}/{big.Slug}/{big.Items[3]}");
         var crumbs = Crumbs(html);
-        Assert.Equal(3, crumbs.Count);
-        Assert.Equal(("/", "Galleries"), crumbs[0]);
-        Assert.Equal(($"/g/{big.Id}/{big.Slug}#p-{big.Items[3]}", "September 6"), crumbs[1]);
-        Assert.Null(crumbs[2].Href);
+        Assert.Equal(4, crumbs.Count);
+        Assert.Equal(("/", "Home"), crumbs[0]);
+        Assert.Equal(("/g", "Galleries"), crumbs[1]);
+        Assert.Equal(($"/g/{big.Id}/{big.Slug}#p-{big.Items[3]}", "September 6"), crumbs[2]);
+        Assert.Null(crumbs[3].Href);
         Assert.Equal("4 / 23", Count(html));
         Assert.Contains("aria-current=\"page\"", BreadcrumbRx().Match(html).Value);
         var pager = Pager(html);
@@ -176,7 +177,7 @@ public partial class NavRoutesTests(S3ProxyFixture s3, MongoFixture mongo) : ICl
         // First: 1 / 23, no Previous link.
         html = await HtmlAsync(h, $"/g/{big.Id}/{big.Slug}/{big.Items[0]}");
         Assert.Equal("1 / 23", Count(html));
-        Assert.Equal($"/g/{big.Id}/{big.Slug}#p-{big.Items[0]}", Crumbs(html)[1].Href);
+        Assert.Equal($"/g/{big.Id}/{big.Slug}#p-{big.Items[0]}", Crumbs(html)[2].Href);
         pager = Pager(html);
         Assert.DoesNotContain("rel=\"prev\"", pager);
         Assert.Contains("rel=\"next\"", pager);
@@ -191,7 +192,7 @@ public partial class NavRoutesTests(S3ProxyFixture s3, MongoFixture mongo) : ICl
         // One-photo gallery: 1 / 1, neither Previous nor Next.
         html = await HtmlAsync(h, $"/g/{one.Id}/{one.Slug}/{one.Items[0]}");
         Assert.Equal("1 / 1", Count(html));
-        Assert.Equal($"/g/{one.Id}/{one.Slug}#p-{one.Items[0]}", Crumbs(html)[1].Href);
+        Assert.Equal($"/g/{one.Id}/{one.Slug}#p-{one.Items[0]}", Crumbs(html)[2].Href);
         pager = Pager(html);
         Assert.DoesNotContain("rel=\"prev\"", pager);
         Assert.DoesNotContain("rel=\"next\"", pager);
@@ -214,11 +215,12 @@ public partial class NavRoutesTests(S3ProxyFixture s3, MongoFixture mongo) : ICl
         var lib = await NavLibrary.BuildAsync(h);
         var b = await h.Galleries.Find(g => g.Id == lib.B).FirstAsync();
 
-        Assert.Equal(1, DbReads(await RequestLineAsync(h, "/", "/")));
+        Assert.Equal(1, DbReads(await RequestLineAsync(h, "/g", "/g")));
+        Assert.Equal(0, DbReads(await RequestLineAsync(h, "/", "/"))); // 011: the home page reads nothing
         Assert.True(DbReads(await RequestLineAsync(h, $"/g/{b.Id}/{b.Slug}", "/g/{id}/{slug}")) <= 2);
         Assert.True(DbReads(await RequestLineAsync(h, $"/g/{b.Id}/{b.Slug}/{b.Items[0]}", "/g/{id}/{slug}/{imageId}")) <= 2);
 
-        foreach (var path in new[] { "/", $"/g/{b.Id}/{b.Slug}", $"/g/{b.Id}/{b.Slug}/{b.Items[0]}" })
+        foreach (var path in new[] { "/", "/g", $"/g/{b.Id}/{b.Slug}", $"/g/{b.Id}/{b.Slug}/{b.Items[0]}" })
         {
             var resp = await h.GetAsync(path);
             Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
@@ -309,19 +311,21 @@ public partial class NavRoutesTests(S3ProxyFixture s3, MongoFixture mongo) : ICl
         var pages = new[]
         {
             await HtmlAsync(h, "/"),
+            await HtmlAsync(h, "/g"),
             await HtmlAsync(h, $"/g/{b.Id}/{b.Slug}"),
             await HtmlAsync(h, $"/g/{b.Id}/{b.Slug}/{b.Items[0]}"),
             await HtmlAsync(h, "/g/zzzzzzzzzzzz/none", HttpStatusCode.NotFound),
         };
         // Owner review 2 (R1): the header IS the breadcrumb: no brand, no site nav, one trail, and its
-        // links are exactly the trail's ancestors (home's own trail has no link at all).
+        // links are exactly the trail's ancestors (home's own trail has no link at all). 011: home has the
+        // Nav home links in main, so the no-site-nav check is scoped to the header.
         foreach (var html in pages)
         {
             var header = HeaderRx().Matches(html);
             Assert.Single(header);
             Assert.StartsWith("<nav class=\"breadcrumb", Regex.Replace(header[0].Groups[1].Value, " b-[a-z0-9]{10}", "").Trim());
             Assert.DoesNotContain("class=\"brand", html);
-            Assert.DoesNotContain("aria-label=\"Site\"", html);
+            Assert.DoesNotContain("aria-label=\"Site\"", header[0].Value);
             var hrefs = HeaderHrefs(html);
             Assert.Equal(hrefs.Count, hrefs.Distinct(StringComparer.Ordinal).Count());
             Assert.Equal(Crumbs(html).Where(c => c.Href is not null).Select(c => c.Href!), hrefs);
@@ -338,17 +342,18 @@ public partial class NavRoutesTests(S3ProxyFixture s3, MongoFixture mongo) : ICl
         var b = await h.Galleries.Find(g => g.Id == lib.B).FirstAsync();
         var p = await h.Galleries.Find(g => g.Id == lib.P).FirstAsync();
 
-        Assert.Equal([(null, "Galleries")], Crumbs(await HtmlAsync(h, "/")));
+        Assert.Equal([(null, "Home")], Crumbs(await HtmlAsync(h, "/")));
+        Assert.Equal([("/", "Home"), (null, "Galleries")], Crumbs(await HtmlAsync(h, "/g")));
         var missing = await HtmlAsync(h, "/g/zzzzzzzzzzzz/none", HttpStatusCode.NotFound);
-        Assert.Equal([("/", "Galleries"), (null, "Not found")], Crumbs(missing));
+        Assert.Equal([("/", "Home"), (null, "Not found")], Crumbs(missing));
         Assert.DoesNotContain("Back to galleries", missing);
 
-        Assert.Equal([("/", "Galleries"), (null, b.Title)], Crumbs(await HtmlAsync(h, $"/g/{b.Id}/{b.Slug}")));
+        Assert.Equal([("/", "Home"), ("/g", "Galleries"), (null, b.Title)], Crumbs(await HtmlAsync(h, $"/g/{b.Id}/{b.Slug}")));
 
-        // [SAFETY] II.2: a private gallery's breadcrumb links only to home, naming no other gallery.
+        // [SAFETY] II.2: a private gallery's breadcrumb links only to home and the listing, naming no other gallery.
         var pHtml = await HtmlAsync(h, $"/g/{p.Id}/{p.Slug}");
-        Assert.Equal([("/", "Galleries"), (null, p.Title)], Crumbs(pHtml));
-        Assert.Equal([("/", "Galleries"), ($"/g/{p.Id}/{p.Slug}#p-{p.Items[1]}", p.Title), (null, Crumbs(await HtmlAsync(h, $"/g/{p.Id}/{p.Slug}/{p.Items[1]}"))[2].Label)],
+        Assert.Equal([("/", "Home"), ("/g", "Galleries"), (null, p.Title)], Crumbs(pHtml));
+        Assert.Equal([("/", "Home"), ("/g", "Galleries"), ($"/g/{p.Id}/{p.Slug}#p-{p.Items[1]}", p.Title), (null, Crumbs(await HtmlAsync(h, $"/g/{p.Id}/{p.Slug}/{p.Items[1]}"))[3].Label)],
             Crumbs(await HtmlAsync(h, $"/g/{p.Id}/{p.Slug}/{p.Items[1]}")));
     }
 
@@ -435,7 +440,7 @@ public partial class NavRoutesTests(S3ProxyFixture s3, MongoFixture mongo) : ICl
         Assert.Equal($"/g/{g.Id}/{newSlug}/{g.Items[1]}", location);
 
         var html = await HtmlAsync(h, location);
-        Assert.Equal(($"/g/{g.Id}/{newSlug}#p-{g.Items[1]}", "Harbour Lights"), Crumbs(html)[1]);
+        Assert.Equal(($"/g/{g.Id}/{newSlug}#p-{g.Items[1]}", "Harbour Lights"), Crumbs(html)[2]);
         Assert.Equal("2 / 3", Count(html));
     }
 }

@@ -20,12 +20,12 @@ public class PageComponentTests
         Exif: null
     );
 
-    // ── HomePage ─────────────────────────────────────────────────────────────
+    // ── ListingPage (011: HomePage renamed) ─────────────────────────────────────────────────────────────
 
     [Fact]
-    public async Task HomePage_zero_cards_renders_layout_only()
+    public async Task ListingPage_zero_cards_renders_layout_only()
     {
-        var html = await Render.Html<HomePage>(new
+        var html = await Render.Html<ListingPage>(new
         {
             Cards = (IReadOnlyList<ContactSheetItem>)[]
         });
@@ -123,7 +123,7 @@ public class PageComponentTests
     {
         var pages = new[]
         {
-            await Render.Html<HomePage>(new { Cards = (IReadOnlyList<ContactSheetItem>)[] }),
+            await Render.Html<ListingPage>(new { Cards = (IReadOnlyList<ContactSheetItem>)[] }),
             await Render.Html<GalleryPage>(new { Title = "G", NoIndex = false, Items = (IReadOnlyList<ContactSheetItem>)[] }),
             await Render.Html<PhotoPage>(new { Image = MakeImage(), GalleryTitle = "G", NoIndex = false }),
         };
@@ -138,7 +138,7 @@ public class PageComponentTests
     [Fact]
     public async Task Predictive_loader_is_under_30_lines()
     {
-        var html = await Render.Html<HomePage>(new { Cards = (IReadOnlyList<ContactSheetItem>)[] });
+        var html = await Render.Html<ListingPage>(new { Cards = (IReadOnlyList<ContactSheetItem>)[] });
         var start = html.IndexOf("<script type=\"module\"", StringComparison.Ordinal); // scoped CSS may add b-xxxx
         var end = html.IndexOf("</script>", start, StringComparison.Ordinal);
         Assert.True(start >= 0 && end > start);
@@ -195,7 +195,7 @@ public class PageComponentTests
     {
         var image = MakeImage();
 
-        var home = await Render.Html<HomePage>(new
+        var home = await Render.Html<ListingPage>(new
         {
             Cards = (IReadOnlyList<ContactSheetItem>)[]
         });

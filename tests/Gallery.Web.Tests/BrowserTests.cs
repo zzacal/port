@@ -35,7 +35,7 @@ public sealed class BrowserTests(BrowserSiteFixture site)
     [Fact]
     public async Task Pages_are_styled_by_the_inlined_stylesheet()
     {
-        var (ctx, page) = await Open("/");
+        var (ctx, page) = await Open("/g");
         await using var _ = ctx;
         Assert.True(await page.EvaluateAsync<int>("document.querySelector('style').textContent.length") > 10_000);
         Assert.Equal("grid", await page.EvaluateAsync<string>("getComputedStyle(document.querySelector('.cs')).display"));
@@ -149,7 +149,7 @@ public sealed class BrowserTests(BrowserSiteFixture site)
     [MemberData(nameof(Widths))]
     public async Task No_layout_shift_and_no_horizontal_scroll(int width, string which)
     {
-        var path = which switch { "home" => "/", "gallery" => site.GalleryPath, _ => site.PhotoPath(0) };
+        var path = which switch { "home" => "/g", "gallery" => site.GalleryPath, _ => site.PhotoPath(0) };
         var ctx = await site.NewContextAsync(width, width < 600 ? 844 : 900);
         await using var _ = ctx;
         var page = await ctx.NewPageAsync();
@@ -188,7 +188,7 @@ public sealed class BrowserTests(BrowserSiteFixture site)
     [Fact]
     public async Task Walk_home_gallery_photo_next_back_with_javascript_off()
     {
-        var (ctx, page) = await Open("/", js: false);
+        var (ctx, page) = await Open("/g", js: false);
         await using var _ = ctx;
 
         await page.Locator($"a.tile[href='{site.GalleryPath}']").ClickAsync();

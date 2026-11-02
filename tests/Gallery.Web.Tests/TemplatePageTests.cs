@@ -33,7 +33,7 @@ public class TemplatePageTests
     public async Task SiteHeader_page_renders_the_breadcrumb_trails()
     {
         var html = await Render.Html<SiteHeaderPage>();
-        Assert.Contains("Galleries", html);
+        Assert.Contains(">Home<", html); // 011: the default trail is Home
         Assert.Contains("Harbour at dusk", html);
         Guards.AssertNoInlineStyle(html);
         Guards.AssertNoScript(html);

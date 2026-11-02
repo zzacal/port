@@ -77,7 +77,7 @@ public sealed class PurgeSet
 /// </summary>
 public static class PurgeSets
 {
-    public const string HomePath = "/";
+    public const string ListingPath = "/g";
 
     public static string GalleryPath(string gid, string slug) => $"/g/{gid}/{slug}";
     public static string PhotoPath(string gid, string slug, string iid) => $"/g/{gid}/{slug}/{iid}";
@@ -90,9 +90,9 @@ public static class PurgeSets
     /// <summary>Public AND <c>items</c> non-empty.</summary>
     public static bool Listed(GallerySnapshot? g) => HasPage(g) && g!.Visibility == "public";
 
-    /// <summary><c>/</c> when the gallery is listed before or after, else nothing.</summary>
-    public static IReadOnlyList<string> Home(GallerySnapshot? before, GallerySnapshot? after) =>
-        Listed(before) || Listed(after) ? [HomePath] : [];
+    /// <summary><c>/g</c> when the gallery is listed before or after, else nothing.</summary>
+    public static IReadOnlyList<string> Listing(GallerySnapshot? before, GallerySnapshot? after) =>
+        Listed(before) || Listed(after) ? [ListingPath] : [];
 
     /// <summary>
     /// Ids whose photo page changed (010 contracts/edge.md E1): ids in exactly one of the two item
@@ -148,11 +148,11 @@ public static class PurgeSets
 
     /// <summary>P-VIS: publish / unpublish.</summary>
     public static PurgeSet Visibility(GallerySnapshot? before, GallerySnapshot? after, EdgeBases bases) =>
-        new(bases, Pages(before, after, AllItems(before, after)).Append(HomePath), []);
+        new(bases, Pages(before, after, AllItems(before, after)).Append(ListingPath), []);
 
     /// <summary>P-RENAME: slug changed; every page under BOTH slugs.</summary>
     public static PurgeSet Rename(GallerySnapshot? before, GallerySnapshot? after, EdgeBases bases) =>
-        new(bases, Pages(before, after, AllItems(before, after)).Concat(Home(before, after)), []);
+        new(bases, Pages(before, after, AllItems(before, after)).Concat(Listing(before, after)), []);
 
     /// <summary>P-DESC: description only; the gallery page when it has one.</summary>
     public static PurgeSet Description(GallerySnapshot? before, GallerySnapshot? after, EdgeBases bases)
@@ -164,7 +164,7 @@ public static class PurgeSets
     }
 
     /// <summary>
-    /// P-ORDER: <c>/</c> only when the relative order of LISTED galleries changed (decisions row 32).
+    /// P-ORDER: <c>/g</c> only when the relative order of LISTED galleries changed (decisions row 32).
     /// <paramref name="galleries"/> gives each gallery's state (unchanged by a reorder); ids without a
     /// snapshot count as not listed.
     /// </summary>
@@ -177,7 +177,7 @@ public static class PurgeSets
         var listed = galleries.Where(Listed).Select(g => g.Id).ToHashSet(StringComparer.Ordinal);
         var b = beforeOrder.Where(listed.Contains).ToList();
         var a = afterOrder.Where(listed.Contains).ToList();
-        return new(bases, b.SequenceEqual(a, StringComparer.Ordinal) ? [] : [HomePath], []);
+        return new(bases, b.SequenceEqual(a, StringComparer.Ordinal) ? [] : [ListingPath], []);
     }
 
     /// <summary>
@@ -187,13 +187,13 @@ public static class PurgeSets
     public static PurgeSet Nav(IEnumerable<GalleryLinkTarget> navChanged, EdgeBases bases) =>
         new(bases, navChanged.Select(g => GalleryPath(g.Id, g.Slug)), []);
 
-    /// <summary>P-GDELETE: every page of the gallery before + Home(before, ∅).</summary>
+    /// <summary>P-GDELETE: every page of the gallery before + Listing(before, ∅).</summary>
     public static PurgeSet GalleryDelete(GallerySnapshot before, EdgeBases bases) =>
-        new(bases, Pages(before, null, before.Items).Concat(Home(before, null)), []);
+        new(bases, Pages(before, null, before.Items).Concat(Listing(before, null)), []);
 
     /// <summary>
     /// P-TEXT: image title/caption. For every gallery holding the image that has a page: its gallery
-    /// page and the image's photo page in it, plus <c>/</c> when the image is the cover of a listed
+    /// page and the image's photo page in it, plus <c>/g</c> when the image is the cover of a listed
     /// gallery (decisions row 24).
     /// </summary>
     public static PurgeSet Text(string imageId, IEnumerable<GallerySnapshot> galleries, EdgeBases bases)
@@ -205,14 +205,14 @@ public static class PurgeSets
             paths.Add(GalleryPath(g.Id, g.Slug));
             paths.Add(PhotoPath(g.Id, g.Slug, imageId));
             if (Listed(g) && g.Cover == imageId)
-                paths.Add(HomePath);
+                paths.Add(ListingPath);
         }
         return new(bases, paths, []);
     }
 
     /// <summary>
     /// P-DELETE: the union of P-MEMBERS for every gallery that held the image (before → after the
-    /// pull), <c>/</c> when any was listed, and exactly the public object keys actually deleted.
+    /// pull), <c>/g</c> when any was listed, and exactly the public object keys actually deleted.
     /// </summary>
     public static PurgeSet Delete(
         IEnumerable<(GallerySnapshot Before, GallerySnapshot? After)> galleries,
@@ -221,7 +221,7 @@ public static class PurgeSets
     {
         var paths = new List<string>();
         foreach (var (b, a) in galleries)
-            paths.AddRange(MembersPaths(b, a)); // includes Home(b, a): "/" when either side is listed
+            paths.AddRange(MembersPaths(b, a)); // includes Listing(b, a): "/g" when either side is listed
         return new(bases, paths, deletedKeys);
     }
 
@@ -229,12 +229,12 @@ public static class PurgeSets
 
     /// <summary>
     /// Absolute AVIF URLs to warm after <paramref name="purged"/>: for each purged page that still
-    /// exists AFTER the change, every AVIF width of its first-row images (home: the first 3
+    /// exists AFTER the change, every AVIF width of its first-row images (listing: the first 3
     /// <paramref name="homeCards"/> covers; gallery page: the first 4 items; photo page: the photo).
     /// A key in <paramref name="purged"/>'s deleted files is never returned.
     /// </summary>
     /// <param name="after">AFTER snapshots of the affected galleries; a gallery absent here no longer exists.</param>
-    /// <param name="homeCards">The home cards as projected after the change (covers carry their derivatives).</param>
+    /// <param name="homeCards">The listing cards as projected after the change (covers carry their derivatives).</param>
     /// <param name="avifKeysOf">Image id → its AVIF keys, filled by the caller from the documents it read.</param>
     public static IReadOnlyList<string> WarmFiles(
         PurgeSet purged,
@@ -254,7 +254,7 @@ public static class PurgeSets
 
         foreach (var path in purged.PagePaths)
         {
-            if (path == HomePath)
+            if (path == ListingPath)
             {
                 foreach (var card in homeCards.Take(3))
                     if (card.Cover is not null)
@@ -284,7 +284,7 @@ public static class PurgeSets
         foreach (var g in new[] { before, after })
             if (HasPage(g)) paths.Add(GalleryPath(g!.Id, g.Slug));
         paths.AddRange(Pages(before, after, Changed(before, after)));
-        paths.AddRange(Home(before, after));
+        paths.AddRange(Listing(before, after));
         return paths;
     }
 

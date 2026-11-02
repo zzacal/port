@@ -5,7 +5,7 @@
 </UiLayout>
 
 @code {
-    private static readonly IReadOnlyList<Crumb> Home = [new("Galleries")];
-    private static readonly IReadOnlyList<Crumb> Gallery = [new("Galleries", "#"), new("September 6")];
-    private static readonly IReadOnlyList<Crumb> Photo = [new("Galleries", "#"), new("September 6", "#"), new("Harbour at dusk")];
+    private static readonly IReadOnlyList<Crumb> Home = [new("Home")];
+    private static readonly IReadOnlyList<Crumb> Gallery = [new("Home", "#"), new("Galleries", "#"), new("September 6")];
+    private static readonly IReadOnlyList<Crumb> Photo = [new("Home", "#"), new("Galleries", "#"), new("September 6", "#"), new("Harbour at dusk")];
 }

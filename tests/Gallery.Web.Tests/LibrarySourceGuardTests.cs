@@ -78,7 +78,7 @@ public partial class LibrarySourceGuardTests(S3ProxyFixture s3, MongoFixture mon
         Assert.Equal(HttpStatusCode.SeeOther, publish.StatusCode);
         await h.SettleAsync();
 
-        var paths = new[] { "/", $"/g/{gid}/coast", $"/g/{gid}/coast/{a.Id}" };
+        var paths = new[] { "/", "/g", $"/g/{gid}/coast", $"/g/{gid}/coast/{a.Id}" };
 
         // Non-vacuity: the owner session is live (an admin page renders the owner bar).
         var lib = await h.GetAsync("/admin/library");
@@ -93,7 +93,7 @@ public partial class LibrarySourceGuardTests(S3ProxyFixture s3, MongoFixture mon
                 var resp = await h.GetAsync(path);
                 Assert.True(resp.StatusCode == HttpStatusCode.OK, $"GET {path} ({session}) answered {(int)resp.StatusCode}");
                 var html = await resp.Content.ReadAsStringAsync();
-                Assert.True(WebUtility.HtmlDecode(html).Contains("Coast", StringComparison.Ordinal),
+                Assert.True(path == "/" || WebUtility.HtmlDecode(html).Contains("Coast", StringComparison.Ordinal), // 011: "/" shows links only
                     $"GET {path} ({session}) does not show the gallery");
                 AssertNoOwnerMarkup($"GET {path} ({session})", html);
             }

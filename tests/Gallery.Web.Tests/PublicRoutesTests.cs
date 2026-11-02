@@ -205,7 +205,7 @@ public class PublicRoutesTests(MongoFixture mongo) : IAsyncLifetime
     [Fact]
     public async Task Home_lists_public_cards_in_order_with_one_db_read()
     {
-        var resp = await _client!.GetAsync("/");
+        var resp = await _client!.GetAsync("/g");
         Assert.Equal(System.Net.HttpStatusCode.OK, resp.StatusCode);
         var html = await resp.Content.ReadAsStringAsync();
 
@@ -336,7 +336,7 @@ public class PublicRoutesTests(MongoFixture mongo) : IAsyncLifetime
     [Fact]
     public async Task Private_gallery_absent_from_home()
     {
-        var resp = await _client!.GetAsync("/");
+        var resp = await _client!.GetAsync("/g");
         var html = await resp.Content.ReadAsStringAsync();
 
         // Private title not in home (it's not in homeCards)
@@ -505,11 +505,11 @@ public class PublicRoutesTests(MongoFixture mongo) : IAsyncLifetime
         try
         {
             using var http = new HttpClient { BaseAddress = new Uri(app.Urls.First()) };
-            foreach (var path in new[] { "/", $"/g/{GalleryPubId1}/autumn-walk", $"/g/{GalleryPubId1}/autumn-walk/{ImgId2}" })
+            foreach (var path in new[] { "/", "/g", $"/g/{GalleryPubId1}/autumn-walk", $"/g/{GalleryPubId1}/autumn-walk/{ImgId2}" })
             {
                 var resp = await http.GetAsync(path);
                 Assert.True(resp.StatusCode == System.Net.HttpStatusCode.OK, $"{path} -> {(int)resp.StatusCode}");
-                Assert.Contains("https://img.test/", await resp.Content.ReadAsStringAsync());
+                if (path != "/") Assert.Contains("https://img.test/", await resp.Content.ReadAsStringAsync()); // 011: "/" has no image
             }
         }
         finally { await app.StopAsync(); await app.DisposeAsync(); }
@@ -522,7 +522,7 @@ public class PublicRoutesTests(MongoFixture mongo) : IAsyncLifetime
     [Fact]
     public async Task Empty_public_gallery_is_not_on_the_home_page()
     {
-        var html = await _client!.GetStringAsync("/");
+        var html = await _client!.GetStringAsync("/g");
         Assert.DoesNotContain(GalleryEmptyId, html);
         Assert.DoesNotContain("Coming Soon", html);
         Assert.DoesNotContain("tile-empty", html);

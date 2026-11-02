@@ -125,7 +125,7 @@ public class SiteProjectorTests(MongoFixture mongo)
         await db.GetCollection<SiteDoc>("site").InsertOneAsync(new SiteDoc { HomeOrder = g.Select(x => x.Id).ToList() });
         await ProjectAsync(host);
 
-        var resp = await host.GetAsync("/");
+        var resp = await host.GetAsync("/g");
         Assert.Equal(System.Net.HttpStatusCode.OK, resp.StatusCode);
         var html = await resp.Content.ReadAsStringAsync();
         Assert.Contains("Autumn Walk", html);
@@ -134,8 +134,8 @@ public class SiteProjectorTests(MongoFixture mongo)
         Assert.DoesNotContain("Coming Soon", html);
 
         List<string> lines;
-        lock (host.LogLines) lines = host.LogLines.Where(l => l.StartsWith("http.request GET / ", StringComparison.Ordinal)).ToList();
+        lock (host.LogLines) lines = host.LogLines.Where(l => l.StartsWith("http.request GET /g ", StringComparison.Ordinal)).ToList();
         var line = Assert.Single(lines);
-        Assert.Matches(@"^http\.request GET / 200 [0-9.]+ 1$", line);
+        Assert.Matches(@"^http\.request GET /g 200 [0-9.]+ 1$", line);
     }
 }

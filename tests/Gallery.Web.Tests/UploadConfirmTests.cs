@@ -517,6 +517,7 @@ public class UploadConfirmTests : IClassFixture<MongoFixture>, IAsyncLifetime
         (string Path, HttpStatusCode Status)[] paths =
         [
             ("/", HttpStatusCode.OK),
+            ("/g", HttpStatusCode.OK),
             ($"/g/{galId}/autumn-walk", HttpStatusCode.OK),
             ($"/g/{galId}/autumn-walk/{imgId}", HttpStatusCode.OK),
             ($"/g/{emptyId}/coming-soon", HttpStatusCode.NotFound),
@@ -541,7 +542,7 @@ public class UploadConfirmTests : IClassFixture<MongoFixture>, IAsyncLifetime
         Assert.Equal(3, await Images(host).CountDocumentsAsync(FilterDefinition<BsonDocument>.Empty));
 
         var after = await BodiesAsync();
-        Assert.Contains("Autumn Walk", before[0]);
+        Assert.Contains("Autumn Walk", before[1]); // 011: the listing is paths[1], "/g"
         for (var i = 0; i < paths.Length; i++)
             Assert.Equal(before[i], after[i]);
     }

@@ -58,6 +58,7 @@ public class NavTimingEvidenceTests(S3ProxyFixture s3, MongoFixture mongo) : ICl
         var routes = new[]
         {
             "/",
+            "/g",
             $"/g/{big.Id}/{big.Slug}",
             $"/g/{big.Id}/{big.Slug}/{big.Items[11]}",
         };
@@ -77,7 +78,7 @@ public class NavTimingEvidenceTests(S3ProxyFixture s3, MongoFixture mongo) : ICl
 
         var lines = Messages(h);
         var requests = lines.Where(l => l.StartsWith("http.request GET ", StringComparison.Ordinal)).ToList();
-        Assert.Equal(3 * Gets, requests.Count(l => l.Split(' ') is { Length: >= 6 } f && f[3] == "200"));
+        Assert.Equal(4 * Gets, requests.Count(l => l.Split(' ') is { Length: >= 6 } f && f[3] == "200"));
 
         var outPath = Environment.GetEnvironmentVariable("NAV_TIMINGS_OUT") is { Length: > 0 } env
             ? env

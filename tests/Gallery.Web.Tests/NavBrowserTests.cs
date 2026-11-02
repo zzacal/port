@@ -294,7 +294,7 @@ public sealed class NavBrowserTests(NavBrowserFixture site)
                     await page.GotoAsync(site.BaseUrl + await site.PhotoPathAsync(i), new() { WaitUntil = WaitUntilState.Load });
                     var where = $"{width}px photo {i + 1} title {titleLength}";
                     var boxes = await Boxes(page, """[["prev","article.solo a[rel=prev]"],["next","article.solo a[rel=next]"],["crumb",".breadcrumb a"]]""");
-                    var expected = new List<string> { "crumb", "crumb" };
+                    var expected = new List<string> { "crumb", "crumb", "crumb" }; // 011: Home, Galleries, the gallery
                     if (i > 0) expected.Add("prev");
                     if (i < 22) expected.Add("next");
                     if (!boxes.Select(b => b.Name).Order().SequenceEqual(expected.Order()))
@@ -486,7 +486,7 @@ public sealed class NavBrowserTests(NavBrowserFixture site)
     {
         var hint = new Regex(@"arrow|escape|\besc\b|keyboard|shortcut|\bkeys?\b", RegexOptions.IgnoreCase);
         var failures = new List<string>();
-        foreach (var path in new[] { "/", await site.GalleryPathAsync(S), await site.PhotoPathAsync(0), await site.PhotoPathAsync(11), await site.PhotoPathAsync(22) })
+        foreach (var path in new[] { "/", "/g", await site.GalleryPathAsync(S), await site.PhotoPathAsync(0), await site.PhotoPathAsync(11), await site.PhotoPathAsync(22) })
         {
             var (ctx, page) = await Open(path);
             await using var _ = ctx;
@@ -506,7 +506,7 @@ public sealed class NavBrowserTests(NavBrowserFixture site)
     [Fact]
     public async Task Walk_home_gallery_photo_next_back_to_tile_next_gallery_with_javascript_off()
     {
-        var (ctx, page) = await Open("/", js: false);
+        var (ctx, page) = await Open("/g", js: false);
         await using var _ = ctx;
         var gallery = await site.GalleryPathAsync(S);
 
@@ -534,13 +534,13 @@ public sealed class NavBrowserTests(NavBrowserFixture site)
     public async Task Every_listed_gallery_walks_with_javascript_off()
     {
         var listed = new[] { (S, (string?)NavBrowserFixture.CoastId), (NavBrowserFixture.CoastId, NavBrowserFixture.SoloId), (NavBrowserFixture.SoloId, null) };
-        var (ctx, page) = await Open("/", js: false);
+        var (ctx, page) = await Open("/g", js: false);
         await using var _ = ctx;
         foreach (var (gid, next) in listed)
         {
             var gallery = await site.GalleryPathAsync(gid);
             var items = await site.ItemsAsync(gid);
-            await page.GotoAsync(site.BaseUrl + "/");
+            await page.GotoAsync(site.BaseUrl + "/g");
             await page.Locator($"a.tile[href='{gallery}']").ClickAsync();
             Assert.Equal(gallery, await PathAfter(page, p => p == gallery));
             await page.Locator($"a.tile[href='{gallery}/{items[0]}']").ClickAsync();
@@ -578,7 +578,7 @@ public sealed class NavBrowserTests(NavBrowserFixture site)
     [MemberData(nameof(Widths))]
     public async Task No_layout_shift_and_no_horizontal_scroll(int width, string which)
     {
-        var path = which switch { "home" => "/", "gallery" => await site.GalleryPathAsync(S), _ => await site.PhotoPathAsync(11) };
+        var path = which switch { "home" => "/g", "gallery" => await site.GalleryPathAsync(S), _ => await site.PhotoPathAsync(11) };
         var ctx = await site.NewContextAsync(width, HeightFor(width));
         await using var _ = ctx;
         var page = await ctx.NewPageAsync();
@@ -604,7 +604,7 @@ public sealed class NavBrowserTests(NavBrowserFixture site)
     public async Task Header_links_have_no_duplicate_destination()
     {
         var failures = new List<string>();
-        foreach (var path in new[] { "/", await site.GalleryPathAsync(S), await site.PhotoPathAsync(4), "/g/zzzzzzzzzzzzzzzzzzzzzzzzzz/none" })
+        foreach (var path in new[] { "/", "/g", await site.GalleryPathAsync(S), await site.PhotoPathAsync(4), "/g/zzzzzzzzzzzzzzzzzzzzzzzzzz/none" })
         {
             var (ctx, page) = await Open(path);
             await using var _ = ctx;

@@ -8,6 +8,9 @@
 ol { display: flex; align-items: center; min-width: 0; min-height: var(--tap); max-width: calc(100% + 8px); margin: 0 0 0 -8px; padding: 0; list-style: none; white-space: nowrap; }
 li { display: flex; align-items: center; min-width: 0; flex: 0 1 auto; }
 li + li::before { content: "/"; padding-inline: 4px; flex: none; }
+/* 011: only the nearest ancestor and the current page truncate. Higher ancestors (Home, Galleries)
+   keep their full width, so no tap box is squeezed below its 44 px minimum into its neighbour. */
+li:not(:nth-last-child(-n+2)) { flex: none; }
 /* The row's 44 px height comes from the ancestor links' tap rule; the current item only truncates. */
 li[aria-current] { flex: 0 100 auto; overflow: hidden; }
 li[aria-current] span { overflow: hidden; text-overflow: ellipsis; padding-inline: 8px; color: var(--color-text); }

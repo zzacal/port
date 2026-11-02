@@ -226,6 +226,7 @@ public class AdminAccessTests(MongoFixture mongo) : IAsyncLifetime
         string[] publicPaths =
         [
             "/",
+            "/g",
             $"/g/{SeedGalleryId}/autumn-walk",
             $"/g/{SeedGalleryId}/autumn-walk/{SeedImgId1}",
         ];
@@ -286,6 +287,7 @@ public class AdminAccessTests(MongoFixture mongo) : IAsyncLifetime
         string[] publicPaths =
         [
             "/",
+            "/g",
             $"/g/{SeedGalleryId}/autumn-walk",
             $"/g/{SeedGalleryId}/autumn-walk/{SeedImgId1}",
         ];

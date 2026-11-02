@@ -18,7 +18,7 @@ public class ImageServiceTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFi
 {
     private static string Gp(string gid, string slug) => LibraryHost.Page(PurgeSets.GalleryPath(gid, slug));
     private static string Pp(string gid, string slug, string iid) => LibraryHost.Page(PurgeSets.PhotoPath(gid, slug, iid));
-    private static readonly string Home = LibraryHost.Page("/");
+    private static readonly string Home = LibraryHost.Page("/g");
 
     private static void SetEq(IEnumerable<string> expected, IEnumerable<string> actual) =>
         Assert.Equal(expected.Distinct().Order(StringComparer.Ordinal).ToArray(), actual.Order(StringComparer.Ordinal).ToArray());
@@ -97,7 +97,7 @@ public class ImageServiceTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFi
         Assert.Equal(OperationStatus.Ok, r.Status);
         SetEq([Gp(pub, "coast"), Pp(pub, "coast", a.Id), Home, Gp(priv, "drafts"), Pp(priv, "drafts", a.Id)], purged);
 
-        // b is a non-cover in the public gallery and the cover of the private one: no "/".
+        // b is a non-cover in the public gallery and the cover of the private one: no "/g".
         var r2 = await Is(h, s => s.UpdateTextAsync(b.Id, null, "A caption"));
         var purged2 = await h.SettleAsync();
         Assert.Equal(OperationStatus.Ok, r2.Status);

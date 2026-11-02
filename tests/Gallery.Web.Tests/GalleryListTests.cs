@@ -18,7 +18,7 @@ internal static class GalleryHtml
 
     public static string Gp(string gid, string slug) => LibraryHost.Page(PurgeSets.GalleryPath(gid, slug));
     public static string Pp(string gid, string slug, string iid) => LibraryHost.Page(PurgeSets.PhotoPath(gid, slug, iid));
-    public static readonly string Home = LibraryHost.Page("/");
+    public static readonly string Home = LibraryHost.Page("/g"); // 011: the listing moved to /g
 
     /// <summary>Asserts set EQUALITY (none missing, none extra) of purged addresses.</summary>
     public static void SetEq(IEnumerable<string> expected, IEnumerable<string> actual) =>
@@ -55,8 +55,8 @@ internal static class GalleryHtml
         (await h.Db.GetCollection<BsonDocument>("site").Find(new BsonDocument("_id", "site")).FirstAsync())
             ["homeOrder"].AsBsonArray.Select(v => v.AsString).ToList();
 
-    /// <summary>The raw (undecoded) body of <c>/</c>, for byte comparison.</summary>
-    public static async Task<string> HomeRawAsync(LibraryHost h) => await (await h.GetAsync("/")).Content.ReadAsStringAsync();
+    /// <summary>The raw (undecoded) body of the listing <c>/g</c> (011), for byte comparison.</summary>
+    public static async Task<string> HomeRawAsync(LibraryHost h) => await (await h.GetAsync("/g")).Content.ReadAsStringAsync();
 
     /// <summary>The gallery-list card for <paramref name="gid"/> (the tile whose Edit link names it).</summary>
     public static string CardOf(string html, string gid) =>

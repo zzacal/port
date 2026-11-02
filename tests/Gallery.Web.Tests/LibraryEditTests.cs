@@ -151,9 +151,9 @@ public class LibraryEditTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         var photo = $"/g/{gid}/coast/{img.Id}";
 
         Assert.Equal(HttpStatusCode.OK, (await h.GetAsync(photo)).StatusCode);
-        Assert.Equal(HttpStatusCode.OK, (await h.GetAsync("/")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await h.GetAsync("/g")).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await h.GetAsync(photo)).StatusCode);
-        Assert.Equal(HttpStatusCode.OK, (await h.GetAsync("/")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await h.GetAsync("/g")).StatusCode);
         Assert.Equal(1, Count(h, "db.gallery.read"));
         Assert.Equal(1, Count(h, "db.site.read"));
 
@@ -166,7 +166,7 @@ public class LibraryEditTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         Assert.DoesNotContain(">Before<", body);
         Assert.Equal(2, Count(h, "db.gallery.read"));
 
-        Assert.Equal(HttpStatusCode.OK, (await h.GetAsync("/")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await h.GetAsync("/g")).StatusCode);
         Assert.Equal(1, Count(h, "db.site.read"));
     }
 

@@ -1,8 +1,3 @@
-<PublicLayout Title="Not found" NoIndex="true" Crumbs="Crumbs">
+<PublicLayout Title="Not found" NoIndex="true" Crumbs="Trails.NotFound">
     <p>Not found.</p>
 </PublicLayout>
-
-@code {
-    // 010 owner review 2: the breadcrumb's "Galleries" is the way home (it replaces the old text link).
-    private static readonly IReadOnlyList<Crumb> Crumbs = [new("Galleries", "/"), new("Not found")];
-}

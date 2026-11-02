@@ -49,6 +49,7 @@ public sealed class PublicLayoutConsistencyBrowserTests(NavBrowserFixture site)
         var pages = new (string Name, string Path)[]
         {
             ("home", "/"),
+            ("listing", "/g"), // 011 T-IX: the listing moved to /g; every page on all seven measures
             ("gallery", await site.GalleryPathAsync(NavBrowserFixture.SeptemberId)),
             ("photo", await site.PhotoPathAsync(4)),
             ("404", "/g/zzzzzzzzzzzzzzzzzzzzzzzzzz/none"),

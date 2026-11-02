@@ -81,14 +81,14 @@ public class LibraryFlowTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         Assert.True(actions <= 6, $"{actions} owner actions");
 
         // The recorder holds exactly P-MEMBERS ∪ P-VIS of these steps: the gallery page, all 40 photo
-        // pages (P-VIS covers every item) and "/" (P-VIS).
-        var expected = new List<string> { LibraryHost.Page("/"), LibraryHost.Page($"/g/{gid}/coast") };
+        // pages (P-VIS covers every item) and "/g" (P-VIS).
+        var expected = new List<string> { LibraryHost.Page("/g"), LibraryHost.Page($"/g/{gid}/coast") };
         expected.AddRange(forty.Select(id => LibraryHost.Page($"/g/{gid}/coast/{id}")));
         Assert.Equal(expected.Order(StringComparer.Ordinal).ToArray(), h.Recorder.AllPurged().Order(StringComparer.Ordinal).ToArray());
         h.Recorder.Clear();
 
-        // "/" lists Coast with the moved photo as its cover.
-        var home = WebUtility.HtmlDecode(await (await h.GetAsync("/")).Content.ReadAsStringAsync());
+        // "/g" lists Coast with the moved photo as its cover.
+        var home = WebUtility.HtmlDecode(await (await h.GetAsync("/g")).Content.ReadAsStringAsync());
         Assert.Contains($"/g/{gid}/coast", home);
         var moved = images[3];
         Assert.Contains(moved.Derivatives[0].Avif, home);
