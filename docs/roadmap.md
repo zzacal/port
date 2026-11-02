@@ -136,7 +136,7 @@ seeded sample content is removed in this feature.
 
 ### 010 Navigation improvements
 
-**Status: implemented on branch `010-navigation-improvements`, not merged; defaults in
+**Status: merged to main 2026-11-02 (d338625); defaults in
 `specs/010-navigation-improvements/decisions.md`.** Evidence: `specs/010-navigation-improvements/evidence/`
 (verify.sh ALL PASS, p95.sh SC-006 ALL PASS with db_reads identical to the baseline,
 non-vacuity.sh 6/6, snapshot-diff.sh ALL EQUAL, read-only live walkthrough ALL PASS; full suite
@@ -151,7 +151,7 @@ section 4 (Gallery `nav`) and L-07 to L-17 (P-NAV and counter purges).
 
 ### 011 Home page
 
-**Status: implemented on branch `011-home-page` (stacked on 010), not merged; defaults and
+**Status: done, merged to main 2026-11-02 (8e02c9d); defaults and
 stated test changes in `specs/011-home-page/decisions.md`.** Evidence: `specs/011-home-page/evidence/`
 (verify.sh ALL PASS live, 12 of 14 checks FAIL on the pre-011 build; p95.sh ALL PASS: `/` 0 reads
 p95 0.13 ms, `/g` exactly 1 read; snapshot-diff.sh ALL EQUAL; non-vacuity.sh 7/7; design record
