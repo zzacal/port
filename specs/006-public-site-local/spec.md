@@ -11,6 +11,11 @@ locally. Home grid, gallery page, and solo view served from real stored content,
 the dev image storage through the dev image hostname. A seed command loads the sample photos. Keep
 .NET." Clarified: the seed uses the owner's own photos from `dev-pictures/`.
 
+> **AMENDED by feature 011-home-page (constitution 4.5.0, 2026-11-02)**: `/` is now a home page
+> that links to the galleries, and the gallery grid moved to `/g` as the galleries listing. Where
+> this spec says "home page" or "home grid" for the grid of gallery cards, read "galleries
+> listing (`/g`)"; its requirements apply there unchanged. "Home order" keeps its name. FR-001, FR-004, FR-007, SC-001, SC-002 and SC-004 are annotated in place.
+
 ## Clarifications
 
 ### Session 2026-10-30
@@ -192,13 +197,13 @@ hover on a photo starts loading the destination image, and repeat with scripts d
 **Public pages**
 
 - **FR-001**: The home page MUST show every public gallery once, in the owner's order, as a grid of
-  cards (cover photo and title) using the home grid configuration from 003.
+  cards (cover photo and title) using the home grid configuration from 003. **AMENDED by 011**: "home page" here means the galleries listing at `/g`.
 - **FR-002**: A gallery page MUST show the gallery's title, its description when it has one, and
   its photos in the gallery's order as a grid using the gallery grid configuration from 003.
 - **FR-003**: A photo page MUST show the photo, its title, its caption when it has one, the camera
   fields it has, and previous/next links within the gallery it was opened from.
 - **FR-004**: The home page MUST be built from a single datastore read (IV.9). The gallery and photo
-  pages MUST each need at most two datastore reads, regardless of how many photos the gallery has.
+  pages MUST each need at most two datastore reads, regardless of how many photos the gallery has. **AMENDED by 011**: "home page" here means the galleries listing at `/g`.
 - **FR-005**: Every image on every page MUST be addressed on the image hostname. No page may contain
   an address of the storage service itself (III.9, D-19).
 - **FR-006**: Pages MUST render the components built in 003. Any parameters this feature adds to
@@ -209,7 +214,7 @@ hover on a photo starts loading the destination image, and repeat with scripts d
 **Visibility and addresses**
 
 - **FR-007**: Private galleries MUST NOT appear on the home page, and their pages, along with photo
-  pages opened from them, MUST tell search engines not to index them (II.2).
+  pages opened from them, MUST tell search engines not to index them (II.2). **AMENDED by 011**: "home page" here means the galleries listing at `/g`.
 - **FR-008**: Private galleries and their photo pages MUST still render when opened by address
   (II.2: private means unlisted).
 - **FR-009**: Gallery addresses MUST be `/g/{id}/{slug}` and photo addresses
@@ -326,13 +331,13 @@ hover on a photo starts loading the destination image, and repeat with scripts d
 ### Measurable Outcomes
 
 - **SC-001**: A visitor reaches any seeded photo from the home page in two clicks, and every page
-  on the way shows only seeded content.
+  on the way shows only seeded content. **AMENDED by 011**: "home page" here means the galleries listing at `/g`.
 - **SC-002**: 0 private galleries appear on the home page, and 100% of private gallery and private
-  photo pages carry the do-not-index marker.
+  photo pages carry the do-not-index marker. **AMENDED by 011**: "home page" here means the galleries listing at `/g`.
 - **SC-003**: Over a 100-request run per page type on the dev machine, 95% of home, gallery, and
   photo responses are generated in under 50 ms of server time, verified from the log alone.
 - **SC-004**: The home page logs exactly 1 datastore read per request, and gallery and photo pages
-  at most 2, in 100% of requests in the run, verified from the log alone.
+  at most 2, in 100% of requests in the run, verified from the log alone. **AMENDED by 011**: "home page" here means the galleries listing at `/g`.
 - **SC-005**: Layout shift on every public page type is 0, measured in a real browser at large,
   medium, and small widths.
 - **SC-006**: Running preparation and seed twice produces identical content, and the second run

@@ -11,6 +11,11 @@
 antiforgery. AdminLayout renders an empty owner shell. Runs locally against a Google OAuth client
 with a localhost redirect URI. Owns D-04, D-06, the D-23 sign-in page, E-01, E-02, and PC.4.
 
+> **AMENDED by feature 011-home-page (constitution 4.5.0, 2026-11-02)**: `/` is now a home page
+> that links to the galleries, and the gallery grid moved to `/g` as the galleries listing. Where
+> this spec says "home page" or "home grid" for the grid of gallery cards, read "galleries
+> listing (`/g`)"; its requirements apply there unchanged. "Home order" keeps its name. FR-002 is annotated in place.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - The owner claims an unclaimed site (Priority: P1)
@@ -187,7 +192,7 @@ Sign-in and claim
   unclaimed site the card MUST use the claim wording (first sign-in becomes the owner; can't be
   changed later from the web); on a claimed site it MUST use the ordinary sign-in wording.
 - **FR-002**: The sign-in card MUST sit over the home page's first cover photo when one exists,
-  and render without a photo otherwise (D-23).
+  and render without a photo otherwise (D-23). **AMENDED by 011**: "home page" here means the galleries listing at `/g`.
 - **FR-003**: Sign-in MUST use Google as the only identity provider. No passwords, no other
   providers.
 - **FR-004**: The first completed Google sign-in on an unclaimed site MUST claim it in a single

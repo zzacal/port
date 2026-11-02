@@ -1,22 +1,27 @@
 <!--
 Sync Impact Report
-- Version change: 4.3.0 → 4.4.0 (MINOR)
-- Rationale: owner directive (2026-11-01): visual consistency is important. The home page and
-  the gallery pages drew the same breadcrumb header at different heights and with different gaps
-  below it, because each page sized and spaced the shared chrome itself. Principle IX makes the
-  shared chrome the property of one container component per site.
-- Modified principles: none. Added principle: IX. Visual Consistency Through Shared Containers.
-- Added sections: none. Removed sections: none.
+- Version change: 4.4.0 → 4.5.0 (MINOR)
+- Rationale: owner directive (2026-11-02, feature 011-home-page): `/` becomes a home page that
+  links to the galleries, and the gallery grid moves to `/g` as "the galleries listing". II.2,
+  II.6 and IV.9 named "the home page" as the place galleries are listed. Their guarantees move to
+  the listing unchanged (private and empty galleries never listed; the listing is one datastore
+  read). No guarantee is removed, and IV.9 gains one rule: the home page makes no datastore read.
+  MINOR, not MAJOR: the protections are the same, only the page they apply to is renamed, and one
+  is added.
+- Modified principles: II (rules 2 and 6), IV (rule 9). Added/removed sections: none.
 - Templates requiring updates: none (templates read the constitution at runtime).
-- Prior specs swept: 010 (navigation) is amended in the same change; earlier features introduced
-  the per-page spacing this principle forbids and are covered by that fix.
-- Deferred TODOs: none.
+- Prior specs swept: 006, 007, 008, 009 and 010 say "home page" for the gallery grid; each gets an
+  in-place AMENDED note that those requirements now apply to the galleries listing at `/g`.
+  "Home order" (the owner's gallery order) keeps its name.
+- Deferred TODOs: none. The design record (D-13, D-15, D-16, D-21, lifecycle entries) is updated
+  by the 011 plan as a VII.2 amendment.
 - History: 1.0.0 initial ratification. 1.1.0 perceived performance, private = unlisted. 2.0.0
   client-generated derivatives with server validation. 3.0.0 Azure Blob replaced R2, masters kept,
   $10 metered cap (2026-10-27). 4.0.0 images on Cloudflare R2, managed-identity guarantee
   withdrawn, III.9 added (2026-10-30). 4.1.0 III.10 seeded dev content under two-reader
   validation; IV.19 clarified (2026-10-31). 4.2.0 II.6 no empty galleries shown; publish
-  requires an image (2026-10-31). 4.3.0 canonical remote (2026-11-01).
+  requires an image (2026-10-31). 4.3.0 canonical remote (2026-11-01). 4.4.0 IX visual
+  consistency through shared containers (2026-11-01).
 -->
 
 # Gallery Constitution
@@ -47,9 +52,11 @@ accepted, documented risk that design MAY close with an optional claim token.
 
 1. Visitors MUST NOT need an account, cookie consent, or sign-in to view anything public.
 2. Every gallery is either public or private. Public galleries that hold at least one image
-   appear on the home page (rule 6).
-   Private galleries MUST NOT appear on the home page, in any public listing, feed, or sitemap,
-   and their pages MUST be marked non-indexable — but MUST remain reachable by direct link.
+   appear on the galleries listing, the public page that lists galleries (rule 6). The home page
+   is the site's entry page and links to the listing; it lists no galleries.
+   Private galleries MUST NOT appear on the galleries listing, in any other public listing, feed,
+   or sitemap, and their pages MUST be marked non-indexable — but MUST remain reachable by direct
+   link.
    A listing served from an edge cache MAY show a gallery for up to the cache lifetime after it
    is made private; visibility changes MUST trigger a purge, best effort.
 3. Because private means "unlisted", gallery and image addresses MUST NOT be guessable from a
@@ -59,9 +66,9 @@ accepted, documented risk that design MAY close with an optional claim token.
    tagging, or editing.
 6. Visitors MUST never be shown an empty gallery. A gallery MUST hold at least one image to be
    made public; the owner's publish action MUST refuse otherwise, saying why. A public gallery that
-   becomes empty (its last image removed or deleted) stays public but MUST be left out of the home
-   page and every public listing until it holds an image again, and the page of any empty gallery,
-   public or private, MUST answer as not found. Its visibility is not changed on the owner's
+   becomes empty (its last image removed or deleted) stays public but MUST be left out of the
+   galleries listing and every other public listing until it holds an image again, and the page
+   of any empty gallery, public or private, MUST answer as not found. Its visibility is not changed on the owner's
    behalf (rule 5).
 
 Rationale: private doubles as draft and as share-by-link. An empty gallery is a draft by
@@ -146,7 +153,8 @@ Upload-time precomputation (nothing is resized, encoded, or analyzed at view tim
 8. Pixel dimensions and aspect ratio MUST be stored at upload and emitted in markup so the
    layout is final at first paint (no image-caused layout shift).
 9. Gallery cards (cover derivative, placeholder, dimensions, image count) MUST be
-   denormalized onto the gallery so the home page is a single datastore read.
+   denormalized onto the gallery so the galleries listing is a single datastore read. The home
+   page, which shows only fixed links, MUST make no datastore read.
 10. Publishing or editing a public gallery MUST warm the edge cache for its pages and the
     derivatives those pages reference, and tiered edge caching MUST be enabled.
 
@@ -299,4 +307,4 @@ These are binding inputs to every plan:
   place, not silently edited.
 - Every plan and analyze pass verifies compliance and cites principles by number.
 
-**Version**: 4.4.0 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-11-01
+**Version**: 4.5.0 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-11-02
