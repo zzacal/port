@@ -48,7 +48,7 @@ because the home page is still a public page.
 | PublicRoutesTests.cs | 508 |
 | UploadConfirmTests.cs | 519 (add `("/g", OK)`) |
 | AdminAccessTests.cs | 228, 288 (public paths reachable anonymously: add `/g`) |
-| NavBrowserTests.cs | 489, 607 (add `/g`) |
+| NavBrowserTests.cs | 489 (add `/g`) |
 
 AdminAccessTests 325 and 415 GET `/` only for status or session checks. They are unchanged.
 
@@ -64,6 +64,9 @@ AdminAccessTests 325 and 415 GET `/` only for status or session checks. They are
 | PageComponentTests.cs | 51 | gallery crumbs param | unchanged (it passes its own list); expected output unchanged |
 | NavComponentTests.cs | 182, 200, 338, 347, 371 | component inputs | unchanged (inputs, not page trails) |
 | TemplatePageTests.cs | 36 | `Contains("Galleries")` on the PublicLayout page | becomes `Contains(">Home<")` (default trail) |
+| NavRoutesTests.cs | 311–327 `Public_header_has_one_link_to_home_on_every_page` | `DoesNotContain("aria-label=\"Site\"", html)` over the whole page | scope it to the header match (`header[0]`), because `/` now has the Nav home links in `main`. Add `/g` to the page list. The rest is unchanged. Update the comment: home's trail still has no link. |
+| NavBrowserTests.cs | 296–297 `Tap_boxes_stacking_and_centring` | expected links `{"crumb","crumb"}` on photo pages | `{"crumb","crumb","crumb"}` (Home, Galleries, gallery). Every other check is unchanged and must pass at every width and title length (analyze M1). |
+| NavBrowserTests.cs | 603–617 `Header_links_have_no_duplicate_destination` | page list `/`, gallery, photo, 404 | add `/g`. The rule `path == "/" ? 0 links : >0 links, all distinct` is unchanged, and `/g` has exactly one header link (`/`). |
 
 ## Class D: page component rename
 
@@ -72,15 +75,11 @@ the same assertions. Add new `HomePage` tests in HomePageTests.cs instead (no `C
 
 ## T-IX: the chrome comparison (LayoutConsistencyBrowserTests.cs)
 
-- The page list becomes, in this order:
-  - listing `/g`, which is the new base row
-  - home `/`
-  - gallery
-  - photo
-  - 404
-- `home` is compared on the first six measures only. Measure 7, "gap to content", is the
-  intentional centring gap. Every other page is compared on all seven. This is the only
-  narrowing, and it is written as a named `except` list in the test, not as a looser tolerance.
+- The page list gains listing `/g`. The order is home `/` (unchanged base row), listing, gallery,
+  photo, 404.
+- Every page is compared on all seven measures. There is no exception: the centring lives
+  inside `nav.nav--home`, which is main's first box and starts at the normal gap (IX.1; analyze C1).
+  A failure on `/` means the Fill/Nav CSS is wrong, not the test.
 
 ## Snapshots
 

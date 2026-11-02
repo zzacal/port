@@ -38,7 +38,7 @@
     several-link catalogue state. Justification: "only one, for now" implies more later.
   - FR-016/SC-007: home and listing added to the measured layout test. Constitution IX.4.
   - FR-017/SC-005/SC-006: timing events and the zero-read home page. Constitution IV.1-4.
-  - FR-019: constitution amendment. II.2, II.6 and IV.9 say "home page" for the listing.
+  - FR-019: constitution amendment (done, 4.5.0).
 - Overturnable defaults: vertical centring (vs. horizontal only), no redirect from `/`, listing
   page title "Galleries", admin breadcrumbs unchanged.
 - FR-019 done: constitution 4.5.0 (II.2, II.6, IV.9 name the galleries listing; home page makes

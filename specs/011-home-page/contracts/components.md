@@ -19,6 +19,15 @@ Executors implement these exactly as written. Any gap in the contract is escalat
 - CSS, appended to `Nav.razor.css`:
 
 ```css
+/* The home links box fills main and centres its list, so main's first box starts at the normal
+   chrome gap (IX.1) and the centring space lives inside the component (C1 remediation). */
+.nav--home {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .nav--home ul {
     flex-direction: column;
     align-items: center;
@@ -74,8 +83,10 @@ Call sites:
 | `Components/Templates/PublicLayout.razor` | default `Crumbs ?? Trails.Default` |
 
 - Guard (`TrailSourceGuardTests`): it scans the `.cs` and `.razor` files under `src/Gallery.Web/Site`
-  and `src/Gallery.Web/Components/Templates/PublicLayout.razor`. The literals `"Galleries"` and
-  `"Home"` may appear there only in `Trails.cs`. `Ui/` specimen pages are out of scope for the scan.
+  and `src/Gallery.Web/Components/Templates/PublicLayout.razor`. The string literals `"Galleries"`
+  and `"Home"` may appear there only in `Trails.cs`. Every other use goes through
+  `Trails.HomeLabel` or `Trails.ListingLabel` (C5 and C6 do). `Ui/` specimen pages are out of scope
+  for the scan.
 
 ## C4 `PublicLayout` Fill (`Components/Templates/PublicLayout.razor`, `.razor.css`)
 
@@ -97,8 +108,7 @@ body.public.fill {
 body.public.fill > .public-main {
     flex: 1;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
     padding-bottom: 0;
 }
 ```
@@ -117,7 +127,7 @@ body.public.fill > .public-main {
 </PublicLayout>
 
 @code {
-    private static readonly IReadOnlyList<NavItem> Links = [new("Galleries", Trails.ListingHref)];
+    private static readonly IReadOnlyList<NavItem> Links = [new(Trails.ListingLabel, Trails.ListingHref)];
 }
 ```
 
@@ -125,7 +135,7 @@ The page takes no parameters.
 
 ## C6 `ListingPage` (`Site/Pages/ListingPage.razor`, `git mv` from HomePage)
 
-The content is today's HomePage with three changes: `Title="Galleries"`,
+The content is today's HomePage with three changes: `Title="@Trails.ListingLabel"`,
 `Crumbs="Trails.Listing"`, and the static `Crumbs` field removed. The ContactSheet call and its
 `3/3/1` counts are unchanged.
 

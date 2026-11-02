@@ -55,8 +55,11 @@ xunit, Testcontainers Mongo and S3Proxy, Microsoft.Playwright. Nothing added.
 - The owner may run `dotnet watch` on 5080/5081. Build into `--artifacts-path artifacts`, never
   kill or bind those ports.
 
-**Scale/Scope**: about 12 source files touched, 3 new (`Trails.cs`, `ListingPage.razor` by
-rename, `HomePage.razor` rewritten), plus test files listed in test-impact.
+**Scale/Scope**: about 12 source files touched. New source: `Trails.cs`, with `ListingPage.razor`
+by rename and `HomePage.razor` rewritten. New test files: TypeDisplayTests, TrailsTests,
+HomePageTests, TrailRoutesTests, TrailSourceGuardTests, HomeBrowserTests and the
+HomeCaptureLibrary fixture. Evidence scripts are under `evidence/`. Existing test edits are
+listed in contracts/test-impact.md.
 
 ## Constitution Check
 
@@ -87,7 +90,8 @@ rename, `HomePage.razor` rewritten), plus test files listed in test-impact.
 | VIII Cost | PASS | One fewer purged URL per change, never more. |
 | IX.1–2 One container | PASS | Centring is `PublicLayout.Fill`, a container option; links are `Nav`; the page has no CSS. |
 | IX.3 Size independent of parts | PASS | Breadcrumb row stays `--tap`; the one-item `Home` trail is the same height (measured). |
-| IX.4 Measured consistency | PASS | `PublicLayoutConsistencyBrowserTests` page list gains `listing` (`/g`); `home` stays. |
+| IX.1 Same gap under the chrome | PASS | Centring lives inside `nav.nav--home`, which fills main, so main's first box starts at the normal gap. Home is compared on all seven chrome measures (analyze C1). |
+| IX.4 Measured consistency | PASS | `PublicLayoutConsistencyBrowserTests` page list gains `listing` (`/g`); `home` stays; no exceptions. |
 
 No violations, so Complexity Tracking is empty.
 

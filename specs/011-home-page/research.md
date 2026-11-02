@@ -94,9 +94,9 @@ and recorded as risks.
   the header on `/` against every other page type.
 - **Risks to verify in the browser**:
   - A flex-column body stops margin collapsing between header and main. On `/` the IX.2 rule
-    already zeroes main's first-child top margin, and the chrome test measures the header box.
-    The gap to content on `/` is the centring gap and is excluded from that comparison for `home`
-    only (contracts/test-impact.md T-IX).
+    already zeroes main's first-child top margin. The centring happens inside `nav.nav--home`,
+    which fills main, so main's first box starts at the normal gap. The chrome test compares home
+    on all seven measures, with no exception (IX.1; analyze C1).
   - The main padding-bottom must not cause a scrollbar on `/`. `Fill` sets it to 0, and SC-003
     checks `scrollHeight <= innerHeight`.
 

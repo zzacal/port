@@ -62,6 +62,11 @@ layout test). Each batch writes its tests in the files it names, in the same bat
   - the list of `tests/**/*.cs` files
   - the full-suite pass count from `dotnet test Gallery.slnx --artifacts-path artifacts --blame-hang-timeout 120s`
   - one capture of `/` timing lines from the existing `NavTimingEvidenceTests` log, as the no-regression read baseline for `/g` (SC-005)
+  - SC-004 pre-change capture: on the T001 head, GET `/` from a `LibraryHost` seeded with three
+    listed galleries, one private and one empty (fixed ids and titles, written as a reusable
+    helper `HomeCaptureLibrary` in a new `tests/Gallery.Web.Tests/Fixtures/HomeCaptureLibrary.cs`).
+    Save the ContactSheet region (`<div class="cs ` … its closing `</div>`) with scoped ids
+    stripped to `specs/011-home-page/evidence/pre-011-listing.html`. Commit it before Batch A.
 - [ ] T002 Test-impact verification pass (parent, by hand) over the WHOLE `tests/` tree.
   - Grep `"/"`, `HomePath`, `"Galleries"`, `HomePage`, `Page("/")`, and the shared helpers
     `GalleryListTests.Home`, `HomeRawAsync`, `SetEq(`, `AllPurged`.
@@ -160,13 +165,17 @@ ContactSheet. GET `/g` lists the same galleries in the same order as the pre-cha
   - (d) `/g/` gives 301 with `Location: /g` and `ShortPolicy`.
   - (e) A second GET of `/g` is served from the output cache (1 read total). A second GET of `/` adds
     no read either.
-  - (f) [SAFETY] Every set returned by every `PurgeSets` method over the PurgeSetTests fixtures
-    contains `/g` where the old one had `/`, and never contains `/` (contracts/edge.md E2).
+  - (f) [SAFETY] No set returned by any `PurgeSets` method, over the PurgeSetTests fixtures, ever
+    contains `/` (contracts/edge.md E2). The `/g` membership is pinned by the parent's Class A
+    edits to PurgeSetTests.
   - (g) A source guard: the `/` lambda in `PublicEndpoints.cs` takes no `ContentReader`.
   - (h) The speculation rule string is exact on `/`, `/g`, a gallery page and a photo page.
-  - (i) `Nav` with `Home` unset renders the same bytes as before (compare to
-    `specs/011-home-page/evidence/pre-011-specimens/006/molecules/nav.html` Default specimen,
-    style-stripped).
+  - (i) `Nav` with `Home` unset renders the same bytes as before. Compare it to the FIRST
+    specimen section extracted from
+    `specs/011-home-page/evidence/pre-011-specimens/006/molecules/nav.html`, style-stripped, not
+    to the whole file (T013 appends specimens to the live page).
+  - (j) SC-004: build `HomeCaptureLibrary` (T001), GET `/g`, extract the ContactSheet region the
+    same way, and assert it is byte-equal to `specs/011-home-page/evidence/pre-011-listing.html`.
   - If routing does not deliver `/g/` to the redirect, STOP and escalate (research R-03).
 
 **Parent stated change (after Batch B)**: apply contracts/test-impact.md Classes A, B and D to the
@@ -206,11 +215,15 @@ data-model.md table.
     `.breadcrumb a[href*="#p-"]`
 - [ ] T019 [US2] Write `tests/Gallery.Web.Tests/TrailSourceGuardTests.cs` per contracts C3. Scan
   `src/Gallery.Web/Site/**/*.cs|*.razor` and `Components/Templates/PublicLayout.razor`. The string
-  literals `"Home"` and `"Galleries"` appear only in `Site/Trails.cs`. Collect every violation
+  literals `"Home"` and `"Galleries"` appear only in `Site/Trails.cs`. HomePage and ListingPage
+  use `Trails.ListingLabel` per C5 and C6. Collect every violation
   before one final assert.
 
 **Parent stated change (after Batch C)**: apply contracts/test-impact.md Class C, then run the gate
-and commit.
+and commit. The gate must include `NavBrowserTests.Tap_boxes_stacking_and_centring` (all title
+lengths and widths) as a must-pass test. With three ancestor links the 320 px trail is the risk. A
+failure goes back to the Breadcrumb CSS owner as a defect and is escalated; the test's 44 px,
+overlap and one-line rules are never relaxed (analyze M1).
 
 ## Phase 5: User Story 3, big, centred links (P2)
 
@@ -223,7 +236,7 @@ there is no scrollbar, the tap height is ≥ 44, and the font size is 48 px.
 **Batch D**: one executor, after Batch C. It owns `tests/Gallery.Web.Tests/HomeBrowserTests.cs` (new).
 
 - [ ] T020 [US3] Write `tests/Gallery.Web.Tests/HomeBrowserTests.cs` on `NavBrowserFixture`, collection
-  `nav-browser`. At each width 320, 390, 768, 1280 and 2560 (height 900, and a 390×640 phone
+  `nav-browser`. Centre-y is measured on the `a` inside `nav.nav--home`. At each width 320, 390, 768, 1280 and 2560 (height 900, and a 390×640 phone
   case):
   - (a) the `nav.nav--home a` rect centre-x is within 2 px of `innerWidth/2`
   - (b) its centre-y is within 2 px of the midpoint between `header.site-header` bottom and
@@ -237,9 +250,8 @@ there is no scrollbar, the tap height is ≥ 44, and the font size is 48 px.
   - Collect failures and assert once.
 
 **Parent stated change (after Batch D)**: edit `tests/Gallery.Web.Tests/LayoutConsistencyBrowserTests.cs`
-per contracts/test-impact.md T-IX. The page list becomes listing `/g` (base), home `/`, gallery,
-photo, 404, and `home` is excluded from measure 7 only, through a named except list. Run it at
-all five widths, then commit.
+per contracts/test-impact.md T-IX. Add listing `/g` after home. Every page is compared on all seven
+measures, with no exception. Run it at all five widths, then commit.
 
 ## Phase 6: Polish and cross-cutting (parent unless marked)
 
@@ -268,6 +280,9 @@ all five widths, then commit.
     - D-16: purge set says `/g`, `/` never purged
     - D-20: the home usage becomes the listing usage
     - D-21: `/` = `PublicLayout` Fill + `Nav` Home; `/g` = listing; amended-by-011 note on Nav and the Home trail
+  - D-23 (`02d`): "over the home page's first cover" → "over the first cover in the galleries
+    listing (the same `homeCards` read)", and "Gallery list: the home grid" → "Gallery list: the
+    listing grid"
   - `05` lifecycle "Pages and caches": home page → galleries listing
   - `06` edge cases E-16
   - `07` traceability II.2, II.6, IV.9 rows (IV.9 adds "home page: no read")
