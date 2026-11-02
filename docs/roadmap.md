@@ -134,6 +134,21 @@ seeded sample content is removed in this feature.
 
 - L-07 to L-17, E-12, E-14 to E-18, R-03, and R-04.
 
+### 010 Navigation improvements
+
+**Status: implemented on branch `010-navigation-improvements`, not merged; defaults in
+`specs/010-navigation-improvements/decisions.md`.** Evidence: `specs/010-navigation-improvements/evidence/`
+(verify.sh ALL PASS, p95.sh SC-006 ALL PASS with db_reads identical to the baseline,
+non-vacuity.sh 6/6, snapshot-diff.sh ALL EQUAL, read-only live walkthrough ALL PASS; full suite
+104 + 1066 passed, 1 skipped). Not delivered until the owner's checks (010 tasks.md OWNER-ONLY
+O-01..O-03): quickstart Part C on the owner's watch, the phone check, and the prerender landing
+in real Chrome (decisions row 38).
+
+The photo page names its gallery and position and links back to the photo's tile, with 44 px tap
+areas and Left/Right/Escape; listed galleries end with previous/next gallery links; the public
+header drops its duplicate link; the library status links the first gallery. Amends D-17, D-21,
+section 4 (Gallery `nav`) and L-07 to L-17 (P-NAV and counter purges).
+
 ### Hosting (number assigned when it starts)
 
 Choose and provision the host, then deploy, once the owner has a subscription or account only

@@ -68,7 +68,7 @@ brk 3 src/Gallery.Web/Library/GalleryService.cs \
 
 # (4) P-NAV: CompleteAsync stops adding PurgeSets.Nav.
 brk 4 src/Gallery.Web/Library/OperationResult.cs \
-  's/\n[^\n]*sets\.Add\(PurgeSets\.Nav\([^\n]*//' \
+  's/if \(_navChanged\.Count > 0\)\n/if (false \&\& _navChanged.Count > 0)\n/' \
   'FullyQualifiedName~NavPurgeTests' 'CompleteAsync omits PurgeSets.Nav'
 
 # (5) E1 rule 4: Changed stops marking every id when the count changes.

@@ -465,9 +465,9 @@ and the new test file `LibraryMembershipTests.cs`.
   Mongo and R2 read-only (`ASPNETCORE_ENVIRONMENT=Development dotnet artifacts/bin/Gallery.Web/debug/Gallery.Web.dll --contentRoot "$PWD/src/Gallery.Web" --urls https://localhost:5094`);
   curl `/`, one gallery, one photo: 200s, header has one link, photo row shows the gallery link
   and counter. Stop only that pid. Record in `evidence/live-walkthrough.md`.
-- [ ] T045 Full gate: `dotnet clean`, build `-warnaserror`, full test, `git diff --stat <T001 head> -- tests/`
+- [X] T045 Full gate: `dotnet clean`, build `-warnaserror`, full test, `git diff --stat <T001 head> -- tests/`
   shows only new files and the stated-change files (T004, T013, T025, T035, Batch D gate).
-- [ ] T046 Write `specs/010-navigation-improvements/evidence/non-vacuity.sh` from
+- [X] T046 Write `specs/010-navigation-improvements/evidence/non-vacuity.sh` from
   `~/.hermes/skills/software-development/speckit-orchestration/templates/non-vacuity.sh`, one
   `brk` per guard, each dry-run against a temp copy first; break must hit the test's data path:
   (1) [SAFETY] `SiteProjector.Nav` uses all `homeOrder` galleries instead of `Cards` →
@@ -478,7 +478,7 @@ and the new test file `LibraryMembershipTests.cs`.
   after the Save-Data return → `NavBrowserTests` Save-Data key case red. Each red run must fail on
   its assertion, not an exception. `tee` to `evidence/non-vacuity.txt`; tree restored and
   touched.
-- [ ] T047 Fold every executor `decisions_made` into decisions.md (accepted/REJECTED rows), mark
+- [X] T047 Fold every executor `decisions_made` into decisions.md (accepted/REJECTED rows), mark
   tasks `[X]`, update `docs/roadmap.md` status for 010, commit docs then code with the
   verification line (build, test count, evidence files).
 
