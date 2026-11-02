@@ -156,7 +156,6 @@ stated test changes in `specs/011-home-page/decisions.md`.** Evidence: `specs/01
 (verify.sh ALL PASS live, 12 of 14 checks FAIL on the pre-011 build; p95.sh ALL PASS: `/` 0 reads
 p95 0.13 ms, `/g` exactly 1 read; snapshot-diff.sh ALL EQUAL; non-vacuity.sh 7/7; design record
 validate 0 failures; full suite 108 + 1107 passed, 1 skipped). Not delivered until the owner's
-checks (011 tasks.md OWNER-ONLY O-01, O-02): quickstart Part C on the owner's watch at desktop
 and phone widths (Ctrl+R first: `/g` is a new route), and the `/g` prerender in real Chrome.
 
 `/` is a home page whose only content is a large, centred "Galleries" link; the grid moved
