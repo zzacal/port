@@ -326,7 +326,7 @@ measures, with no exception. Run it at all five widths, then commit.
 ## OWNER-ONLY (after the build; not gates)
 
 - [X] O-01 Quickstart Part C on your watch (press Ctrl+R first), at desktop and phone widths. Done 2026-11-02, as reported by the owner.
-- [ ] O-02 Real Chrome: on `/`, hover Galleries, then check DevTools > Application > Speculative loads PARTLY DONE 2026-11-02: hover starts the `/g` prerender in real Chrome (`sec-purpose: prefetch;prerender`, served from the output cache); activation on click (`activationStart > 0`) not yet confirmed.
+- [X] O-02 Real Chrome: on `/`, hover Galleries, then check DevTools > Application > Speculative loads Done 2026-11-02, as reported by the owner: hover starts the `/g` prerender (`sec-purpose: prefetch;prerender`) and the click activates it (`activationStart` 228.7 ms on `/g`).
   shows `/g` prerendered (R-04).
 
 ## Dependencies and execution order

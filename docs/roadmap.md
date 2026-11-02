@@ -155,9 +155,8 @@ section 4 (Gallery `nav`) and L-07 to L-17 (P-NAV and counter purges).
 stated test changes in `specs/011-home-page/decisions.md`.** Evidence: `specs/011-home-page/evidence/`
 (verify.sh ALL PASS live, 12 of 14 checks FAIL on the pre-011 build; p95.sh ALL PASS: `/` 0 reads
 p95 0.13 ms, `/g` exactly 1 read; snapshot-diff.sh ALL EQUAL; non-vacuity.sh 7/7; design record
-validate 0 failures; full suite 108 + 1107 passed, 1 skipped). O-01 passed (owner, 2026-11-02).
-O-02 partly done: the hover starts the `/g` prerender in real Chrome; activation on click is still
-to confirm (decisions row 24).
+validate 0 failures; full suite 108 + 1107 passed, 1 skipped). O-01 and O-02 passed (owner, 2026-11-02): the
+click on Galleries activates the prerendered `/g` (activationStart 228.7 ms; decisions row 25).
 
 `/` is a home page whose only content is a large, centred "Galleries" link; the grid moved
 unchanged to `/g` (`/g/` redirects there); every public breadcrumb starts at Home. Amends D-13,
