@@ -11,7 +11,7 @@ SLN="Gallery.slnx"
 TESTS="tests/Gallery.Web.Tests"
 fails=0
 
-FILES="src/Gallery.Web/Components/Molecules/Pager.razor.css src/Gallery.Web/Components/Organisms/OwnerBar.razor src/Gallery.Web/Library/SiteProjector.cs src/Gallery.Web/Site/PublicEndpoints.cs src/Gallery.Web/Library/GalleryService.cs src/Gallery.Web/Library/OperationResult.cs src/Gallery.Web/Edge/PurgeSets.cs src/Gallery.Web/Components/Templates/PublicLayout.razor"
+FILES="src/Gallery.Web/Components/Molecules/Breadcrumb.razor.css src/Gallery.Web/Components/Molecules/Pager.razor.css src/Gallery.Web/Components/Organisms/OwnerBar.razor src/Gallery.Web/Library/SiteProjector.cs src/Gallery.Web/Site/PublicEndpoints.cs src/Gallery.Web/Library/GalleryService.cs src/Gallery.Web/Library/OperationResult.cs src/Gallery.Web/Edge/PurgeSets.cs src/Gallery.Web/Components/Templates/PublicLayout.razor"
 if [ "${NV_DRYRUN:-0}" != 1 ]; then
   for f in $FILES; do
     git diff --quiet -- "$f" || { echo "ABORT $f has uncommitted changes"; exit 1; }
@@ -86,6 +86,11 @@ brk 7 src/Gallery.Web/Components/Molecules/Pager.razor.css \
 brk 8 src/Gallery.Web/Components/Organisms/OwnerBar.razor \
   's/        \@SignOutForm\n/        <Button Variant="ButtonVariant.Primary" Type="button">New gallery<\/Button>\@SignOutForm\n/' \
   'FullyQualifiedName~AdminNavConsistencyTests.Every_admin_page' 'owner bar carries a page action'
+
+# (9) review 2 R3: the trail pushed right again -> the photo page's left-margin guard must catch it.
+brk 9 src/Gallery.Web/Components/Molecules/Breadcrumb.razor.css \
+  's/justify-content: flex-start;/justify-content: flex-end;/' \
+  'FullyQualifiedName~AdminNavBrowserTests.Builder_breadcrumb' 'breadcrumb leaves the page margin'
 
 # (6) keys survive Save-Data: move the key handler after the Save-Data return.
 brk 6 src/Gallery.Web/Components/Templates/PublicLayout.razor \

@@ -44,7 +44,6 @@ public class NavCataloguePageTests
     {
         { typeof(PagerPage), ["First image", "Middle image", "Last image"],
           ["With count, middle photo", "With count, first photo", "With count, last photo", "One-photo gallery"] },
-        { typeof(SiteHeaderPage), ["Default"], ["Public site (brand only)"] },
         { typeof(TextLinkPage), ["Normal"], ["Tap area"] },
     };
 
@@ -90,12 +89,16 @@ public class NavCataloguePageTests
         Assert.Equal(4, Guards.Count(html, "aria-current=\"page\""));
     }
 
+    // Owner review 2: SiteHeader's specimens are the three trails; none has a brand or a site nav.
     [Fact]
-    public async Task SiteHeader_brand_only_specimen_has_no_nav()
+    public async Task SiteHeader_specimens_are_breadcrumb_trails()
     {
         var html = await Page(typeof(SiteHeaderPage));
-        Assert.Equal(2, Guards.Count(html, "<header class=\"site-header\""));
-        Assert.Equal(1, Guards.Count(html, "<nav class=\"nav\""));
+        Assert.Equal(["Home", "Gallery page", "Photo page"], Labels(html));
+        Assert.Equal(3, Guards.Count(html, "<header class=\"site-header\""));
+        Assert.Equal(3, Guards.Count(html, "<nav class=\"breadcrumb\""));
+        Assert.Equal(0, Guards.Count(html, "<nav class=\"nav\""));
+        Assert.DoesNotContain("class=\"brand", html);
     }
 
     [Fact]

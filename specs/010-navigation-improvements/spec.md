@@ -282,6 +282,13 @@ admin nav bar on every page with page actions out of it; and for Previous/Next a
 FR-001's "nothing above the photo" and FR-002's "the gallery link" now read "the breadcrumb's
 gallery item". Contract: contracts/owner-review-1.md. Decisions rows 41-46.
 
+## Amendment: owner review 2 (2026-11-01)
+
+The breadcrumb replaces the public header: no brand link, no nav list, separator `/`, left-aligned,
+on every public page (home shows `Galleries`). FR-010 now reads "the public header is the
+breadcrumb; it holds no link to the page itself and no duplicate destinations". Contract:
+contracts/owner-review-2.md. Decisions rows 50-52.
+
 ## Assumptions
 
 - Scope is the study's recommended set, confirmed by the owner in clarify (2026-11-01).

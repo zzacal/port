@@ -16,12 +16,13 @@ PASS B6 OwnerBar has no PrimaryAction and a fixed View site link
 PASS B6 no admin page passes ViewHref to AdminLayout
 PASS B6 New gallery sits in a PageHeading
 PASS B6 no Back to galleries in admin
-PASS B2 both layouts render the breadcrumb right after the bar/header
+PASS R1 the public header is the breadcrumb (no brand, no nav)
+PASS B2 admin renders the breadcrumb right after the bar
+PASS R3 breadcrumb separator is / and the trail aligns left
+PASS R2 home and 404 have trails; no Back to galleries on 404
 PASS K7 PublicLayout passes no nav items (no NavItem)
-PASS K7 PublicLayout renders <SiteHeader SiteName="Gallery" />
 PASS K7 key handler (line 20) precedes the Save-Data return (line 25)
 PASS K7 exactly one keydown listener in src
-PASS K6 SiteHeader still renders <Nav for non-empty items
 PASS K6 SiteHeader NavItems not EditorRequired
 PASS UI-4 no aria-keyshortcuts anywhere in src
 PASS Catalogue has 36 entries

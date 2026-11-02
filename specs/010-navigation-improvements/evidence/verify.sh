@@ -39,13 +39,14 @@ chk "B6 no Back to galleries in admin" '! grep -rq "Back to galleries" $S/Admin 
 
 # ── K6/K7 header and key handler ──────────────────────────────────────────────
 L=$S/Components/Templates/PublicLayout.razor
-chk "B2 both layouts render the breadcrumb right after the bar/header" 'grep -q "<SiteHeader SiteName=\"Gallery\" />@CrumbsContent" $L && grep -q "Bar : null)@CrumbsContent" $S/Components/Templates/AdminLayout.razor'
+chk "R1 the public header is the breadcrumb (no brand, no nav)" 'grep -q "<SiteHeader Crumbs=" $L && grep -q "<header class=\"site-header\"><Breadcrumb Items=\"Crumbs\" /></header>" $S/Components/Organisms/SiteHeader.razor && ! grep -qE "<Brand|<Nav " $S/Components/Organisms/SiteHeader.razor'
+chk "B2 admin renders the breadcrumb right after the bar" 'grep -q "Bar : null)@CrumbsContent" $S/Components/Templates/AdminLayout.razor'
+chk "R3 breadcrumb separator is / and the trail aligns left" 'grep -q "content: \"/\";" $S/Components/Molecules/Breadcrumb.razor.css && grep -q "justify-content: flex-start;" $S/Components/Molecules/Breadcrumb.razor.css'
+chk "R2 home and 404 have trails; no Back to galleries on 404" 'grep -q "Crumbs=\"Crumbs\"" $S/Site/Pages/HomePage.razor && grep -qF "new(\"Not found\")" $S/Site/Pages/NotFoundPage.razor && ! grep -q "Back to galleries" $S/Site/Pages/NotFoundPage.razor'
 chk "K7 PublicLayout passes no nav items (no NavItem)" '! grep -q "NavItem" $L'
-chk "K7 PublicLayout renders <SiteHeader SiteName=\"Gallery\" />" 'grep -q "<SiteHeader SiteName=\"Gallery\" />" $L'
 kl=$(grep -n "addEventListener('keydown'" $L | head -1 | cut -d: -f1); sl=$(grep -n "navigator.connection?.saveData" $L | head -1 | cut -d: -f1)
 chk "K7 key handler (line ${kl:-none}) precedes the Save-Data return (line ${sl:-none})" '[ -n "$kl" ] && [ -n "$sl" ] && [ "$kl" -lt "$sl" ]'
 chk "K7 exactly one keydown listener in src" '[ "$(srcfiles | xargs grep -l "keydown" | wc -l | tr -d " ")" = 1 ]'
-chk "K6 SiteHeader still renders <Nav for non-empty items" 'grep -q "<Nav Items" $S/Components/Organisms/SiteHeader.razor'
 chk "K6 SiteHeader NavItems not EditorRequired" '! grep -B2 "NavItems" $S/Components/Organisms/SiteHeader.razor | grep -q EditorRequired'
 chk "UI-4 no aria-keyshortcuts anywhere in src" '! srcfiles | xargs grep -l "aria-keyshortcuts" >/dev/null'
 

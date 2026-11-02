@@ -244,11 +244,13 @@ public partial class NavComponentTests
     }
 
     [Fact]
-    public async Task PhotoPage_without_gallery_href_renders_no_breadcrumb_or_count_and_does_not_throw()
+    public async Task PhotoPage_without_gallery_href_renders_the_home_trail_and_no_count_and_does_not_throw()
     {
         var html = await Render.Html<PhotoPage>(new { Image = MakeImage(), GalleryTitle = "G", NoIndex = false, PrevHref = "/p" });
-        // The element, not the substring: the inline key handler names ".breadcrumb a" (B5).
-        Assert.DoesNotContain("class=\"breadcrumb\"", html);
+        // Owner review 2 (R2): the header is always a trail; with no gallery link it is just home.
+        var crumb = Regex.Match(Bare(html), "<nav class=\"breadcrumb\".*?</nav>", RegexOptions.Singleline).Value;
+        Assert.Equal(1, Guards.Count(crumb, "<li"));
+        Assert.Contains("href=\"/\"", crumb);
         Assert.DoesNotContain("class=\"photo-count\"", html);
         Assert.DoesNotContain("class=\"here\"", html);
         Assert.Contains("<nav class=\"pager\"", html);
@@ -327,29 +329,32 @@ public partial class NavComponentTests
 
     // ── K6 SiteHeader ────────────────────────────────────────────────────────
 
+    // Owner review 2 (R1): the header holds only the breadcrumb.
     [Fact]
-    public async Task SiteHeader_with_no_items_has_no_nav()
+    public async Task SiteHeader_is_the_breadcrumb_and_nothing_else()
     {
-        var html = await Render.Html<SiteHeader>(new { SiteName = "Gallery", NavItems = Array.Empty<NavItem>() });
-        Assert.DoesNotContain("<nav", html);
+        var html = Bare(await Render.Html<SiteHeader>(new { Crumbs = (IReadOnlyList<Crumb>)[new("Galleries", "/"), new("Coast")] }));
+        Assert.Matches("^<header class=\"site-header\"><nav class=\"breadcrumb\" aria-label=\"Breadcrumb\"><ol>.*</ol></nav></header>$", html);
+        Assert.DoesNotContain("brand", html);
         Assert.Equal(1, Guards.Count(html, "<a "));
-        Assert.Contains("<a class=\"brand\" href=\"/\">Gallery</a>", Bare(html));
     }
 
     [Fact]
-    public async Task SiteHeader_without_the_items_parameter_has_no_nav()
+    public async Task SiteHeader_on_home_has_no_link_to_itself()
     {
-        var html = await Render.Html<SiteHeader>(new { SiteName = "Gallery" });
-        Assert.DoesNotContain("<nav", html);
+        var html = await Render.Html<SiteHeader>(new { Crumbs = (IReadOnlyList<Crumb>)[new("Galleries")] });
+        Assert.DoesNotContain("<a ", html);
+        Assert.Contains("aria-current=\"page\"", html);
     }
 
+    // Owner review 2 (R3): "/" separator, left-aligned.
     [Fact]
-    public async Task SiteHeader_with_items_matches_the_pre_010_specimen()
+    public void Breadcrumb_css_uses_a_slash_and_aligns_left()
     {
-        var baseline = Blocks(await File.ReadAllTextAsync(Path.Combine(UiBaseline, "organisms", "site-header.html")),
-            "<header class=\"site-header\".*?</header>");
-        var html = await Render.Html<SiteHeader>(new { SiteName = "Gallery", NavItems = new[] { new NavItem("Galleries", "/") } });
-        Assert.Equal(baseline.Single(), html);
+        var css = File.ReadAllText(Path.Combine(Render.RepoRoot, "src", "Gallery.Web", "Components", "Molecules", "Breadcrumb.razor.css"));
+        Assert.Contains("li + li::before { content: \"/\";", css);
+        Assert.Contains("justify-content: flex-start;", css);
+        Assert.DoesNotContain("›", css);
     }
 
     // ── UI-4: no key hints ───────────────────────────────────────────────────

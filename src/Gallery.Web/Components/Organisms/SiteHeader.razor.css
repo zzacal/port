@@ -1,15 +1,6 @@
-.site-header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--space-s);
-    padding: var(--space-s);
-}
-
-@media (min-width: 600px) {
-    .site-header { padding: var(--space-s) var(--space-m); }
-}
+/* The breadcrumb carries the page-edge side padding; the header adds only the vertical rhythm. */
+.site-header { padding: var(--space-s) 0; }
 
 @media (min-width: 1200px) {
-    .site-header { padding: var(--space-m) var(--space-l); }
+    .site-header { padding: var(--space-m) 0; }
 }

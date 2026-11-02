@@ -502,6 +502,14 @@ and the new test file `LibraryMembershipTests.cs`.
   D-23/D-21/D-17 edits + assemble/validate, verify.sh, non-vacuity (break 6 selector), full gate,
   commit.
 
+## Phase 10: Owner review 2 (contracts/owner-review-2.md; decisions rows 50-52)
+
+- [X] T053 SiteHeader = Breadcrumb; PublicLayout passes Crumbs (default `Galleries` → `/`); home and
+  404 trails; separator `/`; left alignment with the text on the page margin.
+- [ ] T054 Tests: header/breadcrumb route and browser guards updated (one trail per page, no brand,
+  left edge = page margin, `/` separator), stated changes to pre-010 tests, snapshots reviewed,
+  design record, verify.sh, non-vacuity, full gate, commit.
+
 ## OWNER-ONLY: post-build live checks (not part of the automated run)
 
 - [ ] O-01 Quickstart Part C on the owner's own `dotnet watch` (Ctrl+R first; step 2 fills `nav`

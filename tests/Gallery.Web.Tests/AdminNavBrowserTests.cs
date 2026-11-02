@@ -6,7 +6,7 @@ namespace Gallery.Web.Tests;
 /// <summary>
 /// 010 owner review 1 in a real browser (contracts/owner-review-1.md B4, B6): the admin library's
 /// Pager shows Previous and Next as whole words at every width, the page heading's New gallery opens
-/// its dialog, and the builder's breadcrumb sits centred under the owner bar on one line. Measured,
+/// its dialog, and the builder's breadcrumb sits under the owner bar on one line, its text on the page margin (review 2). Measured,
 /// because truncation and centring are rendered geometry no markup assertion can see.
 /// </summary>
 [Collection("library-browser")]
@@ -48,7 +48,7 @@ public sealed class AdminNavBrowserTests(LibraryBrowserFixture fx)
     }
 
     [Fact]
-    public async Task Builder_breadcrumb_sits_centred_under_the_owner_bar_on_one_line()
+    public async Task Builder_breadcrumb_sits_left_aligned_under_the_owner_bar_on_one_line()
     {
         await using var site = await fx.NewSiteAsync();
         var ids = await site.ImagesAsync(1);
@@ -60,7 +60,7 @@ public sealed class AdminNavBrowserTests(LibraryBrowserFixture fx)
             var m = await page.EvaluateAsync<double[]>("""
                 (() => {
                   const bar = document.querySelector('header.owner-bar').getBoundingClientRect();
-                  const nav = document.querySelector('nav.breadcrumb'), ol = nav.querySelector('ol').getBoundingClientRect();
+                  const nav = document.querySelector('nav.breadcrumb'), ol = (() => { const r = document.createRange(); r.selectNodeContents(nav.querySelector('a')); return r.getBoundingClientRect(); })();
                   const tops = new Set([...nav.querySelectorAll('li')].map(li => { const r = li.getBoundingClientRect(); return Math.round((r.top + r.bottom) / 2); }));
                   const link = nav.querySelector('a').getBoundingClientRect();
                   return [bar.bottom, nav.getBoundingClientRect().top, ol.left, ol.right, document.documentElement.clientWidth,
@@ -69,7 +69,8 @@ public sealed class AdminNavBrowserTests(LibraryBrowserFixture fx)
                 """);
             var where = $"{width}px";
             if (m[1] < m[0] - 0.5) failures.Add($"{where}: breadcrumb top {m[1]:0.#} above the bar bottom {m[0]:0.#}");
-            if (Math.Abs((m[2] + m[3]) / 2 - m[4] / 2) > 2) failures.Add($"{where}: off centre ({m[2]:0.#}-{m[3]:0.#} in {m[4]})");
+            var margin = width < 600 ? 16 : width < 1200 ? 32 : 48;
+            if (Math.Abs(m[2] - margin) > 1) failures.Add($"{where}: crumb text starts at {m[2]:0.#}px, page margin {margin}px");
             if (m[5] != 1) failures.Add($"{where}: wraps onto {m[5]} lines");
             if (m[6] < 44 || m[7] < 44) failures.Add($"{where}: Galleries crumb is {m[6]:0.#}x{m[7]:0.#}");
             if (m[8] > m[4] + 0.5) failures.Add($"{where}: horizontal scroll {m[8]} > {m[4]}");

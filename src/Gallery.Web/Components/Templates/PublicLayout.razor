@@ -12,7 +12,7 @@
     <style>@((MarkupString)Styles.Css)</style>@if (HeadExtra is not null){@HeadExtra}
 </head>
 <body class="public">
-    <SiteHeader SiteName="Gallery" />@CrumbsContent
+    <SiteHeader Crumbs="@(Crumbs ?? Home)" />
     <main class="public-main">@ChildContent</main>@if (Enhance)
 {
     <script type="speculationrules">{"prerender":[{"where":{"href_matches":"/g/*"},"eagerness":"moderate"}]}</script>
@@ -55,8 +55,11 @@ window.addEventListener('load', () => {
     [Parameter] public bool Enhance { get; set; }
     [Parameter] public RenderFragment? HeadExtra { get; set; }
 
-    /// <summary>010 owner review 1 (B2): the breadcrumb under the header, on pages with a parent.</summary>
+    /// <summary>
+    /// 010 owner review 2: the page's breadcrumb, which IS the site header. Null (catalogue specimens,
+    /// component tests) shows the root trail linking home.
+    /// </summary>
     [Parameter] public IReadOnlyList<Crumb>? Crumbs { get; set; }
 
-    private RenderFragment? CrumbsContent => Crumbs is null || Crumbs.Count == 0 ? null : @<Breadcrumb Items="Crumbs" />;
+    private static readonly IReadOnlyList<Crumb> Home = [new("Galleries", "/")];
 }

@@ -165,10 +165,12 @@ public partial class NavRoutesTests(S3ProxyFixture s3, MongoFixture mongo) : ICl
         Assert.Contains("class=\"photo-count\"", pager);
         Assert.Contains($"href=\"/g/{big.Id}/{big.Slug}/{big.Items[2]}\"", pager);
         Assert.Contains($"href=\"/g/{big.Id}/{big.Slug}/{big.Items[4]}\"", pager);
-        // The breadcrumb sits right under the header, above the photo's stage.
-        var header = html.IndexOf("</header>", StringComparison.Ordinal);
+        // Owner review 2 (R1): the breadcrumb IS the header, above the photo's stage.
+        var header = html.IndexOf("<header class=\"site-header\"", StringComparison.Ordinal);
         var crumb = html.IndexOf("<nav class=\"breadcrumb\"", StringComparison.Ordinal);
-        Assert.True(header < crumb && crumb < html.IndexOf("class=\"stage\"", StringComparison.Ordinal), $"header {header}, breadcrumb {crumb}");
+        var headerEnd = html.IndexOf("</header>", StringComparison.Ordinal);
+        Assert.True(header < crumb && crumb < headerEnd && headerEnd < html.IndexOf("class=\"stage\"", StringComparison.Ordinal),
+            $"header {header}-{headerEnd}, breadcrumb {crumb}");
         Assert.DoesNotContain("gallery-link", Regex.Replace(html, "<script.*?</script>", "", RegexOptions.Singleline));
 
         // First: 1 / 23, no Previous link.
@@ -311,27 +313,35 @@ public partial class NavRoutesTests(S3ProxyFixture s3, MongoFixture mongo) : ICl
             await HtmlAsync(h, $"/g/{b.Id}/{b.Slug}/{b.Items[0]}"),
             await HtmlAsync(h, "/g/zzzzzzzzzzzz/none", HttpStatusCode.NotFound),
         };
+        // Owner review 2 (R1): the header IS the breadcrumb: no brand, no site nav, one trail, and its
+        // links are exactly the trail's ancestors (home's own trail has no link at all).
         foreach (var html in pages)
         {
+            var header = HeaderRx().Matches(html);
+            Assert.Single(header);
+            Assert.StartsWith("<nav class=\"breadcrumb", Regex.Replace(header[0].Groups[1].Value, " b-[a-z0-9]{10}", "").Trim());
+            Assert.DoesNotContain("class=\"brand", html);
+            Assert.DoesNotContain("aria-label=\"Site\"", html);
             var hrefs = HeaderHrefs(html);
             Assert.Equal(hrefs.Count, hrefs.Distinct(StringComparer.Ordinal).Count());
-            Assert.Equal(["/"], hrefs);
-            Assert.DoesNotContain("aria-label=\"Site\"", html);
+            Assert.Equal(Crumbs(html).Where(c => c.Href is not null).Select(c => c.Href!), hrefs);
         }
     }
 
-    // ── owner review 1 (B1, B2): breadcrumbs on pages with a parent, none on roots ──
+    // ── owner review 1 (B1) and 2 (R2): every public page has a trail ──
 
     [Fact]
-    public async Task Breadcrumbs_show_the_hierarchy_on_gallery_and_photo_pages_and_none_on_roots()
+    public async Task Breadcrumbs_show_the_hierarchy_on_every_public_page()
     {
         await using var h = await LibraryHost.CreateAsync(mongo, s3);
         var lib = await NavLibrary.BuildAsync(h);
         var b = await h.Galleries.Find(g => g.Id == lib.B).FirstAsync();
         var p = await h.Galleries.Find(g => g.Id == lib.P).FirstAsync();
 
-        Assert.Empty(Crumbs(await HtmlAsync(h, "/")));
-        Assert.Empty(Crumbs(await HtmlAsync(h, "/g/zzzzzzzzzzzz/none", HttpStatusCode.NotFound)));
+        Assert.Equal([(null, "Galleries")], Crumbs(await HtmlAsync(h, "/")));
+        var missing = await HtmlAsync(h, "/g/zzzzzzzzzzzz/none", HttpStatusCode.NotFound);
+        Assert.Equal([("/", "Galleries"), (null, "Not found")], Crumbs(missing));
+        Assert.DoesNotContain("Back to galleries", missing);
 
         Assert.Equal([("/", "Galleries"), (null, b.Title)], Crumbs(await HtmlAsync(h, $"/g/{b.Id}/{b.Slug}")));
 

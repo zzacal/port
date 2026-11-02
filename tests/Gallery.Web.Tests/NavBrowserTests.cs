@@ -122,11 +122,19 @@ public sealed class NavBrowserTests(NavBrowserFixture site)
         for (var i = 0; i < NavBrowserFixture.PhotoCount; i++)
         {
             var id = site.PhotoIds[i];
+            // Park the pointer: since review 2 the crumb sits at the same spot on every page, so the
+            // previous click would leave it hovering the next page's crumb and start the moderate
+            // speculation rule mid-test (decisions row 53).
+            await page.Mouse.MoveAsync(width - 1, HeightFor(width) - 1);
             await page.GotoAsync(site.BaseUrl + await site.PhotoPathAsync(i), new() { WaitUntil = WaitUntilState.Load });
             await page.Locator(".breadcrumb a[href*=\"#p-\"]").ClickAsync();
             var path = await PathAfter(page, p => p.EndsWith($"#p-{id}"));
             var (inside, measured) = await TileInView(page, id);
-            if (!path.EndsWith($"#p-{id}") || !inside) failures.Add($"photo {i + 1}: {measured}");
+            if (!path.EndsWith($"#p-{id}") || !inside)
+            {
+                var diag = await page.EvaluateAsync<string>("(() => { const n = performance.getEntriesByType('navigation')[0]; return `ready=${document.readyState} type=${n.type} activationStart=${n.activationStart} loadEnd=${n.loadEventEnd} prerendering=${document.prerendering}`; })()");
+                failures.Add($"photo {i + 1}: path={path} {measured} {diag}");
+            }
         }
         Assert.True(failures.Count == 0, $"{failures.Count} of 23 photos at {width}px did not land on the tile:\n{string.Join("\n", failures)}");
     }
@@ -292,21 +300,21 @@ public sealed class NavBrowserTests(NavBrowserFixture site)
                     CheckBoxes(boxes, where, failures);
 
                     // Owner review 1: Previous/Next are whole words (no ellipsis), the count sits
-                    // centred in the Pager on one line, the breadcrumb is one line centred under
-                    // the header and above the stage, and the stage keeps 80vh.
+                    // centred in the Pager on one line, the breadcrumb (the header itself since review 2) is
+                    // one left-aligned line above the stage, and the stage keeps 80vh.
                     var c = await page.EvaluateAsync<double[]>("""
                         (() => {
                             const words = [...document.querySelectorAll('article.solo .pager a')]
                                 .filter(a => a.scrollWidth > a.clientWidth + 0.5 || !['Previous', 'Next'].includes(a.textContent)).length;
                             const n = document.querySelector('article.solo .photo-count'), nr = n.getBoundingClientRect();
                             const pr = document.querySelector('article.solo .pager').getBoundingClientRect();
-                            const bc = document.querySelector('nav.breadcrumb'), ol = bc.querySelector('ol').getBoundingClientRect();
+                            const bc = document.querySelector('nav.breadcrumb'), ol = (() => { const r = document.createRange(); r.selectNodeContents(bc.querySelector('a')); return r.getBoundingClientRect(); })();
                             const hd = document.querySelector('header.site-header').getBoundingClientRect();
                             const st = document.querySelector('article.solo .stage').getBoundingClientRect();
                             const tops = new Set([...bc.querySelectorAll('li')].map(li => { const r = li.getBoundingClientRect(); return Math.round((r.top + r.bottom) / 2); }));
                             return [words, nr.left, nr.right, pr.left, pr.right, n.getClientRects().length,
                                     ol.left, ol.right, document.documentElement.clientWidth, tops.size,
-                                    hd.bottom, bc.getBoundingClientRect().top, bc.getBoundingClientRect().bottom, st.top,
+                                    (bc.closest('header.site-header') ? hd.top : 1e9), bc.getBoundingClientRect().top, bc.getBoundingClientRect().bottom, st.top,
                                     st.height, innerHeight, document.documentElement.scrollWidth];
                         })()
                         """);
@@ -314,10 +322,11 @@ public sealed class NavBrowserTests(NavBrowserFixture site)
                     if (c[5] != 1) failures.Add($"{where}: count wraps ({c[5]} lines)");
                     var offset = (c[1] + c[2]) / 2 - (c[3] + c[4]) / 2;
                     if (Math.Abs(offset) > 2) failures.Add($"{where}: count off centre by {offset:0.##}px (count {c[1]:0.#}-{c[2]:0.#}, pager {c[3]:0.#}-{c[4]:0.#})");
-                    var crumbOffset = (c[6] + c[7]) / 2 - c[8] / 2;
-                    if (Math.Abs(crumbOffset) > 2) failures.Add($"{where}: breadcrumb off centre by {crumbOffset:0.##}px ({c[6]:0.#}-{c[7]:0.#} in {c[8]})");
+                    // Owner review 2 (R3): left-aligned; the first crumb's TEXT starts on the page margin.
+                    var margin = width < 600 ? 16 : width < 1200 ? 32 : 48;
+                    if (Math.Abs(c[6] - margin) > 1) failures.Add($"{where}: breadcrumb text starts at {c[6]:0.#}px, page margin {margin}px");
                     if (c[9] != 1) failures.Add($"{where}: breadcrumb wraps onto {c[9]} lines");
-                    if (!(c[10] <= c[11] + 0.5 && c[12] <= c[13] + 0.5)) failures.Add($"{where}: breadcrumb {c[11]:0.#}-{c[12]:0.#} not between header bottom {c[10]:0.#} and stage top {c[13]:0.#}");
+                    if (!(c[10] <= c[11] + 0.5 && c[12] <= c[13] + 0.5)) failures.Add($"{where}: breadcrumb {c[11]:0.#}-{c[12]:0.#} not inside the header (top {c[10]:0.#}) and above the stage top {c[13]:0.#}");
                     if (Math.Abs(c[14] - 0.8 * c[15]) > 0.5) failures.Add($"{where}: .stage height {c[14]:0.##} != 0.8 * innerHeight {c[15]}");
                     if (c[16] > c[8] + 0.5) failures.Add($"{where}: horizontal scroll ({c[16]} > {c[8]})");
                 }
@@ -597,7 +606,9 @@ public sealed class NavBrowserTests(NavBrowserFixture site)
             var (ctx, page) = await Open(path);
             await using var _ = ctx;
             var hrefs = await page.EvaluateAsync<string[]>("[...document.querySelectorAll('header.site-header a')].map(a => a.getAttribute('href'))");
-            if (hrefs.Length == 0 || hrefs.Distinct().Count() != hrefs.Length)
+            // Owner review 2: the header is the breadcrumb, so home (whose trail is just the current
+            // page) has no header link at all; elsewhere no destination repeats.
+            if ((path == "/" ? hrefs.Length != 0 : hrefs.Length == 0) || hrefs.Distinct().Count() != hrefs.Length)
                 failures.Add($"{path}: header hrefs [{string.Join(", ", hrefs)}]");
         }
         Assert.True(failures.Count == 0, string.Join("\n", failures));
