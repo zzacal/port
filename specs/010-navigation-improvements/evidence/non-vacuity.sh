@@ -76,10 +76,11 @@ brk 5 src/Gallery.Web/Edge/PurgeSets.cs \
   's/\n\s*else if \(countChanged\)\n\s*changed\.Add\(id\);//' \
   'FullyQualifiedName~NavPurgeTests' 'Changed drops rule 4 (count change)'
 
-# (7) review 1 B4: Pager side tracks back to minmax(44px) -> "Previous" truncates on the library pager.
+# (7) review 1 B4 (decisions row 48): the edge margin back on the LINK makes it narrower than its
+# text under the tap rule's max-width, so "Previous" truncates; the library pager guard must catch it.
 brk 7 src/Gallery.Web/Components/Molecules/Pager.razor.css \
-  's/minmax\(max-content, 1fr\) auto minmax\(max-content, 1fr\)/minmax(44px, 1fr) auto minmax(44px, 1fr)/' \
-  'FullyQualifiedName~AdminNavBrowserTests.Library_pager' 'Pager side tracks can shrink below the word'
+  's/\.prev \{ margin-inline-start: -8px; \}/.prev ::deep .text-link { margin-inline-start: -8px; }/' \
+  'FullyQualifiedName~AdminNavBrowserTests.Library_pager' 'edge margin on the link truncates Previous'
 
 # (8) review 1 B6: a page action back in the owner bar breaks the one-bar guard.
 brk 8 src/Gallery.Web/Components/Organisms/OwnerBar.razor \

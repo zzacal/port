@@ -497,7 +497,7 @@ and the new test file `LibraryMembershipTests.cs`.
   roots-without-crumbs (component + route), owner bar byte-identical across Library, Galleries,
   builder and Upload except `aria-current`, Pager whole words in the browser at 320-1440 px on the
   photo page and the admin library pager, Escape via the crumb, SC-001 via the crumb.
-- [ ] T052 Parent: stated changes to pre-010 tests (owner bar specimens, builder "Back to
+- [X] T052 Parent: stated changes to pre-010 tests (owner bar specimens, builder "Back to
   galleries", primary-button location), snapshot regeneration with snapshot-diff, design record
   D-23/D-21/D-17 edits + assemble/validate, verify.sh, non-vacuity (break 6 selector), full gate,
   commit.
