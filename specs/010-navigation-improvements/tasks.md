@@ -506,7 +506,7 @@ and the new test file `LibraryMembershipTests.cs`.
 
 - [X] T053 SiteHeader = Breadcrumb; PublicLayout passes Crumbs (default `Galleries` → `/`); home and
   404 trails; separator `/`; left alignment with the text on the page margin.
-- [ ] T054 Tests: header/breadcrumb route and browser guards updated (one trail per page, no brand,
+- [X] T054 Tests: header/breadcrumb route and browser guards updated (one trail per page, no brand,
   left edge = page margin, `/` separator), stated changes to pre-010 tests, snapshots reviewed,
   design record, verify.sh, non-vacuity, full gate, commit.
 
