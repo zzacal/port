@@ -10,7 +10,7 @@
     <style>@((MarkupString)Styles.Css)</style>
 </head>
 <body class="admin">
-    @(ShowOwnerBar ? Bar : null)
+    @(ShowOwnerBar ? Bar : null)@CrumbsContent
     <div class="@BodyClass">
         <main class="admin-main">@ChildContent</main>
         @if (Aside is not null)
@@ -24,8 +24,8 @@
 @code {
     [Parameter, EditorRequired] public string Title { get; set; } = "";
     [Parameter] public AdminPage? Current { get; set; }
-    [Parameter] public string ViewHref { get; set; } = "/";
-    [Parameter] public RenderFragment? PrimaryAction { get; set; }
+    /// <summary>010 owner review 1 (B6): the breadcrumb under the owner bar, on pages with a parent.</summary>
+    [Parameter] public IReadOnlyList<Crumb>? Crumbs { get; set; }
     [Parameter] public RenderFragment? Aside { get; set; }
     [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public bool ShowOwnerBar { get; set; } = true;
@@ -33,5 +33,8 @@
 
     private string BodyClass => Aside is not null ? "admin-body with-aside" : "admin-body";
 
-    private RenderFragment Bar => @<OwnerBar Current="@Current" ViewHref="@ViewHref" PrimaryAction="@PrimaryAction" SignOut="@SignOut" />;
+    // One bar on every admin page (010 owner review 1): same links, View site, Sign out; only aria-current differs.
+    private RenderFragment Bar => @<OwnerBar Current="@Current" SignOut="@SignOut" />;
+
+    private RenderFragment? CrumbsContent => Crumbs is null || Crumbs.Count == 0 ? null : @<Breadcrumb Items="Crumbs" />;
 }

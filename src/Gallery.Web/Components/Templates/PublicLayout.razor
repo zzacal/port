@@ -12,15 +12,15 @@
     <style>@((MarkupString)Styles.Css)</style>@if (HeadExtra is not null){@HeadExtra}
 </head>
 <body class="public">
-    <SiteHeader SiteName="Gallery" />
+    <SiteHeader SiteName="Gallery" />@CrumbsContent
     <main class="public-main">@ChildContent</main>@if (Enhance)
 {
     <script type="speculationrules">{"prerender":[{"where":{"href_matches":"/g/*"},"eagerness":"moderate"}]}</script>
     <script type="module">(() => {
 document.addEventListener('keydown', e => {
-const k = { ArrowLeft: 'a[rel=prev]', ArrowRight: 'a[rel=next]', Escape: '.gallery-link a' }[e.key];
+const k = { ArrowLeft: 'article.solo a[rel=prev]', ArrowRight: 'article.solo a[rel=next]', Escape: '.breadcrumb a[href*="#p-"]' }[e.key];
 if (!k || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || e.defaultPrevented || e.target.closest?.('input,textarea,select,[contenteditable]')) return;
-document.querySelector('article.solo ' + k)?.click();
+document.querySelector(k)?.click();
 });
 if (navigator.connection?.saveData) return;
 // Fetch through a detached <picture> with the destination's own AVIF <source> (same srcset and
@@ -54,4 +54,9 @@ window.addEventListener('load', () => {
     [Parameter] public bool NoIndex { get; set; }
     [Parameter] public bool Enhance { get; set; }
     [Parameter] public RenderFragment? HeadExtra { get; set; }
+
+    /// <summary>010 owner review 1 (B2): the breadcrumb under the header, on pages with a parent.</summary>
+    [Parameter] public IReadOnlyList<Crumb>? Crumbs { get; set; }
+
+    private RenderFragment? CrumbsContent => Crumbs is null || Crumbs.Count == 0 ? null : @<Breadcrumb Items="Crumbs" />;
 }

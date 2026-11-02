@@ -149,64 +149,66 @@ public partial class NavComponentTests
             Bare(html));
     }
 
-    [Theory]
-    [InlineData(PagerStack.None, "class=\"pager\"")]
-    [InlineData(PagerStack.Narrow, "class=\"pager pager-stack\"")]
-    [InlineData(PagerStack.Always, "class=\"pager pager-stack pager-stack-all\"")]
-    public async Task Pager_stack_sets_the_nav_class(PagerStack stack, string expected)
-    {
-        var html = await Render.Html<Pager>(new { PrevHref = "/p", NextHref = "/n", Stack = stack });
-        Assert.StartsWith($"<nav {expected} aria-label=\"Image navigation\"", Bare(html));
-    }
-
     [Fact]
-    public void Pager_css_breakpoint_matches_tokens()
+    public void Pager_css_keeps_both_words_whole()
     {
+        // Owner review 1 (B4): side tracks are at least max-content, so a centre item can never
+        // squeeze "Previous" into the tap rule's ellipsis; no stacking rules any more.
         var css = File.ReadAllText(Path.Combine(Render.RepoRoot, "src", "Gallery.Web", "Components", "Molecules", "Pager.razor.css"));
-        Assert.Contains("@media (max-width: 599.98px)", css);
+        Assert.Contains("grid-template-columns: minmax(max-content, 1fr) auto minmax(max-content, 1fr);", css);
+        Assert.DoesNotContain("minmax(44px", css);
+        Assert.DoesNotContain("pager-stack", css);
         Assert.DoesNotContain("min-height", css);
         Assert.DoesNotContain("line-height", css);
     }
 
-    // ── K3 GalleryLink ───────────────────────────────────────────────────────
+    // ── B3 PhotoCount ────────────────────────────────────────────────────────
 
     [Fact]
-    public async Task GalleryLink_renders_back_arrow_title_and_counter()
+    public async Task PhotoCount_renders_index_slash_total()
     {
-        var html = await Render.Html<GalleryLink>(new { Href = "/g/a/coast#p-img7", Title = "Coast", Index = 3, Total = 23 });
+        var html = await Render.Html<PhotoCount>(new { Index = 3, Total = 23 });
+        Assert.Equal("<p class=\"photo-count\">3 / 23</p>", Bare(html));
+        Assert.DoesNotContain("<a ", html);
+    }
+
+    // ── B1 Breadcrumb ────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task Breadcrumb_links_ancestors_and_marks_the_current_page()
+    {
+        var html = await Render.Html<Breadcrumb>(new { Items = (IReadOnlyList<Crumb>)[new("Galleries", "/"), new("Coast", "/g/a/coast#p-i"), new("Dusk")] });
         Assert.Equal(
-            "<p class=\"gallery-link\"><a class=\"text-link tap\" href=\"/g/a/coast#p-img7\">← Coast</a><span class=\"count\"> · 3 / 23</span></p>",
-            Bare(html));
+            "<nav class=\"breadcrumb\" aria-label=\"Breadcrumb\"><ol><li><a class=\"text-link tap\" href=\"/\">Galleries</a></li>" +
+            "<li><a class=\"text-link tap\" href=\"/g/a/coast#p-i\">Coast</a></li><li aria-current=\"page\"><span>Dusk</span></li></ol></nav>",
+            Regex.Replace(Bare(html), @">\s+<", "><"));
+        Assert.Equal(2, Guards.Count(html, "<a "));
         Guards.AssertNoInlineStyle(html);
     }
 
     [Fact]
-    public async Task GalleryLink_encodes_the_title()
+    public async Task Breadcrumb_with_no_items_renders_nothing()
     {
-        var html = await Render.Html<GalleryLink>(new { Href = "/g/a/s", Title = "<b>&", Index = 1, Total = 1 });
-        Assert.DoesNotContain("<b>", html);
-        Assert.Contains("&lt;b&gt;&amp;</a>", html);
+        Assert.Equal("", (await Render.Html<Breadcrumb>(new { Items = (IReadOnlyList<Crumb>)[] })).Trim());
     }
 
     [Fact]
-    public void GalleryLink_length_counts_the_whole_centre_text()
+    public async Task Breadcrumb_encodes_labels()
     {
-        Assert.Equal("← Coast · 3 / 23".Length, GalleryLink.Length("Coast", 3, 23));
-        Assert.Equal(26, GalleryLink.NarrowChars);
-        Assert.Equal(60, GalleryLink.WideChars);
+        var html = await Render.Html<Breadcrumb>(new { Items = (IReadOnlyList<Crumb>)[new("Galleries", "/"), new("<b>&")] });
+        Assert.DoesNotContain("<b>", html);
+        Assert.Contains("&lt;b&gt;&amp;", html);
     }
 
-    [Theory]
-    // "← " + title + " · 1 / 1" = title.Length + 10
-    [InlineData(16, PagerStack.None)]    // 26 chars
-    [InlineData(17, PagerStack.Narrow)]  // 27 chars
-    [InlineData(50, PagerStack.Narrow)]  // 60 chars
-    [InlineData(51, PagerStack.Always)]  // 61 chars
-    public void GalleryLink_StackFor_thresholds(int titleLength, PagerStack expected)
+    // ── B6 PageHeading ───────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task PageHeading_renders_title_and_actions_only_when_given()
     {
-        var title = new string('x', titleLength);
-        Assert.Equal(titleLength + 10, GalleryLink.Length(title, 1, 1));
-        Assert.Equal(expected, GalleryLink.StackFor(title, 1, 1));
+        var bare = Bare(await Render.Html<PageHeading>(new { Text = "Library" }));
+        Assert.Equal("<div class=\"page-heading\"><h1>Library</h1></div>", bare);
+        var with = Bare(await Render.Html<PageHeading>(new { Text = "Galleries", Actions = Markup("<b>x</b>") }));
+        Assert.Equal("<div class=\"page-heading\"><h1>Galleries</h1><div class=\"page-actions\"><b>x</b></div></div>", with);
     }
 
     // ── K4 SoloViewer ────────────────────────────────────────────────────────
@@ -226,7 +228,7 @@ public partial class NavComponentTests
     }
 
     [Fact]
-    public async Task SoloViewer_passes_here_and_stack_through_to_the_pager()
+    public async Task SoloViewer_passes_here_through_to_the_pager()
     {
         var html = await Render.Html<SoloViewer>(new
         {
@@ -234,20 +236,20 @@ public partial class NavComponentTests
             PrevHref = "/p",
             NextHref = "/n",
             Here = Markup("<i>centre</i>"),
-            Stack = PagerStack.Narrow,
         });
         var bare = Bare(html);
-        Assert.Contains("<nav class=\"pager pager-stack\" aria-label=\"Image navigation\">", bare);
+        Assert.Contains("<nav class=\"pager\" aria-label=\"Image navigation\">", bare);
         Assert.Contains("</span><div class=\"here\"><i>centre</i></div>", bare);
         Guards.AssertNoInlineStyle(html);
     }
 
     [Fact]
-    public async Task PhotoPage_without_gallery_href_renders_no_gallery_link_and_does_not_throw()
+    public async Task PhotoPage_without_gallery_href_renders_no_breadcrumb_or_count_and_does_not_throw()
     {
         var html = await Render.Html<PhotoPage>(new { Image = MakeImage(), GalleryTitle = "G", NoIndex = false, PrevHref = "/p" });
-        // The element, not the substring: the inline key handler names ".gallery-link a" (K7).
-        Assert.DoesNotContain("class=\"gallery-link\"", html);
+        // The element, not the substring: the inline key handler names ".breadcrumb a" (B5).
+        Assert.DoesNotContain("class=\"breadcrumb\"", html);
+        Assert.DoesNotContain("class=\"photo-count\"", html);
         Assert.DoesNotContain("class=\"here\"", html);
         Assert.Contains("<nav class=\"pager\"", html);
         Guards.AssertNoInlineStyle(html);
@@ -357,8 +359,9 @@ public partial class NavComponentTests
     {
         var htmls = new[]
         {
-            await Render.Html<Pager>(new { PrevHref = "/p", NextHref = "/n", Here = Markup("x"), Stack = PagerStack.Always }),
-            await Render.Html<GalleryLink>(new { Href = "/g", Title = "T", Index = 1, Total = 2 }),
+            await Render.Html<Pager>(new { PrevHref = "/p", NextHref = "/n", Here = Markup("x") }),
+            await Render.Html<PhotoCount>(new { Index = 1, Total = 2 }),
+            await Render.Html<Breadcrumb>(new { Items = (IReadOnlyList<Crumb>)[new("Galleries", "/"), new("T", "/g#p-1"), new("P")] }),
             await Render.Html<GalleryNeighbours>(new { Prev = new GalleryNeighbour("/a", "A"), Next = new GalleryNeighbour("/b", "B") }),
         };
         foreach (var html in htmls)

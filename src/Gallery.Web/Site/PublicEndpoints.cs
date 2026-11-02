@@ -113,6 +113,8 @@ public static class PublicEndpoints
                     [nameof(GalleryPage.Items)] = (IReadOnlyList<ContactSheetItem>)items,
                     [nameof(GalleryPage.Prev)] = Neighbour(nav?.Prev),
                     [nameof(GalleryPage.Next)] = Neighbour(nav?.Next),
+                    // 010 owner review 1 (B2): links only to "/", so a private gallery's page names no other gallery.
+                    [nameof(GalleryPage.Crumbs)] = (IReadOnlyList<Crumb>)[new("Galleries", "/"), new(gallery.Title)],
                 });
 
                 return ApplyGalleryHeaders(result, items, noIndex, siteOptions);
@@ -181,7 +183,7 @@ public static class PublicEndpoints
                     [nameof(PhotoPage.PrefetchUrls)] = prefetchUrls,
                     [nameof(PhotoPage.NoIndex)] = (bool)noIndex,
                     [nameof(PhotoPage.GalleryTitle)] = gallery.Title,
-                    // 010 P1: the way back to this photo's tile, and its position (no new read).
+                    // 010 B2/B3: the gallery crumb lands on this photo's tile; its position (no new read).
                     [nameof(PhotoPage.GalleryHref)] = $"/g/{id}/{slug}#p-{imageId}",
                     [nameof(PhotoPage.Index)] = gallery.Items.IndexOf(imageId) + 1,
                     [nameof(PhotoPage.Total)] = gallery.Items.Count,

@@ -2,17 +2,12 @@
     <Specimen Label="First image" Width="w-480"><Pager NextHref="#" /></Specimen>
     <Specimen Label="Middle image" Width="w-480"><Pager PrevHref="#" NextHref="#" /></Specimen>
     <Specimen Label="Last image" Width="w-480"><Pager PrevHref="#" /></Specimen>
-    <Specimen Label="With gallery link, middle photo" Width="w-480"><Pager PrevHref="#" NextHref="#" Here="@Here(Short, 7, 24)" Stack="GalleryLink.StackFor(Short, 7, 24)" /></Specimen>
-    <Specimen Label="With gallery link, first photo" Width="w-480"><Pager NextHref="#" Here="@Here(Short, 1, 24)" Stack="GalleryLink.StackFor(Short, 1, 24)" /></Specimen>
-    <Specimen Label="With gallery link, last photo" Width="w-480"><Pager PrevHref="#" Here="@Here(Short, 24, 24)" Stack="GalleryLink.StackFor(Short, 24, 24)" /></Specimen>
-    <Specimen Label="One-photo gallery" Width="w-480"><Pager Here="@Here(Short, 1, 1)" Stack="GalleryLink.StackFor(Short, 1, 1)" /></Specimen>
-    <Specimen Label="Long gallery title (stacks on small screens)" Width="w-480"><Pager PrevHref="#" NextHref="#" Here="@Here(Medium, 7, 24)" Stack="GalleryLink.StackFor(Medium, 7, 24)" /></Specimen>
+    <Specimen Label="With count, middle photo" Width="w-480"><Pager PrevHref="#" NextHref="#" Here="@Here(7, 24)" /></Specimen>
+    <Specimen Label="With count, first photo" Width="w-480"><Pager NextHref="#" Here="@Here(1, 24)" /></Specimen>
+    <Specimen Label="With count, last photo" Width="w-480"><Pager PrevHref="#" Here="@Here(24, 24)" /></Specimen>
+    <Specimen Label="One-photo gallery" Width="w-480"><Pager Here="@Here(1, 1)" /></Specimen>
 </UiLayout>
 
 @code {
-    private const string Short = "Coast walk";
-    private const string Medium = "Alpine lakes and the high pass";
-
-    private static RenderFragment Here(string title, int index, int total) =>
-        @<GalleryLink Href="#" Title="@title" Index="index" Total="total" />;
+    private static RenderFragment Here(int index, int total) => @<PhotoCount Index="index" Total="total" />;
 }

@@ -21,19 +21,25 @@ chk "K1 TextLink renders text-link tap only when Tap" 'grep -q "\"text-link tap\
 
 # ── K2 Pager ──────────────────────────────────────────────────────────────────
 chk "K2 Pager links pass Tap=\"true\" (2)" '[ "$(grep -c "Tap=\"true\"" $S/Components/Molecules/Pager.razor)" = 2 ]'
-chk "K2 PagerStack enum has None, Narrow, Always" 'grep -qE "None,? *Narrow,? *Always|None.*Narrow.*Always" <(tr -d "\n" < $S/Components/Molecules/PagerStack.cs)'
-chk "K2 stack breakpoint 599.98px" 'grep -q "max-width: 599.98px" $S/Components/Molecules/Pager.razor.css'
+chk "B4 Pager side tracks are at least max-content (whole words)" 'grep -q "minmax(max-content, 1fr) auto minmax(max-content, 1fr)" $S/Components/Molecules/Pager.razor.css'
+chk "B4 no Pager stacking and no PagerStack type left" '! grep -q "pager-stack" $S/Components/Molecules/Pager.razor.css && [ ! -f $S/Components/Molecules/PagerStack.cs ]'
+chk "B3 GalleryLink is gone (review 1)" '[ ! -f $S/Components/Molecules/GalleryLink.razor ] && ! srcfiles | xargs grep -l "gallery-link" >/dev/null'
 
 # ── K3/K5/K8 molecules call TextLink, never a raw anchor ──────────────────────
-for c in GalleryLink GalleryNeighbours MembershipStatus; do
+for c in GalleryNeighbours MembershipStatus Breadcrumb; do
   f=$S/Components/Molecules/$c.razor
   chk "K $c exists and uses the TextLink atom" '[ -f "$f" ] && grep -q "<TextLink" "$f"'
   chk "K $c has no raw <a element" '[ -f "$f" ] && ! grep -q "<a " "$f"'
 done
-chk "K3 GalleryLink budgets 26/60" 'grep -q "NarrowChars = 26" $S/Components/Molecules/GalleryLink.razor && grep -q "WideChars = 60" $S/Components/Molecules/GalleryLink.razor'
+chk "B1 Breadcrumb marks the current page" 'grep -q "aria-current=\"page\"" $S/Components/Molecules/Breadcrumb.razor'
+chk "B6 OwnerBar has no PrimaryAction and a fixed View site link" '! grep -q "PrimaryAction" $S/Components/Organisms/OwnerBar.razor $S/Components/Templates/AdminLayout.razor && grep -q "View site ↗" $S/Components/Organisms/OwnerBar.razor'
+chk "B6 no admin page passes ViewHref to AdminLayout" '! grep -h "<AdminLayout" $S/Admin/Pages/*.razor | grep -q "ViewHref"'
+chk "B6 New gallery sits in a PageHeading" 'grep -q "<PageHeading Text=\"Galleries\" Actions=\"@NewGallery\"" $S/Admin/Pages/GalleriesPage.razor'
+chk "B6 no Back to galleries in admin" '! grep -rq "Back to galleries" $S/Admin $S/Components/Organisms'
 
 # ── K6/K7 header and key handler ──────────────────────────────────────────────
 L=$S/Components/Templates/PublicLayout.razor
+chk "B2 both layouts render the breadcrumb right after the bar/header" 'grep -q "<SiteHeader SiteName=\"Gallery\" />@CrumbsContent" $L && grep -q "Bar : null)@CrumbsContent" $S/Components/Templates/AdminLayout.razor'
 chk "K7 PublicLayout passes no nav items (no NavItem)" '! grep -q "NavItem" $L'
 chk "K7 PublicLayout renders <SiteHeader SiteName=\"Gallery\" />" 'grep -q "<SiteHeader SiteName=\"Gallery\" />" $L'
 kl=$(grep -n "addEventListener('keydown'" $L | head -1 | cut -d: -f1); sl=$(grep -n "navigator.connection?.saveData" $L | head -1 | cut -d: -f1)
@@ -45,8 +51,8 @@ chk "UI-4 no aria-keyshortcuts anywhere in src" '! srcfiles | xargs grep -l "ari
 
 # ── catalogue ─────────────────────────────────────────────────────────────────
 C=$S/Ui/UiCatalog.cs
-chk "Catalogue has 34 entries" '[ "$(grep -cE "^\s+new\(UiLevel\." $C)" = 34 ]'
-for slug in molecules/gallery-link molecules/gallery-neighbours molecules/membership-status; do
+chk "Catalogue has 36 entries" '[ "$(grep -cE "^\s+new\(UiLevel\." $C)" = 36 ]'
+for slug in molecules/photo-count molecules/gallery-neighbours molecules/membership-status molecules/breadcrumb molecules/page-heading; do
   chk "Catalogue has $slug" 'grep -q "\"$slug\"" $C'
 done
 
@@ -66,7 +72,7 @@ chk "[SAFETY] no nav write outside SiteProjector/Documents" '[ -z "$nw" ]'
 [ -n "$nw" ] && echo "$nw"
 
 # ── hygiene over the 010 components ───────────────────────────────────────────
-new="$S/Components/Molecules/GalleryLink.razor $S/Components/Molecules/GalleryNeighbours.razor $S/Components/Molecules/MembershipStatus.razor $S/Components/Molecules/Pager.razor $S/Components/Atoms/TextLink.razor"
+new="$S/Components/Molecules/Breadcrumb.razor $S/Components/Molecules/PhotoCount.razor $S/Components/Molecules/PageHeading.razor $S/Components/Molecules/GalleryNeighbours.razor $S/Components/Molecules/MembershipStatus.razor $S/Components/Molecules/Pager.razor $S/Components/Atoms/TextLink.razor"
 chk "no style= attribute in 010 components" '! grep -l "style=" $new >/dev/null 2>&1'
 chk "no <script in 010 components" '! grep -l "<script" $new >/dev/null 2>&1'
 chk "public pages keep one inline module (one <script type=\"module\"> in PublicLayout)" '[ "$(grep -c "<script type=\"module\">" $L)" = 1 ]'

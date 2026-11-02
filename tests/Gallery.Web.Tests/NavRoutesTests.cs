@@ -19,8 +19,29 @@ namespace Gallery.Web.Tests;
 public partial class NavRoutesTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixture<MongoFixture>
 {
     // Scoped CSS adds b-xxxx attributes to elements, so every tag pattern allows extra attributes.
-    [GeneratedRegex("<p class=\"gallery-link\"[^>]*><a class=\"text-link tap\" href=\"([^\"]*)\"[^>]*>← (.*?)</a><span class=\"count\"[^>]*>( · \\d+ / \\d+)</span></p>", RegexOptions.Singleline)]
-    private static partial Regex GalleryLinkRx();
+    [GeneratedRegex("<nav class=\"breadcrumb\"[^>]*>(.*?)</nav>", RegexOptions.Singleline)]
+    private static partial Regex BreadcrumbRx();
+
+    [GeneratedRegex("<li[^>]*>(?:<a [^>]*href=\"([^\"]*)\"[^>]*>(.*?)</a>|<span[^>]*>(.*?)</span>)</li>", RegexOptions.Singleline)]
+    private static partial Regex CrumbRx();
+
+    [GeneratedRegex("<p class=\"photo-count\"[^>]*>(\\d+ / \\d+)</p>")]
+    private static partial Regex CountRx();
+
+    /// <summary>The breadcrumb as (href, label) pairs; href null = the current page (owner review 1, B1).</summary>
+    private static List<(string? Href, string Label)> Crumbs(string html)
+    {
+        var nav = BreadcrumbRx().Matches(html);
+        Assert.True(nav.Count <= 1, $"{nav.Count} breadcrumbs");
+        if (nav.Count == 0) return [];
+        return CrumbRx().Matches(nav[0].Groups[1].Value)
+            .Select(m => m.Groups[1].Success
+                ? ((string?)WebUtility.HtmlDecode(m.Groups[1].Value), WebUtility.HtmlDecode(m.Groups[2].Value))
+                : (null, WebUtility.HtmlDecode(m.Groups[3].Value)))
+            .ToList();
+    }
+
+    private static string Count(string html) => CountRx().Match(html).Groups[1].Value;
 
     [GeneratedRegex("<nav class=\"gallery-neighbours\"[^>]*>(.*?)</nav>", RegexOptions.Singleline)]
     private static partial Regex NeighboursRx();
@@ -130,42 +151,45 @@ public partial class NavRoutesTests(S3ProxyFixture s3, MongoFixture mongo) : ICl
         var one = await GalleryAsync(h, "Solo", 1);
         await h.SettleAsync();
 
-        // Photo 4 of 23: the way back is the tile anchor, then the counter.
+        // Photo 4 of 23 (owner review 1): breadcrumb Galleries › September 6 › {photo}, the gallery
+        // crumb landing on the tile; the count in the Pager's centre.
         var html = await HtmlAsync(h, $"/g/{big.Id}/{big.Slug}/{big.Items[3]}");
-        var link = GalleryLinkRx().Match(html);
-        Assert.True(link.Success, "no gallery link");
-        Assert.Equal($"/g/{big.Id}/{big.Slug}#p-{big.Items[3]}", link.Groups[1].Value);
-        Assert.Equal("September 6", link.Groups[2].Value);
-        Assert.Equal(" · 4 / 23", link.Groups[3].Value);
-        Assert.Contains("← September 6", html);
-        Assert.Contains(" · 4 / 23", html);
+        var crumbs = Crumbs(html);
+        Assert.Equal(3, crumbs.Count);
+        Assert.Equal(("/", "Galleries"), crumbs[0]);
+        Assert.Equal(($"/g/{big.Id}/{big.Slug}#p-{big.Items[3]}", "September 6"), crumbs[1]);
+        Assert.Null(crumbs[2].Href);
+        Assert.Equal("4 / 23", Count(html));
+        Assert.Contains("aria-current=\"page\"", BreadcrumbRx().Match(html).Value);
         var pager = Pager(html);
+        Assert.Contains("class=\"photo-count\"", pager);
         Assert.Contains($"href=\"/g/{big.Id}/{big.Slug}/{big.Items[2]}\"", pager);
         Assert.Contains($"href=\"/g/{big.Id}/{big.Slug}/{big.Items[4]}\"", pager);
-        // UI-3: nothing added before the photo's stage.
-        Assert.True(html.IndexOf("class=\"stage\"", StringComparison.Ordinal) < html.IndexOf("class=\"gallery-link\"", StringComparison.Ordinal));
+        // The breadcrumb sits right under the header, above the photo's stage.
+        var header = html.IndexOf("</header>", StringComparison.Ordinal);
+        var crumb = html.IndexOf("<nav class=\"breadcrumb\"", StringComparison.Ordinal);
+        Assert.True(header < crumb && crumb < html.IndexOf("class=\"stage\"", StringComparison.Ordinal), $"header {header}, breadcrumb {crumb}");
+        Assert.DoesNotContain("gallery-link", Regex.Replace(html, "<script.*?</script>", "", RegexOptions.Singleline));
 
         // First: 1 / 23, no Previous link.
         html = await HtmlAsync(h, $"/g/{big.Id}/{big.Slug}/{big.Items[0]}");
-        link = GalleryLinkRx().Match(html);
-        Assert.Equal(" · 1 / 23", link.Groups[3].Value);
-        Assert.Equal($"/g/{big.Id}/{big.Slug}#p-{big.Items[0]}", link.Groups[1].Value);
+        Assert.Equal("1 / 23", Count(html));
+        Assert.Equal($"/g/{big.Id}/{big.Slug}#p-{big.Items[0]}", Crumbs(html)[1].Href);
         pager = Pager(html);
         Assert.DoesNotContain("rel=\"prev\"", pager);
         Assert.Contains("rel=\"next\"", pager);
 
         // Last: 23 / 23, no Next link.
         html = await HtmlAsync(h, $"/g/{big.Id}/{big.Slug}/{big.Items[22]}");
-        Assert.Equal(" · 23 / 23", GalleryLinkRx().Match(html).Groups[3].Value);
+        Assert.Equal("23 / 23", Count(html));
         pager = Pager(html);
         Assert.Contains("rel=\"prev\"", pager);
         Assert.DoesNotContain("rel=\"next\"", pager);
 
         // One-photo gallery: 1 / 1, neither Previous nor Next.
         html = await HtmlAsync(h, $"/g/{one.Id}/{one.Slug}/{one.Items[0]}");
-        link = GalleryLinkRx().Match(html);
-        Assert.Equal(" · 1 / 1", link.Groups[3].Value);
-        Assert.Equal($"/g/{one.Id}/{one.Slug}#p-{one.Items[0]}", link.Groups[1].Value);
+        Assert.Equal("1 / 1", Count(html));
+        Assert.Equal($"/g/{one.Id}/{one.Slug}#p-{one.Items[0]}", Crumbs(html)[1].Href);
         pager = Pager(html);
         Assert.DoesNotContain("rel=\"prev\"", pager);
         Assert.DoesNotContain("rel=\"next\"", pager);
@@ -174,7 +198,7 @@ public partial class NavRoutesTests(S3ProxyFixture s3, MongoFixture mongo) : ICl
 
         // UI-4: no key hints on the new controls.
         Assert.DoesNotContain("aria-keyshortcuts", html);
-        Assert.DoesNotContain(" title=", link.Value);
+        Assert.DoesNotContain(" title=", BreadcrumbRx().Match(html).Value);
         Assert.DoesNotContain(" title=", pager);
         Guards.AssertNoInlineStyle(html);
     }
@@ -296,6 +320,28 @@ public partial class NavRoutesTests(S3ProxyFixture s3, MongoFixture mongo) : ICl
         }
     }
 
+    // ── owner review 1 (B1, B2): breadcrumbs on pages with a parent, none on roots ──
+
+    [Fact]
+    public async Task Breadcrumbs_show_the_hierarchy_on_gallery_and_photo_pages_and_none_on_roots()
+    {
+        await using var h = await LibraryHost.CreateAsync(mongo, s3);
+        var lib = await NavLibrary.BuildAsync(h);
+        var b = await h.Galleries.Find(g => g.Id == lib.B).FirstAsync();
+        var p = await h.Galleries.Find(g => g.Id == lib.P).FirstAsync();
+
+        Assert.Empty(Crumbs(await HtmlAsync(h, "/")));
+        Assert.Empty(Crumbs(await HtmlAsync(h, "/g/zzzzzzzzzzzz/none", HttpStatusCode.NotFound)));
+
+        Assert.Equal([("/", "Galleries"), (null, b.Title)], Crumbs(await HtmlAsync(h, $"/g/{b.Id}/{b.Slug}")));
+
+        // [SAFETY] II.2: a private gallery's breadcrumb links only to home, naming no other gallery.
+        var pHtml = await HtmlAsync(h, $"/g/{p.Id}/{p.Slug}");
+        Assert.Equal([("/", "Galleries"), (null, p.Title)], Crumbs(pHtml));
+        Assert.Equal([("/", "Galleries"), ($"/g/{p.Id}/{p.Slug}#p-{p.Items[1]}", p.Title), (null, Crumbs(await HtmlAsync(h, $"/g/{p.Id}/{p.Slug}/{p.Items[1]}"))[2].Label)],
+            Crumbs(await HtmlAsync(h, $"/g/{p.Id}/{p.Slug}/{p.Items[1]}")));
+    }
+
     // ── (h) SC-005: zero stale neighbour links across owner actions ──────────
 
     /// <summary>
@@ -379,10 +425,7 @@ public partial class NavRoutesTests(S3ProxyFixture s3, MongoFixture mongo) : ICl
         Assert.Equal($"/g/{g.Id}/{newSlug}/{g.Items[1]}", location);
 
         var html = await HtmlAsync(h, location);
-        var link = GalleryLinkRx().Match(html);
-        Assert.True(link.Success, "no gallery link");
-        Assert.Equal($"/g/{g.Id}/{newSlug}#p-{g.Items[1]}", link.Groups[1].Value);
-        Assert.Equal("Harbour Lights", link.Groups[2].Value);
-        Assert.Equal(" · 2 / 3", link.Groups[3].Value);
+        Assert.Equal(($"/g/{g.Id}/{newSlug}#p-{g.Items[1]}", "Harbour Lights"), Crumbs(html)[1]);
+        Assert.Equal("2 / 3", Count(html));
     }
 }

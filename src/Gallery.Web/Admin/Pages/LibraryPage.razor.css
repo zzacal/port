@@ -1,7 +1,6 @@
 /* 009 library page (contracts/components.md C1). Overlay wrappers and captions are authored here,
    so they carry this page's scope; Tile's own elements need ::deep. No @media: the grid's column
    counts come from ContactSheet. */
-.lib-heading { margin: 0 0 var(--space-s); font-size: var(--type-brand); }
 .lib-result { margin: 0 0 var(--space-s); font-size: var(--type-body); }
 .lib-empty { font-size: var(--type-body); color: var(--color-muted); }
 .lib-pages { margin: var(--space-s) 0 0; font-size: var(--type-caption); color: var(--color-muted); text-align: center; }

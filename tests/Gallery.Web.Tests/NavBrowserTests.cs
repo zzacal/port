@@ -123,7 +123,7 @@ public sealed class NavBrowserTests(NavBrowserFixture site)
         {
             var id = site.PhotoIds[i];
             await page.GotoAsync(site.BaseUrl + await site.PhotoPathAsync(i), new() { WaitUntil = WaitUntilState.Load });
-            await page.Locator("article.solo .gallery-link a").ClickAsync();
+            await page.Locator(".breadcrumb a[href*=\"#p-\"]").ClickAsync();
             var path = await PathAfter(page, p => p.EndsWith($"#p-{id}"));
             var (inside, measured) = await TileInView(page, id);
             if (!path.EndsWith($"#p-{id}") || !inside) failures.Add($"photo {i + 1}: {measured}");
@@ -138,7 +138,7 @@ public sealed class NavBrowserTests(NavBrowserFixture site)
     {
         var (ctx, page) = await Open(await site.PhotoPathAsync(17), width, js: false);
         await using var _ = ctx;
-        await page.Locator("article.solo .gallery-link a").ClickAsync();
+        await page.Locator(".breadcrumb a[href*=\"#p-\"]").ClickAsync();
         var id = site.PhotoIds[17];
         var path = await PathAfter(page, p => p.EndsWith($"#p-{id}"));
         var (inside, measured) = await TileInView(page, id);
@@ -168,7 +168,7 @@ public sealed class NavBrowserTests(NavBrowserFixture site)
     {
         var (ctx, page) = await Open(await site.PhotoPathAsync(15), prerender: true);
         await using var _ = ctx;
-        var link = page.Locator("article.solo .gallery-link a");
+        var link = page.Locator(".breadcrumb a[href*=\"#p-\"]");
         await link.HoverAsync();
         await page.WaitForTimeoutAsync(1000);
         await link.ClickAsync();
@@ -190,7 +190,7 @@ public sealed class NavBrowserTests(NavBrowserFixture site)
     {
         var (ctx, page) = await Open(await site.PhotoPathAsync(15), prerender: true);
         await using var _ = ctx;
-        var link = page.Locator("article.solo .gallery-link a");
+        var link = page.Locator(".breadcrumb a[href*=\"#p-\"]");
         await link.HoverAsync();
         await page.WaitForTimeoutAsync(1000);
         await link.ClickAsync();
@@ -208,12 +208,12 @@ public sealed class NavBrowserTests(NavBrowserFixture site)
         var id = site.PhotoIds[19];
         var (ctx, page) = await Open(await site.PhotoPathAsync(19));
         await using var _ = ctx;
-        var oldHref = await page.Locator("article.solo .gallery-link a").GetAttributeAsync("href");
+        var oldHref = await page.Locator(".breadcrumb a[href*=\"#p-\"]").GetAttributeAsync("href");
         try
         {
             var slug = await site.RenameAsync(S, "September Sixth Roll");
             Assert.Equal("september-sixth-roll", slug);
-            await page.Locator("article.solo .gallery-link a").ClickAsync(); // the page still carries the old slug
+            await page.Locator(".breadcrumb a[href*=\"#p-\"]").ClickAsync(); // the page still carries the old slug
             var path = await PathAfter(page, p => p.Contains(slug));
             var (inside, measured) = await TileInView(page, id);
             Assert.True(path == $"/g/{S}/{slug}#p-{id}" && inside, $"old href {oldHref} → path={path} {measured}");
@@ -283,32 +283,43 @@ public sealed class NavBrowserTests(NavBrowserFixture site)
                 {
                     await page.GotoAsync(site.BaseUrl + await site.PhotoPathAsync(i), new() { WaitUntil = WaitUntilState.Load });
                     var where = $"{width}px photo {i + 1} title {titleLength}";
-                    var boxes = await Boxes(page, """[["prev","article.solo a[rel=prev]"],["next","article.solo a[rel=next]"],["gallery","article.solo .gallery-link a"]]""");
-                    var expected = new List<string> { "gallery" };
+                    var boxes = await Boxes(page, """[["prev","article.solo a[rel=prev]"],["next","article.solo a[rel=next]"],["crumb",".breadcrumb a"]]""");
+                    var expected = new List<string> { "crumb", "crumb" };
                     if (i > 0) expected.Add("prev");
                     if (i < 22) expected.Add("next");
                     if (!boxes.Select(b => b.Name).Order().SequenceEqual(expected.Order()))
                         failures.Add($"{where}: links [{string.Join(", ", boxes)}], expected [{string.Join(", ", expected)}]");
                     CheckBoxes(boxes, where, failures);
 
+                    // Owner review 1: Previous/Next are whole words (no ellipsis), the count sits
+                    // centred in the Pager on one line, the breadcrumb is one line centred under
+                    // the header and above the stage, and the stage keeps 80vh.
                     var c = await page.EvaluateAsync<double[]>("""
                         (() => {
-                            const p = document.querySelector('article.solo .gallery-link'), a = p.querySelector('a'), n = p.querySelector('.count');
+                            const words = [...document.querySelectorAll('article.solo .pager a')]
+                                .filter(a => a.scrollWidth > a.clientWidth + 0.5 || !['Previous', 'Next'].includes(a.textContent)).length;
+                            const n = document.querySelector('article.solo .photo-count'), nr = n.getBoundingClientRect();
                             const pr = document.querySelector('article.solo .pager').getBoundingClientRect();
-                            const ar = a.getBoundingClientRect(), nr = n.getBoundingClientRect();
-                            return [ar.top, ar.bottom, nr.top, nr.bottom, Math.min(ar.left, nr.left), Math.max(ar.right, nr.right),
-                                    pr.left, pr.right, a.getClientRects().length, n.getClientRects().length,
-                                    document.querySelector('article.solo .stage').getBoundingClientRect().height, innerHeight];
+                            const bc = document.querySelector('nav.breadcrumb'), ol = bc.querySelector('ol').getBoundingClientRect();
+                            const hd = document.querySelector('header.site-header').getBoundingClientRect();
+                            const st = document.querySelector('article.solo .stage').getBoundingClientRect();
+                            const tops = new Set([...bc.querySelectorAll('li')].map(li => { const r = li.getBoundingClientRect(); return Math.round((r.top + r.bottom) / 2); }));
+                            return [words, nr.left, nr.right, pr.left, pr.right, n.getClientRects().length,
+                                    ol.left, ol.right, document.documentElement.clientWidth, tops.size,
+                                    hd.bottom, bc.getBoundingClientRect().top, bc.getBoundingClientRect().bottom, st.top,
+                                    st.height, innerHeight, document.documentElement.scrollWidth];
                         })()
                         """);
-                    var oneLine = c[8] == 1 && c[9] == 1 && c[2] >= c[0] - 0.5 && c[3] <= c[1] + 0.5;
-                    if (!oneLine)
-                        failures.Add($"{where}: centre not on one line (link y {c[0]:0.#}-{c[1]:0.#}, count y {c[2]:0.#}-{c[3]:0.#}, rects {c[8]}/{c[9]})");
-                    var offset = (c[4] + c[5]) / 2 - (c[6] + c[7]) / 2;
-                    if (Math.Abs(offset) > 2)
-                        failures.Add($"{where}: centre off by {offset:0.##}px (content {c[4]:0.#}-{c[5]:0.#}, pager {c[6]:0.#}-{c[7]:0.#})");
-                    if (Math.Abs(c[10] - 0.8 * c[11]) > 0.5)
-                        failures.Add($"{where}: .stage height {c[10]:0.##} != 0.8 * innerHeight {c[11]} = {0.8 * c[11]:0.##}");
+                    if (c[0] != 0) failures.Add($"{where}: {c[0]} Pager link(s) truncated or not a whole word");
+                    if (c[5] != 1) failures.Add($"{where}: count wraps ({c[5]} lines)");
+                    var offset = (c[1] + c[2]) / 2 - (c[3] + c[4]) / 2;
+                    if (Math.Abs(offset) > 2) failures.Add($"{where}: count off centre by {offset:0.##}px (count {c[1]:0.#}-{c[2]:0.#}, pager {c[3]:0.#}-{c[4]:0.#})");
+                    var crumbOffset = (c[6] + c[7]) / 2 - c[8] / 2;
+                    if (Math.Abs(crumbOffset) > 2) failures.Add($"{where}: breadcrumb off centre by {crumbOffset:0.##}px ({c[6]:0.#}-{c[7]:0.#} in {c[8]})");
+                    if (c[9] != 1) failures.Add($"{where}: breadcrumb wraps onto {c[9]} lines");
+                    if (!(c[10] <= c[11] + 0.5 && c[12] <= c[13] + 0.5)) failures.Add($"{where}: breadcrumb {c[11]:0.#}-{c[12]:0.#} not between header bottom {c[10]:0.#} and stage top {c[13]:0.#}");
+                    if (Math.Abs(c[14] - 0.8 * c[15]) > 0.5) failures.Add($"{where}: .stage height {c[14]:0.##} != 0.8 * innerHeight {c[15]}");
+                    if (c[16] > c[8] + 0.5) failures.Add($"{where}: horizontal scroll ({c[16]} > {c[8]})");
                 }
 
                 // The gallery neighbour links (Coast sits between the renamed gallery and Solo).
@@ -494,7 +505,7 @@ public sealed class NavBrowserTests(NavBrowserFixture site)
         Assert.Equal(await site.PhotoPathAsync(0), await PathAfter(page, p => p.EndsWith(site.PhotoIds[0])));
         await page.Locator("article.solo a[rel=next]").ClickAsync();
         Assert.Equal(await site.PhotoPathAsync(1), await PathAfter(page, p => p.EndsWith(site.PhotoIds[1])));
-        await page.Locator("article.solo .gallery-link a").ClickAsync();
+        await page.Locator(".breadcrumb a[href*=\"#p-\"]").ClickAsync();
         var id = site.PhotoIds[1];
         var path = await PathAfter(page, p => p.EndsWith($"#p-{id}"));
         var (inside, measured) = await TileInView(page, id);
@@ -529,7 +540,7 @@ public sealed class NavBrowserTests(NavBrowserFixture site)
                 at = items[1];
                 Assert.Equal($"{gallery}/{at}", await PathAfter(page, p => p.EndsWith(at)));
             }
-            await page.Locator("article.solo .gallery-link a").ClickAsync();
+            await page.Locator(".breadcrumb a[href*=\"#p-\"]").ClickAsync();
             var path = await PathAfter(page, p => p.EndsWith($"#p-{at}"));
             var (inside, measured) = await TileInView(page, at);
             Assert.True(path == $"{gallery}#p-{at}" && inside, $"{gid}: path={path} {measured}");

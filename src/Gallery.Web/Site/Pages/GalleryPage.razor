@@ -1,4 +1,4 @@
-<PublicLayout Title="@Title" NoIndex="@NoIndex" Enhance="true" HeadExtra="_transitions">
+<PublicLayout Title="@Title" NoIndex="@NoIndex" Enhance="true" HeadExtra="_transitions" Crumbs="Crumbs">
     <header class="gallery-head">
         <Title Text="@Title" Element="h1" />
         @if (!string.IsNullOrEmpty(Description))
@@ -25,6 +25,9 @@
     /// </summary>
     [Parameter] public GalleryNeighbour? Prev { get; set; }
     [Parameter] public GalleryNeighbour? Next { get; set; }
+
+    /// <summary>010 owner review 1 (B2): the endpoint passes "Galleries › {title}"; null renders none.</summary>
+    [Parameter] public IReadOnlyList<Crumb>? Crumbs { get; set; }
 
     private RenderFragment? Neighbours => Prev is null && Next is null
         ? null

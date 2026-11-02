@@ -1,0 +1,7 @@
+.breadcrumb { display: flex; justify-content: center; min-width: 0; padding: 0 var(--space-s); font-size: var(--type-caption); color: var(--color-muted); }
+ol { display: flex; align-items: center; min-width: 0; max-width: 100%; margin: 0; padding: 0; list-style: none; white-space: nowrap; }
+li { display: flex; align-items: center; min-width: 0; flex: 0 1 auto; }
+li + li::before { content: "\203A"; padding-inline: 4px; flex: none; }
+/* The row's 44 px height comes from the ancestor links' tap rule; the current item only truncates. */
+li[aria-current] { flex: 0 100 auto; overflow: hidden; }
+li[aria-current] span { overflow: hidden; text-overflow: ellipsis; padding-inline: 8px; color: var(--color-text); }

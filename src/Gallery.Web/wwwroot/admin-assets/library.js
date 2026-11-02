@@ -16,7 +16,7 @@
 //   - A gallery-list visibility switch (form="gal-vis-{gid}") submits its form when it changes
 //     (publish/unpublish at once, no confirm). The builder's switch belongs to its Save form and
 //     submits nothing on change (owner feedback: typed edits are never lost).
-//   - The owner bar's "New gallery" opens <dialog id="gal-new">; Cancel closes it.
+//   - The page heading's "New gallery" opens <dialog id="gal-new">; Cancel closes it.
 //
 // Elements are resolved when an event happens (event delegation on the document), never cached at
 // load, so markup declared after the script, or replaced later, is always found. Text is set with
@@ -221,8 +221,8 @@ document.addEventListener('click', (e) => {
     return;
   }
 
-  // Owner bar "New gallery" (C2).
-  if (button.name === 'action' && button.value === 'new-gallery' && button.closest('.owner-bar')) {
+  // "New gallery" in the page heading row (C2; 010 owner review 1).
+  if (button.name === 'action' && button.value === 'new-gallery' && button.closest('.page-heading')) {
     e.preventDefault();
     openDialog(document.getElementById('gal-new'));
     return;

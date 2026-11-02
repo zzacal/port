@@ -1,4 +1,5 @@
-@* Admin owner bar organism (feature 005): brand link, nav with current page, view link, primary action. *@
+@* Admin owner bar organism (feature 005): brand link, nav with current page, view link, sign out.
+   010 owner review 1: no page actions here; they sit in the page heading row (PageHeading). *@
 <header class="owner-bar">
     <a class="ob-brand" href="/admin">Gallery <span>admin</span></a>
     <nav aria-label="Admin">
@@ -9,16 +10,13 @@
         </ul>
     </nav>
     <div class="ob-actions">
-        <Button Element="ButtonElement.Link" Variant="ButtonVariant.Quiet" Href="@ViewHref" Target="_blank">@ViewLabel ↗</Button>
-        @PrimaryAction@SignOutForm
+        <Button Element="ButtonElement.Link" Variant="ButtonVariant.Quiet" Href="/" Target="_blank">View site ↗</Button>
+        @SignOutForm
     </div>
 </header>
 
 @code {
     [Parameter] public AdminPage? Current { get; set; }
-    [Parameter] public string ViewHref { get; set; } = "/";
-    [Parameter] public string ViewLabel { get; set; } = "View site";
-    [Parameter] public RenderFragment? PrimaryAction { get; set; }
     [Parameter] public FormToken? SignOut { get; set; }
 
     private RenderFragment? SignOutForm => SignOut is null ? null

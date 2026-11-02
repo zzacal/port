@@ -1,6 +1,6 @@
 .pager {
     display: grid;
-    grid-template-columns: minmax(44px, 1fr) auto minmax(44px, 1fr);
+    grid-template-columns: minmax(max-content, 1fr) auto minmax(max-content, 1fr);
     grid-template-areas: "prev here next";
     align-items: center;
     gap: var(--space-s);
@@ -8,10 +8,7 @@
 .prev { grid-area: prev; justify-self: start; }
 .next { grid-area: next; justify-self: end; text-align: right; }
 .here { grid-area: here; min-width: 0; text-align: center; }
-.prev ::deep .text-link { margin-inline-start: -8px; }
-.next ::deep .text-link { margin-inline-end: -8px; }
-
-@media (max-width: 599.98px) {
-    .pager-stack { grid-template-columns: 1fr 1fr; grid-template-areas: "here here" "prev next"; row-gap: 0; }
-}
-.pager-stack-all { grid-template-columns: 1fr 1fr; grid-template-areas: "here here" "prev next"; row-gap: 0; }
+/* Pull each side out by the tap rule's 8 px padding so the words sit on the row's edges, as before
+   010. The margin is on the grid item, not the link, so the link's max-width: 100% never cuts it. */
+.prev { margin-inline-start: -8px; }
+.next { margin-inline-end: -8px; }

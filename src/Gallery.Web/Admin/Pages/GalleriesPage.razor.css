@@ -1,7 +1,6 @@
 /* 009 gallery list (contracts/components.md C2). Wrappers and captions authored here carry this
    page's scope; Tile's own elements need ::deep. No @media: the grid's column counts come from
    ContactSheet. */
-.gal-heading { margin: 0 0 var(--space-s); font-size: var(--type-brand); }
 .gal-result { margin: 0 0 var(--space-s); font-size: var(--type-body); }
 .gal-empty { font-size: var(--type-body); color: var(--color-muted); }
 

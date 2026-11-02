@@ -274,6 +274,14 @@ Quality floors carried from the constitution
 - **SC-009**: Every library photo that is in at least one gallery links to a gallery editing page
   from its status, checked over a library holding photos in 0, 1 and 3 galleries.
 
+## Amendment: owner review 1 (2026-11-01)
+
+The owner replaced the photo page's back link with a breadcrumb at the top of every page that has
+a parent, public and admin, centred under the nav bar; kept the "x / y" count; asked for one
+admin nav bar on every page with page actions out of it; and for Previous/Next as whole words.
+FR-001's "nothing above the photo" and FR-002's "the gallery link" now read "the breadcrumb's
+gallery item". Contract: contracts/owner-review-1.md. Decisions rows 41-46.
+
 ## Assumptions
 
 - Scope is the study's recommended set, confirmed by the owner in clarify (2026-11-01).

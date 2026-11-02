@@ -1,0 +1,16 @@
+@* Where this page sits (010 owner review 1, B1): ancestors as tap-sized links, the current page
+   last and not a link. Renders nothing for an empty list; the separator is drawn by CSS. *@
+@if (Items.Count > 0)
+{
+<nav class="breadcrumb" aria-label="Breadcrumb"><ol>@foreach (var c in Items)
+{
+@(c.Href is null ? Current(c) : Ancestor(c))
+}</ol></nav>
+}
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<Crumb> Items { get; set; } = [];
+
+    private static RenderFragment Ancestor(Crumb c) => @<li><TextLink Href="@(c.Href ?? "")" Tap="true">@c.Label</TextLink></li>;
+    private static RenderFragment Current(Crumb c) => @<li aria-current="page"><span>@c.Label</span></li>;
+}

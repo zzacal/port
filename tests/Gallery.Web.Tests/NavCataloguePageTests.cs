@@ -25,9 +25,11 @@ public class NavCataloguePageTests
 
     public static TheoryData<Type, string[]> NewPages => new()
     {
-        { typeof(GalleryLinkPage), ["Short title", "Long title (truncates)"] },
+        { typeof(PhotoCountPage), ["Middle photo", "One-photo gallery"] },
         { typeof(GalleryNeighboursPage), ["First gallery", "Middle gallery", "Last gallery", "Long titles"] },
         { typeof(MembershipStatusPage), ["In no gallery", "In one gallery", "In three galleries", "In two, public in one"] },
+        { typeof(BreadcrumbPage), ["Gallery page", "Photo page", "Admin gallery", "Long titles (narrow)"] },
+        { typeof(PageHeadingPage), ["Title only", "With an action"] },
     };
 
     [Theory]
@@ -41,8 +43,7 @@ public class NavCataloguePageTests
     public static TheoryData<Type, string[], string[]> AppendedPages => new()
     {
         { typeof(PagerPage), ["First image", "Middle image", "Last image"],
-          ["With gallery link, middle photo", "With gallery link, first photo", "With gallery link, last photo",
-           "One-photo gallery", "Long gallery title (stacks on small screens)"] },
+          ["With count, middle photo", "With count, first photo", "With count, last photo", "One-photo gallery"] },
         { typeof(SiteHeaderPage), ["Default"], ["Public site (brand only)"] },
         { typeof(TextLinkPage), ["Normal"], ["Tap area"] },
     };
@@ -56,28 +57,37 @@ public class NavCataloguePageTests
     }
 
     [Fact]
-    public void Catalogue_lists_the_three_new_pages_at_the_end_of_the_molecules()
+    public void Catalogue_lists_the_010_pages_at_the_end_of_the_molecules()
     {
-        var molecules = UiCatalog.Entries.Where(e => e.Level == UiLevel.Molecules).TakeLast(3)
+        var molecules = UiCatalog.Entries.Where(e => e.Level == UiLevel.Molecules).TakeLast(5)
             .Select(e => (e.Name, e.Slug, e.PageType)).ToArray();
         Assert.Equal(
             [
-                ("GalleryLink", "molecules/gallery-link", typeof(GalleryLinkPage)),
+                ("PhotoCount", "molecules/photo-count", typeof(PhotoCountPage)),
                 ("GalleryNeighbours", "molecules/gallery-neighbours", typeof(GalleryNeighboursPage)),
                 ("MembershipStatus", "molecules/membership-status", typeof(MembershipStatusPage)),
+                ("Breadcrumb", "molecules/breadcrumb", typeof(BreadcrumbPage)),
+                ("PageHeading", "molecules/page-heading", typeof(PageHeadingPage)),
             ],
             molecules);
     }
 
     [Fact]
-    public async Task Pager_specimens_show_the_gallery_link_and_the_long_title_stacks()
+    public async Task Pager_specimens_show_the_count_in_the_centre()
     {
         var html = WebUtility.HtmlDecode(await Page(typeof(PagerPage)));
-        Assert.Equal(5, Guards.Count(html, "<div class=\"here\""));
-        Assert.Equal(1, Guards.Count(html, "class=\"pager pager-stack\""));
-        Assert.Equal(0, Guards.Count(html, "pager-stack-all"));
-        Assert.Contains("← Alpine lakes and the high pass", html);
-        Assert.Contains(" · 1 / 1", html);
+        Assert.Equal(4, Guards.Count(html, "<div class=\"here\""));
+        Assert.Equal(0, Guards.Count(html, "pager-stack"));
+        Assert.Contains(">7 / 24</p>", html);
+        Assert.Contains(">1 / 1</p>", html);
+    }
+
+    [Fact]
+    public async Task Breadcrumb_page_marks_one_current_item_per_specimen()
+    {
+        var html = await Page(typeof(BreadcrumbPage));
+        Assert.Equal(4, Guards.Count(html, "aria-label=\"Breadcrumb\""));
+        Assert.Equal(4, Guards.Count(html, "aria-current=\"page\""));
     }
 
     [Fact]

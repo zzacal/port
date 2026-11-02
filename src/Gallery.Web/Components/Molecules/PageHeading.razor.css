@@ -1,0 +1,10 @@
+.page-heading {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-s);
+    margin: 0 0 var(--space-s);
+}
+h1 { margin: 0; font-size: var(--type-brand); }
+.page-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }

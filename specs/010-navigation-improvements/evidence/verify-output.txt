@@ -2,15 +2,21 @@ PASS K1 the .text-link.tap rule exists in exactly one stylesheet (1)
 PASS UI-2 no min-height/line-height 44px outside TextLink.razor.css
 PASS K1 TextLink renders text-link tap only when Tap
 PASS K2 Pager links pass Tap="true" (2)
-PASS K2 PagerStack enum has None, Narrow, Always
-PASS K2 stack breakpoint 599.98px
-PASS K GalleryLink exists and uses the TextLink atom
-PASS K GalleryLink has no raw <a element
+PASS B4 Pager side tracks are at least max-content (whole words)
+PASS B4 no Pager stacking and no PagerStack type left
+PASS B3 GalleryLink is gone (review 1)
 PASS K GalleryNeighbours exists and uses the TextLink atom
 PASS K GalleryNeighbours has no raw <a element
 PASS K MembershipStatus exists and uses the TextLink atom
 PASS K MembershipStatus has no raw <a element
-PASS K3 GalleryLink budgets 26/60
+PASS K Breadcrumb exists and uses the TextLink atom
+PASS K Breadcrumb has no raw <a element
+PASS B1 Breadcrumb marks the current page
+PASS B6 OwnerBar has no PrimaryAction and a fixed View site link
+PASS B6 no admin page passes ViewHref to AdminLayout
+PASS B6 New gallery sits in a PageHeading
+PASS B6 no Back to galleries in admin
+PASS B2 both layouts render the breadcrumb right after the bar/header
 PASS K7 PublicLayout passes no nav items (no NavItem)
 PASS K7 PublicLayout renders <SiteHeader SiteName="Gallery" />
 PASS K7 key handler (line 20) precedes the Save-Data return (line 25)
@@ -18,10 +24,12 @@ PASS K7 exactly one keydown listener in src
 PASS K6 SiteHeader still renders <Nav for non-empty items
 PASS K6 SiteHeader NavItems not EditorRequired
 PASS UI-4 no aria-keyshortcuts anywhere in src
-PASS Catalogue has 34 entries
-PASS Catalogue has molecules/gallery-link
+PASS Catalogue has 36 entries
+PASS Catalogue has molecules/photo-count
 PASS Catalogue has molecules/gallery-neighbours
 PASS Catalogue has molecules/membership-status
+PASS Catalogue has molecules/breadcrumb
+PASS Catalogue has molecules/page-heading
 PASS ProjectAsync still exists (signature kept)
 PASS ProjectWithNavAsync exists
 PASS [SAFETY] SiteProjector.Nav calls Cards(

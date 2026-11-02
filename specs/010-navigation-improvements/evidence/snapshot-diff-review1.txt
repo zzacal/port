@@ -1,0 +1,64 @@
+=== index.html
+< <a href="/ui/molecules/gallery-link">GalleryLink</a>
+> <a href="/ui/molecules/photo-count">PhotoCount</a>
+> </li>
+> <li>
+> <a href="/ui/molecules/breadcrumb">Breadcrumb</a>
+> </li>
+> <li>
+> <a href="/ui/molecules/page-heading">PageHeading</a>
+=== molecules/pager.html
+< <h2 class="specimen-label">With gallery link, middle photo</h2>
+> <h2 class="specimen-label">With count, middle photo</h2>
+< <p class="gallery-link">
+< <a class="text-link tap" href="#">← Coast walk</a>
+< <span class="count"> · 7 / 24</span>
+< </p>
+> <p class="photo-count">7 / 24</p>
+< <h2 class="specimen-label">With gallery link, first photo</h2>
+> <h2 class="specimen-label">With count, first photo</h2>
+< <p class="gallery-link">
+< <a class="text-link tap" href="#">← Coast walk</a>
+< <span class="count"> · 1 / 24</span>
+< </p>
+> <p class="photo-count">1 / 24</p>
+< <h2 class="specimen-label">With gallery link, last photo</h2>
+> <h2 class="specimen-label">With count, last photo</h2>
+< <p class="gallery-link">
+< <a class="text-link tap" href="#">← Coast walk</a>
+< <span class="count"> · 24 / 24</span>
+< </p>
+> <p class="photo-count">24 / 24</p>
+< <p class="gallery-link">
+< <a class="text-link tap" href="#">← Coast walk</a>
+< <span class="count"> · 1 / 1</span>
+< </p>
+> <p class="photo-count">1 / 1</p>
+< </span>
+< </nav>
+< </div>
+< </section>
+< <section class="specimen">
+< <h2 class="specimen-label">Long gallery title (stacks on small screens)</h2>
+< <div class="specimen-body w-480">
+< <nav class="pager pager-stack" aria-label="Image navigation">
+< <span class="prev">
+< <a class="text-link tap" href="#" rel="prev">Previous</a>
+< </span>
+< <div class="here">
+< <p class="gallery-link">
+< <a class="text-link tap" href="#">← Alpine lakes and the high pass</a>
+< <span class="count"> · 7 / 24</span>
+< </p>
+< </div>
+< <span class="next">
+< <a class="text-link tap" href="#" rel="next">Next</a>
+=== organisms/owner-bar.html
+< <h2 class="specimen-label">Upload current, with primary action</h2>
+> <h2 class="specimen-label">Upload current</h2>
+< <button class="btn btn-primary" type="submit">Add 40 photos to library</button>
+< <h2 class="specimen-label">Galleries current, viewing a gallery</h2>
+> <h2 class="specimen-label">Galleries current</h2>
+< <a class="btn btn-quiet" href="/g/abc/coast" target="_blank" rel="noopener">View gallery ↗</a>
+> <a class="btn btn-quiet" href="/" target="_blank" rel="noopener">View site ↗</a>
+< <button class="btn btn-primary" type="submit">Add 40 photos to library</button>

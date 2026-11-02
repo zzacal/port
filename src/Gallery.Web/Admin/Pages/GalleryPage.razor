@@ -1,6 +1,7 @@
 @* 009 gallery builder (contracts/components.md C3, contracts/http.md B1). The 005 GalleryBuilder
    with its K6 parameters: per-tile drag handle, cover pin/unpin, Remove and View ↗ in the row under
-   each title (UI-2); Save is the one primary (UI-3) and posts title, description and the Public
+   each title (UI-2); Save is the one primary (UI-3); 010 owner review 1: the breadcrumb is the way back, and the
+   panel's View gallery ↗ shows only when the gallery has photos and posts title, description and the Public
    switch together (B2, owner feedback: no separate publish confirm, the warning has no buttons); Delete gallery… is outlined Danger and Remove is Quiet with no confirmation (UI-4,
    FR-024); limits from LibraryOptions (UI-7); no validation nags (UI-8). Per-item controls post the
    hidden forms below through form="…" (no nested forms); the title and description inputs belong
@@ -12,7 +13,7 @@
 @using Gallery.Web.Components.Templates
 @using Gallery.Web.Library
 
-<AdminLayout Title="@G.Title" Current="AdminPage.Galleries" ViewHref="@(PhotoHrefBase ?? "/")" SignOut="@Model.Csrf">
+<AdminLayout Title="@G.Title" Current="AdminPage.Galleries" SignOut="@Model.Csrf" Crumbs="Crumbs">
     <section class="gb">
         <form id="b-order" method="post" action="@($"{Base}/order")" hidden>@Token@foreach (var item in Model.Items)
             {
@@ -26,7 +27,7 @@
             @Token
             <GalleryBuilder Title="@(Model.EditTitle ?? G.Title)" Description="@Model.EditDescription" Public="@IsPublic" PublicChecked="@Model.EditPublic"
                             Items="@Model.Items" ItemIds="@ItemIds" State="@State" PinnedIndex="@PinnedIndex"
-                            ViewHref="@ViewHref" ViewLabel="@ViewLabel" ViewExternal="@Model.HasPhotos" FormId="b-panel"
+                            ViewHref="@(PhotoHrefBase ?? "/")" ShowView="@Model.HasPhotos" FormId="b-panel"
                             RemoveFormId="b-remove" CoverFormId="b-cover" UnpinFormId="b-unpin" OrderFormId="b-order"
                             DeleteFormId="b-delete"
                             PhotoHrefBase="@PhotoHrefBase" PublicDisabledReason="@GalleriesPage.DisabledReasonFor(Ref)"
@@ -48,8 +49,9 @@
     private GalleryRef Ref => new(G.Id, G.Slug, G.Title, G.Visibility, Model.Items.Count);
 
     private string? PhotoHrefBase => Model.HasPhotos ? $"/g/{G.Id}/{G.Slug}" : null;
-    private string ViewHref => PhotoHrefBase ?? "/admin/galleries";
-    private string ViewLabel => Model.HasPhotos ? "View gallery" : "Back to galleries";
+
+    /// <summary>010 owner review 1 (B6): "Galleries › {title}" under the owner bar.</summary>
+    private IReadOnlyList<Crumb> Crumbs => [new("Galleries", "/admin/galleries"), new(G.Title)];
 
     private IReadOnlyList<string> ItemIds => Model.Items.Select(i => i.Id).ToList();
 

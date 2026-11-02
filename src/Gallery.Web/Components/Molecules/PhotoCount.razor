@@ -1,0 +1,8 @@
+@* The photo's position in its gallery (010 owner review 1, B3), shown in the Pager's centre. *@
+<p class="photo-count">@Index / @Total</p>
+
+@code {
+    /// <summary>1-based position of the photo in its gallery.</summary>
+    [Parameter, EditorRequired] public int Index { get; set; }
+    [Parameter, EditorRequired] public int Total { get; set; }
+}

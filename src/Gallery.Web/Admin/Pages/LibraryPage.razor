@@ -11,14 +11,14 @@
 @using Gallery.Web.Components.Templates
 @using Gallery.Web.Library
 
-<AdminLayout Title="Library" Current="AdminPage.Library" ViewHref="/" SignOut="@Model.Csrf" Aside="@PanelFragment">
+<AdminLayout Title="Library" Current="AdminPage.Library" SignOut="@Model.Csrf" Aside="@PanelFragment">
     <section class="lib">
         <form id="lib-delete" method="post" action="/admin/library/delete" hidden>@Token<input type="hidden" name="page" value="@Data.Page"></form>
         @if (Open is not null)
         {
             <form id="lib-del-one" method="post" action="@($"/admin/library/images/{Open.Image.Id}/delete")" hidden>@Token<input type="hidden" name="page" value="@Data.Page"></form>
         }
-        <h1 class="lib-heading">Library</h1>
+        <PageHeading Text="Library" />
         @if (Model.Status is not null)
         {
             <p class="lib-result" role="status">@Model.Status</p>

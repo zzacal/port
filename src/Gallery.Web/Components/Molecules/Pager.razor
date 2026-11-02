@@ -1,5 +1,5 @@
 @* A missing direction renders nothing (no disabled link). *@
-<nav class="@NavClass" aria-label="Image navigation">
+<nav class="pager" aria-label="Image navigation">
     <span class="prev">
         @if (!string.IsNullOrEmpty(PrevHref))
         {
@@ -20,16 +20,6 @@
 
     /// <summary>Feature 010 (K2): centre content, rendered as div.here between the two sides.</summary>
     [Parameter] public RenderFragment? Here { get; set; }
-
-    /// <summary>Feature 010 (K2): stack the centre above Previous/Next below 600 px or always.</summary>
-    [Parameter] public PagerStack Stack { get; set; } = PagerStack.None;
-
-    private string NavClass => Stack switch
-    {
-        PagerStack.Narrow => "pager pager-stack",
-        PagerStack.Always => "pager pager-stack pager-stack-all",
-        _ => "pager",
-    };
 
     private RenderFragment? HereContent => Here is null ? null : @<div class="here">@Here</div>;
 }

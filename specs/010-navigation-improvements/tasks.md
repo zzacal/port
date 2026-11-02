@@ -484,6 +484,24 @@ and the new test file `LibraryMembershipTests.cs`.
 
 ---
 
+## Phase 9: Owner review 1 (contracts/owner-review-1.md; decisions rows 41-46)
+
+- [X] T048 Parent: B1 `Crumb`, `Breadcrumb`; B3 `PhotoCount`; B6 `PageHeading`; delete
+  `GalleryLink`/`PagerStack`; B4 Pager CSS; SoloViewer/Pager lose `Stack`; OwnerBar and
+  AdminLayout lose `PrimaryAction`, both layouts gain `Crumbs`; catalogue pages and entries (36).
+- [X] T049 Public wiring (B2, B3, B5): PublicLayout crumbs + K7 Escape selector; PhotoPage and
+  GalleryPage crumbs; endpoints pass them.
+- [X] T050 Admin wiring (B6): Galleries and Library `PageHeading`; builder crumbs, no "Back to
+  galleries"; no page passes `ViewHref`; `library.js` New gallery opener via `.page-heading`.
+- [X] T051 Tests: 010 test files updated to the amendment; new guards: breadcrumb markup and
+  roots-without-crumbs (component + route), owner bar byte-identical across Library, Galleries,
+  builder and Upload except `aria-current`, Pager whole words in the browser at 320-1440 px on the
+  photo page and the admin library pager, Escape via the crumb, SC-001 via the crumb.
+- [ ] T052 Parent: stated changes to pre-010 tests (owner bar specimens, builder "Back to
+  galleries", primary-button location), snapshot regeneration with snapshot-diff, design record
+  D-23/D-21/D-17 edits + assemble/validate, verify.sh, non-vacuity (break 6 selector), full gate,
+  commit.
+
 ## OWNER-ONLY: post-build live checks (not part of the automated run)
 
 - [ ] O-01 Quickstart Part C on the owner's own `dotnet watch` (Ctrl+R first; step 2 fills `nav`
