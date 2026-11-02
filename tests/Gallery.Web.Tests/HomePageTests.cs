@@ -181,6 +181,18 @@ public partial class HomePageTests(S3ProxyFixture s3, MongoFixture mongo) : ICla
         Assert.Single(titles);
         Assert.Equal("Galleries", titles[0].Groups[1].Value);
         Assert.Empty(HomeNavRx().Matches(html));
+
+        // [SAFETY] II.6 at render time (parent, after the T025 non-vacuity run showed the services
+        // alone keep the case above green): a stale coverless card planted in homeCards is not listed.
+        var empty = await GalleryHtml.LoadAsync(h, built.Empty);
+        await h.Site.UpdateOneAsync(MongoDB.Driver.Builders<Gallery.Web.Data.SiteDoc>.Filter.Eq(s => s.Id, "site"),
+            MongoDB.Driver.Builders<Gallery.Web.Data.SiteDoc>.Update.Push(s => s.HomeCards,
+                new Gallery.Web.Data.GalleryCardDoc { GalleryId = empty.Id, Slug = empty.Slug, Title = empty.Title, ImageCount = 0, Cover = null }));
+        Assert.Contains((await h.SiteAsync()).HomeCards, c => c.GalleryId == empty.Id);
+        var stale = await RawOkAsync(h, "/g");
+        Assert.Equal(expected, TileHrefRx().Matches(stale).Select(m => m.Groups[1].Value).ToList());
+        Assert.DoesNotContain($"href=\"/g/{empty.Id}/", stale, StringComparison.Ordinal);
+        Assert.DoesNotContain("tile-empty", stale, StringComparison.Ordinal);
     }
 
     // ── (d) /g/ redirect ─────────────────────────────────────────────────────
