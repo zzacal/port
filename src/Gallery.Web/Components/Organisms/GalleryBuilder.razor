@@ -54,7 +54,7 @@
             <Input Label="Title" Name="title" Value="@Title" MaxLength="@(TitleMax ?? 200)" Required="@(TitleMax is not null)" Pattern="@(TitleMax is null ? null : TitlePattern)" />
             <Input Label="Description" Name="description" Value="@Description" Multiline="true" MaxLength="@(DescriptionMax ?? 5000)" />
             <VisibilityToggle Public="@Public" Checked="@PublicChecked" GalleryTitle="@Title" PhotoCount="@Items.Count" Warning="@(State == BuilderState.PublishWarning)" FormId="@FormId" PartOfSave="@(FormId is not null)" DisabledReason="@PublicDisabledReason" />
-            <p class="b-view"><Button Element="ButtonElement.Link" Variant="ButtonVariant.Quiet" Href="@ViewHref" Target="@(ViewExternal ? "_blank" : null)">@ViewLabel@ViewArrow</Button></p>
+            @ViewContent
         </ChildContent>
         <Danger>
             <DangerConfirm Action="Delete gallery"
@@ -120,15 +120,24 @@
     /// <summary>Hidden B6 form the delete confirm posts (defaults to <see cref="FormId"/>; C3 names <c>b-delete</c>).</summary>
     [Parameter] public string? DeleteFormId { get; set; }
 
-    /// <summary>The panel's view-link text ("View gallery" by default; C3: "Back to galleries" for a gallery with no photos).</summary>
+    /// <summary>The panel's view-link text ("View gallery" by default).</summary>
     [Parameter] public string ViewLabel { get; set; } = "View gallery";
 
-    /// <summary>Whether the view link ends with " ↗" (an external, visitor view). False for "Back to galleries".</summary>
+    /// <summary>Whether the view link ends with " ↗" (an external, visitor view).</summary>
     [Parameter] public bool ViewExternal { get; set; } = true;
 
     // A MarkupString, not a string, so the arrow renders as the literal character, exactly as the
     // 005 markup did (a string expression would encode it as &#x2197;).
     private MarkupString ViewArrow => ViewExternal ? new(" ↗") : default;
+
+    /// <summary>
+    /// 010 owner review 1: false hides the panel's view link (a gallery with no photos has no public
+    /// page; the breadcrumb is the way back). Default true keeps every existing render byte-identical.
+    /// </summary>
+    [Parameter] public bool ShowView { get; set; } = true;
+
+    private RenderFragment? ViewContent => !ShowView ? null
+        : @<p class="b-view"><Button Element="ButtonElement.Link" Variant="ButtonVariant.Quiet" Href="@ViewHref" Target="@(ViewExternal ? "_blank" : null)">@ViewLabel@ViewArrow</Button></p>;
 
     /// <summary>The single-line not-blank rule the server applies (FR-010).</summary>
     public const string TitlePattern = @".*\S.*";

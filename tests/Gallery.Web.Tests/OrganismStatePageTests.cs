@@ -11,7 +11,7 @@ public class OrganismStatePageTests
 {
     public static TheoryData<Type, string[]> Pages() => new()
     {
-        { typeof(OwnerBarPage), ["Upload current, with primary action", "Library current", "Galleries current, viewing a gallery", "Phone width"] },
+        { typeof(OwnerBarPage), ["Upload current", "Library current", "Galleries current", "Phone width"] }, // 010 owner review 1: no page action in the bar (stated change, decisions row 47)
         { typeof(SidePanelPage), ["At rest", "Saving", "Saved", "With danger area", "Delete confirm open"] },
         { typeof(UploadDropzonePage), ["Idle", "Drag-over", "Files refused"] },
         { typeof(BatchFooterPage), ["In progress (12 of 40)", "Ready (40)", "Blocked (38 ready, 2 failed)", "Discard confirmation"] },

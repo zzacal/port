@@ -1,0 +1,13 @@
+/* Left-aligned trail (010 owner review 2). Its side padding equals the page margins (16/32/48 px,
+   as the grid uses), so the first item's text lines up with the page's left edge. */
+.breadcrumb { display: flex; justify-content: flex-start; min-width: 0; padding: 0 var(--space-s); font-size: var(--type-caption); color: var(--color-muted); }
+@media (min-width: 600px) { .breadcrumb { padding: 0 var(--space-m); } }
+@media (min-width: 1200px) { .breadcrumb { padding: 0 var(--space-l); } }
+/* -8px: the first link's tap padding, so its TEXT (not its tap box) starts on the page margin. */
+/* IX.3: the row is one tap height whether or not the trail holds a link (home's trail has none). */
+ol { display: flex; align-items: center; min-width: 0; min-height: var(--tap); max-width: calc(100% + 8px); margin: 0 0 0 -8px; padding: 0; list-style: none; white-space: nowrap; }
+li { display: flex; align-items: center; min-width: 0; flex: 0 1 auto; }
+li + li::before { content: "/"; padding-inline: 4px; flex: none; }
+/* The row's 44 px height comes from the ancestor links' tap rule; the current item only truncates. */
+li[aria-current] { flex: 0 100 auto; overflow: hidden; }
+li[aria-current] span { overflow: hidden; text-overflow: ellipsis; padding-inline: 8px; color: var(--color-text); }

@@ -1,21 +1,22 @@
 <!--
 Sync Impact Report
-- Version change: 4.2.0 → 4.3.0 (MINOR)
-- Rationale: owner directive (2026-11-01): the canonical remote is git@github.com:zzacal/port.git.
-  Its name differs from the local folder ("gallery"), which twice raised the question of whether
-  pushes were going to the wrong project. Development Workflow gains a source-of-truth rule, so
-  the remote is settled and is not re-questioned before a push.
-- Modified principles: none. Modified sections: Development Workflow (one rule added).
+- Version change: 4.3.0 → 4.4.0 (MINOR)
+- Rationale: owner directive (2026-11-01): visual consistency is important. The home page and
+  the gallery pages drew the same breadcrumb header at different heights and with different gaps
+  below it, because each page sized and spaced the shared chrome itself. Principle IX makes the
+  shared chrome the property of one container component per site.
+- Modified principles: none. Added principle: IX. Visual Consistency Through Shared Containers.
 - Added sections: none. Removed sections: none.
 - Templates requiring updates: none (templates read the constitution at runtime).
-- Prior specs swept: none needed (no spec names a remote).
+- Prior specs swept: 010 (navigation) is amended in the same change; earlier features introduced
+  the per-page spacing this principle forbids and are covered by that fix.
 - Deferred TODOs: none.
 - History: 1.0.0 initial ratification. 1.1.0 perceived performance, private = unlisted. 2.0.0
   client-generated derivatives with server validation. 3.0.0 Azure Blob replaced R2, masters kept,
   $10 metered cap (2026-10-27). 4.0.0 images on Cloudflare R2, managed-identity guarantee
   withdrawn, III.9 added (2026-10-30). 4.1.0 III.10 seeded dev content under two-reader
   validation; IV.19 clarified (2026-10-31). 4.2.0 II.6 no empty galleries shown; publish
-  requires an image (2026-10-31).
+  requires an image (2026-10-31). 4.3.0 canonical remote (2026-11-01).
 -->
 
 # Gallery Constitution
@@ -228,6 +229,24 @@ inside feature plans produces contradictions that are expensive to unwind.
 4. Every metered service that offers a hard spending limit MUST have one configured, set inside
    the VIII.1 cap. One example is a daily ingestion cap on logs.
 
+### IX. Visual Consistency Through Shared Containers
+
+1. Visual consistency between pages is a requirement, not polish. The same element on two pages
+   (header, navigation, breadcrumb, owner bar, page gutters, the gap between the chrome and the
+   content) MUST render at the same position, height, and spacing.
+2. Each site (public, admin) MUST have exactly one layout container that owns its chrome and the
+   page frame around the content. Pages supply content and data only; they MUST NOT add margins,
+   padding, or sizes to the chrome or to the frame (for example a top margin on a page's first
+   element that changes the gap under the header).
+3. A component's size MUST NOT depend on which of its optional parts a page passes (a breadcrumb
+   row is the same height whether or not it holds a link).
+4. Consistency MUST be guarded by a measured browser test that renders every page type of a site
+   at narrow and wide widths and asserts equal chrome geometry, so a page that drifts fails.
+
+Rationale: per-page spacing drifts silently; the owner found it by eye on two pages that looked
+alike. One container makes drift a code-review-visible change in one file, and the measured test
+catches the rest.
+
 ## Platform Constraints
 
 These are binding inputs to every plan:
@@ -280,4 +299,4 @@ These are binding inputs to every plan:
   place, not silently edited.
 - Every plan and analyze pass verifies compliance and cites principles by number.
 
-**Version**: 4.3.0 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-11-01
+**Version**: 4.4.0 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-11-01

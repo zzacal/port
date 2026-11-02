@@ -10,7 +10,7 @@
     <style>@((MarkupString)Styles.Css)</style>
 </head>
 <body class="admin">
-    @(ShowOwnerBar ? Bar : null)
+    @(ShowOwnerBar ? Bar : null)@CrumbsContent
     <div class="@BodyClass">
         <main class="admin-main">@ChildContent</main>
         @if (Aside is not null)
@@ -24,8 +24,12 @@
 @code {
     [Parameter, EditorRequired] public string Title { get; set; } = "";
     [Parameter] public AdminPage? Current { get; set; }
-    [Parameter] public string ViewHref { get; set; } = "/";
-    [Parameter] public RenderFragment? PrimaryAction { get; set; }
+    /// <summary>
+    /// The breadcrumb under the owner bar. Constitution IX: the layout draws it on every page with the
+    /// bar, so the content starts at the same height everywhere. Null shows the section's own name
+    /// (or the page title) as the one, current, item.
+    /// </summary>
+    [Parameter] public IReadOnlyList<Crumb>? Crumbs { get; set; }
     [Parameter] public RenderFragment? Aside { get; set; }
     [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public bool ShowOwnerBar { get; set; } = true;
@@ -33,5 +37,16 @@
 
     private string BodyClass => Aside is not null ? "admin-body with-aside" : "admin-body";
 
-    private RenderFragment Bar => @<OwnerBar Current="@Current" ViewHref="@ViewHref" PrimaryAction="@PrimaryAction" SignOut="@SignOut" />;
+    // One bar on every admin page (010 owner review 1): same links, View site, Sign out; only aria-current differs.
+    private RenderFragment Bar => @<OwnerBar Current="@Current" SignOut="@SignOut" />;
+
+    private RenderFragment? CrumbsContent => ShowOwnerBar ? @<Breadcrumb Items="Trail" /> : null;
+
+    private IReadOnlyList<Crumb> Trail => Crumbs is { Count: > 0 } ? Crumbs : [new(Current switch
+    {
+        AdminPage.Upload => "Upload",
+        AdminPage.Library => "Library",
+        AdminPage.Galleries => "Galleries",
+        _ => Title,
+    })];
 }

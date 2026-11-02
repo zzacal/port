@@ -39,6 +39,11 @@ body.admin {
     min-width: 0;
 }
 
+/* Constitution IX.2: the layout owns the frame; no page's first element moves the content down. */
+.admin-main > ::deep :first-child {
+    margin-top: 0;
+}
+
 .admin-aside {
     min-width: 0;
 }

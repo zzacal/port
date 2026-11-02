@@ -73,8 +73,8 @@ public enum PurgeKind
 /// One owner request's write bookkeeping (tasks.md T021). It collects the BEFORE snapshot (first
 /// touch) of every gallery the operation touches, what changed about it, the public keys deleted
 /// and the image ids whose text changed. <see cref="CompleteAsync"/> then runs, exactly once:
-/// card rebuilds (<see cref="CardBuilder.Build"/>), <see cref="SiteProjector.ProjectAsync"/>, the
-/// AFTER snapshots, the purge set (<see cref="PurgeSets"/>), local eviction
+/// card rebuilds (<see cref="CardBuilder.Build"/>), <see cref="SiteProjector.ProjectWithNavAsync"/>, the
+/// AFTER snapshots, the purge set (<see cref="PurgeSets"/>, including P-NAV), local eviction
 /// (<see cref="PageCacheEvictor"/>) and ONE <see cref="IEdgeCache.Enqueue"/> carrying
 /// <see cref="PurgeSets.WarmFiles"/>. A bulk loop of single-item calls shares one scope, so it
 /// flushes once (contracts/edge.md "A bulk operation enqueues ONE EdgeWork"; decisions row 11).
@@ -100,6 +100,9 @@ public sealed class OperationScope
 
     private readonly Dictionary<string, Entry> _touched = new(StringComparer.Ordinal);
     private readonly HashSet<string> _deletedKeys = new(StringComparer.Ordinal);
+    // 010 P-NAV (contracts/edge.md E2): every gallery whose nav any projection in this scope changed,
+    // id → slug after the change (the latest projection's slug wins).
+    private readonly Dictionary<string, string> _navChanged = new(StringComparer.Ordinal);
     private bool _completed;
 
     public string Op { get; }
@@ -153,12 +156,21 @@ public sealed class OperationScope
     /// Rebuilds the card of each existing gallery in <paramref name="galleryIds"/> with
     /// <see cref="CardBuilder.Build"/> (one read of the galleries, one of their covers, one write per
     /// changed card), then projects the site. Image delete step 2 calls it (research R-02);
-    /// <see cref="CompleteAsync"/> calls the card part for every touched gallery.
+    /// <see cref="CompleteAsync"/> calls the card part for every touched gallery. The projection's
+    /// <c>NavChanged</c> is kept in the scope, so <see cref="CompleteAsync"/> purges those pages too.
     /// </summary>
     public async Task<IReadOnlyList<GalleryCardDoc>> RefreshAsync(IEnumerable<string> galleryIds)
     {
         await RebuildCardsAsync(galleryIds);
-        return await _projector.ProjectAsync();
+        return await ProjectAsync();
+    }
+
+    private async Task<IReadOnlyList<GalleryCardDoc>> ProjectAsync()
+    {
+        var result = await _projector.ProjectWithNavAsync();
+        foreach (var g in result.NavChanged)
+            _navChanged[g.Id] = g.Slug;
+        return result.Cards;
     }
 
     private async Task<List<GalleryDoc>> RebuildCardsAsync(IEnumerable<string> galleryIds)
@@ -202,7 +214,7 @@ public sealed class OperationScope
 
         var after = (await RebuildCardsAsync(_touched.Keys))
             .ToDictionary(g => g.Id, GallerySnapshot.From, StringComparer.Ordinal);
-        var homeCards = await _projector.ProjectAsync();
+        var homeCards = await ProjectAsync();
 
         var sets = new List<PurgeSet>();
         // P-MEMBERS of every gallery, plus the deleted public keys: PurgeSets.Delete is exactly that
@@ -238,11 +250,24 @@ public sealed class OperationScope
             sets.Add(PurgeSets.Delete(members, _deletedKeys, _bases));
         if (_order is { } o)
             sets.Add(PurgeSets.Order(o.Before, o.After, o.Galleries, _bases));
+        if (_navChanged.Count > 0)
+            sets.Add(PurgeSets.Nav(_navChanged.Select(kv => new GalleryLinkTarget(kv.Key, kv.Value)), _bases));
 
         var set = PurgeSet.Union(_bases, sets);
         if (set.IsEmpty) return;
 
         await _evictor.EvictAsync(set.PagePaths);
+
+        // P-NAV pages of galleries this operation did not touch need their AFTER state for warm:
+        // one extra read, only when there are any (contracts/edge.md E2).
+        var missing = _navChanged.Keys.Where(id => !after.ContainsKey(id)).ToList();
+        if (missing.Count > 0)
+        {
+            var extra = await _timer.Time("db.gallery.load", () =>
+                _galleries.Find(Builders<GalleryDoc>.Filter.In(g => g.Id, missing)).ToListAsync());
+            foreach (var g in extra)
+                after[g.Id] = GallerySnapshot.From(g);
+        }
 
         // Warm files come from the AFTER state already read (decisions row 45): the first-row images
         // of each purged page that still exists.

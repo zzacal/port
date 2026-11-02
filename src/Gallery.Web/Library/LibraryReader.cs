@@ -17,9 +17,11 @@ public sealed record GalleryRef(string Id, string Slug, string Title, string Vis
 /// <summary>One library tile (data-model "LibraryPage").</summary>
 /// <param name="Galleries">The galleries holding the image, in home order.</param>
 /// <param name="ViewHref">The photo page in the first gallery (home order) holding it, or null (FR-005, UI-1).</param>
+/// <param name="FirstByTitle">The holder with the least title (case-insensitive, ties by id), any visibility, or null (010 FR-011).</param>
 public sealed record LibraryTile(
     ImageView Image, string? Caption, string Status, string? ViewHref,
-    int GalleryCount, int PublicGalleryCount, IReadOnlyList<GalleryRef> Galleries);
+    int GalleryCount, int PublicGalleryCount, IReadOnlyList<GalleryRef> Galleries,
+    GalleryRef? FirstByTitle);
 
 /// <summary>One page of the library (data-model "LibraryPage").</summary>
 /// <param name="Open">The image of <c>?open={iid}</c> (on this page or not), or null when unknown or tombstoned.</param>
@@ -89,6 +91,10 @@ public sealed class LibraryReader(IMongoDatabase db, OpTimer timer, LibraryOptio
                 .ToList();
             var publicCount = holders.Count(g => g.IsPublic);
             var first = holders.FirstOrDefault();
+            var firstByTitle = holders
+                .OrderBy(g => g.Title, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(g => g.Id, StringComparer.Ordinal)
+                .FirstOrDefault();
             return new LibraryTile(
                 ViewMapper.ToView(d, url),
                 d.Caption,
@@ -96,7 +102,8 @@ public sealed class LibraryReader(IMongoDatabase db, OpTimer timer, LibraryOptio
                 first is null ? null : $"/g/{first.Id}/{first.Slug}/{d.Id}",
                 holders.Count,
                 publicCount,
-                holders);
+                holders,
+                firstByTitle);
         }
         var tiles = docs.Select(ToTile).ToList();
 

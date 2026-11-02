@@ -14,7 +14,7 @@ can only be checked once the resource exists.
 | I.5 | D-04, D-12: claim event logged with `sub`, client IP from `CF-Connecting-IP`, timestamp | log query: claim event present with all three fields | designed |
 | I.6 | D-06: explicit antiforgery validation filter on every non-safe `/admin` request, token from form field or `X-CSRF-TOKEN` header | integration test: admin POST without token is rejected, with and without an owner session (007 AdminAccessTests I-4) | designed |
 | II.1 | D-15: public pages need no account, cookie, or consent | integration test: anonymous GET of every public route returns 200 with no `Set-Cookie` | designed |
-| II.2 | D-14, D-16: private galleries absent from home, listings, sitemap; `noindex`; reachable by link; purge on change, 1-day TTL bound | integration test: private gallery absent from listings and carries `noindex`; L-12 | designed |
+| II.2 | D-14, D-16: private galleries absent from home, listings, sitemap; `noindex`; reachable by link; purge on change, 1-day TTL bound; gallery `nav` stored only on listed galleries and rendered only when public (feature 010) | integration test: private gallery absent from listings and carries `noindex`; L-12; nav projection test: no stored `nav` names or sits on an unlisted gallery, and a planted stale `nav` on a private gallery renders no neighbour links; source scan: only the site projection writes `nav` (feature 010) | designed |
 | II.3 | D-14, D-07: 128-bit base32 ids; content-hash derivative names | integration test: ids are 26-char base32 and differ across titles | designed |
 | II.4 | D-14: `/g/{id}/{slug}`, stale slug 301s to current | integration test: renamed gallery old URL returns 301 to new URL | designed |
 | II.5 | D-14, D-13: galleries default private; upload and edit never change visibility | integration test: new gallery and confirmed batch leave visibility private | designed |
@@ -62,6 +62,10 @@ can only be checked once the resource exists.
 | VIII.2 | D-02: Universal SSL at the edge, Origin CA at the origin | config check: origin certificate issuer is Cloudflare Origin CA | designed |
 | VIII.3 | Section 8: every metered dimension with free limit, unit price, projection | document review: validate.sh C7 | designed |
 | VIII.4 | Section 8, D-18, D-12: Application Insights 150 MB daily cap | config check: daily cap set on the workspace | designed |
+| IX.1 | D-21, D-23 (amended by 010 owner review 3): shared chrome renders at the same position, height and spacing on every page of a site | automated test: LayoutConsistencyBrowserTests | designed |
+| IX.2 | D-21, D-23: PublicLayout and AdminLayout are each the one container that owns the chrome and the gap under it; pages carry no top margin on their first element | automated test: LayoutConsistencyBrowserTests; grep in 010 evidence/verify.sh | designed |
+| IX.3 | D-21: the breadcrumb row is one tap height (Tokens.Tap) with or without a link | automated test: LayoutConsistencyBrowserTests (home's trail has no link) | designed |
+| IX.4 | 010 decisions row 56: measured browser test over every public and admin page type at narrow and wide widths | automated test: LayoutConsistencyBrowserTests; non-vacuity break 10 | designed |
 | PC.1 | D-01, D-15: .NET 10 minimal APIs, server-rendered HTML, htmx and web components for admin | document review: D-01 and D-15 | deferred:first-build-feature |
 | PC.2 | D-01, D-03: App Service Linux B1; IP allowlist plus Authenticated Origin Pulls | config check: access restrictions list only Cloudflare ranges | deferred:first-build-feature |
 | PC.3 | D-02: Cloudflare proxy, cache, Full (strict) TLS | config check: zone SSL mode is Full (strict) | deferred:first-build-feature |

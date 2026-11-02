@@ -1,0 +1,24 @@
+@* Links to the previous and next listed galleries (feature 010, K5). Renders nothing when both
+   are null; a missing side renders its span empty so the other keeps its edge. *@
+@if (Prev is not null || Next is not null)
+{
+<nav class="gallery-neighbours" aria-label="Galleries">
+    <span class="prev">
+        @if (Prev is not null)
+        {
+            <TextLink Href="@Prev.Href" Rel="prev" Tap="true">← @Prev.Title</TextLink>
+        }
+    </span>
+    <span class="next">
+        @if (Next is not null)
+        {
+            <TextLink Href="@Next.Href" Rel="next" Tap="true">@Next.Title →</TextLink>
+        }
+    </span>
+</nav>
+}
+
+@code {
+    [Parameter] public GalleryNeighbour? Prev { get; set; }
+    [Parameter] public GalleryNeighbour? Next { get; set; }
+}

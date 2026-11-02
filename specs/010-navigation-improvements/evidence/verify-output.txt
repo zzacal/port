@@ -1,0 +1,51 @@
+PASS K1 the .text-link.tap rule exists in exactly one stylesheet (1)
+PASS UI-2 the tap size is the one Tokens.Tap value: no literal 44px in any stylesheet
+PASS K1 TextLink renders text-link tap only when Tap
+PASS K2 Pager links pass Tap="true" (2)
+PASS B4 Pager side tracks are at least max-content (whole words)
+PASS B4 no Pager stacking and no PagerStack type left
+PASS B3 GalleryLink is gone (review 1)
+PASS K GalleryNeighbours exists and uses the TextLink atom
+PASS K GalleryNeighbours has no raw <a element
+PASS K MembershipStatus exists and uses the TextLink atom
+PASS K MembershipStatus has no raw <a element
+PASS K Breadcrumb exists and uses the TextLink atom
+PASS K Breadcrumb has no raw <a element
+PASS B1 Breadcrumb marks the current page
+PASS B6 OwnerBar has no PrimaryAction and a fixed View site link
+PASS B6 no admin page passes ViewHref to AdminLayout
+PASS B6 New gallery sits in a PageHeading
+PASS IX constitution 4.4.0 has principle IX
+PASS IX.3 breadcrumb row is a fixed tap height
+PASS IX.2 both layouts zero the first content margin
+PASS IX.2 no public page sets a top margin on its head
+PASS B6 no Back to galleries in admin
+PASS R1 the public header is the breadcrumb (no brand, no nav)
+PASS B2 admin renders the breadcrumb right after the bar
+PASS R3 breadcrumb separator is / and the trail aligns left
+PASS R2 home and 404 have trails; no Back to galleries on 404
+PASS K7 PublicLayout passes no nav items (no NavItem)
+PASS K7 key handler (line 20) precedes the Save-Data return (line 25)
+PASS K7 exactly one keydown listener in src
+PASS K6 SiteHeader NavItems not EditorRequired
+PASS UI-4 no aria-keyshortcuts anywhere in src
+PASS Catalogue has 36 entries
+PASS Catalogue has molecules/photo-count
+PASS Catalogue has molecules/gallery-neighbours
+PASS Catalogue has molecules/membership-status
+PASS Catalogue has molecules/breadcrumb
+PASS Catalogue has molecules/page-heading
+PASS ProjectAsync still exists (signature kept)
+PASS ProjectWithNavAsync exists
+PASS [SAFETY] SiteProjector.Nav calls Cards(
+PASS SiteProjector.Nav calls GalleryNav.Neighbours
+PASS PurgeSets.Nav is called from OperationResult.cs
+PASS PurgeSets.Nav defined
+PASS [SAFETY] gallery route checks Visibility == "public" before using Nav
+PASS [SAFETY] NavSourceGuardTests present
+PASS [SAFETY] no nav write outside SiteProjector/Documents
+PASS no style= attribute in 010 components
+PASS no <script in 010 components
+PASS public pages keep one inline module (one <script type="module"> in PublicLayout)
+
+ALL PASS

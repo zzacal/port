@@ -79,6 +79,24 @@ public sealed class GalleryCardDoc
     [BsonElement("cover")]       public CoverImageDoc? Cover { get; set; }
 }
 
+/// <summary>010 data-model: a neighbour gallery, copied from it at projection time.</summary>
+public sealed class GalleryLinkDoc
+{
+    [BsonElement("id")]    public string Id    { get; set; } = string.Empty;
+    [BsonElement("slug")]  public string Slug  { get; set; } = string.Empty;
+    [BsonElement("title")] public string Title { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// 010 data-model: a listed gallery's neighbours in the gallery sequence. Written ONLY by
+/// <c>SiteProjector</c> (single writer); stored only when at least one side exists.
+/// </summary>
+public sealed class GalleryNavDoc
+{
+    [BsonElement("prev")] [BsonIgnoreIfNull] public GalleryLinkDoc? Prev { get; set; }
+    [BsonElement("next")] [BsonIgnoreIfNull] public GalleryLinkDoc? Next { get; set; }
+}
+
 public sealed class GalleryDoc
 {
     [BsonElement("_id")]          public string Id           { get; set; } = string.Empty;
@@ -92,6 +110,8 @@ public sealed class GalleryDoc
     [BsonElement("items")]        public List<string> Items  { get; set; } = [];
     [BsonElement("pinnedCover")]  public string? PinnedCover { get; set; }
     [BsonElement("card")]         public GalleryCardDoc? Card { get; set; }
+    // 010 [SAFETY] II.2: absent unless the gallery is listed and has a neighbour; only SiteProjector writes it.
+    [BsonElement("nav")]          [BsonIgnoreIfNull] public GalleryNavDoc? Nav { get; set; }
     [BsonElement("updatedAt")]    public DateTime UpdatedAt  { get; set; }
 }
 

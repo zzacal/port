@@ -50,10 +50,11 @@ public class PurgeSetTests
     // ── P-MEMBERS ────────────────────────────────────────────────────────────
 
     [Fact]
-    public void P_MEMBERS_add_purges_gallery_page_added_photo_its_new_neighbour_and_home()
+    public void P_MEMBERS_add_purges_every_photo_page_when_the_count_changes()
     {
         var set = PurgeSets.Members(G("g1", "s", "public", "a", "b", "c"), G("g1", "s", "public", "a", "b", "c", "e"), Bases);
-        Eq(P("/", "/g/g1/s", "/g/g1/s/c", "/g/g1/s/e"), set.Pages);
+        // 010 E1 rule 4 (stated change, decisions row 27): every photo page shows "N / total".
+        Eq(P("/", "/g/g1/s", "/g/g1/s/a", "/g/g1/s/b", "/g/g1/s/c", "/g/g1/s/e"), set.Pages);
         Assert.Empty(set.Files);
     }
 

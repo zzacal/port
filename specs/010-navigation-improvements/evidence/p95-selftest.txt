@@ -1,0 +1,44 @@
+== p95-selftest/empty.log
+FAIL missing, unreadable or empty log
+== p95-selftest/gallery-99-lines.log
+format: plain message lines
+PASS SC-006 home reads n=100 every db_reads <= 1 (exactly 1)
+FAIL SC-006 gallery reads http.request GET /g/{id}/{slug} 200 n=99 < 100
+PASS SC-006 photo reads n=100 every db_reads <= 2
+PASS SC-006 home time n=100 p95=3.90 ms < 50
+FAIL SC-006 gallery time http.request GET /g/{id}/{slug} 200 n=99 < 100
+PASS SC-006 photo time n=100 p95=5.00 ms < 50
+== p95-selftest/home-2-reads.log
+format: plain message lines
+FAIL SC-006 home reads n=101: 1 lines break db_reads == 1 (max 2)
+PASS SC-006 gallery reads n=100 every db_reads <= 2
+PASS SC-006 photo reads n=100 every db_reads <= 2
+PASS SC-006 home time n=101 p95=3.90 ms < 50
+PASS SC-006 gallery time n=100 p95=4.90 ms < 50
+PASS SC-006 photo time n=100 p95=5.00 ms < 50
+== p95-selftest/pass-json.log
+format: JSON console log
+PASS SC-006 home reads n=100 every db_reads <= 1 (exactly 1)
+PASS SC-006 gallery reads n=100 every db_reads <= 2
+PASS SC-006 photo reads n=100 every db_reads <= 2
+PASS SC-006 home time n=100 p95=3.90 ms < 50
+PASS SC-006 gallery time n=100 p95=4.90 ms < 50
+PASS SC-006 photo time n=100 p95=5.00 ms < 50
+== p95-selftest/pass-plain.log
+format: plain message lines
+PASS SC-006 home reads n=100 every db_reads <= 1 (exactly 1)
+PASS SC-006 gallery reads n=100 every db_reads <= 2
+PASS SC-006 photo reads n=100 every db_reads <= 2
+PASS SC-006 home time n=100 p95=3.90 ms < 50
+PASS SC-006 gallery time n=100 p95=4.90 ms < 50
+PASS SC-006 photo time n=100 p95=5.00 ms < 50
+== p95-selftest/photo-p95-60.log
+format: plain message lines
+PASS SC-006 home reads n=100 every db_reads <= 1 (exactly 1)
+PASS SC-006 gallery reads n=100 every db_reads <= 2
+PASS SC-006 photo reads n=100 every db_reads <= 2
+PASS SC-006 home time n=100 p95=3.90 ms < 50
+PASS SC-006 gallery time n=100 p95=4.90 ms < 50
+FAIL SC-006 photo time n=100 p95=60.00 ms >= 50
+
+5 FAILED

@@ -165,12 +165,14 @@ public class LibraryPageTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         await h.SettleAsync();
 
         var html = await GetOkAsync(h, "/admin/library");
-        string StatusOf(string iid) =>
-            Regex.Match(LibraryHtml.TileOf(html, iid), "<span class=\"lib-status\"[^>]*>([^<]*)</span>").Groups[1].Value;
+        // 010 T035 (stated change, decisions row 30): the status holds a link now, so read the
+        // span's text content with tags stripped; the copy is the first gallery by title, +N.
+        string StatusOf(string iid) => Regex.Replace(
+            Regex.Match(LibraryHtml.TileOf(html, iid), "<span class=\"lib-status\"[^>]*>(.*?)</span>").Groups[1].Value, "<[^>]*>", "");
 
         Assert.Equal("Not in a gallery", StatusOf(none.Id));
-        Assert.Equal("In 2 galleries", StatusOf(twoPrivate.Id));
-        Assert.Equal("In 2 galleries · public in 1", StatusOf(twoOnePublic.Id));
+        Assert.Equal("Alpha +1", StatusOf(twoPrivate.Id));
+        Assert.Equal("Alpha +1 · public in 1", StatusOf(twoOnePublic.Id));
 
         // UI-1: View ↗ to the photo page of the FIRST gallery in home order holding it.
         Assert.Contains($"<a class=\"text-link\" href=\"/g/{a}/alpha/{twoPrivate.Id}\"", LibraryHtml.TileOf(html, twoPrivate.Id));

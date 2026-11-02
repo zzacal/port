@@ -1,6 +1,7 @@
 using Gallery.Core.Content;
 using Gallery.Core.Ids;
 using Gallery.Core.Images;
+using Gallery.Web.Components.Molecules;
 using Gallery.Web.Components.Organisms;
 using Gallery.Web.Data;
 using Gallery.Web.Site.Pages;
@@ -100,12 +101,20 @@ public static class PublicEndpoints
                     );
                 }).ToList();
 
+                // 010 P2 [SAFETY] II.2: neighbour links only on a public gallery with a stored nav.
+                // Whatever a non-public document holds, its page links to no other gallery.
+                var nav = gallery.Visibility == "public" ? gallery.Nav : null;
+
                 IResult result = new RazorComponentResult<GalleryPage>(new Dictionary<string, object?>
                 {
                     [nameof(GalleryPage.Title)] = gallery.Title,
                     [nameof(GalleryPage.Description)] = gallery.Description,
                     [nameof(GalleryPage.NoIndex)] = (bool)noIndex,
-                    [nameof(GalleryPage.Items)] = (IReadOnlyList<ContactSheetItem>)items
+                    [nameof(GalleryPage.Items)] = (IReadOnlyList<ContactSheetItem>)items,
+                    [nameof(GalleryPage.Prev)] = Neighbour(nav?.Prev),
+                    [nameof(GalleryPage.Next)] = Neighbour(nav?.Next),
+                    // 010 owner review 1 (B2): links only to "/", so a private gallery's page names no other gallery.
+                    [nameof(GalleryPage.Crumbs)] = (IReadOnlyList<Crumb>)[new("Galleries", "/"), new(gallery.Title)],
                 });
 
                 return ApplyGalleryHeaders(result, items, noIndex, siteOptions);
@@ -174,6 +183,10 @@ public static class PublicEndpoints
                     [nameof(PhotoPage.PrefetchUrls)] = prefetchUrls,
                     [nameof(PhotoPage.NoIndex)] = (bool)noIndex,
                     [nameof(PhotoPage.GalleryTitle)] = gallery.Title,
+                    // 010 B2/B3: the gallery crumb lands on this photo's tile; its position (no new read).
+                    [nameof(PhotoPage.GalleryHref)] = $"/g/{id}/{slug}#p-{imageId}",
+                    [nameof(PhotoPage.Index)] = gallery.Items.IndexOf(imageId) + 1,
+                    [nameof(PhotoPage.Total)] = gallery.Items.Count,
                 });
 
                 return ApplyPhotoHeaders(result, currentView, noIndex, siteOptions);
@@ -205,6 +218,9 @@ public static class PublicEndpoints
         var baseUrl = (storage.ImageBaseUrl ?? "").TrimEnd('/');
         return key => $"{baseUrl}/{key}";
     }
+
+    private static GalleryNeighbour? Neighbour(GalleryLinkDoc? n) =>
+        n is null ? null : new GalleryNeighbour($"/g/{n.Id}/{n.Slug}", n.Title);
 
     private static bool IsDataException(Exception ex) =>
         ex is MongoDB.Driver.MongoException || ex is TimeoutException;

@@ -36,6 +36,11 @@ public static class UiCatalog
         new(UiLevel.Molecules, "SelectionBar", "molecules/selection-bar", typeof(SelectionBarPage)),
         new(UiLevel.Molecules, "DangerConfirm", "molecules/danger-confirm", typeof(DangerConfirmPage)),
         new(UiLevel.Molecules, "VisibilityToggle", "molecules/visibility-toggle", typeof(VisibilityTogglePage)),
+        new(UiLevel.Molecules, "PhotoCount", "molecules/photo-count", typeof(PhotoCountPage)),
+        new(UiLevel.Molecules, "GalleryNeighbours", "molecules/gallery-neighbours", typeof(GalleryNeighboursPage)),
+        new(UiLevel.Molecules, "MembershipStatus", "molecules/membership-status", typeof(MembershipStatusPage)),
+        new(UiLevel.Molecules, "Breadcrumb", "molecules/breadcrumb", typeof(BreadcrumbPage)),
+        new(UiLevel.Molecules, "PageHeading", "molecules/page-heading", typeof(PageHeadingPage)),
 
         new(UiLevel.Organisms, "ContactSheet", "organisms/contact-sheet", typeof(ContactSheetPage)),
         new(UiLevel.Organisms, "SoloViewer", "organisms/solo-viewer", typeof(SoloViewerPage)),

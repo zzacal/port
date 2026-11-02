@@ -1,9 +1,7 @@
-<header class="site-header">
-    <Brand Name="@SiteName" />
-    <Nav Items="NavItems" />
-</header>
+@* The public site's main navigation (010 owner review 2): the breadcrumb, right-aligned. The
+   brand link and the nav list are gone; the trail's first item "Galleries" is home. *@
+<header class="site-header"><Breadcrumb Items="Crumbs" /></header>
 
 @code {
-    [Parameter, EditorRequired] public string SiteName { get; set; } = "";
-    [Parameter, EditorRequired] public IReadOnlyList<NavItem> NavItems { get; set; } = [];
+    [Parameter, EditorRequired] public IReadOnlyList<Crumb> Crumbs { get; set; } = [];
 }

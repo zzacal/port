@@ -11,14 +11,14 @@
 @using Gallery.Web.Components.Templates
 @using Gallery.Web.Library
 
-<AdminLayout Title="Library" Current="AdminPage.Library" ViewHref="/" SignOut="@Model.Csrf" Aside="@PanelFragment">
+<AdminLayout Title="Library" Current="AdminPage.Library" SignOut="@Model.Csrf" Aside="@PanelFragment">
     <section class="lib">
         <form id="lib-delete" method="post" action="/admin/library/delete" hidden>@Token<input type="hidden" name="page" value="@Data.Page"></form>
         @if (Open is not null)
         {
             <form id="lib-del-one" method="post" action="@($"/admin/library/images/{Open.Image.Id}/delete")" hidden>@Token<input type="hidden" name="page" value="@Data.Page"></form>
         }
-        <h1 class="lib-heading">Library</h1>
+        <PageHeading Text="Library" />
         @if (Model.Status is not null)
         {
             <p class="lib-result" role="status">@Model.Status</p>
@@ -104,7 +104,7 @@
         @<div class="pos-tl"><SelectMark Label="@($"Select {tile.Image.Title}")" Name="ids" Value="@tile.Image.Id" FormId="lib-select" /></div>;
 
     private RenderFragment RowFor(LibraryTile tile) =>
-        @<div class="lib-row"><span class="lib-status">@tile.Status</span><TextLink Href="@($"?page={Data.Page}&open={tile.Image.Id}")">Edit</TextLink>@ViewFor(tile.ViewHref)</div>;
+        @<div class="lib-row"><span class="lib-status"><MembershipStatus FirstId="@tile.FirstByTitle?.Id" FirstTitle="@tile.FirstByTitle?.Title" Others="@(tile.GalleryCount - 1)" Public="@tile.PublicGalleryCount" /></span><TextLink Href="@($"?page={Data.Page}&open={tile.Image.Id}")">Edit</TextLink>@ViewFor(tile.ViewHref)</div>;
 
     private static RenderFragment? ViewFor(string? href) => href is null
         ? null

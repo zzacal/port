@@ -1,4 +1,8 @@
-<PublicLayout Title="Not found" NoIndex="true">
+<PublicLayout Title="Not found" NoIndex="true" Crumbs="Crumbs">
     <p>Not found.</p>
-    <TextLink Href="/">Back to galleries</TextLink>
 </PublicLayout>
+
+@code {
+    // 010 owner review 2: the breadcrumb's "Galleries" is the way home (it replaces the old text link).
+    private static readonly IReadOnlyList<Crumb> Crumbs = [new("Galleries", "/"), new("Not found")];
+}

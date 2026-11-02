@@ -1,0 +1,63 @@
+=== specs/006-public-site-local/evidence/ui-baseline/organisms/site-header.html
+< <h2 class="specimen-label">Default</h2>
+> <h2 class="specimen-label">Home</h2>
+< <a class="brand" href="/">Gallery</a>
+< <nav class="nav" aria-label="Site">
+< <ul>
+> <nav class="breadcrumb" aria-label="Breadcrumb">
+> <ol>
+> <li aria-current="page">
+> <span>Galleries</span>
+> </li>
+> </ol>
+> </nav>
+> </header>
+> </div>
+> </section>
+> <section class="specimen">
+> <h2 class="specimen-label">Gallery page</h2>
+> <div class="specimen-body ">
+> <header class="site-header">
+> <nav class="breadcrumb" aria-label="Breadcrumb">
+> <ol>
+< <a href="/">Galleries</a>
+> <a class="text-link tap" href="#">Galleries</a>
+< </ul>
+> <li aria-current="page">
+> <span>September 6</span>
+> </li>
+> </ol>
+< <h2 class="specimen-label">Public site (brand only)</h2>
+> <h2 class="specimen-label">Photo page</h2>
+< <a class="brand" href="/">Gallery</a>
+> <nav class="breadcrumb" aria-label="Breadcrumb">
+> <ol>
+> <li>
+> <a class="text-link tap" href="#">Galleries</a>
+> </li>
+> <li>
+> <a class="text-link tap" href="#">September 6</a>
+> </li>
+> <li aria-current="page">
+> <span>Harbour at dusk</span>
+> </li>
+> </ol>
+> </nav>
+=== specs/006-public-site-local/evidence/ui-baseline/templates/public-layout.html
+< <a class="brand" href="/">Gallery</a>
+> <nav class="breadcrumb" aria-label="Breadcrumb">
+> <ol>
+> <li>
+> <a class="text-link tap" href="/">Galleries</a>
+> </li>
+> </ol>
+> </nav>
+=== specs/005-admin-ui-components/evidence/baseline/PublicLayoutPage.html
+< <a class="brand" href="/">Gallery</a>
+> <nav class="breadcrumb" aria-label="Breadcrumb">
+> <ol>
+> <li>
+> <a class="text-link tap" href="/">Galleries</a>
+> </li>
+> </ol>
+> </nav>

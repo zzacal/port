@@ -12,11 +12,16 @@
     <style>@((MarkupString)Styles.Css)</style>@if (HeadExtra is not null){@HeadExtra}
 </head>
 <body class="public">
-    <SiteHeader SiteName="Gallery" NavItems="_nav" />
+    <SiteHeader Crumbs="@(Crumbs ?? Home)" />
     <main class="public-main">@ChildContent</main>@if (Enhance)
 {
     <script type="speculationrules">{"prerender":[{"where":{"href_matches":"/g/*"},"eagerness":"moderate"}]}</script>
     <script type="module">(() => {
+document.addEventListener('keydown', e => {
+const k = { ArrowLeft: 'article.solo a[rel=prev]', ArrowRight: 'article.solo a[rel=next]', Escape: '.breadcrumb a[href*="#p-"]' }[e.key];
+if (!k || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || e.defaultPrevented || e.target.closest?.('input,textarea,select,[contenteditable]')) return;
+document.querySelector(k)?.click();
+});
 if (navigator.connection?.saveData) return;
 // Fetch through a detached <picture> with the destination's own AVIF <source> (same srcset and
 // sizes), so the browser picks, and caches, exactly the file the destination page then uses.
@@ -50,5 +55,11 @@ window.addEventListener('load', () => {
     [Parameter] public bool Enhance { get; set; }
     [Parameter] public RenderFragment? HeadExtra { get; set; }
 
-    private static readonly IReadOnlyList<NavItem> _nav = [new("Galleries", "/")];
+    /// <summary>
+    /// 010 owner review 2: the page's breadcrumb, which IS the site header. Null (catalogue specimens,
+    /// component tests) shows the root trail linking home.
+    /// </summary>
+    [Parameter] public IReadOnlyList<Crumb>? Crumbs { get; set; }
+
+    private static readonly IReadOnlyList<Crumb> Home = [new("Galleries", "/")];
 }

@@ -1,6 +1,6 @@
-<PublicLayout Title="@($"{Image.Title} — {GalleryTitle}")" NoIndex="@NoIndex" Enhance="true" HeadExtra="_transitions">
+<PublicLayout Title="@($"{Image.Title} — {GalleryTitle}")" NoIndex="@NoIndex" Enhance="true" HeadExtra="_transitions" Crumbs="Crumbs">
     <SoloViewer Image="Image" Caption="@Caption" PrevHref="@PrevHref" NextHref="@NextHref"
-                TransitionId="@Image.Id" PrefetchUrls="@PrefetchUrls" />
+                TransitionId="@Image.Id" PrefetchUrls="@PrefetchUrls" Here="Here" />
 </PublicLayout>
 
 @code {
@@ -11,6 +11,22 @@
     [Parameter] public string? PrefetchUrls { get; set; }
     [Parameter] public bool NoIndex { get; set; }
     [Parameter, EditorRequired] public string GalleryTitle { get; set; } = "";
+
+    /// <summary>
+    /// Feature 010 (owner review 1, B2/B3): the gallery crumb's href (the photo's tile) and the
+    /// photo's 1-based position. Optional: null/0 render no breadcrumb and no count, as before.
+    /// </summary>
+    [Parameter] public string? GalleryHref { get; set; }
+    [Parameter] public int Index { get; set; }
+    [Parameter] public int Total { get; set; }
+
+    private IReadOnlyList<Crumb>? Crumbs => GalleryHref is null
+        ? null
+        : [new("Galleries", "/"), new(GalleryTitle, GalleryHref), new(Image.Title)];
+
+    private RenderFragment? Here => Total <= 0
+        ? null
+        : @<PhotoCount Index="@Index" Total="@Total" />;
 
     private RenderFragment _transitions => b =>
     {

@@ -1,4 +1,4 @@
-<a class="text-link" href="@Href" rel="@RelValue" target="@Target">@ChildContent</a>
+<a class="@Class" href="@Href" rel="@RelValue" target="@Target">@ChildContent</a>
 
 @code {
     [Parameter, EditorRequired] public string Href { get; set; } = "";
@@ -10,6 +10,11 @@
     /// links may carry the arrow. A new-tab link gets rel="noopener" unless Rel is given.
     /// </summary>
     [Parameter] public string? Target { get; set; }
+
+    /// <summary>Feature 010 (K1): true adds the site's one 44×44 tap box, class "text-link tap".</summary>
+    [Parameter] public bool Tap { get; set; }
+
+    private string Class => Tap ? "text-link tap" : "text-link";
 
     private string? RelValue => Rel ?? (Target == "_blank" ? "noopener" : null);
 }

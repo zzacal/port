@@ -2,4 +2,12 @@
     <Specimen Label="First image" Width="w-480"><Pager NextHref="#" /></Specimen>
     <Specimen Label="Middle image" Width="w-480"><Pager PrevHref="#" NextHref="#" /></Specimen>
     <Specimen Label="Last image" Width="w-480"><Pager PrevHref="#" /></Specimen>
+    <Specimen Label="With count, middle photo" Width="w-480"><Pager PrevHref="#" NextHref="#" Here="@Here(7, 24)" /></Specimen>
+    <Specimen Label="With count, first photo" Width="w-480"><Pager NextHref="#" Here="@Here(1, 24)" /></Specimen>
+    <Specimen Label="With count, last photo" Width="w-480"><Pager PrevHref="#" Here="@Here(24, 24)" /></Specimen>
+    <Specimen Label="One-photo gallery" Width="w-480"><Pager Here="@Here(1, 1)" /></Specimen>
 </UiLayout>
+
+@code {
+    private static RenderFragment Here(int index, int total) => @<PhotoCount Index="index" Total="total" />;
+}

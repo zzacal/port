@@ -1,5 +1,6 @@
 using Gallery.Core.Content;
 using Gallery.Web.Data;
+using Gallery.Web.Library;
 
 namespace Gallery.Web.Edge;
 
@@ -71,7 +72,8 @@ public sealed class PurgeSet
 
 /// <summary>
 /// Pure purge-set computation, exactly per contracts/edge.md (FR-038, SC-004, decisions rows 7, 24
-/// and 32) and the warm file list (FR-039, decisions rows 25 and 45).
+/// and 32; 010 E1 widened <see cref="Changed"/>, E2 <see cref="Nav"/>) and the warm file list
+/// (FR-039, decisions rows 25 and 45).
 /// </summary>
 public static class PurgeSets
 {
@@ -92,19 +94,28 @@ public static class PurgeSets
     public static IReadOnlyList<string> Home(GallerySnapshot? before, GallerySnapshot? after) =>
         Listed(before) || Listed(after) ? [HomePath] : [];
 
-    /// <summary>Ids in exactly one of the two item lists, plus ids in both whose neighbours differ.</summary>
+    /// <summary>
+    /// Ids whose photo page changed (010 contracts/edge.md E1): ids in exactly one of the two item
+    /// lists; ids in both whose neighbours differ; ids in both whose 1-based index differs (the
+    /// "N / total" counter); and every id in both when the item count differs (the total changed).
+    /// </summary>
     public static IReadOnlyList<string> Changed(GallerySnapshot? before, GallerySnapshot? after)
     {
         var b = before?.Items ?? [];
         var a = after?.Items ?? [];
         var inB = b.ToHashSet(StringComparer.Ordinal);
         var inA = a.ToHashSet(StringComparer.Ordinal);
+        var countChanged = b.Count != a.Count;
         var changed = new List<string>();
         foreach (var id in inB.Union(inA))
         {
             if (inB.Contains(id) != inA.Contains(id))
                 changed.Add(id);
+            else if (countChanged)
+                changed.Add(id);
             else if (GalleryNav.Neighbours(b, id) != GalleryNav.Neighbours(a, id))
+                changed.Add(id);
+            else if (IndexOf(b, id) != IndexOf(a, id))
                 changed.Add(id);
         }
         return Sorted(changed);
@@ -168,6 +179,13 @@ public static class PurgeSets
         var a = afterOrder.Where(listed.Contains).ToList();
         return new(bases, b.SequenceEqual(a, StringComparer.Ordinal) ? [] : [HomePath], []);
     }
+
+    /// <summary>
+    /// P-NAV (010 contracts/edge.md E2): the gallery page of every gallery whose stored <c>nav</c> the
+    /// projection set or unset, under its slug after the change. No photo pages, no <c>/</c>.
+    /// </summary>
+    public static PurgeSet Nav(IEnumerable<GalleryLinkTarget> navChanged, EdgeBases bases) =>
+        new(bases, navChanged.Select(g => GalleryPath(g.Id, g.Slug)), []);
 
     /// <summary>P-GDELETE: every page of the gallery before + Home(before, ∅).</summary>
     public static PurgeSet GalleryDelete(GallerySnapshot before, EdgeBases bases) =>
@@ -268,6 +286,13 @@ public static class PurgeSets
         paths.AddRange(Pages(before, after, Changed(before, after)));
         paths.AddRange(Home(before, after));
         return paths;
+    }
+
+    private static int IndexOf(IReadOnlyList<string> items, string id)
+    {
+        for (var i = 0; i < items.Count; i++)
+            if (items[i] == id) return i;
+        return -1;
     }
 
     private static IEnumerable<string> AllItems(GallerySnapshot? before, GallerySnapshot? after) =>

@@ -48,8 +48,9 @@ public class BuilderTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixture
         Assert.Matches("<a href=\"/admin/galleries\" aria-current=\"page\"", html);
         Assert.Matches("<title[^>]*>Coast</title>", html);
 
-        // UI-1: View gallery in the owner bar and the panel, and View ↗ on every tile.
-        Assert.Matches($"<a class=\"btn btn-quiet\" href=\"/g/{gid}/coast\"[^>]*>View site ↗</a>", html);
+        // UI-1: View gallery in the panel and View ↗ on every tile. 010 owner review 1 (stated change,
+        // decisions row 47): the owner bar is the same on every admin page, so its link is View site ↗ to "/".
+        Assert.Matches("<a class=\"btn btn-quiet\" href=\"/\"[^>]*>View site ↗</a>", html);
         Assert.Matches($"<a class=\"btn btn-quiet\" href=\"/g/{gid}/coast\"[^>]*>View gallery ↗</a>", html);
         foreach (var iid in ids)
         {
@@ -341,7 +342,8 @@ public class BuilderTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixture
         Assert.Equal(HttpStatusCode.SeeOther, (await h.PostFormAsync($"/admin/galleries/{gid}/remove", [F("image", c)])).StatusCode);
         GalleryHtml.SetEq([Gp(gid, "coast"), Pp(gid, "coast", a), Pp(gid, "coast", c), Home], await h.SettleAsync());
         Assert.Equal(HttpStatusCode.SeeOther, (await h.PostFormAsync($"/admin/galleries/{gid}/remove", [F("image", a)])).StatusCode);
-        GalleryHtml.SetEq([Gp(gid, "coast"), Pp(gid, "coast", a), Home], await h.SettleAsync());
+        // 010 P-NAV (stated change, decisions row 27): Coast is unlisted, so Later loses its prev link.
+        GalleryHtml.SetEq([Gp(gid, "coast"), Pp(gid, "coast", a), Gp(later, "later"), Home], await h.SettleAsync());
 
         g = await GalleryHtml.LoadAsync(h, gid);
         Assert.Equal("public", g.Visibility);
@@ -358,16 +360,19 @@ public class BuilderTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixture
         Assert.True(GalleryHtml.HasAttr(sw, "checked"), sw);
         Assert.False(GalleryHtml.HasAttr(sw, "disabled"), sw);
 
-        // The empty builder: the existing copy with the library link; "Back to galleries" instead of a View link.
+        // The empty builder: the existing copy with the library link. 010 owner review 1 (stated change,
+        // decisions row 47): no "Back to galleries" and no View link; the breadcrumb leads back.
         var builder = await GalleryHtml.GetOkAsync(h, $"/admin/galleries/{gid}");
         Assert.Matches("<p class=\"b-empty\"[^>]*>No photos in this gallery yet. <a href=\"/admin/library\"[^>]*>Add photos from the library</a></p>", builder);
-        Assert.Matches("<a class=\"btn btn-quiet\" href=\"/admin/galleries\"[^>]*>Back to galleries</a>", builder);
+        Assert.DoesNotContain("Back to galleries", builder);
+        Assert.Matches("<nav class=\"breadcrumb\"[^>]*><ol[^>]*><li[^>]*><a class=\"text-link tap\" href=\"/admin/galleries\"", builder);
         Assert.DoesNotContain($"/g/{gid}", builder);
 
         // Adding a photo (library L3) brings it back at its home position with no publish.
         var add = await h.PostFormAsync("/admin/library/add", [F("ids", a), F("gallery", gid), F("page", "1")]);
         Assert.Equal(HttpStatusCode.SeeOther, add.StatusCode);
-        GalleryHtml.SetEq([Gp(gid, "coast"), Pp(gid, "coast", a), Home], await h.SettleAsync());
+        // 010 P-NAV (stated change, decisions row 27): Coast is listed again, so Later regains its prev link.
+        GalleryHtml.SetEq([Gp(gid, "coast"), Pp(gid, "coast", a), Gp(later, "later"), Home], await h.SettleAsync());
         home = await GalleryHtml.HomeRawAsync(h);
         var at = home.IndexOf($"/g/{gid}/coast", StringComparison.Ordinal);
         Assert.True(at >= 0 && at < home.IndexOf($"/g/{later}/later", StringComparison.Ordinal), "Coast is back before Later");

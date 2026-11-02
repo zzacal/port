@@ -3,13 +3,13 @@
     <span class="prev">
         @if (!string.IsNullOrEmpty(PrevHref))
         {
-            <TextLink Href="@PrevHref" Rel="prev">Previous</TextLink>
+            <TextLink Href="@PrevHref" Rel="prev" Tap="true">Previous</TextLink>
         }
-    </span>
+    </span>@HereContent
     <span class="next">
         @if (!string.IsNullOrEmpty(NextHref))
         {
-            <TextLink Href="@NextHref" Rel="next">Next</TextLink>
+            <TextLink Href="@NextHref" Rel="next" Tap="true">Next</TextLink>
         }
     </span>
 </nav>
@@ -17,4 +17,9 @@
 @code {
     [Parameter] public string? PrevHref { get; set; }
     [Parameter] public string? NextHref { get; set; }
+
+    /// <summary>Feature 010 (K2): centre content, rendered as div.here between the two sides.</summary>
+    [Parameter] public RenderFragment? Here { get; set; }
+
+    private RenderFragment? HereContent => Here is null ? null : @<div class="here">@Here</div>;
 }

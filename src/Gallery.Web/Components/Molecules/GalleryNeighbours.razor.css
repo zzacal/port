@@ -1,0 +1,13 @@
+.gallery-neighbours {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-s);
+    max-width: 960px;
+    margin: var(--space-m) auto 0;
+    padding: 0 var(--space-s);
+}
+/* max-width caps each side at its grid column: with justify-self start/end the item is otherwise
+   as wide as its no-wrap title (min-content) and overlaps the other side on narrow screens. The
+   link's own max-width/ellipsis (TextLink tap rule) then truncates inside it (decisions row 37). */
+.prev { justify-self: start; min-width: 0; max-width: 100%; }
+.next { justify-self: end; min-width: 0; max-width: 100%; text-align: right; }

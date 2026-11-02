@@ -30,11 +30,11 @@ public class TemplatePageTests
     }
 
     [Fact]
-    public async Task SiteHeader_page_renders_brand_and_nav()
+    public async Task SiteHeader_page_renders_the_breadcrumb_trails()
     {
         var html = await Render.Html<SiteHeaderPage>();
-        Assert.Contains("Gallery", html);
         Assert.Contains("Galleries", html);
+        Assert.Contains("Harbour at dusk", html);
         Guards.AssertNoInlineStyle(html);
         Guards.AssertNoScript(html);
     }

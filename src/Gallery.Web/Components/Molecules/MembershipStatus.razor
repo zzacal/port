@@ -1,0 +1,24 @@
+@* The library tile's gallery status (feature 010, K8). No wrapper element: the page keeps its
+   own span.lib-status around this. Copy: "Not in a gallery", or the first gallery by title as a
+   link, then " +N" for the others, then " · public in M". *@
+@if (FirstId is null)
+{
+@("Not in a gallery")
+}
+else
+{
+<TextLink Href="@($"/admin/galleries/{FirstId}")">@FirstTitle</TextLink>@Suffix
+}
+
+@code {
+    [Parameter] public string? FirstId { get; set; }
+    [Parameter] public string? FirstTitle { get; set; }
+
+    /// <summary>Galleries holding the photo besides the first.</summary>
+    [Parameter] public int Others { get; set; }
+
+    /// <summary>Public galleries holding the photo.</summary>
+    [Parameter] public int Public { get; set; }
+
+    private string Suffix => (Others > 0 ? $" +{Others}" : "") + (Public > 0 ? $" · public in {Public}" : "");
+}

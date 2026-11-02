@@ -1,7 +1,11 @@
 <UiLayout Title="SiteHeader">
-    <Specimen Label="Default"><SiteHeader SiteName="Gallery" NavItems="Items" /></Specimen>
+    <Specimen Label="Home"><SiteHeader Crumbs="@Home" /></Specimen>
+    <Specimen Label="Gallery page"><SiteHeader Crumbs="@Gallery" /></Specimen>
+    <Specimen Label="Photo page"><SiteHeader Crumbs="@Photo" /></Specimen>
 </UiLayout>
 
 @code {
-    private static readonly IReadOnlyList<NavItem> Items = [new("Galleries", "/")];
+    private static readonly IReadOnlyList<Crumb> Home = [new("Galleries")];
+    private static readonly IReadOnlyList<Crumb> Gallery = [new("Galleries", "#"), new("September 6")];
+    private static readonly IReadOnlyList<Crumb> Photo = [new("Galleries", "#"), new("September 6", "#"), new("Harbour at dusk")];
 }

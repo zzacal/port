@@ -1,15 +1,15 @@
-<PublicLayout Title="@Title" NoIndex="@NoIndex" Enhance="true" HeadExtra="_transitions">
-    <header class="gallery-head">
-        <Title Text="@Title" Element="h1" />
-        @if (!string.IsNullOrEmpty(Description))
-        {
-            <p class="gallery-desc">@Description</p>
-        }
-    </header>
+<PublicLayout Title="@Title" NoIndex="@NoIndex" Enhance="true" HeadExtra="_transitions" Crumbs="Crumbs">
+    @* Owner review 4: the breadcrumb names the gallery, so the page shows no title; only the
+       description, when there is one. *@
+    @if (!string.IsNullOrEmpty(Description))
+    {
+        <p class="gallery-desc">@Description</p>
+    }
     @if (Items.Count > 0)
     {
         <ContactSheet Items="Items" Large="4" Medium="3" Small="1" />
     }
+    @Neighbours
 </PublicLayout>
 
 @code {
@@ -17,6 +17,20 @@
     [Parameter] public string? Description { get; set; }
     [Parameter] public bool NoIndex { get; set; }
     [Parameter] public IReadOnlyList<ContactSheetItem> Items { get; set; } = [];
+
+    /// <summary>
+    /// Feature 010 (P2): the listed galleries before and after this one. The endpoint passes them
+    /// only for a public gallery ([SAFETY] II.2); both null renders nothing.
+    /// </summary>
+    [Parameter] public GalleryNeighbour? Prev { get; set; }
+    [Parameter] public GalleryNeighbour? Next { get; set; }
+
+    /// <summary>010 owner review 1 (B2): the endpoint passes "Galleries › {title}"; null renders none.</summary>
+    [Parameter] public IReadOnlyList<Crumb>? Crumbs { get; set; }
+
+    private RenderFragment? Neighbours => Prev is null && Next is null
+        ? null
+        : @<GalleryNeighbours Prev="Prev" Next="Next" />;
 
     private RenderFragment _transitions => b =>
     {

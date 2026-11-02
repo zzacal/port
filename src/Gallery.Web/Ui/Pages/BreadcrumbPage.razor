@@ -1,0 +1,14 @@
+<UiLayout Title="Breadcrumb">
+    <Specimen Label="Gallery page"><Breadcrumb Items="@Gallery" /></Specimen>
+    <Specimen Label="Photo page"><Breadcrumb Items="@Photo" /></Specimen>
+    <Specimen Label="Admin gallery"><Breadcrumb Items="@Admin" /></Specimen>
+    <Specimen Label="Long titles (narrow)" Width="w-320"><Breadcrumb Items="@Long" /></Specimen>
+</UiLayout>
+
+@code {
+    private static readonly IReadOnlyList<Crumb> Gallery = [new("Galleries", "#"), new("September 6")];
+    private static readonly IReadOnlyList<Crumb> Photo = [new("Galleries", "#"), new("September 6", "#"), new("Harbour at dusk")];
+    private static readonly IReadOnlyList<Crumb> Admin = [new("Galleries", "#"), new("September 6")];
+    private static readonly IReadOnlyList<Crumb> Long =
+        [new("Galleries", "#"), new("Alpine lakes and the high pass", "#"), new("Birds of the northern estuary, photographed through three long winters")];
+}

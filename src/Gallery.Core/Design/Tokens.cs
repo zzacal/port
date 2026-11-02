@@ -7,6 +7,9 @@ public static class Tokens
     public const int SpaceM = 32;
     public const int SpaceS = 16;
 
+    // Tap target: the one minimum touch size (010 UI-2; constitution IX.3 sizes the breadcrumb row by it)
+    public const int Tap = 44;
+
     // Breakpoints
     public const int BreakLarge = 1200;
     public const int BreakMedium = 600;
@@ -33,7 +36,7 @@ public static class Tokens
     public const string FontStack = "system-ui, -apple-system, \"Helvetica Neue\", Arial, sans-serif";
 
     public static string ToCssRoot() =>
-        $":root{{--space-l:{SpaceL}px;--space-m:{SpaceM}px;--space-s:{SpaceS}px;" +
+        $":root{{--space-l:{SpaceL}px;--space-m:{SpaceM}px;--space-s:{SpaceS}px;--tap:{Tap}px;" +
         $"--cell-ratio:{CellRatioW}/{CellRatioH};" +
         $"--type-caption:{TypeCaption}px;--type-body:{TypeBody}px;--type-brand:{TypeBrand}px;" +
         $"--color-bg:{ColorBg};--color-text:{ColorText};--color-muted:{ColorMuted};--color-rule:{ColorRule};" +
@@ -45,6 +48,7 @@ public static class Tokens
         ("Spacing",     "SpaceL",      $"{SpaceL}px"),
         ("Spacing",     "SpaceM",      $"{SpaceM}px"),
         ("Spacing",     "SpaceS",      $"{SpaceS}px"),
+        ("Spacing",     "Tap",         $"{Tap}px"),
         ("Breakpoints", "BreakLarge",  $"{BreakLarge}px"),
         ("Breakpoints", "BreakMedium", $"{BreakMedium}px"),
         ("Cell",        "CellRatioW",  $"{CellRatioW}"),

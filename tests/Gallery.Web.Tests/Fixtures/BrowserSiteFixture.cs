@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.Security.Cryptography;
 using Gallery.Web.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -33,8 +32,6 @@ public sealed class BrowserSiteFixture : IAsyncLifetime
     public const string GalleryId = "ppppppppppppppppppppppppp2";
     public const string GallerySlug = "test-roll";
     public const string OtherGalleryId = "qqqqqqqqqqqqqqqqqqqqqqqqq2";
-    private static readonly int[] Ladder = [320, 640, 960, 1280];
-    private static readonly string[] Colours = ["red", "green", "blue", "orange", "purple", "teal"];
 
     private readonly MongoDbContainer _mongo = new MongoDbBuilder("mongo:8").Build();
     private readonly ConcurrentDictionary<string, int> _hits = new();
@@ -65,7 +62,7 @@ public sealed class BrowserSiteFixture : IAsyncLifetime
         _dir = Path.Combine(Path.GetTempPath(), $"gallery-browser-{Guid.NewGuid():N}");
         Directory.CreateDirectory(_dir);
 
-        var images = Enumerable.Range(0, PhotoCount).Select(EncodePhoto).ToList();
+        var images = Enumerable.Range(0, PhotoCount).Select(i => PhotoEncoder.EncodePhoto(_dir, i)).ToList();
         PhotoIds = images.Select(i => i.Id).ToList();
 
         await _mongo.StartAsync();
@@ -136,42 +133,10 @@ public sealed class BrowserSiteFixture : IAsyncLifetime
         return host;
     }
 
-    private sealed record Encoded(string Id, int Width, int Height, List<DerivativeDoc> Derivatives, string Preview);
-
-    // A distinct 1600x1200 image per index, encoded like scripts/prepare-photos.sh.
-    private Encoded EncodePhoto(int index)
+    private static async Task SeedAsync(IMongoDatabase db, List<PhotoEncoder.Encoded> images)
     {
-        var png = Path.Combine(_dir, $"src-{index}.png");
-        Run("/opt/homebrew/bin/ffmpeg", $"-hide_banner -loglevel error -y -f lavfi -i \"color=c={Colours[index]}:s=1600x1200,drawbox=x={index * 200}:y=100:w=300:h=900:c=white:t=fill\" -frames:v 1 \"{png}\"");
-        var derivatives = new List<DerivativeDoc>();
-        foreach (var w in Ladder)
-        {
-            var avif = Named(Path.Combine(_dir, $"tmp-{index}-{w}.avif"), path =>
-                Run("/opt/homebrew/bin/ffmpeg", $"-hide_banner -loglevel error -y -i \"{png}\" -vf \"scale={w}:-2,format=yuv420p\" -frames:v 1 -map_metadata -1 -c:v libsvtav1 -crf 32 -preset 8 \"{path}\""));
-            var webp = Named(Path.Combine(_dir, $"tmp-{index}-{w}.webp"), path =>
-                Run("/opt/homebrew/bin/cwebp", $"-quiet -q 78 -resize {w} 0 \"{png}\" -o \"{path}\""));
-            derivatives.Add(new DerivativeDoc { W = w, Avif = avif, Webp = webp, BytesAvif = 1, BytesWebp = 1 });
-        }
-        var preview = Path.Combine(_dir, $"preview-{index}.webp");
-        Run("/opt/homebrew/bin/cwebp", $"-quiet -q 40 -resize 32 24 \"{png}\" -o \"{preview}\"");
-        var id = new string((char)('a' + index), 25) + "2";
-        return new Encoded(id, 1280, 960, derivatives, "data:image/webp;base64," + Convert.ToBase64String(File.ReadAllBytes(preview)));
-    }
-
-    // Content-hash name, as the real pipeline does: identical bytes would share a cache entry.
-    private string Named(string tmpPath, Action<string> encode)
-    {
-        encode(tmpPath);
-        var ext = Path.GetExtension(tmpPath);
-        var name = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(tmpPath)))[..16] + ext;
-        File.Move(tmpPath, Path.Combine(_dir, name), overwrite: true);
-        return name;
-    }
-
-    private static async Task SeedAsync(IMongoDatabase db, List<Encoded> images)
-    {
-        PlaceholderDoc Ph(Encoded e) => new() { Color = "#808080", Preview = e.Preview };
-        GalleryCardDoc Card(string gid, string slug, string title, Encoded cover, int count) => new()
+        PlaceholderDoc Ph(PhotoEncoder.Encoded e) => new() { Color = "#808080", Preview = e.Preview };
+        GalleryCardDoc Card(string gid, string slug, string title, PhotoEncoder.Encoded cover, int count) => new()
         {
             GalleryId = gid, Slug = slug, Title = title, ImageCount = count,
             Cover = new CoverImageDoc { ImageId = cover.Id, Width = cover.Width, Height = cover.Height, Placeholder = Ph(cover), Derivatives = cover.Derivatives },
@@ -196,16 +161,5 @@ public sealed class BrowserSiteFixture : IAsyncLifetime
         {
             HomeOrder = [GalleryId, OtherGalleryId], HomeCards = [main, other], UpdatedAt = DateTime.UtcNow,
         });
-    }
-
-    private static void Run(string exe, string args)
-    {
-        using var p = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(exe, args)
-        {
-            RedirectStandardError = true, RedirectStandardOutput = true, UseShellExecute = false,
-        })!;
-        var err = p.StandardError.ReadToEnd();
-        p.WaitForExit();
-        if (p.ExitCode != 0) throw new InvalidOperationException($"{exe} failed: {err}");
     }
 }

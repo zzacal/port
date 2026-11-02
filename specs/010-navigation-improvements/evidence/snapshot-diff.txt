@@ -1,0 +1,17 @@
+## 006 ui-baseline
+EQUAL    atoms/text-link.html (differs only by intended 010 changes)
+EQUAL    index.html (differs only by intended 010 changes)
+EQUAL    molecules/pager.html (differs only by intended 010 changes)
+EQUAL    organisms/site-header.html (differs only by intended 010 changes)
+EQUAL    organisms/solo-viewer.html (differs only by intended 010 changes)
+EQUAL    templates/public-layout.html (differs only by intended 010 changes)
+
+ALL EQUAL
+
+## 005 baseline
+EQUAL    PublicLayoutPage.html (differs only by intended 010 changes)
+EQUAL    SoloViewerPage.html (differs only by intended 010 changes)
+
+ALL EQUAL
+
+Note: the three new slugs (molecules/gallery-link, gallery-neighbours, membership-status) were first written by the full merged-tree gate run, from the same code, before this backup; they compare SAME. Their specimen labels equal contracts/components.md Catalogue exactly (checked by NavCataloguePageTests).

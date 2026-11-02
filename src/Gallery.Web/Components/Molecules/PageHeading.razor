@@ -1,0 +1,10 @@
+@* A page's title row with its page-level actions on the right (010 owner review 1, B6). Global
+   bars hold navigation and account only; a page's own create action sits here. *@
+<div class="page-heading"><h1>@Text</h1>@ActionsContent</div>
+
+@code {
+    [Parameter, EditorRequired] public string Text { get; set; } = "";
+    [Parameter] public RenderFragment? Actions { get; set; }
+
+    private RenderFragment? ActionsContent => Actions is null ? null : @<div class="page-actions">@Actions</div>;
+}
