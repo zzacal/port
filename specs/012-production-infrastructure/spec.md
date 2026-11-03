@@ -22,8 +22,13 @@ front of both, hosted logs, cost alerts, and a repeatable way to create and upda
 - Q: How does code reach production? → A: Option A, the D-25 pipeline: build and full test suite
   on every push, deploy from `main` only after they pass. The exact sign-in mechanism the pipeline
   uses depends on the host (Q1, still open). Applied to User Story 5 and FR-024.
-- Q: Which host? → Open. The owner asked which option is the most automatable for IaC and
-  deployment, and said Azure now looks expensive. Comparison given in chat; answer pending.
+- Q: Which host? → A: Azure App Service (Linux B1), as in the constitution and D-01, so no
+  amendment is needed for the host itself. The owner expects not to have rights for a pipeline
+  identity that can create resources: production resources are created by the owner, and the
+  pipeline only gets the ability to publish to the one existing app. Applied to FR-001, FR-002,
+  FR-022 and FR-024. Still open: what rights the owner holds in the subscription (decides the
+  pipeline's credential) and whether "by hand" means the dashboard or the IaC tool run from the
+  owner's machine.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -181,8 +186,9 @@ it reports no changes. Change one setting by hand in a dashboard; the preview re
 
 Host and platform
 
-- **FR-001**: The production app MUST run on [NEEDS CLARIFICATION: host, see Q1] in an account
-  only the owner controls (no other person holds access to the account or subscription).
+- **FR-001**: The production app MUST run on one Azure App Service Linux B1 plan (Platform
+  Constraints, D-01) in a subscription the owner controls (no other person holds access to the
+  account or subscription).
 - **FR-002**: If the chosen host differs from the constitution's Platform Constraints (Azure App
   Service Linux B1) or breaks the VIII.1 fixed-cost ceiling, the constitution MUST be amended
   through /speckit-constitution before /speckit-plan, and D-01, D-03, D-05, D-12, D-18, D-24 and
@@ -255,9 +261,10 @@ Repeatability
 - **FR-023**: A preview run against unchanged production MUST report zero changes.
 - **FR-024**: Every push to any branch MUST be built and run the full test suite automatically.
   Only pushes to `main` deploy, and only after the full build and test suite pass on the exact
-  commit deployed. The pipeline MUST hold no long-lived host credential where the host offers a
-  federated sign-in; where it does not, the one credential it holds MUST be scoped to deploying
-  this app only and covered by the rotation runbook.
+  commit deployed. The pipeline MUST NOT be able to create, delete or reconfigure any resource; it
+  can only publish a build to the one existing production app. It MUST hold no long-lived
+  credential where the owner's rights allow a federated sign-in; otherwise the one credential it
+  holds MUST be limited to publishing to that app and covered by the rotation runbook.
 
 Verification
 
