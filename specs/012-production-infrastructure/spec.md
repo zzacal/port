@@ -13,6 +13,18 @@ starts)"). Everything built so far runs only on the owner's machine. This featur
 the public internet: a production host, production image storage and image hostname, the edge in
 front of both, hosted logs, cost alerts, and a repeatable way to create and update all of it.
 
+## Clarifications
+
+### Session 2026-11-02
+
+- Q: Public address of the site? → A: `port.zacal.me`. Images stay on a separate production
+  image hostname (default `img.zacal.me`). Applied to FR-005, FR-016 and Assumptions.
+- Q: How does code reach production? → A: Option A, the D-25 pipeline: build and full test suite
+  on every push, deploy from `main` only after they pass. The exact sign-in mechanism the pipeline
+  uses depends on the host (Q1, still open). Applied to User Story 5 and FR-024.
+- Q: Which host? → Open. The owner asked which option is the most automatable for IaC and
+  deployment, and said Azure now looks expensive. Comparison given in chat; answer pending.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A visitor opens the real site (Priority: P1)
@@ -123,7 +135,8 @@ per-route timing results. Inspect the configured spending alerts and the log ing
 
 Every production resource is described in the repository. The owner previews a change before
 applying it, applies it from their own machine, and can see when someone changed a setting by
-hand. Code changes reach production through [NEEDS CLARIFICATION: deployment path, see Q3].
+hand. Code changes reach production through an automated pipeline: every push is built and tested,
+and only `main` deploys, only after its tests pass.
 
 **Why this priority**: The design already decided this (D-24, D-25, both on hold). It is what
 makes production recoverable and keeps dashboard edits from drifting silently.
@@ -181,8 +194,8 @@ Host and platform
 
 Addresses, TLS and the edge
 
-- **FR-005**: The site MUST be served at [NEEDS CLARIFICATION: public hostname, see Q2] and
-  images at a separate production image hostname attached to the production public bucket.
+- **FR-005**: The site MUST be served at `https://port.zacal.me` and images at a separate
+  production image hostname attached to the production public bucket.
 - **FR-006**: All traffic MUST be HTTPS with free certificates at the edge and between edge and
   host, in strict mode (never flexible); plain HTTP MUST redirect to HTTPS.
 - **FR-007**: The host MUST refuse every request that did not come through the edge. An address
@@ -240,8 +253,11 @@ Repeatability
   repository and created from that description, previewed before it is applied, applied from the
   owner's machine (D-24). Steps with no management interface MUST be in a committed runbook.
 - **FR-023**: A preview run against unchanged production MUST report zero changes.
-- **FR-024**: Code MUST reach production only after the full build and test suite passes on the
-  exact commit deployed.
+- **FR-024**: Every push to any branch MUST be built and run the full test suite automatically.
+  Only pushes to `main` deploy, and only after the full build and test suite pass on the exact
+  commit deployed. The pipeline MUST hold no long-lived host credential where the host offers a
+  federated sign-in; where it does not, the one credential it holds MUST be scoped to deploying
+  this app only and covered by the rotation runbook.
 
 Verification
 
@@ -294,11 +310,12 @@ Verification
   `zzacal/port` with OIDC to the host and tests on every push; D-12 is Application Insights; D-03
   is the edge IP allow-list plus Authenticated Origin Pulls. They are re-checked against whatever
   host Q1 picks, and change only through the design record (VII.2).
-- The domain is `zacal.me` on Cloudflare in the same account as R2 (owner profile). Observed
-  2026-11-02: `zacal.me`, `www.zacal.me` and `gallery.zacal.me` all resolve to `192.168.1.112`, a
-  private home-network address, so a DNS-only wildcard or apex record exists; `img-dev.zacal.me`
-  resolves through Cloudflare. Whatever uses the current record has to be known before it is
-  repointed.
+- The domain is `zacal.me` on Cloudflare in the same account as R2 (owner profile). The site's
+  address is `port.zacal.me` (Clarification 2026-11-02). Observed 2026-11-02: `zacal.me`,
+  `www.zacal.me`, `port.zacal.me` and `img.zacal.me` all resolve to `192.168.1.112`, a private
+  home-network address, so a DNS-only wildcard record most likely exists; `img-dev.zacal.me`
+  resolves through Cloudflare. Explicit `port` and `img` records override the wildcard for those
+  two names only, so whatever else uses the wildcard keeps working.
 - Production content starts empty. Development content is never copied to production (III.10);
   the owner uploads through production `/admin`.
 - Production bucket names default to `gallery-prod-private` and `gallery-prod-public`, matching
@@ -314,8 +331,8 @@ Verification
   time, and are listed in the runbook and tasks as OWNER-ONLY, not as pre-plan gates.
 - Severable seams (not literally named in "standing up production infrastructure", included
   because the roadmap gives them to hosting; each can be cut before planning):
-  1. The deployment pipeline (D-25, FR-024 and User Story 5 scenario 3) — the roadmap's hosting
-     entry owns it. Depends on Q3.
+  1. (Accepted by the owner, Clarification 2026-11-02; no longer severable.) The deployment
+     pipeline (D-25, FR-024, User Story 5 scenario 3).
   2. Edge page purge and warm against production (FR-011) — owned by hosting per D-16; without it
      published changes wait up to a day.
   3. Committed hosted-log queries with evidence (FR-019) — a deferred design item; without it
