@@ -22,7 +22,7 @@ front of both, hosted logs, cost alerts, and a repeatable way to create and upda
 - Q: How does code reach production? → A: Option A, the D-25 pipeline: build and full test suite
   on every push, deploy from `main` only after they pass. The exact sign-in mechanism the pipeline
   uses depends on the host (Q1, still open). Applied to User Story 5 and FR-024.
-- Q: Which host? → A: Azure App Service (Linux B1), as in the constitution and D-01, so no
+- Q: Which host? → A: Azure App Service (Linux; B1 at the time, B2 since, see below), so no
   amendment is needed for the host itself. The owner expects not to have rights for a pipeline
   identity that can create resources: production resources are created by the owner, and the
   pipeline only gets the ability to publish to the one existing app. Applied to FR-001, FR-002,
@@ -43,6 +43,15 @@ front of both, hosted logs, cost alerts, and a repeatable way to create and upda
   bullet.) D-24 is withdrawn for this feature: User Story 5, FR-022, FR-023, SC-007 and the
   Infrastructure description entity are rewritten as a committed runbook plus a read-only settings
   check. The design record records the change in the plan (VII.2).
+- Q: Plan size? → A: B2, "for double the beef". The owner recreated the app (superseding the
+  Container/B1 details above): resource group `portfolio`, app `portfolio-web`, new plan
+  `portfolio-plan`, West US, Linux, Publish Code, runtime .NET 10 (LTS), Basic B2 (2 cores,
+  3.5 GB, US$26.28/month), secure unique default hostname on, basic authentication disabled,
+  continuous deployment not enabled, Application Insights `portfolio-appinsights` (West US)
+  enabled. Told once: the origin decodes no pixels (III.8) and anonymous pages are edge-cached, so
+  B1 is not expected to be the bottleneck; scaling down to B1 is a plan setting with no rebuild.
+  B2 exceeds constitution VIII.1 (one B1 plan), so FR-002 now requires an amendment before
+  /speckit-plan. Applied to FR-001, FR-002, FR-021 and SC-008.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -200,14 +209,16 @@ Change one checked setting by hand in a dashboard; the check reports it.
 
 Host and platform
 
-- **FR-001**: The production app MUST run on one Azure App Service Linux B1 plan (Platform
-  Constraints, D-01) in the subscription "Zac Zacal Test Ops Platform"
+- **FR-001**: The production app MUST run on one Azure App Service Linux B2 plan
+  (`portfolio-plan`, app `portfolio-web`, West US) in the subscription "Zac Zacal Test Ops Platform"
   (`c28725a0-a61d-4a6c-999a-0a8980111fbf`), inside resource groups used only by this site. No
   production Azure resource may live in any other subscription.
-- **FR-002**: If the chosen host differs from the constitution's Platform Constraints (Azure App
-  Service Linux B1) or breaks the VIII.1 fixed-cost ceiling, the constitution MUST be amended
-  through /speckit-constitution before /speckit-plan, and D-01, D-03, D-05, D-12, D-18, D-24 and
-  D-25 updated in the design record in this feature (VII.2).
+- **FR-002** (blocking, before /speckit-plan): constitution VIII.1 ("one Azure App Service Basic
+  B1 (Linux) plan") and the Platform Constraints hosting bullet ("Azure App Service (Linux, B1)")
+  MUST be amended through /speckit-constitution to allow one Basic B2 plan. The metered cap
+  (US$10, alert at US$7) is unchanged. In this feature the design record MUST then update D-01
+  (B2), D-18 and section 8 (fixed cost), D-24 (withdrawn: production made by hand) and D-25 (deploy
+  identity), and every other entry that says B1 (VII.2).
 - **FR-003**: The app MUST stay warm: no request may wait on a cold start of the app, and the
   datastore connection MUST stay open so the free datastore never pauses.
 - **FR-004**: Production MUST use its own datastore, separate from development, in the region
@@ -324,7 +335,8 @@ Verification
   network distance to the host.
 - **SC-007**: The settings check reports zero differences against production built from the
   runbook, and reports a deliberately changed setting when run again.
-- **SC-008**: Projected monthly metered spend stays under US$7, and the alert and ingestion limit
+- **SC-008**: Fixed hosting is one B2 plan (US$26.28/month list price, West US), projected
+  monthly metered spend stays under US$7, and the alert and ingestion limit
   are in place before the first deploy.
 - **SC-009**: No secret value appears in the repository, its history, build output, or any page
   or response served to a browser (checked by scanning for the real values, not their shape).
