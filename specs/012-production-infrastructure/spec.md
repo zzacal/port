@@ -29,6 +29,11 @@ front of both, hosted logs, cost alerts, and a repeatable way to create and upda
   FR-022 and FR-024. Still open: what rights the owner holds in the subscription (decides the
   pipeline's credential) and whether "by hand" means the dashboard or the IaC tool run from the
   owner's machine.
+- Q: Which subscription, and how are resources created? → A: Subscription "Zac Zacal Test Ops
+  Platform" (`c28725a0-a61d-4a6c-999a-0a8980111fbf`) in the Alaska Airlines tenant. OpenTofu, run
+  from the owner's machine, is accepted as long as every Azure resource it touches is scoped to
+  that subscription. The pipeline still only publishes. Applied to FR-001, FR-020, FR-022 and
+  Assumptions (accepted risk: tenant administrators can see the site).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -187,8 +192,9 @@ it reports no changes. Change one setting by hand in a dashboard; the preview re
 Host and platform
 
 - **FR-001**: The production app MUST run on one Azure App Service Linux B1 plan (Platform
-  Constraints, D-01) in a subscription the owner controls (no other person holds access to the
-  account or subscription).
+  Constraints, D-01) in the subscription "Zac Zacal Test Ops Platform"
+  (`c28725a0-a61d-4a6c-999a-0a8980111fbf`), inside resource groups used only by this site. No
+  production Azure resource may live in any other subscription.
 - **FR-002**: If the chosen host differs from the constitution's Platform Constraints (Azure App
   Service Linux B1) or breaks the VIII.1 fixed-cost ceiling, the constitution MUST be amended
   through /speckit-constitution before /speckit-plan, and D-01, D-03, D-05, D-12, D-18, D-24 and
@@ -248,8 +254,9 @@ Observability and cost
 - **FR-019**: One committed query per existing time-bound success criterion MUST run against the
   hosted logs, and this feature's evidence MUST include their output (section 10 deferred item).
 - **FR-020**: A spending alert MUST notify the owner at US$7 per month of metered spend and again
-  at US$10 (VIII.1, D-18). Every metered service in production that offers a hard limit MUST have
-  one set inside the cap (VIII.4).
+  at US$10 (VIII.1, D-18), scoped to this site's resource groups, not the whole subscription, so
+  other spend in the subscription neither triggers it nor hides inside it. Every metered service
+  in production that offers a hard limit MUST have one set inside the cap (VIII.4).
 - **FR-021**: The design's cost table MUST be updated with verified unit prices for the chosen
   host and region, and the projected total MUST stay under the alert threshold (VIII.3).
 
@@ -257,7 +264,10 @@ Repeatability
 
 - **FR-022**: Every production resource that has a management interface MUST be described in the
   repository and created from that description, previewed before it is applied, applied from the
-  owner's machine (D-24). Steps with no management interface MUST be in a committed runbook.
+  owner's machine (D-24), signed in as the owner. The Azure side of the description MUST be pinned
+  to subscription `c28725a0-a61d-4a6c-999a-0a8980111fbf` and touch no resource outside this
+  site's resource groups (the state store excepted only if it sits in its own site-only group).
+  Steps with no management interface MUST be in a committed runbook.
 - **FR-023**: A preview run against unchanged production MUST report zero changes.
 - **FR-024**: Every push to any branch MUST be built and run the full test suite automatically.
   Only pushes to `main` deploy, and only after the full build and test suite pass on the exact
@@ -323,6 +333,13 @@ Verification
   home-network address, so a DNS-only wildcard record most likely exists; `img-dev.zacal.me`
   resolves through Cloudflare. Explicit `port` and `img` records override the wildcard for those
   two names only, so whatever else uses the wildcard keeps working.
+- Accepted risk (owner, 2026-11-02): the subscription sits in the Alaska Airlines tenant, so the
+  tenant's administrators can see the app, its settings and its secrets, and tenant policy (for
+  example blocked app registrations or required tags) can limit what OpenTofu and the pipeline
+  may do. This partly reverses the reason the site left Azure (001 decisions #34); images stay on
+  R2 in the owner's Cloudflare account, so masters are not in the tenant. Reversal cost: low
+  before launch, medium after (re-apply the description in another subscription and redeploy; no
+  data lives in Azure except logs).
 - Production content starts empty. Development content is never copied to production (III.10);
   the owner uploads through production `/admin`.
 - Production bucket names default to `gallery-prod-private` and `gallery-prod-public`, matching

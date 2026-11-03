@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,9 +31,9 @@
 
 ## Notes
 
-- Three [NEEDS CLARIFICATION] markers open: Q1 host (FR-001), Q2 public hostname (FR-005),
-  Q3 deployment path (User Story 5). Q1 decides whether a constitution amendment is needed
-  (FR-002) before /speckit-plan.
+- All three clarification markers resolved 2026-11-02 (host App Service B1 in subscription
+  c28725a0-...; port.zacal.me; D-25 pipeline that only publishes). No constitution amendment needed
+  for the host. Open owner decisions are tracked in the chat report, not as markers.
 - Tooling named by the design record (OpenTofu, GitHub Actions, Application Insights, Authenticated
   Origin Pulls) is kept in Assumptions as planning inputs only. Project vocabulary that the
   constitution fixes (buckets, Google sign-in, the edge) appears in FRs because it is the
