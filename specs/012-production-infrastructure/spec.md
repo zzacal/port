@@ -52,6 +52,14 @@ front of both, hosted logs, cost alerts, and a repeatable way to create and upda
   B1 is not expected to be the bottleneck; scaling down to B1 is a plan setting with no rebuild.
   B2 exceeds constitution VIII.1 (one B1 plan), so FR-002 now requires an amendment before
   /speckit-plan. Applied to FR-001, FR-002, FR-021 and SC-008.
+- Deploy identity (owner, 2026-11-02, done): user-assigned managed identity `portfolio-deploy`
+  (resource group `portfolio`, West US) with federated credential `github-port-main`: issuer
+  `https://token.actions.githubusercontent.com`, subject `repo:zzacal/port:ref:refs/heads/main`
+  (the repo uses the default name-based subject claim), audience `api://AzureADTokenExchange`;
+  role Website Contributor on `portfolio-web` only. Repository variables `AZURE_CLIENT_ID`,
+  `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` set (verified by `gh variable list`: all three
+  present, 36 characters each); no GitHub secret exists. Basic authentication stays disabled. The
+  workflow written in this feature uses exactly these names. Applied to FR-024.
 
 ## User Scenarios & Testing *(mandatory)*
 
