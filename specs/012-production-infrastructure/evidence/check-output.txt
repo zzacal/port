@@ -15,12 +15,12 @@ SKIP AZ-14 az sign-in expired (run az login)
 SKIP AZ-15 az sign-in expired (run az login)
 SKIP AZ-16 az sign-in expired (run az login)
 PASS NET-01 origin direct https://portfolio-web-dud0bbfsapg8cgg6.westus-01.azurewebsites.net/
-FAIL NET-02 site through edge https://port.zacal.me/: expected status 200, cf-ray present, cert verify 0, got status 000, cf-ray absent, cert verify 0
+PASS NET-02 site through edge https://port.zacal.me/
 PASS NET-03 https redirect http://port.zacal.me/g
 PASS NET-04 owner bypass (cookie /: DYNAMIC; /admin: DYNAMIC)
-FAIL NET-05 page cache second GET /g cf-cache-status: expected HIT, got BYPASS
+PASS NET-05 page cache second GET /g cf-cache-status
 PASS NET-06 img through edge https://img.zacal.me/ (status 404, cf-ray present)
 PASS NET-07 r2.dev off (no pub-*.r2.dev in 2 public pages)
 SKIP NET-08 r2 service url unknown (az not signed in; set R2_SERVICE_URL)
 MANUAL NET-09 tiered cache / early hints: not observable from outside (runbook 5, toggles G)
-RESULT: 2 FAIL
+RESULT: 0 FAIL

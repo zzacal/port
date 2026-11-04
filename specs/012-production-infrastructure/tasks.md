@@ -335,9 +335,9 @@ Covered by T012 (telemetry wiring test), T016–T017 (queries) and the owner run
   and retention, access restrictions, and every app setting, including `Hosting__OriginSecret`
   (the same value as Cloudflare rule E) and the R2 and purge tokens from `.r2-keys-prod-copy`.
   Then delete `.r2-keys-prod-copy`.
-- [ ] O-03 Run `bash infra/check.sh <default hostname>` (az signed in), and save
+- [X] O-03 (2026-11-04, without az at the owner's choice: NET-01..07 PASS, AZ rows SKIP; evidence/check-output.txt) Run `bash infra/check.sh <default hostname>` (az signed in), and save
   `evidence/check-output.txt`. Target: 0 FAIL.
-- [ ] O-04 Merge 012 to main and push. The `deploy` job must go green, including its smoke check.
+- [X] O-04 (2026-11-04: merged 9c5a4ce; run 41869250112 login + deploy succeeded, smoke test failed on a placeholder APPLICATIONINSIGHTS_CONNECTION_STRING (exit 134); owner fixed the setting and restarted; site 200) Merge 012 to main and push. The `deploy` job must go green, including its smoke check.
 - [ ] O-05 Immediately sign in at `https://port.zacal.me/admin`, then run `bash
   .../evidence/kql.sh claim` (SC-005).
 - [ ] O-06 Upload a few photos and publish a gallery; then `kql.sh edge` (SC-004).
