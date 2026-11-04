@@ -1,0 +1,26 @@
+SKIP AZ-01 az not signed in
+SKIP AZ-02 az not signed in
+SKIP AZ-03 az not signed in
+SKIP AZ-04 az not signed in
+SKIP AZ-05 az not signed in
+SKIP AZ-06 az not signed in
+SKIP AZ-07 az not signed in
+SKIP AZ-08 az not signed in
+SKIP AZ-09 az not signed in
+SKIP AZ-10 az not signed in
+SKIP AZ-11 az not signed in
+SKIP AZ-12 az not signed in
+SKIP AZ-13 az not signed in
+SKIP AZ-14 az not signed in
+SKIP AZ-15 az not signed in
+SKIP AZ-16 az not signed in
+FAIL NET-01 origin direct https://portfolio-web.azurewebsites.net/: expected 403, got curl: (6) Could not resolve host: portfolio-web.azurewebsites.net 000
+PASS NET-02 site through edge https://port.zacal.me/
+PASS NET-03 https redirect http://port.zacal.me/g
+PASS NET-04 owner bypass (cookie /: DYNAMIC; /admin: DYNAMIC)
+FAIL NET-05 page cache second GET /g cf-cache-status: expected HIT, got BYPASS
+PASS NET-06 img through edge https://img.zacal.me/ (status 404, cf-ray present)
+PASS NET-07 r2.dev off (no pub-*.r2.dev in 2 public pages)
+SKIP NET-08 r2 service url unknown (az not signed in; set R2_SERVICE_URL)
+MANUAL NET-09 tiered cache / early hints: not observable from outside (runbook 5, toggles G)
+RESULT: 2 FAIL

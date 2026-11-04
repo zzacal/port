@@ -1,0 +1,14 @@
+PASS origin-compare: 'CryptographicOperations.FixedTimeEquals' in src/Gallery.Web/Hosting/OriginGuardMiddleware.cs
+PASS origin-log: '"origin.refused' in src/Gallery.Web/Hosting/OriginGuardMiddleware.cs
+PASS origin-strip: 'headers.Remove(HeaderName)' in src/Gallery.Web/Hosting/OriginGuardMiddleware.cs
+PASS forwarded-ip: 'ForwardedForHeaderName = "CF-Connecting-IP"' in src/Gallery.Web/Hosting/HostingSetup.cs
+PASS forwarded-limit: 'ForwardLimit = 1' in src/Gallery.Web/Hosting/HostingSetup.cs
+PASS prod-bucket: 'DevTargetGuard.DevBucketPrefix' in src/Gallery.Web/Hosting/ProductionGuard.cs
+PASS prod-db: 'DevTargetGuard.DevDatabaseSuffix' in src/Gallery.Web/Hosting/ProductionGuard.cs
+PASS log-sampling: 'EnableTraceBasedLogsSampler = false' in src/Gallery.Web/Hosting/HostingSetup.cs
+PASS sampling: 'SamplingRatio = 1.0F' in src/Gallery.Web/Hosting/HostingSetup.cs
+PASS wiring-add: 'AddHosting(builder.Configuration)' in src/Gallery.Web/AppBuilder.cs
+PASS wiring-use: 'app.UseHosting();' in src/Gallery.Web/AppBuilder.cs
+PASS no-copy: no dev literal in Hosting/
+PASS order: UseHosting (line 99) before UseRouting (line 101)
+RESULT: 0 FAIL

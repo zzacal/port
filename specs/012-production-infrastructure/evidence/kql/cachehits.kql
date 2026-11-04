@@ -1,0 +1,24 @@
+// 012 T016 cachehits.kql: SC-003 cross-check (R-09). http.request count per public route per
+// minute in the window, plus the window total. After verify-prod.sh's SC-003 rows (two sequential
+// GETs per page type, the second a cf-cache-status HIT), each route should show one origin
+// http.request per verify run, not two. Run as: kql.sh cachehits --since <SC-003 start time>.
+// Field names (R-06): ILogger events land in `traces`; template fields are expected in
+// customDimensions (method, route, status). Each falls back to parsing the formatted message
+// "http.request {method} {route} {status} {duration_ms} {db_reads}". The first production run
+// confirms the names; if they differ only this file changes.
+// Excludes origin.refused lines and http.request lines with status 403 (origin-guard refusals and
+// the Always On pings). Time range comes from kql.sh (--since -> --start-time; default 1 day).
+let lines = traces
+| where message !startswith "origin.refused"
+| where message startswith "http.request "
+| parse message with "http.request " p_method:string " " p_route:string " " p_status:long " " p_duration:real " " p_reads:long
+| extend method = coalesce(tostring(customDimensions["method"]), p_method)
+| extend route = coalesce(tostring(customDimensions["route"]), p_route)
+| extend status = coalesce(tolong(customDimensions["status"]), p_status)
+| where status != 403
+| where method == "GET" and route in ("/", "/g", "/g/{id}/{slug}", "/g/{id}/{slug}/{imageId}");
+union
+    (lines | summarize requests = count() by route, status, minute = bin(timestamp, 1m) | extend row = "minute"),
+    (lines | summarize requests = count() by route, status | extend row = "window total")
+| project route, status, row, minute, requests
+| order by route asc, row asc, minute asc

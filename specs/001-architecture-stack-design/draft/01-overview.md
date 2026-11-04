@@ -6,11 +6,12 @@ Constitution Check and update this document in the same feature. No application 
 files, or infrastructure changes are produced here; those belong to the first build feature
 (FR-001, FR-022).
 
-**Stack at a glance** (Platform Constraints v4.0.0):
+**Stack at a glance** (Platform Constraints v6.1.0):
 
 - **Application**: .NET 10 minimal APIs, server-rendered HTML; htmx and web components for admin
   interactivity.
-- **Hosting**: Azure App Service (Linux, B1); the origin accepts traffic only from Cloudflare.
+- **Hosting**: Azure App Service (Linux, one Basic B2 plan); the origin accepts traffic only from
+  Cloudflare.
 - **Edge**: Cloudflare DNS, proxy, cache, and TLS in Full (strict) mode. Never Flexible.
 - **Identity**: Google OIDC, with a cookie session that has a 7-day sliding expiry renewed while
   it is in use.

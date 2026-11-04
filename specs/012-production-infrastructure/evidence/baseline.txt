@@ -1,0 +1,9 @@
+# 012 T001 baseline (2026-11-03)
+HEAD: 1af9ffd481432acdc5b9bd249642432d883aee9c
+SDKs:
+10.0.103 [/usr/local/share/dotnet/sdk]
+10.0.403 [/usr/local/share/dotnet/sdk]
+Suite (dotnet test Gallery.slnx --artifacts-path artifacts --blame-hang-timeout 120s):
+  Gallery.Core.Tests: Passed 108, Skipped 0, Total 108
+  Gallery.Web.Tests: Passed 1107, Skipped 1, Total 1108
+APPLICATIONINSIGHTS_CONNECTION_STRING length: 0 (unset)

@@ -1,0 +1,34 @@
+// 012 T016 p95.kql: per public route, count and p95 server duration_ms (006 SC-003 / 011 SC-006
+// bound: p95 < 50 ms server-side). n < 100 on a route FAILS the row (as 011 p95.sh); drive the
+// traffic with drive-prod.sh first.
+// Field names (R-06): ILogger events land in `traces`; template fields are expected in
+// customDimensions (route, status, duration_ms). Each falls back to parsing the formatted message
+// "http.request {method} {route} {status} {duration_ms} {db_reads}". The first production run
+// confirms the names; if they differ only this file changes.
+// Excludes origin.refused lines and http.request lines with status 403 (origin-guard refusals and
+// the Always On pings). Time range comes from kql.sh (--since -> --start-time; default 1 day).
+let routes = datatable(route: string, name: string) [
+    "/", "home",
+    "/g", "listing",
+    "/g/{id}/{slug}", "gallery",
+    "/g/{id}/{slug}/{imageId}", "photo"
+];
+let lines = traces
+| where message !startswith "origin.refused"
+| where message startswith "http.request "
+| parse message with "http.request " p_method:string " " p_route:string " " p_status:long " " p_duration:real " " p_reads:long
+| extend method = coalesce(tostring(customDimensions["method"]), p_method)
+| extend route = coalesce(tostring(customDimensions["route"]), p_route)
+| extend status = coalesce(tolong(customDimensions["status"]), p_status)
+| extend duration_ms = coalesce(todouble(customDimensions["duration_ms"]), p_duration)
+| where status != 403
+| where method == "GET" and status == 200;
+routes
+| join kind=leftouter (
+    lines
+    | summarize n = count(), p95_ms = percentile(duration_ms, 95), max_ms = max(duration_ms) by route
+  ) on route
+| extend n = coalesce(n, long(0))
+| extend verdict = case(n < 100, strcat("FAIL (n=", tostring(n), " < 100)"), p95_ms < 50, "PASS", "FAIL")
+| project name, route, n, p95_ms = round(p95_ms, 2), max_ms = round(max_ms, 2), bound_ms = 50, verdict
+| order by name asc

@@ -1,0 +1,61 @@
+base http://127.0.0.1:5193  origin http://127.0.0.1:5193  edge none  origin-secret set
+PASS GET / 200
+PASS / has nav.nav--home
+PASS / links Galleries to /g
+PASS / has no ContactSheet element
+PASS GET /g 200
+PASS /g lists tiles (11)
+PASS GET /g/ 301 -> /g
+PASS GET gallery /g/jkzbmoegpk3fnmzehx677pul4i/september-5 200
+PASS GET photo /g/jkzbmoegpk3fnmzehx677pul4i/september-5/znronaxkb4k6m7nipc3qlffdvm 200
+PASS wrong slug -> 301 /g/jkzbmoegpk3fnmzehx677pul4i/september-5
+PASS /g/{id} -> 301, Cache-Control public, max-age=0, s-maxage=300
+PASS malformed id -> 404
+PASS unknown id -> 404 page, noindex
+PASS breadcrumb root on home is Home
+PASS breadcrumb root on listing is Home
+PASS breadcrumb root on gallery is Home
+PASS breadcrumb root on photo is Home
+PASS breadcrumb root on missing is Home
+PASS home Cache-Control public, max-age=0, s-maxage=86400
+PASS home Server-Timing app;dur
+PASS home has Speculation Rules
+PASS home inline CSS has @view-transition
+PASS home scripts: 2 inline, no external script or stylesheet
+PASS home sets no cookie
+PASS listing Cache-Control public, max-age=0, s-maxage=86400
+PASS listing Server-Timing app;dur
+PASS listing has Speculation Rules
+PASS listing inline CSS has @view-transition
+PASS listing scripts: 2 inline, no external script or stylesheet
+PASS listing sets no cookie
+PASS gallery Cache-Control public, max-age=0, s-maxage=86400
+PASS gallery Server-Timing app;dur
+PASS gallery has Speculation Rules
+PASS gallery inline CSS has @view-transition
+PASS gallery scripts: 2 inline, no external script or stylesheet
+PASS gallery sets no cookie
+PASS photo Cache-Control public, max-age=0, s-maxage=86400
+PASS photo Server-Timing app;dur
+PASS photo has Speculation Rules
+PASS photo inline CSS has @view-transition
+PASS photo scripts: 2 inline, no external script or stylesheet
+PASS photo sets no cookie
+PASS gallery names view transitions
+PASS photo names view transitions
+PASS photo links back to /g/jkzbmoegpk3fnmzehx677pul4i/september-5#p-znronaxkb4k6m7nipc3qlffdvm
+PASS photo has the pager nav
+PASS first photo of 20 links rel=next
+PASS images: 336 distinct URLs on listing+gallery, all start with https://img-dev.zacal.me/
+PASS no public page names r2.cloudflarestorage.com or r2.dev
+SKIP SC-001 TLS (no edge)
+SKIP http -> https redirect (no edge)
+PASS SC-002 20/20 direct GETs to http://127.0.0.1:5193/ (no secret) -> 403
+PASS SC-002 20/20 GETs to http://127.0.0.1:5193/ with Host: 127.0.0.1:5193 (no secret) -> 403
+SKIP SC-003 cf-cache-status HIT on the second GET (no edge)
+SKIP owner bypass cf-cache-status (no edge)
+SKIP SC-009 secret scan (infra/.secrets.local not found)
+
+ALL PASS
+== app log lines containing the secret: 0
+== origin.refused lines: 40

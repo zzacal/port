@@ -20,18 +20,18 @@ internal static class PhotoEncoder
     public static Encoded EncodePhoto(string dir, int index)
     {
         var png = Path.Combine(dir, $"src-{index}.png");
-        Run("/opt/homebrew/bin/ffmpeg", $"-hide_banner -loglevel error -y -f lavfi -i \"color=c={Colours[index]}:s=1600x1200,drawbox=x={index * 200}:y=100:w=300:h=900:c=white:t=fill\" -frames:v 1 \"{png}\"");
+        Run(EncodedFixtures.FfmpegPath, $"-hide_banner -loglevel error -y -f lavfi -i \"color=c={Colours[index]}:s=1600x1200,drawbox=x={index * 200}:y=100:w=300:h=900:c=white:t=fill\" -frames:v 1 \"{png}\"");
         var derivatives = new List<DerivativeDoc>();
         foreach (var w in Ladder)
         {
             var avif = Named(dir, Path.Combine(dir, $"tmp-{index}-{w}.avif"), path =>
-                Run("/opt/homebrew/bin/ffmpeg", $"-hide_banner -loglevel error -y -i \"{png}\" -vf \"scale={w}:-2,format=yuv420p\" -frames:v 1 -map_metadata -1 -c:v libsvtav1 -crf 32 -preset 8 \"{path}\""));
+                Run(EncodedFixtures.FfmpegPath, $"-hide_banner -loglevel error -y -i \"{png}\" -vf \"scale={w}:-2,format=yuv420p\" -frames:v 1 -map_metadata -1 -c:v libsvtav1 -crf 32 -preset 8 \"{path}\""));
             var webp = Named(dir, Path.Combine(dir, $"tmp-{index}-{w}.webp"), path =>
-                Run("/opt/homebrew/bin/cwebp", $"-quiet -q 78 -resize {w} 0 \"{png}\" -o \"{path}\""));
+                Run(EncodedFixtures.CwebpPath, $"-quiet -q 78 -resize {w} 0 \"{png}\" -o \"{path}\""));
             derivatives.Add(new DerivativeDoc { W = w, Avif = avif, Webp = webp, BytesAvif = 1, BytesWebp = 1 });
         }
         var preview = Path.Combine(dir, $"preview-{index}.webp");
-        Run("/opt/homebrew/bin/cwebp", $"-quiet -q 40 -resize 32 24 \"{png}\" -o \"{preview}\"");
+        Run(EncodedFixtures.CwebpPath, $"-quiet -q 40 -resize 32 24 \"{png}\" -o \"{preview}\"");
         var id = new string((char)('a' + index), 25) + "2";
         return new Encoded(id, 1280, 960, derivatives, "data:image/webp;base64," + Convert.ToBase64String(File.ReadAllBytes(preview)));
     }

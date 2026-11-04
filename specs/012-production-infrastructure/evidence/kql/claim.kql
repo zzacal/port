@@ -1,0 +1,19 @@
+// 012 T016 claim.kql: the auth.claim event (012 SC-005): time, sub, ip, and the hosted-log
+// ingestion delay ingestion_time() - timestamp, which must be <= 5 minutes.
+// Field names (R-06): ILogger events land in `traces`; template fields are expected in
+// customDimensions (sub, ip, at). Each falls back to parsing the formatted message
+// "auth.claim {sub} {ip} {at}". The first production run confirms the names; if they differ only
+// this file changes. Excludes origin.refused lines (none can match auth.claim; kept explicit).
+// Time range comes from kql.sh (--since -> --start-time; default 1 day).
+traces
+| where message !startswith "origin.refused"
+| where message startswith "auth.claim "
+| parse message with "auth.claim " p_sub:string " " p_ip:string " " p_at:string
+| extend sub = coalesce(tostring(customDimensions["sub"]), p_sub)
+| extend ip = coalesce(tostring(customDimensions["ip"]), p_ip)
+| extend at = coalesce(tostring(customDimensions["at"]), p_at)
+| extend ingested = ingestion_time()
+| extend delay_s = round((ingested - timestamp) / 1s, 1)
+| extend verdict = iff(delay_s <= 300, "PASS (<= 5 min)", "FAIL (> 5 min)")
+| project timestamp, ingested, delay_s, sub, ip, at, verdict
+| order by timestamp asc

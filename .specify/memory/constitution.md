@@ -1,27 +1,22 @@
 <!--
 Sync Impact Report
-- Version change: 4.4.0 → 4.5.0 (MINOR)
-- Rationale: owner directive (2026-11-02, feature 011-home-page): `/` becomes a home page that
-  links to the galleries, and the gallery grid moves to `/g` as "the galleries listing". II.2,
-  II.6 and IV.9 named "the home page" as the place galleries are listed. Their guarantees move to
-  the listing unchanged (private and empty galleries never listed; the listing is one datastore
-  read). No guarantee is removed, and IV.9 gains one rule: the home page makes no datastore read.
-  MINOR, not MAJOR: the protections are the same, only the page they apply to is renamed, and one
-  is added.
-- Modified principles: II (rules 2 and 6), IV (rule 9). Added/removed sections: none.
+- Version change: 6.0.0 → 6.1.0 (MINOR)
+- Rationale: owner directive (2026-11-02, feature 012 analyze, on a proposed datastore keep-alive
+  job): "do not overengineer marginal benefits ... high effort should yield high benefits." Adds
+  V.4, proportional effort. A new principle rule with no guarantee removed: MINOR.
+- Modified principles: V (rule 4 added). Added/removed sections: none.
 - Templates requiring updates: none (templates read the constitution at runtime).
-- Prior specs swept: 006, 007, 008, 009 and 010 say "home page" for the gallery grid; each gets an
-  in-place AMENDED note that those requirements now apply to the galleries listing at `/g`.
-  "Home order" (the owner's gallery order) keeps its name.
-- Deferred TODOs: none. The design record (D-13, D-15, D-16, D-21, lifecycle entries) is updated
-  by the 011 plan as a VII.2 amendment.
+- Prior specs swept: none needed; V.4 binds plans and tasks from 012 on. 012 already dropped the
+  keep-alive under it (decisions row 24).
+- Deferred TODOs: none.
 - History: 1.0.0 initial ratification. 1.1.0 perceived performance, private = unlisted. 2.0.0
   client-generated derivatives with server validation. 3.0.0 Azure Blob replaced R2, masters kept,
   $10 metered cap (2026-10-27). 4.0.0 images on Cloudflare R2, managed-identity guarantee
-  withdrawn, III.9 added (2026-10-30). 4.1.0 III.10 seeded dev content under two-reader
-  validation; IV.19 clarified (2026-10-31). 4.2.0 II.6 no empty galleries shown; publish
-  requires an image (2026-10-31). 4.3.0 canonical remote (2026-11-01). 4.4.0 IX visual
-  consistency through shared containers (2026-11-01).
+  withdrawn, III.9 added (2026-10-30). 4.1.0 III.10 seeded dev content (2026-10-31). 4.2.0 II.6
+  no empty galleries shown (2026-10-31). 4.3.0 canonical remote (2026-11-01). 4.4.0 IX visual
+  consistency through shared containers (2026-11-01). 4.5.0 home page at `/`, listing at `/g`
+  (2026-11-02). 5.0.0 fixed hosting ceiling B1 -> B2 (2026-11-02). 6.0.0 US$7 budget alert
+  withdrawn (2026-11-02).
 -->
 
 # Gallery Constitution
@@ -203,6 +198,13 @@ Rationale: the product is a photo viewer; speed, real and perceived, is the feat
    justified in the plan against a specific requirement.
 3. Public pages MUST work with JavaScript disabled; scripting is progressive enhancement.
    Admin pages MAY require it.
+4. Effort MUST be proportional to benefit. Work whose benefit is marginal (a rare or self-healing
+   failure, a cosmetic gain, a convenience nobody asked for) MUST NOT be built when it costs more
+   than a line of configuration or a sentence of documentation. Accept and record the risk
+   instead. High effort is justified only by a high benefit: a constitution guarantee, a security
+   or data-loss risk, or a visible improvement for visitors or the owner. Every plan MUST state,
+   for each addition beyond the literal request, its benefit and its cost, and drop the ones that
+   fail this rule; constitution MUST rules are never dropped under it.
 
 ### VI. Official CLIs for Scaffolding
 
@@ -225,15 +227,15 @@ inside feature plans produces contradictions that are expensive to unwind.
 
 ### VIII. Cost Ceiling
 
-1. Recurring fixed hosting cost MUST NOT exceed one Azure App Service Basic B1 (Linux) plan.
+1. Recurring fixed hosting cost MUST NOT exceed one Azure App Service Basic B2 (Linux) plan.
    Metered spend on everything else (storage, operations, egress, log ingestion) MUST NOT exceed
-   US$10 per month. An Azure budget alert MUST fire at US$7 per month. Exceeding the cap requires
-   an amendment. Free tiers MUST be used wherever one covers the need.
+   US$10 per month. Exceeding the cap requires an amendment. No spending alert is required
+   (withdrawn in 6.0.0). Free tiers MUST be used wherever one covers the need.
 2. TLS certificates MUST be free (Cloudflare Universal SSL at the edge; Cloudflare Origin CA
    to the origin). No paid certificate.
 3. Designs MUST identify each metered cost (egress, operations, storage, log ingestion), its
    free-tier limit if one exists, its unit price, and its projected monthly cost at the stated
-   scale. The projected total MUST stay under the VIII.1 alert threshold.
+   scale. The projected total MUST stay under US$7 per month.
 4. Every metered service that offers a hard spending limit MUST have one configured, set inside
    the VIII.1 cap. One example is a daily ingestion cap on logs.
 
@@ -261,7 +263,8 @@ These are binding inputs to every plan:
 
 - Application: .NET 10 minimal APIs, server-rendered HTML; htmx and web components for admin
   interactivity.
-- Hosting: Azure App Service (Linux, B1). Origin MUST accept traffic only from Cloudflare.
+- Hosting: Azure App Service (Linux, one Basic plan no larger than B2). Origin MUST accept
+  traffic only from Cloudflare.
 - Edge: Cloudflare DNS, proxy, cache, and TLS in "Full (strict)" mode. Never "Flexible".
 - Identity: Google OIDC, with a cookie session that has a 7-day sliding expiry (renewed while it
   is in use).
@@ -307,4 +310,4 @@ These are binding inputs to every plan:
   place, not silently edited.
 - Every plan and analyze pass verifies compliance and cites principles by number.
 
-**Version**: 4.5.0 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-11-02
+**Version**: 6.1.0 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-11-02

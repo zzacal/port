@@ -1,0 +1,49 @@
+// 012 T016 reads.kql: 011 SC-005 restated for production (contracts/evidence.md "reads.kql").
+// Field names (R-06): Application Insights stores ILogger events in `traces`; the template fields
+// are expected in customDimensions (route, status, duration_ms, db_reads). Each field falls back to
+// parsing the formatted message "http.request {method} {route} {status} {duration_ms} {db_reads}".
+// The first production run confirms the names; if they differ only this file changes.
+// Excludes origin.refused lines and http.request lines with status 403 (origin-guard refusals and
+// the Always On pings). Time range comes from kql.sh (--since -> --start-time; default 1 day).
+// Rule (production runs the 60 s origin output cache, IV.21, so cache hits log db_reads 0):
+//   /                         every line == 0
+//   /g                        every non-zero line == 1, and at least one non-zero line
+//   /g/{id}/{slug}            every line <= 2,          and at least one non-zero line
+//   /g/{id}/{slug}/{imageId}  every line <= 2,          and at least one non-zero line
+// "/" makes no read by design (011 SC-005), so the at-least-one-non-zero clause does not apply to it.
+// A route with no lines is a FAIL row.
+let routes = datatable(route: string, name: string) [
+    "/", "home",
+    "/g", "listing",
+    "/g/{id}/{slug}", "gallery",
+    "/g/{id}/{slug}/{imageId}", "photo"
+];
+let lines = traces
+| where message !startswith "origin.refused"
+| where message startswith "http.request "
+| parse message with "http.request " p_method:string " " p_route:string " " p_status:long " " p_duration:real " " p_reads:long
+| extend method = coalesce(tostring(customDimensions["method"]), p_method)
+| extend route = coalesce(tostring(customDimensions["route"]), p_route)
+| extend status = coalesce(tolong(customDimensions["status"]), p_status)
+| extend db_reads = coalesce(tolong(customDimensions["db_reads"]), p_reads)
+| where status != 403
+| where method == "GET" and status == 200;
+routes
+| join kind=leftouter (
+    lines
+    | summarize n = count(),
+                nonzero = countif(db_reads > 0),
+                zero = countif(db_reads == 0),
+                max_reads = max(db_reads),
+                nonzero_not_1 = countif(db_reads > 0 and db_reads != 1),
+                over_2 = countif(db_reads > 2)
+        by route
+  ) on route
+| extend n = coalesce(n, long(0))
+| extend verdict = case(
+    n == 0, "FAIL (no lines)",
+    name == "home", iff(nonzero == 0, "PASS", "FAIL"),
+    name == "listing", iff(nonzero_not_1 == 0 and nonzero >= 1, "PASS", "FAIL"),
+    iff(over_2 == 0 and nonzero >= 1, "PASS", "FAIL"))
+| project name, route, n, zero, nonzero, max_reads, verdict
+| order by name asc

@@ -1,0 +1,8 @@
+PASS (a) FixedTimeEquals always true (any header passes) -> red:   Failed Gallery.Web.Tests.HostingGuardTests.Wrong_header_is_refused_403_and_logged_mismatch(wrong: "wrong-short-value") |  Assert.Equal() Failure: Values differ Expected: Forbidden 
+PASS (b) ForwardedForHeaderName -> X-Forwarded-For -> red:   Failed Gallery.Web.Tests.HostingGuardTests.CF_Connecting_IP_behind_guard_is_the_logged_ip |  Assert.Equal() Failure: Strings differ  ↓ (pos 0) 
+PASS (c) ProductionGuard drops the dev-bucket rule -> red:   Failed Gallery.Web.Tests.ProductionGuardTests.One_flipped_rule_yields_exactly_one_message_naming_the_key(key: "Storage:PrivateBucket", bad: "gallery-dev-private") |  Assert.Single() Failure: The collection was empty 
+PASS (d) deploy job gets environment: production -> red:   Failed Gallery.Web.Tests.WorkflowGuardTests.Workflow_declares_no_environment |  ci.yml declares environment: (it changes the OIDC subject and breaks the branch-based federated credential): line 56: environment: production 
+PASS (e) deploy job loses needs: test -> red:   Failed Gallery.Web.Tests.WorkflowGuardTests.Deploy_job_needs_test |  deploy job must contain exactly one 'needs: test' 
+restored: build clean
+
+ALL PASS

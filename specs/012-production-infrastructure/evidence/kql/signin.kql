@@ -1,0 +1,38 @@
+// 012 T016 signin.kql: 007 SC-006 from hosted logs. Per /signin-oidc callback: the ownership work
+// (op.timing db.site.owner.read + db.site.claim, summed) and the callback request duration.
+// Bounds: ownership work p95 < 50 ms; callback p95 < 1000 ms. Zero callbacks is a FAIL.
+// Pairing: 007 p95.sh paired by log order; here both events carry the same request trace, so
+// they are joined on operation_Id (lines without an operation_Id are not paired).
+// Field names (R-06): ILogger events land in `traces`; template fields are expected in
+// customDimensions (op, duration_ms, route, status). Each falls back to parsing the formatted
+// messages "op.timing {op} {duration_ms} {outcome}" and
+// "http.request {method} {route} {status} {duration_ms} {db_reads}". The first production run
+// confirms the names; if they differ only this file changes.
+// Excludes origin.refused lines and http.request lines with status 403.
+// Time range comes from kql.sh (--since -> --start-time; default 1 day).
+let callbacks = traces
+| where message !startswith "origin.refused"
+| where message startswith "http.request "
+| parse message with "http.request " p_method:string " " p_route:string " " p_status:long " " p_duration:real " " p_reads:long
+| extend route = coalesce(tostring(customDimensions["route"]), p_route)
+| extend status = coalesce(tolong(customDimensions["status"]), p_status)
+| extend duration_ms = coalesce(todouble(customDimensions["duration_ms"]), p_duration)
+| where status != 403
+| where route == "/signin-oidc" and isnotempty(operation_Id)
+| project operation_Id, callback_ms = duration_ms;
+let ownership = traces
+| where message startswith "op.timing "
+| parse message with "op.timing " p_op:string " " p_duration:real " " p_outcome:string
+| extend op = coalesce(tostring(customDimensions["op"]), p_op)
+| extend duration_ms = coalesce(todouble(customDimensions["duration_ms"]), p_duration)
+| where op in ("db.site.owner.read", "db.site.claim") and isnotempty(operation_Id)
+| summarize own_ms = sum(duration_ms) by operation_Id;
+callbacks
+| join kind=leftouter ownership on operation_Id
+| extend own_ms = coalesce(own_ms, 0.0)
+| summarize callbacks = count(),
+            own_p95_ms = percentile(own_ms, 95),
+            callback_p95_ms = percentile(callback_ms, 95)
+| extend own_verdict = case(callbacks == 0, "FAIL (0 callbacks)", own_p95_ms < 50, "PASS (< 50 ms)", "FAIL"),
+         callback_verdict = case(callbacks == 0, "FAIL (0 callbacks)", callback_p95_ms < 1000, "PASS (< 1000 ms)", "FAIL")
+| project callbacks, own_p95_ms = round(own_p95_ms, 2), own_verdict, callback_p95_ms = round(callback_p95_ms, 2), callback_verdict
