@@ -385,10 +385,12 @@ public sealed class NavBrowserTests(NavBrowserFixture site)
         Assert.Equal(photo, await PathAfterNothing(page));
     }
 
-    // Alt+Left is Back in Chrome on Windows and Linux; on macOS it is a caret move and Back is
-    // Cmd+[. Either way the handler must not turn it into Previous. History is photo 12 → photo 6,
-    // so Back (photo 12), nothing (photo 6) and an intercepted Previous (photo 5) are told apart;
-    // the expected outcome is the one this platform's browser gives.
+    // Alt+Left is Back in headed Chrome on Windows and Linux; on macOS it is a caret move and Back
+    // is Cmd+[. Headless Chrome under Playwright does not run browser shortcuts for a synthesized
+    // key on any platform (observed on the ubuntu-24.04 CI runner, 012 decisions #51), so the page
+    // stays put everywhere. The guarded property is that the handler does not turn it into
+    // Previous: history is photo 12 → photo 6, so nothing (photo 6) and an intercepted Previous
+    // (photo 5) are told apart, and no link may be clicked.
     [Fact]
     public async Task Alt_left_is_not_intercepted()
     {
@@ -398,15 +400,11 @@ public sealed class NavBrowserTests(NavBrowserFixture site)
         await page.GotoAsync(site.BaseUrl + photo, new() { WaitUntil = WaitUntilState.Load });
         await page.EvaluateAsync("window.__clicked = []; document.addEventListener('click', e => window.__clicked.push(e.target.closest('a')?.getAttribute('href')), true)");
         await page.Keyboard.PressAsync("Alt+ArrowLeft");
-        var expected = OperatingSystem.IsMacOS() ? photo : await site.PhotoPathAsync(11);
-        var after = OperatingSystem.IsMacOS() ? await PathAfterNothing(page) : await PathAfter(page, p => p == expected);
-        Assert.True(after == expected,
-            $"Alt+Left went to {after}, expected {expected} (photo 6 is {photo}; Back is photo 12; the handler's Previous would be photo 5)");
-        if (OperatingSystem.IsMacOS())
-        {
-            var clicked = await page.EvaluateAsync<string[]>("window.__clicked");
-            Assert.True(clicked.Length == 0, $"Alt+Left clicked [{string.Join(", ", clicked)}]");
-        }
+        var after = await PathAfterNothing(page);
+        Assert.True(after == photo,
+            $"Alt+Left went to {after}, expected {photo} (photo 6; the handler's Previous would be photo 5)");
+        var clicked = await page.EvaluateAsync<string[]>("window.__clicked");
+        Assert.True(clicked.Length == 0, $"Alt+Left clicked [{string.Join(", ", clicked)}]");
     }
 
     [Theory]

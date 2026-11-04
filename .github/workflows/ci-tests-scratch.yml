@@ -6,30 +6,12 @@ on:
     branches: ['ci-tests']
 
 jobs:
-  probe:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Which mongo images start on this kernel
-        run: |
-          uname -r; cat /proc/version_signature 2>/dev/null || true
-          for img in mongo:8 mongo:8.0 mongo:8.2 mongo:7.0 mongo:9; do
-            docker pull -q "$img" >/dev/null 2>&1 || { echo "$img pull failed"; continue; }
-            id=$(docker run -d "$img"); sleep 8
-            if [ "$(docker inspect -f '{{.State.Running}}' "$id")" = true ]; then echo "$img RUNNING"
-            else echo "$img EXITED: $(docker logs "$id" 2>&1 | grep -o '"msg":"[^"]*' | tail -1 | cut -c1-120)"; fi
-            docker rm -f "$id" >/dev/null
-          done
-
   test:
     runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      matrix:
-        mongo: ['mongo:8.2', 'mongo:7.0']
     env:
       GALLERY_FFMPEG: /usr/bin/ffmpeg
       GALLERY_CWEBP: /usr/bin/cwebp
-      GALLERY_MONGO_IMAGE: ${{ matrix.mongo }}
+      GALLERY_MONGO_IMAGE: mongo:8.2
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-dotnet@v6
