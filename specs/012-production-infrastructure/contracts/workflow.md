@@ -41,7 +41,7 @@ jobs:
 ```
 
 Rules:
-- The deployed package is the artifact the `test` job built and tested (no second build).
+- AMENDED (decisions #48, owner): a `build` job publishes the artifact; `deploy` needs `build`, not `test`. The `test` job runs and reports on every push but does not gate deploys.
 - No `secrets.*` reference anywhere in the file. A source-scan test asserts it
   (`tests/Gallery.Web.Tests/WorkflowGuardTests.cs`): the file has no `secrets.`, the deploy job
   has `needs: test` and `if: github.ref == 'refs/heads/main'`, `id-token: write` appears only in the
