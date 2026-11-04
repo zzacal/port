@@ -44,6 +44,8 @@ jobs:
     env:
       GALLERY_FFMPEG: /usr/bin/ffmpeg
       GALLERY_CWEBP: /usr/bin/cwebp
+      # mongo:8 and 8.0 refuse the runner kernel (MongoDB SERVER-136848); 8.2 starts (012 decisions #51).
+      GALLERY_MONGO_IMAGE: mongo:8.2
     steps:
       - name: Checkout
         uses: actions/checkout@v7

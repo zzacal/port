@@ -161,6 +161,16 @@ public sealed class ImageStore
             };
             // GetPreSignedURL is synchronous; wrap in Task to match the async contract.
             var url = await Task.FromResult(_client.GetPreSignedURL(request));
+            // The SDK signs on its clock-skew-corrected time (learned per endpoint from response
+            // Date headers, second precision), which can sit before our floored "now", so the
+            // whole-second ceiling can still come out one second over. Enforce the cap on the
+            // value actually signed: re-sign with Expires pulled back by the overshoot (III.9).
+            var over = SignedExpirySeconds(url) - (int)expiry.TotalSeconds;
+            if (over > 0)
+            {
+                request.Expires = request.Expires!.Value.AddSeconds(-over);
+                url = _client.GetPreSignedURL(request);
+            }
             OpTiming.Log(_logger, "s3.presign", Ms(start), "ok");
             return url;
         }
@@ -333,6 +343,17 @@ public sealed class ImageStore
 
     private static double Ms(long start) =>
         Math.Round(System.Diagnostics.Stopwatch.GetElapsedTime(start).TotalMilliseconds, 2);
+
+    /// <summary>The <c>X-Amz-Expires</c> seconds a presigned URL carries (0 when absent).</summary>
+    private static int SignedExpirySeconds(string url)
+    {
+        var q = new Uri(url).Query.TrimStart('?').Split('&');
+        foreach (var p in q)
+            if (p.StartsWith("X-Amz-Expires=", StringComparison.Ordinal)
+                && int.TryParse(p.AsSpan("X-Amz-Expires=".Length), out var s))
+                return s;
+        return 0;
+    }
 }
 
 /// <summary>Result of <see cref="ImageStore.CopyIfMatchAsync"/>.</summary>

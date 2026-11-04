@@ -12,8 +12,12 @@ public class MongoCollection : ICollectionFixture<MongoFixture> { }
 /// </summary>
 public sealed class MongoFixture : IAsyncLifetime
 {
+    /// <summary>Test Mongo image; CI overrides it with GALLERY_MONGO_IMAGE (mongo:8 refuses some runner kernels).</summary>
+    internal static readonly string Image =
+        Environment.GetEnvironmentVariable("GALLERY_MONGO_IMAGE") is { Length: > 0 } i ? i : "mongo:8";
+
     private readonly MongoDbContainer _container =
-        new MongoDbBuilder("mongo:8")
+        new MongoDbBuilder(Image)
             .Build();
 
     public async Task InitializeAsync() => await _container.StartAsync();

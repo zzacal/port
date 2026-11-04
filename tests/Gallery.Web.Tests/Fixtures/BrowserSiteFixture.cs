@@ -33,7 +33,7 @@ public sealed class BrowserSiteFixture : IAsyncLifetime
     public const string GallerySlug = "test-roll";
     public const string OtherGalleryId = "qqqqqqqqqqqqqqqqqqqqqqqqq2";
 
-    private readonly MongoDbContainer _mongo = new MongoDbBuilder("mongo:8").Build();
+    private readonly MongoDbContainer _mongo = new MongoDbBuilder(MongoFixture.Image).Build();
     private readonly ConcurrentDictionary<string, int> _hits = new();
     private WebApplication? _images;
     private WebApplication? _app;
