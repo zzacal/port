@@ -1,27 +1,30 @@
 <!--
 Sync Impact Report
-- Version change: 4.4.0 → 4.5.0 (MINOR)
-- Rationale: owner directive (2026-11-02, feature 011-home-page): `/` becomes a home page that
-  links to the galleries, and the gallery grid moves to `/g` as "the galleries listing". II.2,
-  II.6 and IV.9 named "the home page" as the place galleries are listed. Their guarantees move to
-  the listing unchanged (private and empty galleries never listed; the listing is one datastore
-  read). No guarantee is removed, and IV.9 gains one rule: the home page makes no datastore read.
-  MINOR, not MAJOR: the protections are the same, only the page they apply to is renamed, and one
-  is added.
-- Modified principles: II (rules 2 and 6), IV (rule 9). Added/removed sections: none.
+- Version change: 4.5.0 → 5.0.0 (MAJOR)
+- Rationale: owner decision (2026-11-02, feature 012-production-infrastructure): production runs on
+  one Azure App Service Basic B2 (Linux) plan, created by the owner, "for double the beef". VIII.1
+  said "Recurring fixed hosting cost MUST NOT exceed one Azure App Service Basic B1 (Linux) plan."
+  and the hosting Platform Constraint said "Azure App Service (Linux, B1)". The fixed-cost ceiling
+  is redefined from B1 (US$13.14/month list, Linux) to B2 (US$26.28/month list, Linux), so the
+  guarantee that fixed hosting stays at the B1 price is withdrawn. MAJOR per Governance
+  ("redefined"). Unchanged: the US$10 metered cap, the US$7 alert, free tiers, free TLS, the
+  hard-limit rule (VIII.2–VIII.4), and every other principle. Downgrading to B1 stays allowed.
+- Modified principles: VIII (rule 1). Modified sections: Platform Constraints (Hosting bullet).
+  Added/removed sections: none.
 - Templates requiring updates: none (templates read the constitution at runtime).
-- Prior specs swept: 006, 007, 008, 009 and 010 say "home page" for the gallery grid; each gets an
-  in-place AMENDED note that those requirements now apply to the galleries listing at `/g`.
-  "Home order" (the owner's gallery order) keeps its name.
-- Deferred TODOs: none. The design record (D-13, D-15, D-16, D-21, lifecycle entries) is updated
-  by the 011 plan as a VII.2 amendment.
+- Prior specs swept: 001 SC-004 ("no more than one Basic B1 plan") annotated AMENDED in place;
+  001's Clarification and Assumptions bullets that say B1 are historical and left as is. 012
+  FR-002 is the requirement this amendment discharges.
+- Deferred TODOs: none. The design record (D-01, D-18, section 8 cost table, and every entry that
+  says B1) is updated by the 012 plan as a VII.2 amendment.
 - History: 1.0.0 initial ratification. 1.1.0 perceived performance, private = unlisted. 2.0.0
   client-generated derivatives with server validation. 3.0.0 Azure Blob replaced R2, masters kept,
   $10 metered cap (2026-10-27). 4.0.0 images on Cloudflare R2, managed-identity guarantee
   withdrawn, III.9 added (2026-10-30). 4.1.0 III.10 seeded dev content under two-reader
   validation; IV.19 clarified (2026-10-31). 4.2.0 II.6 no empty galleries shown; publish
   requires an image (2026-10-31). 4.3.0 canonical remote (2026-11-01). 4.4.0 IX visual
-  consistency through shared containers (2026-11-01).
+  consistency through shared containers (2026-11-01). 4.5.0 home page at `/`, galleries listing
+  at `/g`; IV.9 home page makes no read (2026-11-02).
 -->
 
 # Gallery Constitution
@@ -225,7 +228,7 @@ inside feature plans produces contradictions that are expensive to unwind.
 
 ### VIII. Cost Ceiling
 
-1. Recurring fixed hosting cost MUST NOT exceed one Azure App Service Basic B1 (Linux) plan.
+1. Recurring fixed hosting cost MUST NOT exceed one Azure App Service Basic B2 (Linux) plan.
    Metered spend on everything else (storage, operations, egress, log ingestion) MUST NOT exceed
    US$10 per month. An Azure budget alert MUST fire at US$7 per month. Exceeding the cap requires
    an amendment. Free tiers MUST be used wherever one covers the need.
@@ -261,7 +264,8 @@ These are binding inputs to every plan:
 
 - Application: .NET 10 minimal APIs, server-rendered HTML; htmx and web components for admin
   interactivity.
-- Hosting: Azure App Service (Linux, B1). Origin MUST accept traffic only from Cloudflare.
+- Hosting: Azure App Service (Linux, one Basic plan no larger than B2). Origin MUST accept
+  traffic only from Cloudflare.
 - Edge: Cloudflare DNS, proxy, cache, and TLS in "Full (strict)" mode. Never "Flexible".
 - Identity: Google OIDC, with a cookie session that has a 7-day sliding expiry (renewed while it
   is in use).
@@ -307,4 +311,4 @@ These are binding inputs to every plan:
   place, not silently edited.
 - Every plan and analyze pass verifies compliance and cites principles by number.
 
-**Version**: 4.5.0 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-11-02
+**Version**: 5.0.0 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-11-02

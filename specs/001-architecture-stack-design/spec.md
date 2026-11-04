@@ -205,7 +205,7 @@ These entities are designed by this feature, not implemented.
 - **SC-001**: 100% of the decision areas in FR-002 have exactly one decision entry, and 100% of entries contain all four labeled fields. This is verified by a structural count script.
 - **SC-002**: 100% of the numbered constitution MUST rules and Platform Constraints bullets appear exactly once in the traceability matrix, with zero rows that lack a status. This is verified by comparing counts against the constitution.
 - **SC-003**: All 17 lifecycle events in FR-010 and all 19 edge cases in this spec have a documented outcome. Zero "TBD" or open-question markers remain in the final document.
-- **SC-004**: The projected fixed cost in the cost section is no more than one Basic B1 plan. The projected metered total is below the $7 alert threshold at the assumed scale. Every line item that has a free tier shows whether usage falls inside it.
+- **SC-004**: The projected fixed cost in the cost section is no more than ~~one Basic B1 plan~~ one Basic B2 plan (**AMENDED by feature 012-production-infrastructure**, constitution 5.0.0). The projected metered total is below the $7 alert threshold at the assumed scale. Every line item that has a free tier shows whether usage falls inside it.
 - **SC-005**: An implementer who reads only the design document and the constitution can write the first build feature's plan without raising an architectural question that the document should have answered. The test: zero `/speckit-plan` Constitution Check rows in the next feature say "undecided by design".
 - **SC-006**: The owner approves or rejects each decision entry on its own in one review sitting, and every rejection maps to a single entry rather than a cross-cutting rewrite.
 

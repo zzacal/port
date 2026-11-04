@@ -221,7 +221,7 @@ Host and platform
   (`portfolio-plan`, app `portfolio-web`, West US) in the subscription "Zac Zacal Test Ops Platform"
   (`c28725a0-a61d-4a6c-999a-0a8980111fbf`), inside resource groups used only by this site. No
   production Azure resource may live in any other subscription.
-- **FR-002** (blocking, before /speckit-plan): constitution VIII.1 ("one Azure App Service Basic
+- **FR-002** (blocking, before /speckit-plan; amendment DONE: constitution 5.0.0, 2026-11-02): constitution VIII.1 ("one Azure App Service Basic
   B1 (Linux) plan") and the Platform Constraints hosting bullet ("Azure App Service (Linux, B1)")
   MUST be amended through /speckit-constitution to allow one Basic B2 plan. The metered cap
   (US$10, alert at US$7) is unchanged. In this feature the design record MUST then update D-01
