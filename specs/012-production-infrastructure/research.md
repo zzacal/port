@@ -240,7 +240,7 @@ The plan uses exactly these values. Each one is an owner portal or dashboard ste
 | CORS on private bucket | AllowedOrigins `https://port.zacal.me`, Methods `PUT`, Headers `content-type`, MaxAge 3600 |
 | Staging lifecycle | delete `staging/` after 7 days; `masters/` to Infrequent Access after 30 days |
 | Atlas | Free cluster `gallery-prod` on Azure `westus` (Free supported there: `probe-atlas-region.txt`), database `gallery`, user `gallery-app` (readWrite on `gallery` only), network access = the app's outbound IPs |
-| Google | new OAuth client "gallery-prod", redirect `https://port.zacal.me/signin-oidc`, consent screen In production |
+| Google | OAuth client "gallery-prod" (owner, done), redirect `https://port.zacal.me/signin-oidc`, consent screen in Testing, owner as test user |
 | Alert email | the owner's subscription email (budget action group) |
 | Budget | `gallery-prod`, scope resource group `portfolio`, US$7 and US$10 actual-cost notifications |
 | App Insights | `portfolio-appinsights`, daily cap 0.15 GB, retention 30 days |

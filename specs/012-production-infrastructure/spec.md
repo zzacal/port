@@ -268,8 +268,9 @@ Storage and secrets
 Identity and claim
 
 - **FR-016**: Google sign-in MUST work on the production address, with the production callback
-  registered and the sign-in consent screen published so the owner's account is not limited to a
-  test-user list.
+  registered. The consent screen stays in Testing with the owner listed as a test user (owner,
+  2026-11-02): publishing requires a privacy policy page the site does not have, and Testing
+  limits only refresh tokens, which the app does not use.
 - **FR-017**: The runbook MUST put the owner's first sign-in immediately after the first deploy and
   before the address is shared, and MUST say how to check the claim event and how to recover if a
   stranger won (R-01, I.4).
@@ -376,7 +377,7 @@ Verification
   the development naming; the image hostname defaults to `img.zacal.me` (D-19). Overturnable in
   clarify.
 - The production Google OAuth client is a new client (or new redirect URIs on the existing one)
-  in the same Google Cloud project; the consent screen moves out of Testing. Overturnable.
+  in the same Google Cloud project (done); the consent screen stays in Testing (owner, 2026-11-02).
 - The existing edge-purge provider gains a production page mode; its log-only and development
   modes stay for local runs and tests.
 - Backups stay an accepted risk (R-02, E-13); no backup work is in scope.

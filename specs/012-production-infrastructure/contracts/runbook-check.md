@@ -12,7 +12,7 @@ PASS. Sections, in this order:
 2. Cloudflare R2: buckets, `img.zacal.me` custom domain, r2.dev off, CORS, lifecycle, the R2 token.
 3. MongoDB Atlas: Free cluster `gallery-prod` on Azure westus, user `gallery-app`, network access
    (the app's outbound IPs from portal > Networking > Outbound addresses), connection string.
-4. Google: OAuth client `gallery-prod`, redirect URI, consent screen In production.
+4. Google: OAuth client `gallery-prod`, redirect URI, consent screen stays in Testing; owner listed as a test user (done).
 5. Cloudflare zone: Origin CA certificate → PFX (`openssl pkcs12 -export`), App Service custom
    domain `port.zacal.me` (`asuid.port` TXT, proxied CNAME), certificate upload and SNI binding;
    SSL Full (strict); Always Use HTTPS; Tiered Cache Smart; Early Hints; transform rule

@@ -54,7 +54,7 @@ with one message listing every failing key and never a value.
 | R2 | `gallery-prod-private`, `gallery-prod-public`, `img.zacal.me` custom domain, r2.dev off, CORS, lifecycle | account | owner |
 | Tokens | R2 Object R/W (2 buckets), Cache Purge (zone), read-only check token | account | owner |
 | Atlas | Free cluster `gallery-prod` (Azure westus), user `gallery-app`, IP access list | Atlas | owner |
-| Google | OAuth client `gallery-prod`, consent screen In production | GCP project | owner |
+| Google | OAuth client `gallery-prod`, consent screen Testing, owner as test user | GCP project | owner (done) |
 | GitHub | variables `AZURE_CLIENT_ID/TENANT_ID/SUBSCRIPTION_ID` | `zzacal/port` | owner (done) |
 
 TLS between Cloudflare and the origin uses a Cloudflare Origin CA certificate for `port.zacal.me`
