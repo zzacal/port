@@ -43,7 +43,7 @@ public sealed class NavBrowserFixture : IAsyncLifetime
 
     private const string DbName = "gallery_nav_browser";
 
-    private readonly MongoDbContainer _mongo = new MongoDbBuilder(MongoFixture.Image).Build();
+    private MongoDbContainer _mongo = null!;
     private readonly ConcurrentDictionary<string, int> _hits = new();
     private WebApplication? _images;
     private WebApplication? _app;
@@ -88,7 +88,7 @@ public sealed class NavBrowserFixture : IAsyncLifetime
         // 23 valid opaque ids ([a-z2-7]{26}), distinct from the encoder's own ids.
         PhotoIds = Enumerable.Range(0, PhotoCount).Select(i => new string('n', 24) + "a" + (char)('a' + i)).ToList();
 
-        await _mongo.StartAsync();
+        _mongo = await MongoFixture.StartContainerAsync();
         Db = new MongoClient(_mongo.GetConnectionString()).GetDatabase(DbName);
 
         _images = StartImageHost();
@@ -130,7 +130,7 @@ public sealed class NavBrowserFixture : IAsyncLifetime
         _playwright?.Dispose();
         if (_app is not null) await _app.DisposeAsync();
         if (_images is not null) await _images.DisposeAsync();
-        await _mongo.DisposeAsync();
+        if (_mongo is not null) await _mongo.DisposeAsync();
         if (Directory.Exists(_dir)) Directory.Delete(_dir, true);
     }
 

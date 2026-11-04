@@ -33,7 +33,7 @@ public sealed class BrowserSiteFixture : IAsyncLifetime
     public const string GallerySlug = "test-roll";
     public const string OtherGalleryId = "qqqqqqqqqqqqqqqqqqqqqqqqq2";
 
-    private readonly MongoDbContainer _mongo = new MongoDbBuilder(MongoFixture.Image).Build();
+    private MongoDbContainer _mongo = null!;
     private readonly ConcurrentDictionary<string, int> _hits = new();
     private WebApplication? _images;
     private WebApplication? _app;
@@ -65,7 +65,7 @@ public sealed class BrowserSiteFixture : IAsyncLifetime
         var images = Enumerable.Range(0, PhotoCount).Select(i => PhotoEncoder.EncodePhoto(_dir, i)).ToList();
         PhotoIds = images.Select(i => i.Id).ToList();
 
-        await _mongo.StartAsync();
+        _mongo = await MongoFixture.StartContainerAsync();
         var db = new MongoClient(_mongo.GetConnectionString()).GetDatabase("gallery_browser");
         await SeedAsync(db, images);
 
@@ -107,7 +107,7 @@ public sealed class BrowserSiteFixture : IAsyncLifetime
         _playwright?.Dispose();
         if (_app is not null) await _app.DisposeAsync();
         if (_images is not null) await _images.DisposeAsync();
-        await _mongo.DisposeAsync();
+        if (_mongo is not null) await _mongo.DisposeAsync();
         if (Directory.Exists(_dir)) Directory.Delete(_dir, true);
     }
 
