@@ -85,13 +85,13 @@ public class WorkflowGuardTests
     }
 
     [Fact]
-    public void Deploy_job_needs_build()
+    public void Deploy_job_needs_build_and_test()
     {
-        // Owner decision (012 decisions #48): the deploy ships the CI-built artifact and does not
-        // wait on the test suite.
+        // 012 decisions #52: the deploy ships the CI-built artifact and only after the test suite passes.
         var deploy = Job("deploy");
-        Assert.True(CountTrimmed(deploy, "needs: build") == 1, "deploy job must contain exactly one 'needs: build'");
+        Assert.True(CountTrimmed(deploy, "needs: [build, test]") == 1, "deploy job must contain exactly one 'needs: [build, test]'");
         Job("build");
+        Job("test");
     }
 
     [Fact]

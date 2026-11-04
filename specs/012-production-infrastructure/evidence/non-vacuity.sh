@@ -62,8 +62,8 @@ brk c $H/ProductionGuard.cs 's/else if \(bucket!\.StartsWith\(DevTargetGuard\.De
   "FullyQualifiedName~$T.ProductionGuardTests" 'ProductionGuard drops the dev-bucket rule'
 brk d .github/workflows/ci.yml 's/(    runs-on: ubuntu-latest\n)/$1    environment: production\n/' \
   "FullyQualifiedName~$T.WorkflowGuardTests.Workflow_declares_no_environment" 'deploy job gets environment: production'
-brk e .github/workflows/ci.yml 's/    needs: build\n//' \
-  "FullyQualifiedName~$T.WorkflowGuardTests.Deploy_job_needs_build" 'deploy job loses needs: build'
+brk e .github/workflows/ci.yml 's/    needs: \[build, test\]/    needs: build/' \
+  "FullyQualifiedName~$T.WorkflowGuardTests.Deploy_job_needs_build_and_test" 'deploy job stops waiting on test'
 
 if [ "${NV_DRYRUN:-0}" != 1 ]; then
   dotnet build "$SLN" -warnaserror --artifacts-path "$ART" -nologo -v q >/dev/null 2>&1 \

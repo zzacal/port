@@ -12,8 +12,8 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: false
 
-# Owner decision (012 decisions #48): deploys do not wait on the test suite. `build` produces the
-# artifact that `deploy` ships; `test` runs on every push and reports, but does not gate a deploy.
+# `build` produces the artifact that `deploy` ships; `deploy` also waits for `test` (012 decisions
+# #52; #48 had made tests non-gating while CI tests were red).
 jobs:
   build:
     runs-on: ubuntu-24.04
@@ -66,7 +66,7 @@ jobs:
 
   deploy:
     if: github.ref == 'refs/heads/main'
-    needs: build
+    needs: [build, test]
     runs-on: ubuntu-latest
     permissions:
       id-token: write

@@ -41,7 +41,7 @@ jobs:
 ```
 
 Rules:
-- AMENDED (decisions #48, owner): a `build` job publishes the artifact; `deploy` needs `build`, not `test`. The `test` job runs and reports on every push but does not gate deploys.
+- AMENDED (decisions #48, owner): a `build` job publishes the artifact; `deploy` needs `build` and `test` (decisions #52; #48 had dropped `test` while CI tests were red).
 - No `secrets.*` reference anywhere in the file. A source-scan test asserts it
   (`tests/Gallery.Web.Tests/WorkflowGuardTests.cs`): the file has no `secrets.`, the deploy job
   has `needs: test` and `if: github.ref == 'refs/heads/main'`, `id-token: write` appears only in the
