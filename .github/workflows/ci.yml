@@ -14,7 +14,9 @@ concurrency:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # ubuntu-24.04, not -latest: on ubuntu-26.04 (kernel reports 7.0.0) every mongo:8 container
+    # exits at startup (MongoDB SERVER-121912 / SERVER-136848). Revisit when that check is fixed.
+    runs-on: ubuntu-24.04
     env:
       GALLERY_FFMPEG: /usr/bin/ffmpeg
       GALLERY_CWEBP: /usr/bin/cwebp

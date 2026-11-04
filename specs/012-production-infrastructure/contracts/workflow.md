@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   test:
-    runs-on: ubuntu-latest   # AMENDED at implement (R-03 fallback, decisions #46): was macos-latest + Colima
+    runs-on: ubuntu-24.04   # AMENDED at implement (R-03 fallback, decisions #46-47): was macos-latest + Colima
     steps:
       - actions/checkout@v5
       - actions/setup-dotnet@v5 with global-json-file: global.json
