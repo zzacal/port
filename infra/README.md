@@ -134,7 +134,7 @@ Check: AZ-11, AZ-12.
 3. Done 2026-11-02: portfolio-web > Access control (IAM) > Add role assignment > `Website Contributor` > Managed identity `portfolio-deploy` > Review + assign.
 4. Done 2026-11-02: GitHub > zzacal/port > Settings > Secrets and variables > Actions > Variables > `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`.
 5. Terminal > merge the feature branch into `main` > `git push origin main`.
-6. GitHub > zzacal/port > Actions > `ci` > jobs `test` and `deploy` green.
+6. GitHub > zzacal/port > Actions > `ci` > jobs `build` and `deploy` green (`test` may be red: decisions #48).
 
 Check: AZ-13, AZ-14, NET-01, NET-02, NET-05.
 
