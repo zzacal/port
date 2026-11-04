@@ -46,7 +46,6 @@ with one message listing every failing key and never a value.
 | Web App | `portfolio-web`, .NET 10, Always On | West US | owner (done) |
 | Application Insights | `portfolio-appinsights`, cap 0.15 GB/day, 30 days | West US | owner (done; cap/retention pending) |
 | Managed identity | `portfolio-deploy` + federated credential `github-port-main`, Website Contributor on `portfolio-web` | `portfolio` | owner (done) |
-| Budget | `gallery-prod`, RG scope, US$7 / US$10 | `portfolio` | owner |
 | Custom domain | `port.zacal.me` on `portfolio-web`, Cloudflare Origin CA certificate (PFX upload, SNI binding) | | owner |
 | Cloudflare DNS | `port` CNAME → `portfolio-web.<suffix>.azurewebsites.net` (proxied); `asuid.port` TXT | zone `zacal.me` | owner |
 | Cloudflare settings | Configuration Rule on `port.zacal.me`: SSL Full (strict); Redirect Rule `http://port.zacal.me/*` → https (301); zone toggles Tiered Cache Smart, Early Hints | zone | owner |

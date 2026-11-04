@@ -94,11 +94,12 @@ GitHub-hosted runners.
 | V.2 dependencies | PASS | One package, justified by FR-018 (R-06). |
 | V.3 no-JS | PASS | No page change. |
 | VI CLI scaffolding | PASS | Package added with `dotnet add package`. No project file is hand-edited. Infra is made in portals by owner choice, so VI's `az`/`wrangler` scaffolding has nothing to scaffold. Runbook steps are portal steps plus the CLI commands that exist (`openssl`, `gh variable set`). |
-| VII.2 design deviations | DEVIATION, handled | The design record is updated in this feature: D-01 (B2, hand-made), D-03 (origin secret header + IP list replaces AOP, R-04), D-05 (westus, Atlas user), D-12 (package name, sampling and log-sampling off), D-16 (production page purge on), D-18 and section 8 (B2 fixed cost, RG-scoped budget), D-24 (withdrawn: hand-made + runbook + check), D-25 (managed identity, not app registration; macOS runner), R-01 and R-06 runbook pointers, section 10 items closed. Done by a committed count-asserting edit script, then assemble and validate. |
+| VII.2 design deviations | DEVIATION, handled | The design record is updated in this feature: D-01 (B2, hand-made), D-03 (origin secret header + IP list replaces AOP, R-04), D-05 (westus, Atlas user), D-12 (package name, sampling and log-sampling off), D-16 (production page purge on), D-18 and section 8 (B2 fixed cost; no budget alert, 6.0.0), D-24 (withdrawn: hand-made + runbook + check), D-25 (managed identity, not app registration; macOS runner), R-01 and R-06 runbook pointers, section 10 items closed. Done by a committed count-asserting edit script, then assemble and validate. |
 | VIII.1 fixed cost | PASS | One B2 plan (5.0.0). |
 | VIII.2 free TLS | PASS | Cloudflare Universal SSL plus Origin CA (R-13). |
 | VIII.3 cost table | PASS | Section 8 updated with the B2 list price and the metered lines (R-12). |
-| VIII.4 hard limits | PASS | App Insights daily cap 0.15 GB (AZ-15). The budget alerts; Azure budgets cannot stop spend (unchanged design fact). |
+| VIII.1 alert | N/A (withdrawn) | Constitution 6.0.0 removed the US$7 alert at the owner's request; no budget is created. |
+| VIII.4 hard limits | PASS | App Insights daily cap 0.15 GB (AZ-15), the only Azure hard limit. |
 | IX visual consistency | N/A (justified) | No UI change. |
 | Platform Constraints | PASS | App Service Linux B2. Origin only from Cloudflare (IP list plus secret header, stronger than AOP for the any-account case). Full (strict). Google OIDC. Atlas Free in the app's region. R2 two buckets. App Insights 30 days with a cap. Forwarded headers and `CF-Connecting-IP` (PC.9, now delivered). |
 

@@ -241,8 +241,6 @@ The plan uses exactly these values. Each one is an owner portal or dashboard ste
 | Staging lifecycle | delete `staging/` after 7 days; `masters/` to Infrequent Access after 30 days |
 | Atlas | Free cluster `gallery-prod` on Azure `westus` (Free supported there: `probe-atlas-region.txt`), database `gallery`, user `gallery-app` (readWrite on `gallery` only), network access = the app's outbound IPs |
 | Google | OAuth client "gallery-prod" (owner, done), redirect `https://port.zacal.me/signin-oidc`, consent screen in Testing, owner as test user |
-| Alert email | the owner's subscription email (budget action group) |
-| Budget | `gallery-prod`, scope resource group `portfolio`, US$7 and US$10 actual-cost notifications |
 | App Insights | `portfolio-appinsights`, daily cap 0.15 GB, retention 30 days |
 
 ## R-13 Origin TLS certificate (D-02 kept)
@@ -260,7 +258,7 @@ The plan uses exactly these values. Each one is an owner portal or dashboard ste
 
 - Fixed: B2 Linux, US$26.28/month list price (owner's portal summary), inside the 5.0.0 ceiling.
 - Metered: R2 under US$1 (existing estimate); Application Insights US$0 under 5 GB a month; Atlas
-  Free US$0; Cloudflare Free US$0. The projected metered total is about US$1, under the US$7 alert.
+  Free US$0; Cloudflare Free US$0. The projected metered total is about US$1, under the US$7 threshold (VIII.3).
   Section 8 of the design record is updated.
-- The budget scopes to resource group `portfolio`, so it sees only this site's Azure spend. R2 is
-  billed by Cloudflare, outside it, as today (design section 8 note).
+- No budget alert (constitution 6.0.0, owner). R2 is billed by Cloudflare, as today (design
+  section 8 note).

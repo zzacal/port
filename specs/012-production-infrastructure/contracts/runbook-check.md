@@ -7,8 +7,7 @@ research R-11 and data-model.md), and a closing `Check:` line naming the `check.
 PASS. Sections, in this order:
 
 1. Azure app settings (done parts marked done): Always On, HTTPS Only, FTP disabled, minimum TLS
-   1.2, App Insights cap 0.15 GB/day and 30-day retention, budget `gallery-prod` on resource group
-   `portfolio` at US$7 and US$10.
+   1.2, App Insights cap 0.15 GB/day and 30-day retention. No budget (constitution 6.0.0).
 2. Cloudflare R2: buckets, `img.zacal.me` custom domain, r2.dev off, CORS, lifecycle, the R2 token.
 3. MongoDB Atlas: Free cluster `gallery-prod` on Azure westus, user `gallery-app`, network access
    (the app's outbound IPs from portal > Networking > Outbound addresses), connection string.
@@ -69,7 +68,6 @@ AZ-13 deploy identity role             portfolio-deploy has Website Contributor 
 AZ-14 federated credential             subject repo:zzacal/port:ref:refs/heads/main, issuer GitHub, audience api://AzureADTokenExchange
 AZ-15 app insights cap                 dailyQuotaGb 0.15
 AZ-16 app insights retention           30
-AZ-17 budget                           gallery-prod, scope RG portfolio, thresholds 7 and 10 USD
 CF-01 dns port                         CNAME proxied to the app's default hostname
 CF-02 dns img                          R2 custom domain on gallery-prod-public, active
 CF-03 ssl mode                         configuration rule on port.zacal.me sets ssl = strict

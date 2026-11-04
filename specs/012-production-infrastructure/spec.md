@@ -11,7 +11,7 @@
 This is the roadmap's "Hosting" feature (docs/roadmap.md, "Hosting (number assigned when it
 starts)"). Everything built so far runs only on the owner's machine. This feature puts the site on
 the public internet: a production host, production image storage and image hostname, the edge in
-front of both, hosted logs, cost alerts, and a repeatable way to create and update all of it.
+front of both, hosted logs, a log ingestion cap, and a repeatable way to create and update all of it.
 
 ## Clarifications
 
@@ -60,6 +60,10 @@ front of both, hosted logs, cost alerts, and a repeatable way to create and upda
   `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` set (verified by `gh variable list`: all three
   present, 36 characters each); no GitHub secret exists. Basic authentication stays disabled. The
   workflow written in this feature uses exactly these names. Applied to FR-024.
+- Q: Spending alert and optional extras? → A: no alert ("No alert needed"); constitution amended to
+  6.0.0 before /speckit-tasks. Keep all three optional extras: production purge and warm
+  (FR-011), saved hosted-log queries (FR-019), production startup guard (FR-015). Applied to
+  FR-020, SC-008 and the severable-seams list.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -147,21 +151,21 @@ address and check it succeeds, and that the logged client address is the caller'
 ### User Story 4 - The owner can see what production is doing and costing (Priority: P2)
 
 The owner can query the production logs for request timings and named operation timings, and
-gets an alert before monthly spend reaches the cost cap.
+log volume can never bill past the free allowance.
 
 **Why this priority**: The constitution makes every time bound verifiable from logs (IV.4) and
-caps metered spend (VIII). Without hosted logs and the alert, production silently loses both
-guarantees, but visitors are not affected on day one.
+requires a hard limit on every metered service that offers one (VIII.4). Without hosted logs and
+the ingestion cap, production silently loses both, but visitors are not affected on day one.
 
 **Independent Test**: Load a few production pages, then run the committed log queries and get
-per-route timing results. Inspect the configured spending alerts and the log ingestion limit.
+per-route timing results. Inspect the log ingestion limit.
 
 **Acceptance Scenarios**:
 
 1. **Given** production has served requests, **When** the owner runs a committed query, **Then**
    they get request and operation timings per route without opening any server.
-2. **Given** metered spend reaches the alert threshold, **When** the threshold is crossed,
-   **Then** the owner is notified.
+2. ~~**Given** metered spend reaches the alert threshold, **When** the threshold is crossed,
+   **Then** the owner is notified.~~ Removed: no spending alert (owner, constitution 6.0.0).
 3. **Given** a sudden flood of log volume, **When** the daily ingestion limit is reached, **Then**
    ingestion stops for the day rather than billing past the free allowance.
 
@@ -224,7 +228,7 @@ Host and platform
 - **FR-002** (blocking, before /speckit-plan; amendment DONE: constitution 5.0.0, 2026-11-02): constitution VIII.1 ("one Azure App Service Basic
   B1 (Linux) plan") and the Platform Constraints hosting bullet ("Azure App Service (Linux, B1)")
   MUST be amended through /speckit-constitution to allow one Basic B2 plan. The metered cap
-  (US$10, alert at US$7) is unchanged. In this feature the design record MUST then update D-01
+  (US$10) is unchanged; the US$7 alert was later withdrawn (6.0.0). In this feature the design record MUST then update D-01
   (B2), D-18 and section 8 (fixed cost), D-24 (withdrawn: production made by hand) and D-25 (deploy
   identity), and every other entry that says B1 (VII.2).
 - **FR-003**: The app MUST stay warm: no request may wait on a cold start of the app, and the
@@ -282,12 +286,11 @@ Observability and cost
   ingestion limit that keeps usage inside the free allowance (D-12, VIII.4).
 - **FR-019**: One committed query per existing time-bound success criterion MUST run against the
   hosted logs, and this feature's evidence MUST include their output (section 10 deferred item).
-- **FR-020**: A spending alert MUST notify the owner at US$7 per month of metered spend and again
-  at US$10 (VIII.1, D-18), scoped to this site's resource groups, not the whole subscription, so
-  other spend in the subscription neither triggers it nor hides inside it. Every metered service
-  in production that offers a hard limit MUST have one set inside the cap (VIII.4).
+- **FR-020**: No spending alert is configured (owner, 2026-11-02; constitution 6.0.0 withdrew the
+  VIII.1 alert). Every metered service in production that offers a hard limit MUST have one set
+  inside the cap (VIII.4): the Application Insights daily ingestion cap.
 - **FR-021**: The design's cost table MUST be updated with verified unit prices for the chosen
-  host and region, and the projected total MUST stay under the alert threshold (VIII.3).
+  host and region, and the projected total MUST stay under US$7 (VIII.3).
 
 Repeatability
 
@@ -295,7 +298,7 @@ Repeatability
   order the owner creates them, with the exact names and values. Production is created by hand;
   no tool creates or changes resources (Clarification 2026-11-02).
 - **FR-023**: A committed settings check MUST read the live production settings (host, edge,
-  buckets, logs, alerts), changing nothing, and list every difference from the runbook's values.
+  buckets, logs), changing nothing, and list every difference from the runbook's values.
   It MUST be pinned to subscription `c28725a0-a61d-4a6c-999a-0a8980111fbf` and resource group
   `portfolio`. Run against production built from the runbook, it MUST report zero differences.
 - **FR-024**: Every push to any branch MUST be built and run the full test suite automatically.
@@ -317,7 +320,7 @@ Verification
 ### Key Entities
 
 - **Production environment**: the host, datastore, two buckets, two hostnames, edge settings,
-  log workspace and spending alerts that together serve the public site. Exactly one exists.
+  log workspace and its ingestion cap that together serve the public site. Exactly one exists.
 - **Settings check**: the committed read-only check that compares live production settings with
   the runbook's values and lists differences.
 - **Runbook**: the ordered owner-only steps that have no management interface (domain and account
@@ -345,8 +348,8 @@ Verification
 - **SC-007**: The settings check reports zero differences against production built from the
   runbook, and reports a deliberately changed setting when run again.
 - **SC-008**: Fixed hosting is one B2 plan (US$26.28/month list price, West US), projected
-  monthly metered spend stays under US$7, and the alert and ingestion limit
-  are in place before the first deploy.
+  monthly metered spend stays under US$7, and the ingestion limit is in place before the first
+  deploy.
 - **SC-009**: No secret value appears in the repository, its history, build output, or any page
   or response served to a browser (checked by scanning for the real values, not their shape).
 
@@ -398,6 +401,7 @@ Verification
   because the roadmap gives them to hosting; each can be cut before planning):
   1. (Accepted by the owner, Clarification 2026-11-02; no longer severable.) The deployment
      pipeline (D-25, FR-024, User Story 5 scenario 3).
+  (Owner 2026-11-02: items 2–4 kept; none is severable any more.)
   2. Edge page purge and warm against production (FR-011) — owned by hosting per D-16; without it
      published changes wait up to a day.
   3. Committed hosted-log queries with evidence (FR-019) — a deferred design item; without it

@@ -1,22 +1,23 @@
 <!--
 Sync Impact Report
-- Version change: 4.5.0 → 5.0.0 (MAJOR)
-- Rationale: owner decision (2026-11-02, feature 012-production-infrastructure): production runs on
-  one Azure App Service Basic B2 (Linux) plan, created by the owner, "for double the beef". VIII.1
-  said "Recurring fixed hosting cost MUST NOT exceed one Azure App Service Basic B1 (Linux) plan."
-  and the hosting Platform Constraint said "Azure App Service (Linux, B1)". The fixed-cost ceiling
-  is redefined from B1 (US$13.14/month list, Linux) to B2 (US$26.28/month list, Linux), so the
-  guarantee that fixed hosting stays at the B1 price is withdrawn. MAJOR per Governance
-  ("redefined"). Unchanged: the US$10 metered cap, the US$7 alert, free tiers, free TLS, the
-  hard-limit rule (VIII.2–VIII.4), and every other principle. Downgrading to B1 stays allowed.
-- Modified principles: VIII (rule 1). Modified sections: Platform Constraints (Hosting bullet).
-  Added/removed sections: none.
+- Version change: 5.0.0 → 6.0.0 (MAJOR)
+- Rationale: owner decision (2026-11-02, feature 012-production-infrastructure): "No alert
+  needed." VIII.1 said "An Azure budget alert MUST fire at US$7 per month." That guarantee is
+  withdrawn: nothing notifies the owner when Azure spend rises. MAJOR per Governance (a guarantee is
+  removed). What stays, and is now the entire protection against overspend:
+  - the US$10 metered cap as a governance limit (exceeding it still requires an amendment)
+  - VIII.3: every design projects each metered cost and the total MUST stay under US$7 (the old
+    alert level, kept as a planning threshold)
+  - VIII.4: every metered service that offers a hard limit has one set (the Application Insights
+    daily ingestion cap is the only Azure one)
+  - the fixed-price plan (VIII.1), which has no metered component
+  Reversal: one Azure budget on the site's resource group restores the alert; no code change.
+- Modified principles: VIII (rules 1 and 3). Added/removed sections: none.
 - Templates requiring updates: none (templates read the constitution at runtime).
-- Prior specs swept: 001 SC-004 ("no more than one Basic B1 plan") annotated AMENDED in place;
-  001's Clarification and Assumptions bullets that say B1 are historical and left as is. 012
-  FR-002 is the requirement this amendment discharges.
-- Deferred TODOs: none. The design record (D-01, D-18, section 8 cost table, and every entry that
-  says B1) is updated by the 012 plan as a VII.2 amendment.
+- Prior specs swept: 001 FR-006, the cost user story and the $7 edge case annotated AMENDED in place;
+  012 FR-020 and SC-008 rewritten (this feature).
+- Deferred TODOs: none. The design record (D-18, section 8 "Configured limits", E-19) is updated
+  by the 012 tasks as a VII.2 amendment.
 - History: 1.0.0 initial ratification. 1.1.0 perceived performance, private = unlisted. 2.0.0
   client-generated derivatives with server validation. 3.0.0 Azure Blob replaced R2, masters kept,
   $10 metered cap (2026-10-27). 4.0.0 images on Cloudflare R2, managed-identity guarantee
@@ -24,7 +25,8 @@ Sync Impact Report
   validation; IV.19 clarified (2026-10-31). 4.2.0 II.6 no empty galleries shown; publish
   requires an image (2026-10-31). 4.3.0 canonical remote (2026-11-01). 4.4.0 IX visual
   consistency through shared containers (2026-11-01). 4.5.0 home page at `/`, galleries listing
-  at `/g`; IV.9 home page makes no read (2026-11-02).
+  at `/g`; IV.9 home page makes no read (2026-11-02). 5.0.0 fixed hosting ceiling B1 -> B2
+  (2026-11-02).
 -->
 
 # Gallery Constitution
@@ -230,13 +232,13 @@ inside feature plans produces contradictions that are expensive to unwind.
 
 1. Recurring fixed hosting cost MUST NOT exceed one Azure App Service Basic B2 (Linux) plan.
    Metered spend on everything else (storage, operations, egress, log ingestion) MUST NOT exceed
-   US$10 per month. An Azure budget alert MUST fire at US$7 per month. Exceeding the cap requires
-   an amendment. Free tiers MUST be used wherever one covers the need.
+   US$10 per month. Exceeding the cap requires an amendment. No spending alert is required
+   (withdrawn in 6.0.0). Free tiers MUST be used wherever one covers the need.
 2. TLS certificates MUST be free (Cloudflare Universal SSL at the edge; Cloudflare Origin CA
    to the origin). No paid certificate.
 3. Designs MUST identify each metered cost (egress, operations, storage, log ingestion), its
    free-tier limit if one exists, its unit price, and its projected monthly cost at the stated
-   scale. The projected total MUST stay under the VIII.1 alert threshold.
+   scale. The projected total MUST stay under US$7 per month.
 4. Every metered service that offers a hard spending limit MUST have one configured, set inside
    the VIII.1 cap. One example is a daily ingestion cap on logs.
 
@@ -311,4 +313,4 @@ These are binding inputs to every plan:
   place, not silently edited.
 - Every plan and analyze pass verifies compliance and cites principles by number.
 
-**Version**: 5.0.0 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-11-02
+**Version**: 6.0.0 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-11-02

@@ -89,7 +89,7 @@ The owner reads how images, the library, galleries, and visibility relate. The d
 
 ### User Story 4 - See the cost and free-tier exposure (Priority: P2)
 
-The owner can see every recurring and metered cost, with its free-tier limit and the expected usage, and the projected monthly total against the VIII.1 cap ($10, with an alert at $7).
+The owner can see every recurring and metered cost, with its free-tier limit and the expected usage, and the projected monthly total against the VIII.1 cap ($10, with an alert at $7). (**AMENDED by feature 012-production-infrastructure**, constitution 6.0.0: the $7 alert is withdrawn; $7 remains the projection threshold.)
 
 **Why this priority**: Principle VIII is a hard ceiling. The figures are needed before any resource is provisioned, but they do not block the shape of the design.
 
@@ -135,7 +135,7 @@ The design must cover each of these:
 - A gallery has no images. The design defines what the home card and the gallery page show.
 - The owner deletes an image by mistake. There is no trash and no backup, so recovery is re-uploading it from local exports. Its gallery memberships, positions, title, and caption are lost.
 - The edge purge fails after an image is deleted. Storage no longer has the files, so the edge can serve only what it already holds, until its cache lifetime runs out. The design states that bound.
-- The datastore's free-tier limit is reached, the log ingestion cap is hit, or metered spend crosses the $7 alert. The design defines the owner-visible behavior and what stops working; for example, logs stop being ingested for the rest of the day.
+- The datastore's free-tier limit is reached, the log ingestion cap is hit, or metered spend crosses the $7 alert (**AMENDED by feature 012-production-infrastructure**, constitution 6.0.0: the $7 alert is withdrawn; $7 remains the projection threshold.). The design defines the owner-visible behavior and what stops working; for example, logs stop being ingested for the rest of the day.
 
 ## Requirements *(mandatory)*
 
@@ -148,7 +148,7 @@ Deliverable and form
 - **FR-003**: Each decision entry MUST state the choice, its rationale, the alternatives rejected with the reason for each, and its pivot cost (Constitution VII.3). Decisions that the constitution already fixes MUST cite the principle and still record their pivot cost.
 - **FR-004**: The document MUST include a traceability matrix with one row per numbered MUST rule in the constitution (Principles I–VIII) and per Platform Constraints bullet. Each row gives the mechanism, the verification method, and a status: designed, deferred with the named owning feature, or N/A with a reason.
 - **FR-005**: The document MUST have a machine-checkable structure: fixed headings per decision entry, with labeled Choice, Rationale, Alternatives, and Pivot cost fields, and a fixed matrix format. FR-002 to FR-004 must be verifiable by counting, not only by reading.
-- **FR-006**: The document MUST include a cost section that lists each external service and each metered dimension with its free-tier limit if any, its unit price, its projected usage and monthly cost at an assumed scale, and the behavior on overage. The document MUST also give the projected metered total against the $10 cap and the $7 alert, and list every hard spending limit that is configured (Constitution VIII.1, VIII.3, VIII.4).
+- **FR-006**: The document MUST include a cost section that lists each external service and each metered dimension with its free-tier limit if any, its unit price, its projected usage and monthly cost at an assumed scale, and the behavior on overage. The document MUST also give the projected metered total against the $10 cap and the $7 alert (**AMENDED by feature 012-production-infrastructure**, constitution 6.0.0: the $7 alert is withdrawn; $7 remains the projection threshold.), and list every hard spending limit that is configured (Constitution VIII.1, VIII.3, VIII.4).
 - **FR-007**: The document MUST include an accepted-risk register. It contains at least the risks under Assumptions marked accepted, each with the concrete failure, how it is detected, the recovery, and the reversal cost.
 - **FR-008**: The document MUST include system diagrams showing the components and the request paths for: a visitor viewing a public page, a cache miss through to the origin, owner upload from in-browser derivative production through server validation to the image appearing in the library, and owner sign-in and claim.
 
