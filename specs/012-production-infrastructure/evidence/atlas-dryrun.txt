@@ -1,10 +1,10 @@
-+ brew install mongodb-atlas-cli
 == signed in
 + atlas auth whoami || atlas auth login
 + atlas auth whoami
 == project gallery-prod
 + atlas projects list --output json
-+ atlas projects create gallery-prod
++ atlas organizations list --output json
++ atlas projects create gallery-prod --orgId <orgId>
 == cluster gallery-prod
 + atlas clusters list --projectId <projectId> --output json
 + atlas clusters create gallery-prod --projectId <projectId> --provider AZURE --region US_WEST --tier M0
@@ -15,8 +15,9 @@
 + atlas dbusers create --username gallery-app --password <hidden> --role readWrite@gallery --projectId <projectId>
 == network access
 + atlas accessLists list --projectId <projectId> --output json
-+ atlas accessLists create 203.0.113.1 --type ipAddress --projectId <projectId> --comment portfolio-web outbound
-+ atlas accessLists create 203.0.113.2 --type ipAddress --projectId <projectId> --comment portfolio-web outbound
++ atlas accessLists create 104.40.24.151 --type ipAddress --projectId <projectId> --comment portfolio-web outbound
++ atlas accessLists create 104.40.16.150 --type ipAddress --projectId <projectId> --comment portfolio-web outbound
++ atlas accessLists create 40.112.243.55 --type ipAddress --projectId <projectId> --comment portfolio-web outbound
 == connection
 + atlas clusters connectionStrings describe gallery-prod --projectId <projectId> --output json
 SRV host: <srv-host>

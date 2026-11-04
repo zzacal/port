@@ -21,7 +21,14 @@ if [ "$#" -lt 1 ]; then
   echo "usage: bash infra/atlas.sh [--dry-run] <outbound-ip> [<outbound-ip> ...]" >&2
   exit 2
 fi
-IPS=("$@")
+IPS=()
+# Accept the portal's comma-separated list as pasted ("1.2.3.4, 5.6.7.8") or space-separated.
+for a in "$@"; do
+  for ip in $(printf '%s' "$a" | tr ',' ' '); do IPS+=("$ip"); done
+done
+for ip in "${IPS[@]}"; do
+  [[ "$ip" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}$ ]] || { echo "not an IPv4 address: '$ip'" >&2; exit 2; }
+done
 
 # run CMD...: prints the command; runs it unless --dry-run.
 run() {
@@ -60,7 +67,22 @@ PROJECT_ID=$(read_json atlas projects list --output json \
 if [ -n "$PROJECT_ID" ]; then
   echo "exists: project ${PROJECT} id=${PROJECT_ID}"
 else
-  run atlas projects create "$PROJECT"
+  # projects create needs the organisation: use the only one, or ATLAS_ORG_ID when there are several.
+  if [ "$DRY" -eq 1 ]; then
+    ORG_ID="<orgId>"; echo "+ atlas organizations list --output json"
+  elif [ -n "${ATLAS_ORG_ID:-}" ]; then
+    ORG_ID="$ATLAS_ORG_ID"
+  else
+    ORGS=$(atlas organizations list --output json | jq -r '(.results // [])[] | "\(.id) \(.name)"')
+    if [ "$(printf '%s\n' "$ORGS" | grep -c .)" -ne 1 ]; then
+      echo "found $(printf '%s\n' "$ORGS" | grep -c .) Atlas organisations; re-run with ATLAS_ORG_ID=<id> set:" >&2
+      printf '%s\n' "$ORGS" >&2
+      exit 2
+    fi
+    ORG_ID=${ORGS%% *}
+    echo "organisation: ${ORGS#* } (${ORG_ID})"
+  fi
+  run atlas projects create "$PROJECT" --orgId "$ORG_ID"
   if [ "$DRY" -eq 1 ]; then
     PROJECT_ID="<projectId>"
   else
