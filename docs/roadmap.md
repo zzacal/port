@@ -165,8 +165,8 @@ caches" lines, E-16, and the II.2/II.6/IV.9 traceability rows.
 
 ### 012 Production infrastructure
 
-**Status: implemented on branch 012-production-infrastructure, owner-only steps O-01..O-08
-pending.** Evidence: `specs/012-production-infrastructure/evidence/` (design record validate 0
+**Status: live at https://port.zacal.me (merged 9c5a4ce, 2026-11-04).** O-01..O-07 done;
+O-08 dropped (decisions #49); log-based timing skipped (decisions #50). Evidence: `specs/012-production-infrastructure/evidence/` (design record validate 0
 failures in `design-validate.txt`). Decisions in `specs/012-production-infrastructure/decisions.md`.
 
 The site goes live at `https://port.zacal.me` on the owner's hand-made App Service `portfolio-web`

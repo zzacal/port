@@ -1,0 +1,14 @@
+012 O-07 browser check, live https://port.zacal.me (2026-11-04, real Chrome via CDP, from the owner's machine)
+
+Widths 390 (phone) and 1440 (desktop): / and /g, no horizontal scroll, 0 broken images; /g shows 3 galleries, 6 images.
+Gallery page (seattle waterfront): 6 tiles, 0 broken images, no horizontal scroll.
+Photo page: image served from img.zacal.me; breadcrumb Home / Galleries / seattle waterfront; Next link; ArrowRight moves to the next photo.
+
+Navigation timing, 3 loads each (TTFB ms / load ms / CLS):
+  /                     100/104/0   93/109/0   68/78/0
+  /g                    105/123/0   71/87/0    67/82/0
+  gallery               92/109/0    94/112/0   60/74/0
+  photo                 68/74/0     60/73/0    71/84/0
+
+verify-prod.sh https://port.zacal.me <origin>: 59 PASS, ALL PASS (SC-009 SKIP: no infra/.secrets.local) -> verify-prod-output.txt
+Log-based timing (kql.sh) skipped by the owner (decisions #50).
