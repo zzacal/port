@@ -34,11 +34,9 @@ Check: NET-06, NET-07, NET-08 (lifecycle: no row).
 
 ## 3. MongoDB Atlas
 
-1. Terminal > `brew install mongodb-atlas-cli`.
-2. Terminal > `atlas auth login` > browser > Authorize.
-3. portfolio-web > Settings > Networking > Outbound traffic configuration > Outbound addresses > copy every IPv4 address.
-4. Terminal, repo root > `bash infra/atlas.sh <ip1> <ip2> ...` (project `gallery-prod`, cluster `gallery-prod` M0 AZURE US_WEST, user `gallery-app` readWrite@gallery).
-5. Copy the line under "paste into Mongo__ConnectionString" > keep it private > step 7.4.
+1. portfolio-web > Settings > Networking > Outbound traffic configuration > Outbound addresses > copy every IPv4 address.
+2. Terminal, repo root > `bash infra/atlas.sh <ip1> <ip2> ...` > Authorize in the browser if it opens (the script installs `mongodb-atlas-cli` and `jq` with Homebrew when missing, and runs `atlas auth login` when not signed in). Creates project `gallery-prod`, cluster `gallery-prod` M0 AZURE US_WEST, user `gallery-app` readWrite@gallery.
+3. Copy the line under "paste into Mongo__ConnectionString" > keep it private > step 7.4.
 
 Check: AZ-11 (`Mongo__ConnectionString present`).
 
@@ -110,7 +108,7 @@ portfolio-web > Settings > Environment variables > App settings > + Add > Name >
 4. `Hosting__OriginSecret` = the 64-character value from 5.12 (the same value as Cloudflare rule `port origin secret`)
 5. `Hosting__DataProtectionKeysPath` = `/home/data/dataprotection-keys`
 6. `Site__OutputCache` = `true`
-7. `Mongo__ConnectionString` = the line from 3.5
+7. `Mongo__ConnectionString` = the line from 3.3
 8. `Mongo__Database` = `gallery`
 9. `Storage__ServiceUrl` = `https://<account-id>.r2.cloudflarestorage.com` (Cloudflare > R2 Object Storage > Account Details > Account ID)
 10. `Storage__AccessKeyId` = Access Key ID from `.r2-keys-prod-copy`

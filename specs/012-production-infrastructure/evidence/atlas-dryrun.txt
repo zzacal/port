@@ -1,4 +1,6 @@
++ brew install mongodb-atlas-cli
 == signed in
++ atlas auth whoami || atlas auth login
 + atlas auth whoami
 == project gallery-prod
 + atlas projects list --output json

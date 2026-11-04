@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # 012: creates the production MongoDB Atlas resources with the official Atlas CLI (decisions row 19).
 # Usage: bash infra/atlas.sh [--dry-run] <outbound-ip> [<outbound-ip> ...]
-# Prerequisites: brew install mongodb-atlas-cli; atlas auth login (owner, browser).
+# Installs its own tools on macOS (Homebrew: mongodb-atlas-cli, jq) and runs `atlas auth login`
+# (browser) when not signed in. Needs Homebrew itself.
 # Idempotent: each step lists before it creates and skips what exists.
 set -euo pipefail
 
@@ -32,13 +33,25 @@ read_json() {
   if [ "$DRY" -eq 1 ]; then echo "+ $*" >&2; echo '{}'; else "$@"; fi
 }
 
-command -v jq >/dev/null || { echo "jq not found" >&2; exit 2; }
-if [ "$DRY" -eq 0 ]; then
-  command -v atlas >/dev/null || { echo "atlas not found: brew install mongodb-atlas-cli" >&2; exit 2; }
-  command -v openssl >/dev/null || { echo "openssl not found" >&2; exit 2; }
-fi
+# need CMD BREW_FORMULA: install the tool with Homebrew when it is missing (not in --dry-run).
+need() {
+  command -v "$1" >/dev/null && return 0
+  if [ "$DRY" -eq 1 ]; then echo "+ brew install $2"; return 0; fi
+  command -v brew >/dev/null || { echo "$1 not found and Homebrew is missing: install it from https://brew.sh, then re-run" >&2; exit 2; }
+  echo "== installing $2"
+  brew install "$2"
+}
+need jq jq
+need atlas mongodb-atlas-cli
+need openssl openssl
 
 echo "== signed in"
+if [ "$DRY" -eq 1 ]; then
+  echo "+ atlas auth whoami || atlas auth login"
+elif ! atlas auth whoami >/dev/null 2>&1; then
+  echo "not signed in to Atlas: opening the browser sign-in"
+  atlas auth login
+fi
 run atlas auth whoami
 
 echo "== project ${PROJECT}"
