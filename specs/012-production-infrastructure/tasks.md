@@ -331,7 +331,7 @@ Covered by T012 (telemetry wiring test), T016–T017 (queries) and the owner run
 
 - [X] O-01 (done 2026-11-03, as reported by the owner: atlas.sh succeeded) Run `bash infra/atlas.sh
   <outbound IPs>`. Keep the printed password private.
-- [ ] O-02 Runbook steps 1, 6 and 7: Always On, HTTPS Only, FTP off, TLS 1.2, the App Insights cap
+- [X] O-02 (done 2026-11-04, as reported by the owner: app settings saved via Advanced edit; new purge token gallery-prod-purge created and verified active by the owner; portal toggles, R2 settings and access restrictions not separately confirmed: O-03 check.sh proves them) Runbook steps 1, 6 and 7: Always On, HTTPS Only, FTP off, TLS 1.2, the App Insights cap
   and retention, access restrictions, and every app setting, including `Hosting__OriginSecret`
   (the same value as Cloudflare rule E) and the R2 and purge tokens from `.r2-keys-prod-copy`.
   Then delete `.r2-keys-prod-copy`.
