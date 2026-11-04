@@ -1,0 +1,23 @@
+== signed in
++ atlas auth whoami
+== project gallery-prod
++ atlas projects list --output json
++ atlas projects create gallery-prod
+== cluster gallery-prod
++ atlas clusters list --projectId <projectId> --output json
++ atlas clusters create gallery-prod --projectId <projectId> --provider AZURE --region US_WEST --tier M0
++ atlas clusters watch gallery-prod --projectId <projectId>
+== database user gallery-app
++ atlas dbusers list --projectId <projectId> --output json
++ openssl rand -base64 24
++ atlas dbusers create --username gallery-app --password <hidden> --role readWrite@gallery --projectId <projectId>
+== network access
++ atlas accessLists list --projectId <projectId> --output json
++ atlas accessLists create 203.0.113.1 --type ipAddress --projectId <projectId> --comment portfolio-web outbound
++ atlas accessLists create 203.0.113.2 --type ipAddress --projectId <projectId> --comment portfolio-web outbound
+== connection
++ atlas clusters connectionStrings describe gallery-prod --projectId <projectId> --output json
+SRV host: <srv-host>
+
+paste into Mongo__ConnectionString (shown once):
+mongodb+srv://gallery-app:<generated-by-openssl-rand-base64-24-in-real-run>@<srv-host>/?retryWrites=true&w=majority&appName=gallery-prod

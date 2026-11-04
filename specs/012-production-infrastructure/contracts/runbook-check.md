@@ -21,7 +21,7 @@ PASS. Sections, in this order:
    `https://www.cloudflare.com/ips-v4` and `-v6`), default deny; Advanced tool site: "Use main site
    rules" OFF, unrestricted.
 7. App settings: every row of data-model.md "Production configuration", entered in portal >
-   Environment variables. Generate the origin secret with `openssl rand -base64 32`.
+   Environment variables. Generate the origin secret with `openssl rand -hex 32` (research R-04; AMENDED at implement: was `-base64 32`, the owner's step E used hex).
 8. First deploy: push to main, watch the `ci` run go green.
 9. Claim: open `https://port.zacal.me/admin` immediately and sign in. Run
    `bash specs/012-production-infrastructure/evidence/kql.sh claim` and confirm one `auth.claim`

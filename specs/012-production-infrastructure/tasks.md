@@ -62,14 +62,14 @@ say. If something is missing or contradictory, stop and report a blocker. Do not
 
 ## Phase 1: Setup (parent)
 
-- [ ] T001 Record the baseline in `specs/012-production-infrastructure/evidence/baseline.txt`:
+- [X] T001 Record the baseline in `specs/012-production-infrastructure/evidence/baseline.txt`:
   - `git rev-parse HEAD`
   - `dotnet --list-sdks`
   - the full-suite pass/skip count from `dotnet test Gallery.slnx --artifacts-path artifacts --blame-hang-timeout 120s`
   - confirm `printenv APPLICATIONINSIGHTS_CONNECTION_STRING` is empty (contracts/test-impact.md)
-- [ ] T002 Add the package with `dotnet add src/Gallery.Web package Azure.Monitor.OpenTelemetry.AspNetCore --version 1.6.0`
+- [X] T002 Add the package with `dotnet add src/Gallery.Web package Azure.Monitor.OpenTelemetry.AspNetCore --version 1.6.0`
   (CLI only, constitution VI). Build `-warnaserror`.
-- [ ] T003 Apply the stated test change: `tests/Gallery.Web.Tests/UploadSourceGuardTests.cs`
+- [X] T003 Apply the stated test change: `tests/Gallery.Web.Tests/UploadSourceGuardTests.cs`
   `BaselinePackages` gains `Azure.Monitor.OpenTelemetry.AspNetCore` in ordinal order, and the
   summary comment reads "at 47de295 plus 012 R-06". Run the full suite; it must equal T001's count.
   Commit T001–T003.
@@ -81,27 +81,27 @@ say. If something is missing or contradictory, stop and report a blocker. Do not
 `src/Gallery.Web/Hosting/ProductionGuard.cs`. Gate: build `-warnaserror` and the full suite still
 green (nothing is wired yet).
 
-- [ ] T004 Create `src/Gallery.Web/Hosting/HostingOptions.cs` exactly per contracts/hosting.md
+- [X] T004 Create `src/Gallery.Web/Hosting/HostingOptions.cs` exactly per contracts/hosting.md
   "HostingOptions": a class, `Section = "Hosting"`, the four properties, no `ToString` override,
   and helpers `IsProductionTarget` and `IsCloudflareEdge` (ordinal, case-insensitive).
-- [ ] T005 [SAFETY] Create `src/Gallery.Web/Hosting/ProductionGuard.cs`: `public static
+- [X] T005 [SAFETY] Create `src/Gallery.Web/Hosting/ProductionGuard.cs`: `public static
   IReadOnlyList<string> Check(IConfiguration c)` implementing every row of the contracts/hosting.md
   rule table. Each message names the key and the rule, never the value. Uses `DevTargetGuard`
   constants.
-- [ ] T006 [SAFETY] Create `src/Gallery.Web/Hosting/OriginGuardMiddleware.cs` per contracts/hosting.md
+- [X] T006 [SAFETY] Create `src/Gallery.Web/Hosting/OriginGuardMiddleware.cs` per contracts/hosting.md
   "UseHosting" step 1:
   - header `X-Gallery-Origin`
   - `CryptographicOperations.FixedTimeEquals` over UTF-8 bytes; a length mismatch counts as a mismatch
   - on refusal: 403, empty body, `Cache-Control: no-store`, `origin.refused {method} {path} {status} {duration_ms} {reason}`
   - remove the header before calling next
-- [ ] T007 Create `src/Gallery.Web/Hosting/HostingSetup.cs` with `AddHosting(this IServiceCollection,
+- [X] T007 Create `src/Gallery.Web/Hosting/HostingSetup.cs` with `AddHosting(this IServiceCollection,
   IConfiguration)` (contract steps 1–6, in order) and `UseHosting(this WebApplication)` (guard, then
   `UseForwardedHeaders()`, both only when the edge is cloudflare). Forwarded options exactly per
   contract step 4 (`KnownIPNetworks`, not the obsolete `KnownNetworks`). Azure Monitor options
   exactly per contract step 5. Data Protection exactly per step 3.
 **Parent wiring (after Batch A1)**:
 
-- [ ] T008 Edit `src/Gallery.Web/AppBuilder.cs`:
+- [X] T008 Edit `src/Gallery.Web/AppBuilder.cs`:
   - add `builder.Services.AddHosting(builder.Configuration);` on the line after `AddEdge(...)`
   - add `app.UseHosting();` as the first line after `var app = builder.Build();`, before `UseRouting()`
   - no other change
@@ -112,21 +112,21 @@ green (nothing is wired yet).
 `HostingDataProtectionTests.cs` and `HostingTelemetryTests.cs`. It may fix defects its tests find
 in the four `Hosting/` files (report each in `decisions_made`); it never edits AppBuilder.cs.
 
-- [ ] T009 [SAFETY] `tests/Gallery.Web.Tests/HostingGuardTests.cs`: every case in
+- [X] T009 [SAFETY] `tests/Gallery.Web.Tests/HostingGuardTests.cs`: every case in
   contracts/hosting.md "Tests". Hosts are built with `AppBuilder.Build(["--urls",
   "http://127.0.0.1:0"], overrides)`. The forwarded-IP case configures the existing
   `Fixtures/FakeGoogle.cs` authority (copy how AdminAccessTests sets `Authentication:Google:*`).
   Assert the refused-request line carries method, path, 403 and a duration. Use a fixed 40-char test
   secret, and assert it is absent from every captured log line.
-- [ ] T010 [P] [SAFETY] `tests/Gallery.Web.Tests/ProductionGuardTests.cs`:
+- [X] T010 [P] [SAFETY] `tests/Gallery.Web.Tests/ProductionGuardTests.cs`:
   - one complete valid dictionary returns an empty list
   - one `[Theory]` row per rule flips exactly one key; assert exactly one message naming that key,
     and that the bad value is absent
   - a host built with `Hosting:Target=production` plus one bad key throws at `Build` with that key
     named and the value absent
-- [ ] T011 [P] `tests/Gallery.Web.Tests/HostingDataProtectionTests.cs` per contract: two sequential
+- [X] T011 [P] `tests/Gallery.Web.Tests/HostingDataProtectionTests.cs` per contract: two sequential
   hosts share a temp key path; host 1 protects, host 2 unprotects; a `key-*.xml` file exists.
-- [ ] T012 [P] `tests/Gallery.Web.Tests/HostingTelemetryTests.cs` per contract:
+- [X] T012 [P] `tests/Gallery.Web.Tests/HostingTelemetryTests.cs` per contract:
   - no connection string: no `TracerProvider` service is registered
   - fake unreachable connection string `InstrumentationKey=00000000-0000-0000-0000-000000000000;IngestionEndpoint=https://127.0.0.1:9/`:
     the host starts and `/` answers 200
@@ -201,7 +201,7 @@ skipped.
 **Batch B**: one executor. It owns `.github/workflows/ci.yml` and
 `tests/Gallery.Web.Tests/WorkflowGuardTests.cs`.
 
-- [ ] T019 [US5] [SAFETY] Create `.github/workflows/ci.yml` per contracts/workflow.md:
+- [X] T019 [US5] [SAFETY] Create `.github/workflows/ci.yml` per contracts/workflow.md:
   - no `environment:` key
   - no `secrets.` reference
   - `id-token: write` only on the deploy job
@@ -210,7 +210,7 @@ skipped.
   Look up the current major versions of `actions/checkout`, `actions/setup-dotnet`,
   `actions/upload-artifact`, `actions/download-artifact`, `azure/login` and
   `azure/webapps-deploy` on their GitHub release pages, and report them in `decisions_made`.
-- [ ] T020 [US5] [SAFETY] `tests/Gallery.Web.Tests/WorkflowGuardTests.cs`: read
+- [X] T020 [US5] [SAFETY] `tests/Gallery.Web.Tests/WorkflowGuardTests.cs`: read
   `.github/workflows/ci.yml` from `Render.RepoRoot` as text and assert each rule from
   contracts/workflow.md "Rules":
   - no `secrets.`
@@ -224,7 +224,7 @@ skipped.
 **Batch C**: one executor, parallel to Batch B. It owns `infra/README.md`, `infra/check.sh` and
 `infra/atlas.sh`.
 
-- [ ] T021 [P] [US5] Create `infra/README.md`, the runbook, per contracts/runbook-check.md sections
+- [X] T021 [P] [US5] Create `infra/README.md`, the runbook, per contracts/runbook-check.md sections
   1–11:
   - bare numbered steps, each with page path, field, exact value and button (the owner's standing
     preference: no explanatory prose)
@@ -232,7 +232,7 @@ skipped.
   - mark the steps already done (Azure app, deploy identity, GitHub variables, Google client in
     Testing, Cloudflare A–G) as "Done 2026-11-02"
   - no budget step
-- [ ] T022 [P] [US5] Create `infra/atlas.sh` per decisions row 19:
+- [X] T022 [P] [US5] Create `infra/atlas.sh` per decisions row 19:
   - official Atlas CLI only; `atlas auth login` is run by the owner beforehand
   - idempotent: list before create
   - project `gallery-prod`; cluster `gallery-prod`, tier M0, provider AZURE, region US_WEST
@@ -243,7 +243,7 @@ skipped.
   - `bash -n` must pass
   - a `--dry-run` flag prints each command instead of running it; run it and save the output to
     `specs/012-production-infrastructure/evidence/atlas-dryrun.txt`
-- [ ] T023 [P] [US5] Create `infra/check.sh` per contracts/runbook-check.md (no fixtures, no
+- [X] T023 [P] [US5] Create `infra/check.sh` per contracts/runbook-check.md (no fixtures, no
   Cloudflare token: V.4):
   - row ids AZ-01..AZ-16 and NET-01..NET-09 (no CF-* rows; AZ-17 removed under 6.0.0)
   - pinned to the subscription, resource group and app
@@ -256,7 +256,7 @@ skipped.
 
 **Parent (after Batches B and C)**:
 
-- [ ] T024 [US5] Add `infra/*.pem`, `infra/*.key`, `infra/*.pfx` and `infra/.secrets.local` to
+- [X] T024 [US5] Add `infra/*.pem`, `infra/*.key`, `infra/*.pfx` and `infra/.secrets.local` to
   `.gitignore`, and confirm with `git check-ignore -v`. Commit with Batches B and C.
 
 ## Phase 6: User Story 4: production observability evidence (P2)
