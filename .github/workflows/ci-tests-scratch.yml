@@ -2,6 +2,7 @@ name: ci-tests-scratch
 
 # Temporary: iterate on the CI test job without build/deploy. Deleted once tests are green.
 on:
+  workflow_dispatch:
   push:
     branches: ['ci-tests']
 
