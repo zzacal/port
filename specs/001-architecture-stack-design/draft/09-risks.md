@@ -4,7 +4,7 @@
 
 **Failure**: From deploy until the owner's first sign-in at `/admin`, anyone with a Google account who reaches it first becomes owner (spec Assumptions).
 **Detection**: The claim log event (Constitution I.5) records the identity, client IP, and timestamp; the real owner's subsequent sign-in is refused because the site is already claimed.
-**Recovery**: Out-of-band datastore reset by the operator (Constitution I.4); no web-accessible reset path exists.
+**Recovery**: Out-of-band datastore reset by the operator (Constitution I.4); no web-accessible reset path exists. Prevention is runbook step 9 (`infra/README.md`, feature 012): right after the first deploy the owner opens `https://port.zacal.me/admin`, signs in, and confirms one `auth.claim` with their Google subject with `evidence/kql.sh claim`; the address is not shared before that step.
 **Reversal cost**: Low — a claim token checked at claim time can be added later without changing the data model (spec Assumptions).
 
 ### R-02: No backups — datastore and master loss is permanent
@@ -39,7 +39,7 @@
 
 **Failure**: The app holds an R2 token with Object Read and Write on both buckets. Anyone who obtains it can read every master and staged upload, and can overwrite or delete objects, until the token is rotated (Constitution 4.0.0, III.9; decisions #34).
 **Detection**: Unexpected Class B operations or storage changes on the Cloudflare R2 metrics page; masters or derivatives missing or altered.
-**Recovery**: Roll the token in the Cloudflare dashboard and update the app's configuration; derivatives can be regenerated from masters only by re-uploading. The token cannot reach account settings, the zone, or other buckets (III.9).
+**Recovery**: Roll the token in the Cloudflare dashboard and update the app's configuration; derivatives can be regenerated from masters only by re-uploading. The token cannot reach account settings, the zone, or other buckets (III.9). The order is runbook step 10 (`infra/README.md`, feature 012): create the new token, update the app setting, restart, verify, then revoke the old one; the same step covers the purge token, the origin secret, the Google secret and the Origin CA certificate.
 **Reversal cost**: Low — R2 temporary credentials or a Worker binding can replace the stored token later without changing object keys or URLs.
 
 ### R-07: client-generated derivatives — metadata leak if admin page has a bug

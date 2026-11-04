@@ -163,55 +163,84 @@ unchanged to `/g` (`/g/` redirects there); every public breadcrumb starts at Hom
 D-15, D-16, D-20, D-21, D-23, the content model's `homeCards` row, the lifecycle "Pages and
 caches" lines, E-16, and the II.2/II.6/IV.9 traceability rows.
 
-### Hosting (number assigned when it starts)
+### 012 Production infrastructure
 
-Choose and provision the host, then deploy, once the owner has a subscription or account only
-they control. This feature reopens D-01, D-03, D-05 region, D-12, D-18, D-24, and D-25, and it
-amends the Platform Constraints for whatever host is chosen. It owns production R2 buckets and
-their image hostname, Cloudflare in front of the origin, origin lock-down, the budget alerts, log
-ingestion and saved queries, edge HTML caching and page purge (D-16 edge side), and the claim
-window on first deploy (R-01). It can start at any point. 007 is the latest sensible point,
-because R-01 only exists once `/admin` is public.
+**Status: implemented on branch 012-production-infrastructure, owner-only steps O-01..O-08
+pending.** Evidence: `specs/012-production-infrastructure/evidence/` (design record validate 0
+failures in `design-validate.txt`). Decisions in `specs/012-production-infrastructure/decisions.md`.
 
-The app stays .NET (owner, 2026-10-30), so the host must run a .NET container or runtime.
-Candidates to compare with real numbers then: Azure App Service in a subscription only the owner
-controls; Cloudflare Containers (same account as R2 and DNS, origin unreachable except through a
-Worker, $5/month Workers Paid plus usage, but it sleeps when idle and .NET cold starts cost
-seconds); Fly.io; and a VPS behind Cloudflare Tunnel. Workers and Pages alone are ruled out
-because they don't run .NET.
+The site goes live at `https://port.zacal.me` on the owner's hand-made App Service `portfolio-web`
+(Linux B2, .NET 10, West US) behind Cloudflare. The origin accepts only Cloudflare: IP allow-list
+plus the secret `X-Gallery-Origin` header, with `CF-Connecting-IP` trusted only behind that guard
+(replaces Authenticated Origin Pulls). Data Protection keys persist under `/home`, Application
+Insights through `Azure.Monitor.OpenTelemetry.AspNetCore` with sampling off, a production startup
+guard against dev names, production page purge and warm, and GitHub Actions deploying `main` as
+the managed identity `portfolio-deploy`. D-24 (OpenTofu) is withdrawn: production is made by hand
+from the runbook `infra/README.md` and checked by the read-only `infra/check.sh`; Atlas is scripted
+by `infra/atlas.sh`. No budget alert (constitution 6.0.0). Amends D-01, D-02, D-03, D-05, D-12,
+D-16, D-18, D-24, D-25, E-19, R-01, R-06, section 8 and section 10.
+
+Owner prerequisites (done):
+
+- [x] App Service `portfolio-plan` (B2) and `portfolio-web` in resource group `portfolio`, West US;
+  Application Insights `portfolio-appinsights` created (cap and retention are in O-02).
+- [x] Deploy identity `portfolio-deploy` with federated credential subject
+  `repo:zzacal/port:ref:refs/heads/main`, Website Contributor on `portfolio-web` only; GitHub
+  variables `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` set.
+- [x] Cloudflare steps A–G (2026-11-02), probed in `evidence/probe-cloudflare.txt`: `port.zacal.me`
+  through Cloudflare, `asuid.port` TXT, http to https redirect, `/admin` not cached, `img.zacal.me`
+  through the cache.
+- [x] Production R2 token and purge token saved in `.r2-keys-prod-copy` (gitignored, mode 600).
+- [x] Google OAuth client `gallery-prod`, redirect `https://port.zacal.me/signin-oidc`, consent
+  screen in Testing with the owner as a test user.
+
+Remaining OWNER-ONLY steps (012 tasks.md, after the build, one at a time):
+
+- [ ] O-01 Atlas: `brew install mongodb-atlas-cli`, `atlas auth login`, `bash infra/atlas.sh
+  <outbound IPs>`.
+- [ ] O-02 Runbook steps 1, 6 and 7: app settings, App Insights cap and retention, access
+  restrictions, every app setting including `Hosting__OriginSecret`; then delete
+  `.r2-keys-prod-copy`.
+- [ ] O-03 `bash infra/check.sh <default hostname>` with 0 FAIL.
+- [ ] O-04 Merge 012 to main and push; the `deploy` job goes green.
+- [ ] O-05 Claim immediately at `https://port.zacal.me/admin`, then `kql.sh claim` (R-01).
+- [ ] O-06 Upload and publish a gallery, then `kql.sh edge`.
+- [ ] O-07 `verify-prod.sh`, `drive-prod.sh`, then `kql.sh all`.
+- [ ] O-08 Drift test: Always On off, `check.sh` shows `FAIL AZ-03`, then back on.
 
 ## Not a feature
 
-- **Cost cap (D-18, E-19)**: configuration owned by the hosting feature. Until then, the only
-  metered service is R2 at well under $1/month; the owner checks it on the Cloudflare billing
-  page.
+- **Cost cap (D-18, E-19)**: no budget alert (constitution 6.0.0 withdrew the $7 alert). The
+  $10 metered cap is a governance limit; the Application Insights daily cap (0.15 GB, set by 012)
+  is the only hard limit. The B2 plan is fixed-price; R2 stays under $1/month and the owner checks
+  it on the Cloudflare billing page.
 - **Backups (E-13, R-02)**: an accepted risk with no feature.
-- **R-05 (log retention)**: an accepted risk, configured by the hosting feature.
+- **R-05 (log retention)**: an accepted risk; 30-day retention configured by 012.
 
 ## Coverage
 
 | Entry | Feature |
 |---|---|
 | D-07, D-13, D-14, D-15, D-17, D-19, D-20 | 006 |
-| D-16 | 006 (headers), 009 (purge and warm), hosting (edge cache rules) |
+| D-16 | 006 (headers), 009 (purge and warm), 012 (edge cache rules, production page purge) |
 | D-21, D-22 | built (003, 002); followed by all |
 | D-23 | 007 (sign-in, shell), 008 (upload batch), 009 (library, gallery list, builder) |
 | D-04, D-06 | 007 |
 | D-08, D-09, D-10, D-11 | 008 |
-| D-01, D-02, D-03, D-05, D-12, D-18, D-24, D-25 | hosting (reopened) |
+| D-01, D-02, D-03, D-05, D-12, D-18, D-24, D-25 | 012 |
 | L-01 to L-06 | 008 |
 | L-07 to L-17 | 009 |
 | E-01, E-02 | 007 |
 | E-03 to E-11 | 008 |
 | E-12, E-14, E-15, E-16, E-17, E-18 | 009 (E-16 listing and 404 rules in 006; publish refusal in 009, II.6) |
 | E-13 | accepted risk (R-02) |
-| E-19 | hosting |
-| R-01 | hosting (first public deploy of `/admin`) |
-| R-02, R-05 | accepted; R-05 configured by hosting |
+| E-19 | 012 |
+| R-01 | 012 (runbook step 9, first public deploy of `/admin`) |
+| R-02, R-05 | accepted; R-05 configured by 012 |
 | R-03, R-04 | 009 |
-| R-06 | 006 (token scope and storage), rotation runbook with hosting |
+| R-06 | 006 (token scope and storage), 012 (rotation, runbook step 10) |
 | R-07 | 008 |
 | III.9 | 006 (credential, buckets), 008 (presigned uploads) |
-| PC.9 | hosting (moved from 006: no effect without a proxy; 006 decisions row 30) |
-| PC.4 | 007 |
-| PC.1, PC.2, PC.3, PC.5, PC.6, PC.7, PC.8 | hosting |
+| PC.9 | 012 (moved from 006: no effect without a proxy; 006 decisions row 30) |
+| PC.4 | 007; 012 (production Google client `gallery-prod`) |
+| PC.1, PC.2, PC.3, PC.5, PC.6, PC.7, PC.8 | 012 |

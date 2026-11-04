@@ -1,6 +1,6 @@
 ## 7. Traceability Matrix
 
-One row per numbered rule in constitution v4.1.0, plus one per Platform Constraints bullet (`PC.n`,
+One row per numbered rule in constitution v6.1.0, plus one per Platform Constraints bullet (`PC.n`,
 in order). A rule with no numbered list (VI) counts as one rule. Status `deferred:first-build-feature`
 marks rules whose mechanism is designed here but whose compliance is a provisioning setting that
 can only be checked once the resource exists.
@@ -54,24 +54,25 @@ can only be checked once the resource exists.
 | V.1 | Section 10 and spec scope: no comments, likes, search, multi-user, analytics | document review: every capability traces to spec 001 | designed |
 | V.2 | research.md dependency table justifies every package | document review: package list matches the justification table | designed |
 | V.3 | D-15: public pages work without JavaScript; admin may require it | integration test: public routes render complete HTML with no script execution | designed |
+| V.4 | Each plan states the benefit and cost of every addition beyond the literal request and drops the marginal ones (012 decisions #24, #27) | document review: the plan's Constitution Check lists additions with benefit and cost | designed |
 | VI.1 | Section 10: scaffolding with `dotnet new`, `az`, `wrangler` | document review: no scaffolding happens in this feature | n/a:no scaffolding in a documents-only feature |
 | VII.1 | This document is feature 001, documents only | document review: feature 001 adds no source or infrastructure | n/a:satisfied by this feature itself |
 | VII.2 | Section 10 and the document header: later deviations must update this document | document review: later plans cite this document in their Constitution Check | designed |
 | VII.3 | Section 2: every decision has rationale, alternatives, pivot cost | document review: validate.sh C2 counts all four fields | designed |
-| VIII.1 | Section 8, D-18: only B1 fixed; metered total about $1 against $10 cap and $7 budget alert | config check: Azure budget with $7 and $10 notifications exists | designed |
+| VIII.1 | Section 8, D-01, D-18: one B2 plan fixed (US$26.28/month list price); metered total about $1 against the $10 cap; no budget alert (constitution 6.0.0) | config check: `infra/check.sh` AZ-01 plan sku is B2 Linux; document review: validate.sh C7 metered total under $7 | designed |
 | VIII.2 | D-02: Universal SSL at the edge, Origin CA at the origin | config check: origin certificate issuer is Cloudflare Origin CA | designed |
 | VIII.3 | Section 8: every metered dimension with free limit, unit price, projection | document review: validate.sh C7 | designed |
-| VIII.4 | Section 8, D-18, D-12: Application Insights 150 MB daily cap | config check: daily cap set on the workspace | designed |
+| VIII.4 | Section 8, D-18, D-12: Application Insights 150 MB daily cap | config check: `infra/check.sh` AZ-15 daily cap 0.15 GB on `portfolio-appinsights` | designed |
 | IX.1 | D-21, D-23 (amended by 010 owner review 3): shared chrome renders at the same position, height and spacing on every page of a site | automated test: LayoutConsistencyBrowserTests | designed |
 | IX.2 | D-21, D-23: PublicLayout and AdminLayout are each the one container that owns the chrome and the gap under it; pages carry no top margin on their first element | automated test: LayoutConsistencyBrowserTests; grep in 010 evidence/verify.sh | designed |
 | IX.3 | D-21: the breadcrumb row is one tap height (Tokens.Tap) with or without a link | automated test: LayoutConsistencyBrowserTests (home's trail has no link) | designed |
 | IX.4 | 010 decisions row 56: measured browser test over every public and admin page type at narrow and wide widths | automated test: LayoutConsistencyBrowserTests; non-vacuity break 10 | designed |
 | PC.1 | D-01, D-15: .NET 10 minimal APIs, server-rendered HTML, htmx and web components for admin | document review: D-01 and D-15 | deferred:first-build-feature |
-| PC.2 | D-01, D-03: App Service Linux B1; IP allowlist plus Authenticated Origin Pulls | config check: access restrictions list only Cloudflare ranges | deferred:first-build-feature |
+| PC.2 | D-01, D-03: App Service Linux B2; Cloudflare IP allowlist on the main site plus the secret `X-Gallery-Origin` header checked by the app in constant time | config check: `infra/check.sh` AZ-08 access restrictions equal the live Cloudflare ranges with default deny, NET-01 the origin's default hostname answers 403; integration test: a request without the exact origin secret is refused with 403 | designed |
 | PC.3 | D-02: Cloudflare proxy, cache, Full (strict) TLS | config check: zone SSL mode is Full (strict) | deferred:first-build-feature |
 | PC.4 | D-04: Google OIDC, `__Host-` cookie with 7-day sliding expiry | integration test: session cookie attributes and expiry | designed |
-| PC.5 | D-05: Atlas Free in a Free-eligible Azure region next to the app | config check: cluster tier and region | deferred:first-build-feature |
+| PC.5 | D-05: Atlas Free `gallery-prod` on Azure `westus`, the app's region, created by `infra/atlas.sh` | config check: cluster tier and region | deferred:first-build-feature |
 | PC.6 | D-07, D-08: R2 `public` and `private` buckets, bucket-scoped credential, presigned uploads | config check: bucket access settings and token scope | deferred:first-build-feature |
 | PC.7 | D-16, D-19: `img.<domain>` as the R2 custom domain through the Cloudflare cache | config check: custom domain attached and r2.dev disabled; markup assertion that no R2 endpoint URL is emitted | deferred:first-build-feature |
-| PC.8 | D-12: workspace-based Application Insights, 30-day retention, daily cap | config check: retention and daily cap settings | deferred:first-build-feature |
-| PC.9 | D-03: forwarded headers from `CF-Connecting-IP`, Cloudflare ranges as known networks | integration test: logged client IP equals `CF-Connecting-IP` | designed |
+| PC.8 | D-12: workspace-based Application Insights, 30-day retention, daily cap | config check: `infra/check.sh` AZ-15 daily cap and AZ-16 retention | deferred:first-build-feature |
+| PC.9 | D-03: forwarded headers trusted only behind the origin guard (`Hosting:Edge = cloudflare`): client IP from `CF-Connecting-IP`, scheme from `X-Forwarded-Proto`; known networks cleared, the origin secret is the trust anchor | integration test: with the guard on, the logged client IP equals `CF-Connecting-IP` and the scheme is https; with it off, the headers are ignored | designed |

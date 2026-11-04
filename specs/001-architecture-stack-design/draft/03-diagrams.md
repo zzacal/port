@@ -25,14 +25,14 @@ flowchart LR
 ```mermaid
 flowchart LR
   CFEdge["Cloudflare Edge"]
-  AOPGuard["Authenticated Origin Pulls and IP allowlist"]
+  OriginGuard["Cloudflare IP allowlist and X-Gallery-Origin secret"]
   AppSvc["App Service .NET 10"]
   Atlas["MongoDB Atlas"]
   ImgHost["img.domain R2 custom domain"]
   R2Public["R2 public bucket"]
 
-  CFEdge -->|"HTML cache MISS"| AOPGuard
-  AOPGuard -->|"mTLS and IP verified"| AppSvc
+  CFEdge -->|"HTML cache MISS"| OriginGuard
+  OriginGuard -->|"IP and secret header verified"| AppSvc
   AppSvc -->|"one read"| Atlas
   Atlas -->|"gallery or image document"| AppSvc
   AppSvc -->|"HTML with Server-Timing and Early Hints Link"| CFEdge
