@@ -18,10 +18,11 @@ public class UploadSourceGuardTests(MongoFixture mongo)
 {
     private static readonly string WebProject = Path.Combine(Render.RepoRoot, "src", "Gallery.Web");
 
-    /// <summary>Gallery.Web.csproj's PackageReference set at 47de295, before 008.</summary>
+    /// <summary>Gallery.Web.csproj's PackageReference set at 47de295 plus 012 R-06.</summary>
     private static readonly string[] BaselinePackages =
     [
         "AWSSDK.S3",
+        "Azure.Monitor.OpenTelemetry.AspNetCore",
         "MetadataExtractor",
         "Microsoft.AspNetCore.Authentication.OpenIdConnect",
         "MongoDB.Driver",
