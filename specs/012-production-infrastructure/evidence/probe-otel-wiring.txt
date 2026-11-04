@@ -1,0 +1,5 @@
+Build succeeded.
+    0 Warning(s)
+mode=none GET / -> ok
+mode=fake GET / -> ok
+probe done

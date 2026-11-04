@@ -1,0 +1,27 @@
+== assemblies
+Azure.Core.dll
+Azure.Monitor.OpenTelemetry.AspNetCore.dll
+Azure.Monitor.OpenTelemetry.Exporter.dll
+OpenTelemetry.Api.dll
+OpenTelemetry.Api.ProviderBuilderExtensions.dll
+OpenTelemetry.dll
+OpenTelemetry.Extensions.Hosting.dll
+OpenTelemetry.Instrumentation.AspNetCore.dll
+OpenTelemetry.Instrumentation.Http.dll
+OpenTelemetry.PersistentStorage.Abstractions.dll
+OpenTelemetry.PersistentStorage.FileSystem.dll
+
+   at Program.<Main>$(String[] args) in /private/tmp/otelprobe2/d/Program.cs:line 7
+   at System.Reflection.RuntimeAssembly.GetExportedTypes()
+Azure.Monitor.OpenTelemetry.AspNetCore.AzureMonitorOptions.ConnectionString: String
+Azure.Monitor.OpenTelemetry.AspNetCore.AzureMonitorOptions.Credential: TokenCredential
+Azure.Monitor.OpenTelemetry.AspNetCore.AzureMonitorOptions.DisableOfflineStorage: Boolean
+Azure.Monitor.OpenTelemetry.AspNetCore.AzureMonitorOptions.EnableLiveMetrics: Boolean
+Azure.Monitor.OpenTelemetry.AspNetCore.AzureMonitorOptions.EnablePerformanceCounters: Boolean
+Azure.Monitor.OpenTelemetry.AspNetCore.AzureMonitorOptions.EnableStandardMetrics: Boolean
+Azure.Monitor.OpenTelemetry.AspNetCore.AzureMonitorOptions.EnableTraceBasedLogsSampler: Boolean
+Azure.Monitor.OpenTelemetry.AspNetCore.AzureMonitorOptions.SamplingRatio: Single
+Azure.Monitor.OpenTelemetry.AspNetCore.AzureMonitorOptions.StorageDirectory: String
+Azure.Monitor.OpenTelemetry.AspNetCore.AzureMonitorOptions.TracesPerSecond: Nullable`1
+File name: 'Microsoft.Extensions.Logging.Abstractions, Version=10.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60'
+Unhandled exception. System.IO.FileNotFoundException: Could not load file or assembly 'Microsoft.Extensions.Logging.Abstractions, Version=10.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60'. The system cannot find the file specified.

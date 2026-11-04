@@ -352,10 +352,11 @@ Verification
 ## Assumptions
 
 - Planning inputs only, not requirements: the design record's on-hold decisions are the starting
-  point. D-24 (OpenTofu) is withdrawn by the owner for this feature: production is made by hand; D-25 is GitHub Actions in
-  `zzacal/port` with OIDC to the host and tests on every push; D-12 is Application Insights; D-03
-  is the edge IP allow-list plus Authenticated Origin Pulls. They are re-checked against whatever
-  host Q1 picks, and change only through the design record (VII.2).
+  point. D-24 (OpenTofu) is withdrawn by the owner for this feature: production is made by hand.
+  D-25 is GitHub Actions in `zzacal/port` with OIDC to the host and tests on every push. D-12 is
+  Application Insights. D-03 was the edge IP allow-list plus Authenticated Origin Pulls; the plan
+  replaces AOP with a secret origin header (research R-04). They change only through the design
+  record (VII.2).
 - The domain is `zacal.me` on Cloudflare in the same account as R2 (owner profile). The site's
   address is `port.zacal.me` (Clarification 2026-11-02). Observed 2026-11-02: `zacal.me`,
   `www.zacal.me`, `port.zacal.me` and `img.zacal.me` all resolve to `192.168.1.112`, a private

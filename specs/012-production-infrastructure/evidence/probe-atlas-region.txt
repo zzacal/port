@@ -1,0 +1,14 @@
+# Atlas Azure region table, fetched 2026-11-04T01:12:49Z from https://www.mongodb.com/docs/atlas/reference/microsoft-azure/
+# First table = cluster tiers (cols: azure region, location, atlas region, Free, Flex, M10+, AZ); raw Free cell shows fa-check-square when supported
+['centralus', 'Iowa, USA', 'US_CENTRAL', '', '', '', '']
+   raw free cell: <div class="Cell-module_xaJ7ha_cellInner Cell-module_xaJ7ha_alignLeft"><div class=""><div class="table_bodyCellContent__Bqt_t"></div></div></div>
+['eastus', 'Virginia (East US)', 'US_EAST', '', '', '', '']
+   raw free cell: <div class="Cell-module_xaJ7ha_cellInner Cell-module_xaJ7ha_alignLeft"><div class=""><div class="table_bodyCellContent__Bqt_t"></div></div></div>
+['eastus2', 'Virginia, USA', 'US_EAST_2', '', '', '', '']
+   raw free cell: <div class="Cell-module_xaJ7ha_cellInner Cell-module_xaJ7ha_alignLeft"><div class=""><div class="table_bodyCellContent__Bqt_t"><i class="fa-check-square fas"></i></div></div></div>
+['westus', 'California, USA', 'US_WEST', '', '', '', '']
+   raw free cell: <div class="Cell-module_xaJ7ha_cellInner Cell-module_xaJ7ha_alignLeft"><div class=""><div class="table_bodyCellContent__Bqt_t"><i class="fa-check-square fas"></i></div></div></div>
+['westus2', 'Washington, USA', 'US_WEST_2', '', '', '', '']
+   raw free cell: <div class="Cell-module_xaJ7ha_cellInner Cell-module_xaJ7ha_alignLeft"><div class=""><div class="table_bodyCellContent__Bqt_t"></div></div></div>
+['westus3', 'Arizona, USA', 'US_WEST_3', '', '', '', '']
+   raw free cell: <div class="Cell-module_xaJ7ha_cellInner Cell-module_xaJ7ha_alignLeft"><div class=""><div class="table_bodyCellContent__Bqt_t"></div></div></div>

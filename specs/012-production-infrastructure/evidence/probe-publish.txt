@@ -1,0 +1,25 @@
+== publish top level:
+appsettings.Development.json
+appsettings.json
+Gallery.Core.pdb
+Gallery.Web
+Gallery.Web.deps.json
+Gallery.Web.pdb
+Gallery.Web.runtimeconfig.json
+Gallery.Web.staticwebassets.endpoints.json
+web.config
+wwwroot
+== runtimeconfig files:
+/tmp/012-publish/Gallery.Web.runtimeconfig.json
+== dll count:       21
+GET / -> 200 
+GET /g -> 200 
+GET /admin -> 302 http://127.0.0.1:5193/admin/signin
+GET /admin/signin -> 500 
+== home has Galleries link: 1
+== startup log lines (first 5, messages only):
+"Message":"Now listening on: http://127.0.0.1:5193"
+"Message":"Application started. Press Ctrl\u002BC to shut down."
+"Message":"Hosting environment: Production"
+"Message":"Content root path: /private/tmp/012-publish"
+"Message":"op.timing startup.inline-styles 1.56 ok"
