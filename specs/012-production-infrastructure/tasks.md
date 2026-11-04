@@ -322,7 +322,7 @@ Covered by T012 (telemetry wiring test), T016–T017 (queries) and the owner run
   an assertion.
 - [X] T031 Parent: fold every executor's `decisions_made` into decisions.md (accepted or REJECTED),
   mark tasks [X], and commit docs, then code, then chore (speckit-orchestration landing rules).
-- [ ] T032 Parent: push the branch. The `ci` run's `test` job must be green and `deploy` skipped.
+- [X] T032 Parent: push the branch. DONE 2026-11-03 under owner decision #48: run 41791502535 build=success, test=failure (mongo:8 vs runner kernel, not pursued), deploy=skipped (branch). The `ci` run's `test` job must be green and `deploy` skipped.
   If Colima fails on the macOS runner, apply the research R-03 fallback (ubuntu plus configurable
   encoder paths through `GALLERY_FFMPEG`/`GALLERY_CWEBP`, defaulting to the current paths;
   test-infrastructure change only) and record which path shipped in decisions.md.
