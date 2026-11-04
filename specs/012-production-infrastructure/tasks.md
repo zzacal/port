@@ -340,7 +340,7 @@ Covered by T012 (telemetry wiring test), T016–T017 (queries) and the owner run
 - [X] O-04 (2026-11-04: merged 9c5a4ce; run 41869250112 login + deploy succeeded, smoke test failed on a placeholder APPLICATIONINSIGHTS_CONNECTION_STRING (exit 134); owner fixed the setting and restarted; site 200) Merge 012 to main and push. The `deploy` job must go green, including its smoke check.
 - [X] O-05 (2026-11-04, as reported by the owner: signed in at /admin as the owner; kql.sh claim not run (no az), so SC-005 ingestion delay is unmeasured) Immediately sign in at `https://port.zacal.me/admin`, then run `bash
   .../evidence/kql.sh claim` (SC-005).
-- [ ] O-06 Upload a few photos and publish a gallery; then `kql.sh edge` (SC-004).
+- [X] O-06 (2026-11-04, as reported by the owner; observed: /g lists 3 published galleries, images served from img.zacal.me 200 via Cloudflare; kql.sh edge not run (no az), so the SC-004 edge.lag value is unmeasured) Upload a few photos and publish a gallery; then `kql.sh edge` (SC-004).
 - [ ] O-07 Run `verify-prod.sh https://port.zacal.me <default hostname>`, then `drive-prod.sh`,
   then `kql.sh all` (SC-001/002/003/006). Save the outputs.
 - [ ] O-08 Drift test: turn Always On off, run `check.sh` and expect `FAIL AZ-03`, then turn it
