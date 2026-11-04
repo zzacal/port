@@ -7,8 +7,11 @@ namespace Gallery.Web.Tests.Fixtures;
 /// </summary>
 public static class EncodedFixtures
 {
-    private static readonly string FfmpegPath = "/opt/homebrew/bin/ffmpeg";
-    private static readonly string CwebpPath = "/opt/homebrew/bin/cwebp";
+    // 012 R-03: overridable for CI (ubuntu: /usr/bin); local default unchanged.
+    internal static readonly string FfmpegPath =
+        Environment.GetEnvironmentVariable("GALLERY_FFMPEG") is { Length: > 0 } f ? f : "/opt/homebrew/bin/ffmpeg";
+    internal static readonly string CwebpPath =
+        Environment.GetEnvironmentVariable("GALLERY_CWEBP") is { Length: > 0 } c ? c : "/opt/homebrew/bin/cwebp";
 
     private static readonly string FixturesDir = Path.GetFullPath(
         Path.Combine(Render.RepoRoot, "tests", "fixtures"));

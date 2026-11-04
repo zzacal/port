@@ -15,12 +15,12 @@ concurrency:
   cancel-in-progress: false
 jobs:
   test:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest   # AMENDED at implement (R-03 fallback, decisions #46): was macos-latest + Colima
     steps:
       - actions/checkout@v5
       - actions/setup-dotnet@v5 with global-json-file: global.json
-      - brew install ffmpeg webp colima docker
-      - colima start --cpu 3 --memory 6 ; export DOCKER_HOST + TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock into $GITHUB_ENV
+      - env GALLERY_FFMPEG=/usr/bin/ffmpeg, GALLERY_CWEBP=/usr/bin/cwebp
+      - sudo apt-get install -y ffmpeg webp
       - dotnet build Gallery.slnx -c Release -warnaserror
       - dotnet test Gallery.slnx -c Release --no-build --blame-hang-timeout 180s
       - dotnet publish src/Gallery.Web -c Release -o publish --no-build
