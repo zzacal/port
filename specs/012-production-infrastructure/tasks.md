@@ -149,7 +149,7 @@ logs the real visitor address, and lets `/admin` work behind TLS termination.
   the header and `X-Forwarded-Proto: https`, `/admin/signin` → 200 (it was 500 before)
 - production: `verify-prod.sh` origin-refusal and image-host checks
 
-- [ ] T013 [US1] Extend `specs/012-production-infrastructure/evidence/probe-publish.sh` (parent-owned
+- [X] T013 [US1] Extend `specs/012-production-infrastructure/evidence/probe-publish.sh` (parent-owned
   evidence) with a second run:
   - set `Hosting__Edge=cloudflare` and a generated 40-char `Hosting__OriginSecret`
   - assert no header → 403
@@ -157,7 +157,7 @@ logs the real visitor address, and lets `/admin` work behind TLS termination.
   - assert header + `CF-Connecting-IP: 203.0.113.9` → the `http.request` line exists and
     `origin.refused` lines carry no secret
   - save the output to `probe-publish.txt`
-- [ ] T014 [P] [US3] Create `specs/012-production-infrastructure/evidence/verify-prod.sh` per
+- [X] T014 [P] [US3] Create `specs/012-production-infrastructure/evidence/verify-prod.sh` per
   contracts/evidence.md "verify-prod.sh". It takes the base URL as `$1` and runs GETs only. It
   ports the public checks of 011/010/006, adds the 012 checks (TLS, http→https, SC-002 20 direct
   requests, image host, SC-003 cache HIT, owner-cookie bypass), and prints `PASS`/`FAIL` lines and
@@ -166,7 +166,7 @@ logs the real visitor address, and lets `/admin` work behind TLS termination.
   against a local Release run on :5193 with the guard on and `ORIGIN_SECRET` set, passing the
   local URL as both arguments; TLS/edge rows report `SKIP (no edge)` and the origin-refusal row
   sends its 20 requests without the header.
-- [ ] T015 [P] [US3] Create `specs/012-production-infrastructure/evidence/drive-prod.sh`: 100
+- [X] T015 [P] [US3] Create `specs/012-production-infrastructure/evidence/drive-prod.sh`: 100
   anonymous GETs per public page type (`/`, `/g`, one gallery, one photo, with ids read from the
   live listing), each with `?n=<i>`, at most 5 per second. Prints a count per route.
 
@@ -178,17 +178,17 @@ logs.
 **Independent test**: `kql.sh claim` shows one `auth.claim` with the owner's real IP;
 `kql.sh edge` shows edge.lag ≤ 60 s for gallery.publish.
 
-- [ ] T016 [P] [US2] Create `specs/012-production-infrastructure/evidence/kql/claim.kql`,
+- [X] T016 [P] [US2] Create `specs/012-production-infrastructure/evidence/kql/claim.kql`,
   `edge.kql`, `reads.kql`, `p95.kql`, `signin.kql` and `cachehits.kql` per contracts/evidence.md.
   Exclude `origin.refused` lines, and `http.request` lines with status 403. `reads.kql` uses the
   production rule from contracts/evidence.md (non-zero lines within bound, plus at least one
   non-zero).
-- [ ] T017 [P] [US2] Create `specs/012-production-infrastructure/evidence/kql.sh`:
+- [X] T017 [P] [US2] Create `specs/012-production-infrastructure/evidence/kql.sh`:
   `kql.sh <name|all> [--since ISO]`. It runs `az monitor app-insights query --app
   portfolio-appinsights -g portfolio --subscription c28725a0-a61d-4a6c-999a-0a8980111fbf
   --analytics-query @kql/<name>.kql`, appends to `kql-output.txt` with a header line per query, and
   is read-only.
-- [ ] T018 [US2] Removed under constitution V.4 (publish-wait.sh): SC-004 evidence is the existing
+- [X] T018 [US2] Removed under constitution V.4 (publish-wait.sh): SC-004 evidence is the existing
   `edge.lag` event in `edge.kql` (T016). Nothing to build; tick it when T016 lands.
 
 ## Phase 5: User Story 5: rebuild and drift check, plus the pipeline (P2)
@@ -265,7 +265,7 @@ Covered by T012 (telemetry wiring test), T016–T017 (queries) and the owner run
 
 ## Phase 7: Design record and roadmap (parent, VII.2)
 
-- [ ] T025 Write `specs/012-production-infrastructure/evidence/design-record-edit.py`: a count-asserting
+- [X] T025 Write `specs/012-production-infrastructure/evidence/design-record-edit.py`: a count-asserting
   edit script over `specs/001-architecture-stack-design/draft/*.md` that aborts before writing if
   any count is off. Rewrite, with Choice/Rationale/Alternatives/Pivot cost where an entry changes:
   - D-01: B2, made by hand, `portfolio-web`, West US
@@ -292,7 +292,7 @@ Covered by T012 (telemetry wiring test), T016–T017 (queries) and the owner run
   leftover `B1`, `Authenticated Origin Pulls`, `$7 budget`, `Microsoft.OpenTelemetry` and
   `app registration`, and review each hit. Confirm `docs/design.md` is in the commit (`git show
   --stat HEAD`).
-- [ ] T026 Update `docs/roadmap.md`:
+- [X] T026 Update `docs/roadmap.md`:
   - the Hosting section becomes "012 Production infrastructure" with status, owner prerequisites as
     ticked checkboxes, and remaining OWNER-ONLY items
   - coverage table rows for D-01/02/03/05/12/18/24/25, E-19, R-01, R-05, R-06 and PC.1–PC.9 name 012
@@ -300,18 +300,18 @@ Covered by T012 (telemetry wiring test), T016–T017 (queries) and the owner run
 
 ## Phase 8: Polish & cross-cutting
 
-- [ ] T027 Parent: full gate:
+- [X] T027 Parent: full gate:
   - `dotnet clean`, build `-warnaserror`, full suite
   - existing tests unmodified except T003 (`git diff --stat <T001 head> -- tests/` lists only
     UploadSourceGuardTests.cs plus new files)
-- [ ] T028 Parent: live local walkthrough. Run `probe-publish.sh` (both runs) and
+- [X] T028 Parent: live local walkthrough. Run `probe-publish.sh` (both runs) and
   `verify-prod.sh http://127.0.0.1:5193 http://127.0.0.1:5193` against the guarded local Release
   build; save the outputs.
-- [ ] T029 Parent: secret scan. `git log -p` of the branch plus the publish output grepped for the
+- [X] T029 Parent: secret scan. `git log -p` of the branch plus the publish output grepped for the
   real values of the production R2 key, purge token and origin secret. Read them inside the script
   from `.r2-keys-prod-copy` and `infra/.secrets.local` if present, printing only `found`/`not
   found` per secret, never the value. Save to `evidence/secret-scan.txt` (SC-009).
-- [ ] T030 Parent: non-vacuity. Copy the 011 `non-vacuity.sh` pattern into
+- [X] T030 Parent: non-vacuity. Copy the 011 `non-vacuity.sh` pattern into
   `specs/012-production-infrastructure/evidence/non-vacuity.sh`, with one break per [SAFETY] guard:
   - FixedTimeEquals → always true (HostingGuardTests red)
   - ForwardedForHeaderName → X-Forwarded-For (IP test red)
@@ -320,7 +320,7 @@ Covered by T012 (telemetry wiring test), T016–T017 (queries) and the owner run
   - workflow deploy job loses `needs: test` (WorkflowGuardTests red)
   Dry-run first (`NV_DRYRUN=1`), then run, and save `non-vacuity.txt`. Every break must be red on
   an assertion.
-- [ ] T031 Parent: fold every executor's `decisions_made` into decisions.md (accepted or REJECTED),
+- [X] T031 Parent: fold every executor's `decisions_made` into decisions.md (accepted or REJECTED),
   mark tasks [X], and commit docs, then code, then chore (speckit-orchestration landing rules).
 - [ ] T032 Parent: push the branch. The `ci` run's `test` job must be green and `deploy` skipped.
   If Colima fails on the macOS runner, apply the research R-03 fallback (ubuntu plus configurable

@@ -1,0 +1,16 @@
+== dotnet clean
+exit 0
+== build -warnaserror
+    0 Warning(s)
+    0 Error(s)
+== full suite
+Passed!  - Failed:     0, Passed:   108, Skipped:     0, Total:   108, Duration: 101 ms - Gallery.Core.Tests.dll (net10.0)
+Passed!  - Failed:     0, Passed:  1159, Skipped:     1, Total:  1160, Duration: 3 m 36 s - Gallery.Web.Tests.dll (net10.0)
+== modified existing test files since 1af9ffd481432acdc5b9bd249642432d883aee9c (must be only UploadSourceGuardTests.cs):
+M	tests/Gallery.Web.Tests/UploadSourceGuardTests.cs
+== added test files:
+A	tests/Gallery.Web.Tests/HostingDataProtectionTests.cs
+A	tests/Gallery.Web.Tests/HostingGuardTests.cs
+A	tests/Gallery.Web.Tests/HostingTelemetryTests.cs
+A	tests/Gallery.Web.Tests/ProductionGuardTests.cs
+A	tests/Gallery.Web.Tests/WorkflowGuardTests.cs

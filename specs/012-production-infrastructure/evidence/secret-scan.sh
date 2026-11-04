@@ -9,11 +9,12 @@ SOURCES=".r2-keys-prod-copy infra/.secrets.local"
 VALS=$(mktemp); trap 'rm -f "$VALS" "$HIST"' EXIT
 HIST=$(mktemp)
 
-# Every "key = value" / "key: value" / bare token line; keep values of 20+ characters (shorter
-# values are names or ids, not credentials). Quotes and surrounding spaces are stripped.
+# Every whitespace-separated token of 20+ characters on any line, after dropping a leading
+# "key=" / "key:" label and quotes. Shorter tokens are names or ids, and prose words never reach
+# 20 characters, so a copied permission description no longer counts as a secret.
 for f in $SOURCES; do
   if [ -f "$f" ]; then
-    n=$(sed -E 's/^[^=:]*[=:][[:space:]]*//; s/^["'\'']//; s/["'\'']$//; s/[[:space:]]+$//' "$f" \
+    n=$(sed -E 's/^[^=:]*[=:][[:space:]]*//; s/["'\'']//g' "$f" | tr -s '[:space:]' '\n' \
         | awk 'length($0) >= 20' | tee -a "$VALS" | wc -l | tr -d ' ')
     echo "source $f: present, $n candidate values"
   else

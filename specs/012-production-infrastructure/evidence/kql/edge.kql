@@ -1,0 +1,43 @@
+// 012 T016 edge.kql: SC-004 publish latency from logs alone (IV.4, V.4; replaces publish-wait.sh).
+// One row per edge.lag {op} {duration_ms} with op == gallery.publish (bound <= 60000 ms), with the
+// edge.purge outcomes of the same change: the purge lines for the same op logged between the
+// change being queued (lag line time - lag - 1 s slack) and its lag line.
+// The edge worker runs outside the request, so purge and lag are paired by op and time, not by
+// operation_Id.
+// Field names (R-06): ILogger events land in `traces`; template fields are expected in
+// customDimensions (op, duration_ms, mode, count, outcome). Each falls back to parsing the
+// formatted messages "edge.lag {op} {duration_ms}" and
+// "edge.purge {op} {mode} {count} {duration_ms} {outcome} {addresses}". The first production run
+// confirms the names; if they differ only this file changes.
+// Excludes origin.refused lines (none can match; kept explicit).
+// Time range comes from kql.sh (--since -> --start-time; default 1 day).
+let lags = traces
+| where message !startswith "origin.refused"
+| where message startswith "edge.lag "
+| parse message with "edge.lag " p_op:string " " p_duration:real
+| extend op = coalesce(tostring(customDimensions["op"]), p_op)
+| extend lag_ms = coalesce(todouble(customDimensions["duration_ms"]), p_duration)
+| where op == "gallery.publish"
+| project lag_at = timestamp, op, lag_ms;
+let purges = traces
+| where message !startswith "origin.refused"
+| where message startswith "edge.purge "
+| parse message with "edge.purge " p_op:string " " p_mode:string " " p_count:long " " p_duration:real " " p_outcome:string " " *
+| extend op = coalesce(tostring(customDimensions["op"]), p_op)
+| extend mode = coalesce(tostring(customDimensions["mode"]), p_mode)
+| extend urls = coalesce(tolong(customDimensions["count"]), p_count)
+// p_outcome is the last word when {addresses} is empty, so strip any trailing text.
+| extend outcome = coalesce(tostring(customDimensions["outcome"]), tostring(split(p_outcome, " ")[0]))
+| where op == "gallery.publish"
+| project purge_at = timestamp, op, mode, urls, outcome;
+lags
+| join kind=leftouter purges on op
+| extend inwin = isnotnull(purge_at) and purge_at <= lag_at and purge_at >= lag_at - (lag_ms * 1ms) - 1s
+| summarize purge_calls = countif(inwin),
+            purged_urls = sumif(urls, inwin),
+            outcomes = make_set_if(outcome, inwin),
+            modes = make_set_if(mode, inwin)
+    by lag_at, op, lag_ms
+| extend verdict = iff(lag_ms <= 60000, "PASS (<= 60000 ms)", "FAIL (> 60000 ms)")
+| project lag_at, op, lag_ms, verdict, purge_calls, purged_urls, outcomes, modes
+| order by lag_at asc
