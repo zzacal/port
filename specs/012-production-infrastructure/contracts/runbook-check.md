@@ -15,7 +15,8 @@ PASS. Sections, in this order:
 4. Google: OAuth client `gallery-prod`, redirect URI, consent screen stays in Testing; owner listed as a test user (done).
 5. Cloudflare zone: Origin CA certificate → PFX (`openssl pkcs12 -export`), App Service custom
    domain `port.zacal.me` (`asuid.port` TXT, proxied CNAME), certificate upload and SNI binding;
-   SSL Full (strict); Always Use HTTPS; Tiered Cache Smart; Early Hints; transform rule
+   Configuration Rule (port.zacal.me: SSL Full (strict)); Redirect Rule (http → https for
+   port.zacal.me only); Tiered Cache Smart; Early Hints; transform rule
    `X-Gallery-Origin`; cache rules; purge token; read-only check token.
 6. App Service access restrictions: allow Cloudflare ranges (from
    `https://www.cloudflare.com/ips-v4` and `-v6`), default deny; Advanced tool site: "Use main site
@@ -71,8 +72,8 @@ AZ-16 app insights retention           30
 AZ-17 budget                           gallery-prod, scope RG portfolio, thresholds 7 and 10 USD
 CF-01 dns port                         CNAME proxied to the app's default hostname
 CF-02 dns img                          R2 custom domain on gallery-prod-public, active
-CF-03 ssl mode                         strict
-CF-04 always use https                 on
+CF-03 ssl mode                         configuration rule on port.zacal.me sets ssl = strict
+CF-04 https redirect                   redirect rule http://port.zacal.me/* -> https, 301
 CF-05 tiered cache                     smart on
 CF-06 early hints                      on
 CF-07 transform rule                   sets X-Gallery-Origin on host port.zacal.me (value: present only)

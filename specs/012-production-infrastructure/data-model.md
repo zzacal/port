@@ -49,7 +49,7 @@ with one message listing every failing key and never a value.
 | Budget | `gallery-prod`, RG scope, US$7 / US$10 | `portfolio` | owner |
 | Custom domain | `port.zacal.me` on `portfolio-web`, Cloudflare Origin CA certificate (PFX upload, SNI binding) | | owner |
 | Cloudflare DNS | `port` CNAME → `portfolio-web.<suffix>.azurewebsites.net` (proxied); `asuid.port` TXT | zone `zacal.me` | owner |
-| Cloudflare zone settings | SSL Full (strict), Always Use HTTPS, Tiered Cache Smart, Early Hints | zone | owner |
+| Cloudflare settings | Configuration Rule on `port.zacal.me`: SSL Full (strict); Redirect Rule `http://port.zacal.me/*` → https (301); zone toggles Tiered Cache Smart, Early Hints | zone | owner |
 | Cloudflare rules | transform `X-Gallery-Origin`; cache rules for `port` and `img` | zone | owner |
 | R2 | `gallery-prod-private`, `gallery-prod-public`, `img.zacal.me` custom domain, r2.dev off, CORS, lifecycle | account | owner |
 | Tokens | R2 Object R/W (2 buckets), Cache Purge (zone), read-only check token | account | owner |
