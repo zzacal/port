@@ -354,7 +354,8 @@ Verification
   bounds: p95 `duration_ms` under 50 ms, and the 011 read counts under the production rule in
   contracts/evidence.md (origin output cache hits log 0 reads).
 - **SC-007**: The settings check reports zero differences against production built from the
-  runbook, and reports a deliberately changed setting when run again.
+  runbook. (AMENDED 2026-11-04, decisions #49: the clause "and reports a deliberately changed
+  setting when run again" was removed by the owner; the pre-deploy run's real FAILs show the check can fail.)
 - **SC-008**: Fixed hosting is one B2 plan (US$26.28/month list price, West US), projected
   monthly metered spend stays under US$7, and the ingestion limit is in place before the first
   deploy.
