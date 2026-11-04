@@ -2,6 +2,7 @@ using Gallery.Web.Admin;
 using Gallery.Web.Admin.Auth;
 using Gallery.Web.Data;
 using Gallery.Web.Edge;
+using Gallery.Web.Hosting;
 using Gallery.Web.Library;
 using Gallery.Web.Observability;
 using Gallery.Web.Site;
@@ -91,9 +92,11 @@ public static class AppBuilder
         // ── Library and edge (009; all registrations live in LibrarySetup / EdgeSetup) ──
         builder.Services.AddLibrary(builder.Configuration);
         builder.Services.AddEdge(builder.Configuration);
+        builder.Services.AddHosting(builder.Configuration);
         builder.Services.TryAddSingleton(TimeProvider.System);
         // ── Build ────────────────────────────────────────────────────────────
         var app = builder.Build();
+        app.UseHosting();
 
         app.UseRouting();
         app.UseMiddleware<RequestTimingMiddleware>();

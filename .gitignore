@@ -490,3 +490,9 @@ $RECYCLE.BIN/
 
 # Prepared derivatives of dev-pictures (local only; stays ignored after the 009 seed retirement)
 /.dev-prepared/
+
+# 012: production credentials kept beside the runbook (never committed)
+infra/*.pem
+infra/*.key
+infra/*.pfx
+infra/.secrets.local
