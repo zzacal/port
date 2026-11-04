@@ -371,6 +371,16 @@ Verification
   R2 in the owner's Cloudflare account, so masters are not in the tenant. Reversal cost: low
   before launch, medium after (re-apply the description in another subscription and redeploy; no
   data lives in Azure except logs).
+- Cloudflare steps A–G done (owner, 2026-11-02), probed from the terminal
+  (`evidence/probe-cloudflare.txt`): `port.zacal.me` resolves to Cloudflare, `asuid.port` TXT
+  present, HTTPS answers 200 through Cloudflare with a valid certificate, `http://` redirects 301
+  to `https://` with the query kept, `/admin` is not cached (`DYNAMIC`), `img.zacal.me` is served
+  through the Cloudflare cache. The origin's own certificate and the Full (strict) rule are not
+  observable from outside; they are covered by the settings check (CF-03, AZ-10).
+- Production R2 tokens (R2 Object R/W and Cache Purge) saved by the owner in
+  `.r2-keys-prod-copy` at the repo root: gitignored by the existing `.r2-keys*` pattern (checked
+  with `git check-ignore`), mode 600. Never opened by the agent; moved into App Service settings by
+  the owner, then deleted.
 - Production content starts empty. Development content is never copied to production (III.10);
   the owner uploads through production `/admin`.
 - Production bucket names default to `gallery-prod-private` and `gallery-prod-public`, matching

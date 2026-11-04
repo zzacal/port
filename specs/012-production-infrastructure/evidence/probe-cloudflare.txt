@@ -1,0 +1,24 @@
+== DNS
+port A (via CF?): 104.21.38.112 172.67.222.68 
+asuid.port TXT present: yes
+img A: 172.67.222.68 104.21.38.112 
+== HTTPS port
+status=200 ssl_verify=0
+server: cloudflare
+cf-cache-status: BYPASS
+cf-ray: <present>
+== cert seen by visitors
+subject= /CN=zacal.me
+issuer= /C=US/O=Google Trust Services/CN=WE1
+notAfter=Dec 29 11:19:33 2026 GMT
+== HTTP -> HTTPS
+status=301 location=https://port.zacal.me/g?x=1
+== cache bypass on /admin
+HTTP/2 404 
+cf-cache-status: DYNAMIC
+== direct origin (bypassing Cloudflare)
+port CNAME visible publicly: <hidden by proxy>
+== img
+HTTP/2 404 
+server: cloudflare
+cf-cache-status: MISS
