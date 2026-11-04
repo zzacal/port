@@ -1,32 +1,22 @@
 <!--
 Sync Impact Report
-- Version change: 5.0.0 → 6.0.0 (MAJOR)
-- Rationale: owner decision (2026-11-02, feature 012-production-infrastructure): "No alert
-  needed." VIII.1 said "An Azure budget alert MUST fire at US$7 per month." That guarantee is
-  withdrawn: nothing notifies the owner when Azure spend rises. MAJOR per Governance (a guarantee is
-  removed). What stays, and is now the entire protection against overspend:
-  - the US$10 metered cap as a governance limit (exceeding it still requires an amendment)
-  - VIII.3: every design projects each metered cost and the total MUST stay under US$7 (the old
-    alert level, kept as a planning threshold)
-  - VIII.4: every metered service that offers a hard limit has one set (the Application Insights
-    daily ingestion cap is the only Azure one)
-  - the fixed-price plan (VIII.1), which has no metered component
-  Reversal: one Azure budget on the site's resource group restores the alert; no code change.
-- Modified principles: VIII (rules 1 and 3). Added/removed sections: none.
+- Version change: 6.0.0 → 6.1.0 (MINOR)
+- Rationale: owner directive (2026-11-02, feature 012 analyze, on a proposed datastore keep-alive
+  job): "do not overengineer marginal benefits ... high effort should yield high benefits." Adds
+  V.4, proportional effort. A new principle rule with no guarantee removed: MINOR.
+- Modified principles: V (rule 4 added). Added/removed sections: none.
 - Templates requiring updates: none (templates read the constitution at runtime).
-- Prior specs swept: 001 FR-006, the cost user story and the $7 edge case annotated AMENDED in place;
-  012 FR-020 and SC-008 rewritten (this feature).
-- Deferred TODOs: none. The design record (D-18, section 8 "Configured limits", E-19) is updated
-  by the 012 tasks as a VII.2 amendment.
+- Prior specs swept: none needed; V.4 binds plans and tasks from 012 on. 012 already dropped the
+  keep-alive under it (decisions row 24).
+- Deferred TODOs: none.
 - History: 1.0.0 initial ratification. 1.1.0 perceived performance, private = unlisted. 2.0.0
   client-generated derivatives with server validation. 3.0.0 Azure Blob replaced R2, masters kept,
   $10 metered cap (2026-10-27). 4.0.0 images on Cloudflare R2, managed-identity guarantee
-  withdrawn, III.9 added (2026-10-30). 4.1.0 III.10 seeded dev content under two-reader
-  validation; IV.19 clarified (2026-10-31). 4.2.0 II.6 no empty galleries shown; publish
-  requires an image (2026-10-31). 4.3.0 canonical remote (2026-11-01). 4.4.0 IX visual
-  consistency through shared containers (2026-11-01). 4.5.0 home page at `/`, galleries listing
-  at `/g`; IV.9 home page makes no read (2026-11-02). 5.0.0 fixed hosting ceiling B1 -> B2
-  (2026-11-02).
+  withdrawn, III.9 added (2026-10-30). 4.1.0 III.10 seeded dev content (2026-10-31). 4.2.0 II.6
+  no empty galleries shown (2026-10-31). 4.3.0 canonical remote (2026-11-01). 4.4.0 IX visual
+  consistency through shared containers (2026-11-01). 4.5.0 home page at `/`, listing at `/g`
+  (2026-11-02). 5.0.0 fixed hosting ceiling B1 -> B2 (2026-11-02). 6.0.0 US$7 budget alert
+  withdrawn (2026-11-02).
 -->
 
 # Gallery Constitution
@@ -208,6 +198,13 @@ Rationale: the product is a photo viewer; speed, real and perceived, is the feat
    justified in the plan against a specific requirement.
 3. Public pages MUST work with JavaScript disabled; scripting is progressive enhancement.
    Admin pages MAY require it.
+4. Effort MUST be proportional to benefit. Work whose benefit is marginal (a rare or self-healing
+   failure, a cosmetic gain, a convenience nobody asked for) MUST NOT be built when it costs more
+   than a line of configuration or a sentence of documentation. Accept and record the risk
+   instead. High effort is justified only by a high benefit: a constitution guarantee, a security
+   or data-loss risk, or a visible improvement for visitors or the owner. Every plan MUST state,
+   for each addition beyond the literal request, its benefit and its cost, and drop the ones that
+   fail this rule; constitution MUST rules are never dropped under it.
 
 ### VI. Official CLIs for Scaffolding
 
@@ -313,4 +310,4 @@ These are binding inputs to every plan:
   place, not silently edited.
 - Every plan and analyze pass verifies compliance and cites principles by number.
 
-**Version**: 6.0.0 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-11-02
+**Version**: 6.1.0 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-11-02

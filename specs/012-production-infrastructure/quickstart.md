@@ -8,12 +8,10 @@ Validation guide. The owner's one-time steps are the runbook (`infra/README.md`,
 ```
 dotnet build Gallery.slnx -warnaserror --artifacts-path artifacts
 dotnet test Gallery.slnx --artifacts-path artifacts --blame-hang-timeout 120s
-bash infra/check.sh --selftest | tee specs/012-production-infrastructure/evidence/check-selftest.txt
 ```
 
 Expected: full suite green, existing tests unmodified. The new Hosting*, ProductionGuard and
-WorkflowGuard tests pass, and the self-test prints `RESULT: 0 FAIL` for `good` and one FAIL per
-drift fixture.
+WorkflowGuard tests pass.
 
 Publish shape (same as the CI artifact):
 
@@ -38,8 +36,7 @@ proto. That is the probe's control case. The guard test proves the forwarded-pro
 
 ```
 az login --tenant 0f44c5d4-42b0-45c2-bf55-d0fea8430d33
-export CF_READ_TOKEN=...            # read-only token, runbook step 5
-bash infra/check.sh | tee specs/012-production-infrastructure/evidence/check-output.txt
+bash infra/check.sh <origin-default-hostname> | tee specs/012-production-infrastructure/evidence/check-output.txt
 bash specs/012-production-infrastructure/evidence/verify-prod.sh https://port.zacal.me \
   | tee specs/012-production-infrastructure/evidence/verify-prod-output.txt
 ```
@@ -51,7 +48,7 @@ open `https://port.zacal.me/admin` → sign in → `bash .../evidence/kql.sh cla
 `auth.claim` with your subject and your public IP (SC-005).
 
 Then upload a few photos, publish a gallery, and run
-`bash .../evidence/publish-wait.sh` (SC-004, ≤ 60 s).
+`bash .../evidence/kql.sh edge` (SC-004: edge.lag ≤ 60 s).
 
 Timing evidence (SC-006): `evidence/drive-prod.sh` sends 100 anonymous GETs per public page type
 through Cloudflare, each with a unique `?n=<i>` query. Cloudflare keys its cache on the query, so

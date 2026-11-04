@@ -40,14 +40,16 @@ When `Edge == "cloudflare"`, in this order:
 1. OriginGuard: read request header `X-Gallery-Origin`. If it is missing or does not equal
    `OriginSecret` (`CryptographicOperations.FixedTimeEquals` over UTF-8 bytes; a length mismatch is a
    mismatch), answer `403` with an empty body and `Cache-Control: no-store`, and do not call the
-   next middleware. Log `origin.refused {reason}` with reason `missing` or `mismatch`, never the
-   value received. Remove the header from the request before calling next, so no later code or log
+   next middleware. Log `origin.refused {method} {path} {status} {duration_ms} {reason}` (IV.1:
+   every request logs route, status and duration; `path` is the request path, `duration_ms` is
+   timed inside the guard), reason `missing` or `mismatch`, never the value received. Remove the header from the request before calling next, so no later code or log
    can read it.
 2. `UseForwardedHeaders()`.
 
 When `Edge` is not `cloudflare`: no-op (today's behavior). `RequestTimingMiddleware` stays where
 it is, so refused requests are not logged as `http.request`; they are logged only as
-`origin.refused`. Rationale: refused probes must not pollute the public-page timing evidence.
+`origin.refused` (which carries the IV.1 fields). Rationale: refused probes, including Always On's
+pings, must not pollute the public-page timing evidence.
 
 ## ProductionGuard.Check(IConfiguration) → IReadOnlyList<string>
 
@@ -67,6 +69,7 @@ One message per failed rule, naming the key and the rule, never the value:
 | `Site:OutputCache` | `true` |
 | `Hosting:Edge` | `cloudflare` |
 | `Hosting:DataProtectionKeysPath` | present |
+| `APPLICATIONINSIGHTS_CONNECTION_STRING` | present (FR-018) |
 
 ## Edge provider mode label
 
@@ -78,7 +81,7 @@ queries match on the op name and outcome, not the mode.
 ## Log events added
 
 ```
-origin.refused {reason}            reason ∈ missing | mismatch
+origin.refused {method} {path} {status} {duration_ms} {reason}    reason ∈ missing | mismatch; status 403
 ```
 
 No change to `http.request`, `op.timing`, `auth.claim`, `auth.signin`, `auth.failed` templates. With
@@ -91,9 +94,9 @@ forwarded headers on, their `{ip}` is the visitor's `CF-Connecting-IP`.
   - no header → 403, empty body
   - wrong header (same length, and different length) → 403
   - correct header → the request passes (`/` → 200)
-  - `CF-Connecting-IP: 203.0.113.9` with the correct secret → the `auth.failed`/request IP seen by
-    the app is `203.0.113.9` (assert through a test endpoint-free route: hit `/signin-oidc` with no
-    state and read the `auth.failed {ip}` log line)
+  - `CF-Connecting-IP: 203.0.113.9` with the correct secret → the IP the app logs is
+    `203.0.113.9`: host configured with the existing `Fixtures/FakeGoogle.cs` authority (as
+    AdminAccessTests does), GET `/signin-oidc` with no state, read the `auth.failed {ip}` line
   - `X-Forwarded-Proto: https` → `/admin/signin` renders 200, not the antiforgery 500 (the probe-publish defect)
   - the secret value never appears in any captured log line
   - Edge unset → no header needed, `CF-Connecting-IP` ignored (logged IP is the loopback)

@@ -38,7 +38,8 @@ say. If something is missing or contradictory, stop and report a blocker. Do not
 - **Secrets**: never read, print, or `cat` `.r2-keys*`, `infra/.secrets.local`, user-secrets
   values, or any `*.pem`/`*.key`/`*.pfx`. Scripts that need secrets read them inside the script
   and print only presence and length.
-- **Log templates, verbatim**: `origin.refused {reason}`, with reason `missing` or `mismatch`. No
+- **Log templates, verbatim**: `origin.refused {method} {path} {status} {duration_ms} {reason}`,
+  with reason `missing` or `mismatch`. No
   other new event. Never log the origin secret or the value received in `X-Gallery-Origin`.
 - **Do not name** `claimedSubject`, `claimedAt` or `claimedIp` in any new `src/` file
   (OwnerWriteGuardTests scans for them).
@@ -91,7 +92,7 @@ green (nothing is wired yet).
   "UseHosting" step 1:
   - header `X-Gallery-Origin`
   - `CryptographicOperations.FixedTimeEquals` over UTF-8 bytes; a length mismatch counts as a mismatch
-  - on refusal: 403, empty body, `Cache-Control: no-store`, `origin.refused {reason}`
+  - on refusal: 403, empty body, `Cache-Control: no-store`, `origin.refused {method} {path} {status} {duration_ms} {reason}`
   - remove the header before calling next
 - [ ] T007 Create `src/Gallery.Web/Hosting/HostingSetup.cs` with `AddHosting(this IServiceCollection,
   IConfiguration)` (contract steps 1–6, in order) and `UseHosting(this WebApplication)` (guard, then
@@ -113,8 +114,10 @@ in the four `Hosting/` files (report each in `decisions_made`); it never edits A
 
 - [ ] T009 [SAFETY] `tests/Gallery.Web.Tests/HostingGuardTests.cs`: every case in
   contracts/hosting.md "Tests". Hosts are built with `AppBuilder.Build(["--urls",
-  "http://127.0.0.1:0"], overrides)`. Use a fixed 40-char test secret, and assert it is absent
-  from every captured log line.
+  "http://127.0.0.1:0"], overrides)`. The forwarded-IP case configures the existing
+  `Fixtures/FakeGoogle.cs` authority (copy how AdminAccessTests sets `Authentication:Google:*`).
+  Assert the refused-request line carries method, path, 403 and a duration. Use a fixed 40-char test
+  secret, and assert it is absent from every captured log line.
 - [ ] T010 [P] [SAFETY] `tests/Gallery.Web.Tests/ProductionGuardTests.cs`:
   - one complete valid dictionary returns an empty list
   - one `[Theory]` row per rule flips exactly one key; assert exactly one message naming that key,
@@ -159,8 +162,10 @@ logs the real visitor address, and lets `/admin` work behind TLS termination.
   ports the public checks of 011/010/006, adds the 012 checks (TLS, http→https, SC-002 20 direct
   requests, image host, SC-003 cache HIT, owner-cookie bypass), and prints `PASS`/`FAIL` lines and
   `ALL PASS`. The origin default hostname comes from `$2` (`portfolio-web….azurewebsites.net`).
-  Self-test it against a local Release run on :5193 with the guard on, by passing the local URL as
-  both arguments. TLS/edge rows report `SKIP (no edge)` there.
+  Optional env `ORIGIN_SECRET` adds `X-Gallery-Origin` to every request (local only). Self-test it
+  against a local Release run on :5193 with the guard on and `ORIGIN_SECRET` set, passing the
+  local URL as both arguments; TLS/edge rows report `SKIP (no edge)` and the origin-refusal row
+  sends its 20 requests without the header.
 - [ ] T015 [P] [US3] Create `specs/012-production-infrastructure/evidence/drive-prod.sh`: 100
   anonymous GETs per public page type (`/`, `/g`, one gallery, one photo, with ids read from the
   live listing), each with `?n=<i>`, at most 5 per second. Prints a count per route.
@@ -171,7 +176,7 @@ logs the real visitor address, and lets `/admin` work behind TLS termination.
 logs.
 
 **Independent test**: `kql.sh claim` shows one `auth.claim` with the owner's real IP;
-`publish-wait.sh` ≤ 60 s.
+`kql.sh edge` shows edge.lag ≤ 60 s for gallery.publish.
 
 - [ ] T016 [P] [US2] Create `specs/012-production-infrastructure/evidence/kql/claim.kql`,
   `edge.kql`, `reads.kql`, `p95.kql`, `signin.kql` and `cachehits.kql` per contracts/evidence.md.
@@ -183,16 +188,14 @@ logs.
   portfolio-appinsights -g portfolio --subscription c28725a0-a61d-4a6c-999a-0a8980111fbf
   --analytics-query @kql/<name>.kql`, appends to `kql-output.txt` with a header line per query, and
   is read-only.
-- [ ] T018 [P] [US2] Create `specs/012-production-infrastructure/evidence/publish-wait.sh <title>`:
-  polls `https://port.zacal.me/g` every 5 s for up to 120 s until the HTML-decoded title appears;
-  prints the elapsed seconds and `PASS` if ≤ 60 (SC-004).
+- [ ] T018 [US2] Removed under constitution V.4 (publish-wait.sh): SC-004 evidence is the existing
+  `edge.lag` event in `edge.kql` (T016). Nothing to build; tick it when T016 lands.
 
 ## Phase 5: User Story 5: rebuild and drift check, plus the pipeline (P2)
 
 **Goal**: the runbook, the read-only settings check, and the CI/CD workflow.
 
-**Independent test**: `infra/check.sh --selftest` prints `RESULT: 0 FAIL` for good and one FAIL per
-drift fixture; `WorkflowGuardTests` green; the first branch push runs `test` green with `deploy`
+**Independent test**: `infra/check.sh` NET rows run against the live Cloudflare setup; `WorkflowGuardTests` green; the first branch push runs `test` green with `deploy`
 skipped.
 
 **Batch B**: one executor. It owns `.github/workflows/ci.yml` and
@@ -218,8 +221,8 @@ skipped.
   - the test job runs `dotnet test`
   Split the file into job blocks by indentation; no YAML package.
 
-**Batch C**: one executor, parallel to Batch B. It owns `infra/README.md`, `infra/check.sh`,
-`infra/atlas.sh` and `infra/check-fixtures/**`.
+**Batch C**: one executor, parallel to Batch B. It owns `infra/README.md`, `infra/check.sh` and
+`infra/atlas.sh`.
 
 - [ ] T021 [P] [US5] Create `infra/README.md`, the runbook, per contracts/runbook-check.md sections
   1–11:
@@ -240,17 +243,16 @@ skipped.
   - `bash -n` must pass
   - a `--dry-run` flag prints each command instead of running it; run it and save the output to
     `specs/012-production-infrastructure/evidence/atlas-dryrun.txt`
-- [ ] T023 [P] [US5] Create `infra/check.sh` and `infra/check-fixtures/{good,drift}/*.json` per
-  contracts/runbook-check.md:
-  - row ids AZ-01..AZ-16, CF-01..CF-12, NET-01..NET-03; AZ-17 was removed under constitution 6.0.0
+- [ ] T023 [P] [US5] Create `infra/check.sh` per contracts/runbook-check.md (no fixtures, no
+  Cloudflare token: V.4):
+  - row ids AZ-01..AZ-16 and NET-01..NET-09 (no CF-* rows; AZ-17 removed under 6.0.0)
   - pinned to the subscription, resource group and app
   - read-only calls only
   - secrets as presence and length
-  - `--selftest` reads fixtures through the same comparison functions
   - `jq` is the only parser
-  Run `bash infra/check.sh --selftest` and save the output to
-  `specs/012-production-infrastructure/evidence/check-selftest.txt`. It must show 0 FAIL for good
-  and exactly one FAIL per drift file.
+  Gate: `bash -n infra/check.sh`, and a run without `az` login prints `SKIP` for every AZ row and
+  runs the NET rows (they work today against the live Cloudflare setup; save the output to
+  `specs/012-production-infrastructure/evidence/check-net-only.txt`).
 
 **Parent (after Batches B and C)**:
 
@@ -333,12 +335,12 @@ Covered by T012 (telemetry wiring test), T016–T017 (queries) and the owner run
   and retention, access restrictions, and every app setting, including `Hosting__OriginSecret`
   (the same value as Cloudflare rule E) and the R2 and purge tokens from `.r2-keys-prod-copy`.
   Then delete `.r2-keys-prod-copy`.
-- [ ] O-03 Run `bash infra/check.sh` with `CF_READ_TOKEN` exported, and save
+- [ ] O-03 Run `bash infra/check.sh <default hostname>` (az signed in), and save
   `evidence/check-output.txt`. Target: 0 FAIL.
 - [ ] O-04 Merge 012 to main and push. The `deploy` job must go green, including its smoke check.
 - [ ] O-05 Immediately sign in at `https://port.zacal.me/admin`, then run `bash
   .../evidence/kql.sh claim` (SC-005).
-- [ ] O-06 Upload a few photos, publish a gallery, and run `publish-wait.sh "<title>"` (SC-004).
+- [ ] O-06 Upload a few photos and publish a gallery; then `kql.sh edge` (SC-004).
 - [ ] O-07 Run `verify-prod.sh https://port.zacal.me <default hostname>`, then `drive-prod.sh`,
   then `kql.sh all` (SC-001/002/003/006). Save the outputs.
 - [ ] O-08 Drift test: turn Always On off, run `check.sh` and expect `FAIL AZ-03`, then turn it

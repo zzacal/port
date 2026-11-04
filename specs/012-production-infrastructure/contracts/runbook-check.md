@@ -38,10 +38,10 @@ existing wildcard for those two names only.
 
 ## infra/check.sh (the settings check)
 
-Usage: `bash infra/check.sh` (live) or `bash infra/check.sh --selftest`.
+Usage: `bash infra/check.sh <origin-default-hostname>`.
 
-Live mode requires `az` signed in and `CF_READ_TOKEN` exported (a token with Zone Read, DNS Read,
-Zone Settings Read, Cache Rules Read, Transform Rules Read, and Account R2 Read). It is pinned to:
+Requires `az` signed in. No Cloudflare token: Cloudflare and R2 settings are checked by their
+observable outcome (V.4). It is pinned to:
 `SUB=c28725a0-a61d-4a6c-999a-0a8980111fbf`, `RG=portfolio`, `APP=portfolio-web`. Every call is a
 read (`az ... show|list`, HTTP GET).
 
@@ -68,28 +68,20 @@ AZ-13 deploy identity role             portfolio-deploy has Website Contributor 
 AZ-14 federated credential             subject repo:zzacal/port:ref:refs/heads/main, issuer GitHub, audience api://AzureADTokenExchange
 AZ-15 app insights cap                 dailyQuotaGb 0.15
 AZ-16 app insights retention           30
-CF-01 dns port                         CNAME proxied to the app's default hostname
-CF-02 dns img                          R2 custom domain on gallery-prod-public, active
-CF-03 ssl mode                         configuration rule on port.zacal.me sets ssl = strict
-CF-04 https redirect                   redirect rule http://port.zacal.me/* -> https, 301
-CF-05 tiered cache                     smart on
-CF-06 early hints                      on
-CF-07 transform rule                   sets X-Gallery-Origin on host port.zacal.me (value: present only)
-CF-08 cache rules                      port: eligible, respect origin, bypass cookie __Host-gallery and /admin,/signin-oidc,/signout-callback-oidc,/ui; img: eligible, edge TTL 31536000
-CF-09 r2 buckets                       gallery-prod-private, gallery-prod-public exist
-CF-10 r2.dev                           disabled on both
-CF-11 r2 cors (private)                exactly the R-11 rule
-CF-12 r2 lifecycle                     staging/ 7-day delete; masters/ IA after 30 days
-NET-01 origin direct                   https://<default-hostname>/ answers 403 (from this machine; not through Cloudflare)
-NET-02 site through edge               https://port.zacal.me/ answers 200
-NET-03 img through edge                https://img.zacal.me/ answers via Cloudflare (cf-ray header present)
+NET-01 origin direct                   https://<default-hostname>/ answers 403 (secret header missing)
+NET-02 site through edge               https://port.zacal.me/ answers 200 via Cloudflare (cf-ray), cert verifies (proves DNS, TLS strict, transform rule)
+NET-03 https redirect                  http://port.zacal.me/g -> 301 https://port.zacal.me/g
+NET-04 owner bypass                    GET / with Cookie __Host-gallery=x -> cf-cache-status BYPASS or DYNAMIC; GET /admin -> not HIT
+NET-05 page cache                      second GET /g -> cf-cache-status HIT
+NET-06 img through edge                https://img.zacal.me/ answers via Cloudflare (cf-ray)
+NET-07 r2.dev off                      no pub-*.r2.dev URL appears in any public page (and the bucket's r2.dev host, if known, does not answer 200)
+NET-08 r2 cors                         OPTIONS preflight PUT from https://port.zacal.me with content-type -> allowed; from https://example.com -> refused
+NET-09 tiered cache / early hints      not observable from outside: listed as MANUAL (runbook toggles), not checked
 ```
 
-Self-test mode reads `infra/check-fixtures/good/*.json` and `infra/check-fixtures/drift/*.json`
-(recorded shapes of each `az`/API response, with secrets replaced by placeholders) instead of calling
-anything, runs the same comparison functions, and must print `RESULT: 0 FAIL` for `good` and one
-FAIL per drifted file for `drift`. The selftest output is committed as
-`specs/012-production-infrastructure/evidence/check-selftest.txt`.
+No self-test fixtures (V.4): owner step O-08 changes a real setting and must see its row FAIL. The
+R2 lifecycle rule is a runbook step only (not observable; the 7-day backstop is already covered by
+008's explicit staging deletes).
 
 Rows that cannot be read with the owner's rights (for example AZ-13 if the owner cannot list
 role assignments) print `SKIP <row-id> <reason>` rather than FAIL, and are listed in the evidence.

@@ -100,8 +100,8 @@ owner can overturn cheaply (also logged in decisions.md).
   Unset (local runs and every existing test) means no guard and no forwarding, exactly today's
   behavior.
 - Always On pings `/` without the header and get 403. That still keeps the worker process loaded,
-  which is all Always On is for. The 403s are logged as `http.request GET / 403` from the
-  platform's address; evidence queries filter them by status (R-09). Default; overturnable by
+  which is all Always On is for. The 403s are logged as `origin.refused GET / 403 ...`, never as
+  `http.request`, so evidence queries are unaffected (R-09). Default; overturnable by
   excluding the `AlwaysOn` user agent, which was rejected because a user agent is trivially forged.
 - This is a VII.2 deviation from D-03's mechanism (AOP). The design record is updated in this
   feature (task in the design-record batch). The guarantee "origin accepts traffic only from
@@ -218,11 +218,11 @@ owner can overturn cheaply (also logged in decisions.md).
   pinned to the subscription and resource group, and calls `az ... show` / `az ... list`,
   Cloudflare API GETs, and `dig`/`curl`. It prints one `PASS`/`FAIL <expected> <actual>` line per
   setting and exits non-zero on any FAIL. Secrets are only checked for presence and length. The
-  Cloudflare read uses a separate read-only token the owner exports as `CF_READ_TOKEN`, which is not
+  (Amended by constitution 6.1.0 V.4, decisions 27: no Cloudflare API rows or token; Cloudflare and R2 are checked by outcome probes. Original text follows.) Cloudflare read uses a separate read-only token the owner exports as `CF_READ_TOKEN`, which is not
   stored anywhere.
 - The Cloudflare IP ranges are fetched live from `https://api.cloudflare.com/client/v4/ips`, so a
   range change shows up as a FAIL on the access-restriction row (spec edge case).
-- Self-test: `infra/check.sh --selftest` feeds recorded JSON fixtures (one all-good, one with a
+- (Dropped under V.4, decisions 27.) Self-test: `infra/check.sh --selftest` feeds recorded JSON fixtures (one all-good, one with a
   single drifted value per section) through the same comparison code and must report 0 and N FAILs
   respectively. This proves the check can fail before production exists.
 

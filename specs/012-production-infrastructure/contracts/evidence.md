@@ -5,7 +5,10 @@ from the owner's machine.
 
 ## verify-prod.sh (FR-025)
 
-`bash evidence/verify-prod.sh https://port.zacal.me | tee evidence/verify-prod-output.txt`
+`bash evidence/verify-prod.sh https://port.zacal.me <origin-default-hostname> | tee evidence/verify-prod-output.txt`
+
+Optional env `ORIGIN_SECRET`: when set, every request also sends `X-Gallery-Origin: $ORIGIN_SECRET`.
+Only for the local self-test against a guarded build; never set for production runs.
 
 - Ports the GET-only public checks of 011 `verify.sh` (home, listing, breadcrumbs, `/g/` redirect,
   404 rules, no-script assertions) and the 006/010 public-page header checks (Cache-Control,
@@ -42,9 +45,9 @@ reads.kql       per public route: count, and the distribution of db_reads. Produ
                 every line <= 2; and each route has at least one non-zero line (proves the
                 read happened at all). 011 SC-005 is restated this way for production.
 p95.kql         per public route: count, p95 duration_ms (bound 50 ms server-side, 006/011)
-claim.kql       auth.claim events: time, sub, ip (012 SC-005)
+claim.kql       auth.claim events: time, sub, ip, ingestion delay = ingestion_time() - timestamp (SC-005: <= 5 min)
 signin.kql      007 SC-006: callback and ownership-work p95
-edge.kql        op.timing edge.purge.call / edge.warm.request outcomes (SC-004)
+edge.kql        edge.lag {op} {duration_ms} for gallery.publish (SC-004: <= 60000) and the edge.purge outcomes of the same change
 cachehits.kql   http.request count per route in a time window (SC-003 cross-check)
 ```
 
@@ -53,6 +56,4 @@ template names, only the `.kql` files change (research R-06).
 
 ## SC-004 publish latency
 
-Owner-only: publish a gallery, then `evidence/publish-wait.sh <gallery-url>` polls
-`https://port.zacal.me/g` anonymously every 5 s until the gallery's title appears and prints the
-elapsed seconds; PASS ≤ 60.
+Evidence is `edge.kql` (log-only, IV.4). No visitor-side poll script (V.4).

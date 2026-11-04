@@ -64,6 +64,9 @@ front of both, hosted logs, a log ingestion cap, and a repeatable way to create 
   6.0.0 before /speckit-tasks. Keep all three optional extras: production purge and warm
   (FR-011), saved hosted-log queries (FR-019), production startup guard (FR-015). Applied to
   FR-020, SC-008 and the severable-seams list.
+- Analyze remediation (owner, 2026-11-02): datastore keep-alive not built ("do not overengineer
+  marginal benefits"); FR-003 and the edge case accept the pause. SC-004/005/006 restated to be
+  log-verifiable (IV.4). FR-022 names the Atlas script exception.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -207,8 +210,8 @@ Change one checked setting by hand in a dashboard; the check reports it.
 - A purge call fails after a publish: cached HTML self-heals within its bounded lifetime (IV.18),
   as already designed (E-12).
 - A deploy fails its tests: production keeps the previous version.
-- The datastore's free tier pauses after long inactivity: the always-on host keeps a connection
-  open, so it does not.
+- The datastore's free tier pauses after long inactivity (accepted risk, FR-003): the first
+  request after the pause reconnects; no keep-alive job is built.
 - Development keys or development buckets are configured in production by mistake: the app
   refuses to start, because production configuration is checked against the development names.
 - The seeding command is run against production: it refuses (III.10).
@@ -231,8 +234,9 @@ Host and platform
   (US$10) is unchanged; the US$7 alert was later withdrawn (6.0.0). In this feature the design record MUST then update D-01
   (B2), D-18 and section 8 (fixed cost), D-24 (withdrawn: production made by hand) and D-25 (deploy
   identity), and every other entry that says B1 (VII.2).
-- **FR-003**: The app MUST stay warm: no request may wait on a cold start of the app, and the
-  datastore connection MUST stay open so the free datastore never pauses.
+- **FR-003**: The app MUST stay warm: no request may wait on a cold start of the app (Always On).
+  The free datastore may pause after long inactivity; this is an accepted risk (owner, 2026-11-02):
+  the next page view or admin visit reconnects.
 - **FR-004**: Production MUST use its own datastore, separate from development, in the region
   nearest the host.
 
@@ -295,15 +299,17 @@ Observability and cost
 Repeatability
 
 - **FR-022**: Every production resource and setting MUST be listed in a committed runbook, in the
-  order the owner creates them, with the exact names and values. Production is created by hand;
-  no tool creates or changes resources (Clarification 2026-11-02).
+  order the owner creates them, with the exact names and values. Production is created by hand,
+  except the MongoDB Atlas rollout, which the owner runs with the official Atlas CLI script
+  `infra/atlas.sh` (owner, 2026-11-02). No other tool creates or changes resources.
 - **FR-023**: A committed settings check MUST read the live production settings (host, edge,
   buckets, logs), changing nothing, and list every difference from the runbook's values.
   It MUST be pinned to subscription `c28725a0-a61d-4a6c-999a-0a8980111fbf` and resource group
   `portfolio`. Run against production built from the runbook, it MUST report zero differences.
 - **FR-024**: Every push to any branch MUST be built and run the full test suite automatically.
   Only pushes to `main` deploy, and only after the full build and test suite pass on the exact
-  commit deployed. The pipeline MUST NOT be able to create, delete or reconfigure any resource; it
+  commit deployed. Tests that need live R2 keys skip there, as they do locally without keys. The
+  pipeline MUST NOT be able to create, delete or reconfigure any resource; it
   can only publish a build to the one existing production app. It MUST hold no long-lived
   credential where the owner's rights allow a federated sign-in; otherwise the one credential it
   holds MUST be limited to publishing to that app and covered by the rotation runbook.
@@ -323,8 +329,8 @@ Verification
   log workspace and its ingestion cap that together serve the public site. Exactly one exists.
 - **Settings check**: the committed read-only check that compares live production settings with
   the runbook's values and lists differences.
-- **Runbook**: the ordered owner-only steps that have no management interface (domain and account
-  setup, identity console, first sign-in and claim check, credential rotation).
+- **Runbook**: the ordered owner steps that create every production resource and setting, plus
+  the first sign-in and claim check and credential rotation.
 - **Production configuration**: the secret and non-secret values the app reads in production;
   checked at start-up against development names.
 
@@ -338,13 +344,15 @@ Verification
 - **SC-002**: 100% of at least 20 direct requests to the host that bypass the edge are refused.
 - **SC-003**: For every public page type, the second anonymous request within the cache lifetime
   produces zero request events in the app's logs.
-- **SC-004**: After the owner publishes a gallery, it appears on the public listing for an
-  anonymous visitor within 60 seconds.
-- **SC-005**: The claim event for the owner is queryable in the hosted logs within 5 minutes of
-  the first sign-in, showing the owner's identity and their real client address.
-- **SC-006**: Each prior time-bound success criterion that applies to public pages is reproduced
-  from hosted-log queries alone, and its p95 is no worse than the local evidence by more than the
-  network distance to the host.
+- **SC-004**: After the owner publishes a gallery, the purge and warm of the affected pages
+  completes within 60 seconds of the save, read from the existing `edge.lag {op}` event for
+  `gallery.publish` in the hosted logs, with every `edge.purge` line of that change `ok`.
+- **SC-005**: The claim event for the owner is in the hosted logs with the owner's identity and
+  their real client address (not a platform or Cloudflare address), and its ingestion delay
+  (ingestion time minus event time) is at most 5 minutes.
+- **SC-006**: From hosted-log queries alone, every public route keeps the existing server-side
+  bounds: p95 `duration_ms` under 50 ms, and the 011 read counts under the production rule in
+  contracts/evidence.md (origin output cache hits log 0 reads).
 - **SC-007**: The settings check reports zero differences against production built from the
   runbook, and reports a deliberately changed setting when run again.
 - **SC-008**: Fixed hosting is one B2 plan (US$26.28/month list price, West US), projected
@@ -379,7 +387,7 @@ Verification
   present, HTTPS answers 200 through Cloudflare with a valid certificate, `http://` redirects 301
   to `https://` with the query kept, `/admin` is not cached (`DYNAMIC`), `img.zacal.me` is served
   through the Cloudflare cache. The origin's own certificate and the Full (strict) rule are not
-  observable from outside; they are covered by the settings check (CF-03, AZ-10).
+  observable from outside; they are covered by the settings check (NET-02 proves strict TLS end to end; AZ-10).
 - Production R2 tokens (R2 Object R/W and Cache Purge) saved by the owner in
   `.r2-keys-prod-copy` at the repo root: gitignored by the existing `.r2-keys*` pattern (checked
   with `git check-ignore`), mode 600. Never opened by the agent; moved into App Service settings by
