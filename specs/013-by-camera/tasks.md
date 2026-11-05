@@ -196,18 +196,18 @@ order; `/c` has exactly 2 tiles; each `/c/{slug}` shows exactly that camera's ph
 - `tests/Gallery.Web.Tests/CameraRoutesTests.cs` (new)
 - `tests/Gallery.Web.Tests/CameraPageComponentTests.cs` (new)
 
-- [ ] T009 [P] [US1] Add `CamerasLabel`, `CamerasHref`, `Cameras` and `UnderCameras(params Crumb[])` to
+- [X] T009 [P] [US1] Add `CamerasLabel`, `CamerasHref`, `Cameras` and `UnderCameras(params Crumb[])` to
   `src/Gallery.Web/Site/Trails.cs`, exactly per contracts/routes.md "Breadcrumbs". Existing
   members are unchanged.
-- [ ] T010 [P] [US1] [SAFETY] Add `CamerasAsync()` and `CameraAsync(slug)` to
+- [X] T010 [P] [US1] [SAFETY] Add `CamerasAsync()` and `CameraAsync(slug)` to
   `src/Gallery.Web/Data/ContentReader.cs`, per the routes.md reader table: one find each, the
   projection and sort as listed, `isDbRead: true`.
-- [ ] T011 [P] [US1] Add `ToCameraCard(CameraCardDoc, Func<string,string> url)` to
+- [X] T011 [P] [US1] Add `ToCameraCard(CameraCardDoc, Func<string,string> url)` to
   `src/Gallery.Web/Site/ViewMapper.cs`, the same shape as `ToCard`, with href `/c/{slug}` and
   title = name.
-- [ ] T012 [US1] Create `src/Gallery.Web/Site/Pages/CameraListingPage.razor` (K1) and
+- [X] T012 [US1] Create `src/Gallery.Web/Site/Pages/CameraListingPage.razor` (K1) and
   `src/Gallery.Web/Site/Pages/CameraPage.razor` (K2), per contracts/components.md.
-- [ ] T013 [US1] [SAFETY] Add C1 `/c` and C2 `/c/{slug}` to `src/Gallery.Web/Site/PublicEndpoints.cs`,
+- [X] T013 [US1] [SAFETY] Add C1 `/c` and C2 `/c/{slug}` to `src/Gallery.Web/Site/PublicEndpoints.cs`,
   per contracts/routes.md:
   - `/c/` → 301 inside C1;
   - slug regex check, then `CameraAsync`, then `ImagesAsync(items, full: false)`;
@@ -217,16 +217,16 @@ order; `/c` has exactly 2 tiles; each `/c/{slug}` shows exactly that camera's ph
   - every refusal goes through `NotFoundResult()`;
   - `.CacheOutput` attached when OutputCache is on;
   - update the class summary's route list.
-- [ ] T014 [US1] `src/Gallery.Web/Site/Pages/HomePage.razor`: `Links` per K4.
+- [X] T014 [US1] `src/Gallery.Web/Site/Pages/HomePage.razor`: `Links` per K4.
   `src/Gallery.Web/Components/Templates/PublicLayout.razor`: replace the speculation-rule string
   with the research R-07 string verbatim (K5). Change nothing else in the script.
-- [ ] T015 [US1] Write `tests/Gallery.Web.Tests/CameraPageComponentTests.cs` (`Render.Html<…>`):
+- [X] T015 [US1] Write `tests/Gallery.Web.Tests/CameraPageComponentTests.cs` (`Render.Html<…>`):
   - K1 with 0 cards has no `contact-sheet` and has crumbs Home → `/`, then "By Camera" current;
   - K1 with 2 cards has 2 `class="tile"` links to `/c/{slug}`, and the first has
     `fetchpriority="high"`;
   - K2 has tiles with `/c/{slug}/{iid}` hrefs, `id="p-{iid}"` and a `view-transition-name` rule,
     no `gallery-desc`, no `GalleryNeighbours`, and no `<meta name="robots"`.
-- [ ] T016 [US1] [SAFETY] Write `tests/Gallery.Web.Tests/CameraRoutesTests.cs` (`LibraryHost`; two
+- [X] T016 [US1] [SAFETY] Write `tests/Gallery.Web.Tests/CameraRoutesTests.cs` (`LibraryHost`; two
   cameras A and B across two public galleries, plus camera C only in a private gallery), part 1:
   - `/` has exactly 2 anchors in `nav.nav--home`: `/g` "Galleries", then `/c` "By Camera";
   - `/c` is 200 with exactly the tiles for A and B, in rank order, and no C;
@@ -234,12 +234,12 @@ order; `/c` has exactly 2 tiles; each `/c/{slug}` shows exactly that camera's ph
   - `/c/` → 301 `/c` with ShortPolicy;
   - read budget `==`: `/c` 1 (`db.cameras.list`), `/c/{slug}` 2, `/` still 0. Every page has
     `Server-Timing`, and with output cache on, a second GET adds no read.
-- [ ] T017 [US1] [SAFETY] Same file, part 2 (FR-009/FR-010):
+- [X] T017 [US1] [SAFETY] Same file, part 2 (FR-009/FR-010):
   - `/c/{C's slug}`, `/c/no-such-camera` and `/c/BAD!` answer 404 with identical status,
     `Cache-Control`, `X-Robots-Tag` and body bytes;
   - `/c` and `/c/{a}` contain no `href="/g/` (no gallery is linked or named);
   - neither page carries `X-Robots-Tag`.
-- [ ] T018 [US1] Same file, part 3, repeating the test-impact (B) scans for `/c`, `/c/{a}` and
+- [X] T018 [US1] Same file, part 3, repeating the test-impact (B) scans for `/c`, `/c/{a}` and
   (after Batch D) `/c/{a}/{iid}`. Leave a `// T029 adds the photo route` marker in the path array:
   - with the owner session and anonymous: 200, no `/admin-assets/`, no `owner-bar`, no
     `lib-`/`gal-`/`b-ctl` class tokens (copy the assertion helper's logic into a private method;

@@ -11,7 +11,7 @@ namespace Gallery.Web.Tests;
 /// </summary>
 public class TrailSourceGuardTests
 {
-    private static readonly Regex Literal = new("\"(Home|Galleries)\"", RegexOptions.Compiled);
+    private static readonly Regex Literal = new("\"(Home|Galleries|By Camera)\"", RegexOptions.Compiled);
 
     [Fact]
     public void Trail_labels_are_literal_only_in_Trails_cs()
@@ -39,7 +39,7 @@ public class TrailSourceGuardTests
         }
 
         // Non-vacuity: the scan does see the two labels where they are defined.
-        Assert.Equal(2, inTrails);
+        Assert.Equal(3, inTrails);
         Assert.True(violations.Count == 0, "trail label literals outside Site/Trails.cs:\n" + string.Join("\n", violations));
     }
 }

@@ -12,10 +12,11 @@ using Microsoft.AspNetCore.OutputCaching;
 namespace Gallery.Web.Site;
 
 /// <summary>
-/// Maps public routes: / (home), /g (listing), /g/{id}, /g/{id}/{slug}, /g/{id}/{slug}/{imageId}.
+/// Maps public routes: / (home), /g (listing), /g/{id}, /g/{id}/{slug}, /g/{id}/{slug}/{imageId},
+/// /c (013: cameras) and /c/{slug} (013: one camera).
 /// GET and HEAD only. Replaces the Hello World stub from AppBuilder.
 /// </summary>
-public static class PublicEndpoints
+public static partial class PublicEndpoints
 {
     public static void MapPublic(this WebApplication app)
     {
@@ -100,18 +101,7 @@ public static class PublicEndpoints
                 var imageDocs = await reader.ImagesAsync(gallery.Items, full: false);
 
                 var noIndex = gallery.Visibility != "public";
-                var items = imageDocs.Select(img =>
-                {
-                    var view = ViewMapper.ToView(img, url);
-                    return new ContactSheetItem(
-                        Image: view,
-                        Href: $"/g/{id}/{slug}/{img.Id}",
-                        Title: view.Title,
-                        TransitionId: img.Id,
-                        PreloadSrcSet: SrcSet.Avif(view),
-                        PreloadSizes: "100vw"
-                    );
-                }).ToList();
+                var items = imageDocs.Select(img => GridTile(img, url, $"/g/{id}/{slug}/{img.Id}")).ToList();
 
                 // 010 P2 [SAFETY] II.2: neighbour links only on a public gallery with a stored nav.
                 // Whatever a non-public document holds, its page links to no other gallery.
@@ -209,6 +199,69 @@ public static class PublicEndpoints
             }
         });
 
+        // 013 C1 (contracts/routes.md): the camera listing. Mirrors /g: one read (db.cameras.list).
+        var cameras = app.MapMethods("/c", verbs, async (HttpContext http, ContentReader reader, StorageOptions storage) =>
+        {
+            // 011 R-03 pattern: routing delivers "/c/" here; a separate "/c/" route is ambiguous.
+            if (http.Request.Path.Value == "/c/")
+                return (IResult)new ShortPolicyRedirectResult(Trails.CamerasHref);
+
+            try
+            {
+                var docs = await reader.CamerasAsync();
+                var url = MakeUrl(storage);
+                var cards = docs.Select(c => ViewMapper.ToCameraCard(c.Card, url)).ToList();
+
+                IResult result = new RazorComponentResult<CameraListingPage>(new Dictionary<string, object?>
+                {
+                    [nameof(CameraListingPage.Cards)] = (IReadOnlyList<ContactSheetItem>)cards
+                });
+
+                return ApplyCameraListingHeaders(result, cards, siteOptions);
+            }
+            catch (Exception ex) when (IsDataException(ex))
+            {
+                return TypedResults.Text("Something went wrong", statusCode: 500);
+            }
+        });
+
+        // 013 C2 (contracts/routes.md): one camera's grid. Mirrors the gallery page: two reads.
+        var cameraPage = app.MapMethods("/c/{slug}", verbs, async (string slug, ContentReader reader, StorageOptions storage) =>
+        {
+            // [SAFETY] FR-009: junk never reaches the reader, and every refusal is the same 404.
+            if (!CameraSlugRx().IsMatch(slug))
+                return NotFoundResult();
+
+            try
+            {
+                var camera = await reader.CameraAsync(slug);
+                if (camera is null || camera.Items.Count == 0)
+                    return NotFoundResult();
+
+                var url = MakeUrl(storage);
+                var imageDocs = await reader.ImagesAsync(camera.Items, full: false);
+
+                // Research R-09 render-time guard (the grid projection omits deletingAt, so this
+                // only drops a tombstone a fuller read would carry).
+                var items = imageDocs.Where(img => img.DeletingAt is null)
+                    .Select(img => GridTile(img, url, $"/c/{slug}/{img.Id}")).ToList();
+
+                IResult result = new RazorComponentResult<CameraPage>(new Dictionary<string, object?>
+                {
+                    [nameof(CameraPage.Title)] = camera.Name,
+                    [nameof(CameraPage.Items)] = (IReadOnlyList<ContactSheetItem>)items,
+                    // FR-010: Home and By Camera only, so the page names no gallery.
+                    [nameof(CameraPage.Crumbs)] = Trails.UnderCameras(new Crumb(camera.Name)),
+                });
+
+                return ApplyCameraHeaders(result, items, siteOptions);
+            }
+            catch (Exception ex) when (IsDataException(ex))
+            {
+                return TypedResults.Text("Something went wrong", statusCode: 500);
+            }
+        });
+
         // 009 T002 (research R-07): the 006 policy only applies to endpoints that carry it, so the
         // page routes (011: home and listing too) attach it explicitly. The /g/{id} short route is not cached, and the
         // policy's default rules cache only 200 responses (never a 301 or 404).
@@ -218,10 +271,30 @@ public static class PublicEndpoints
             listing.CacheOutput(PublicCache.PolicyName);
             galleryPage.CacheOutput(PublicCache.PolicyName);
             photoPage.CacheOutput(PublicCache.PolicyName);
+            cameras.CacheOutput(PublicCache.PolicyName);
+            cameraPage.CacheOutput(PublicCache.PolicyName);
         }
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────
+
+    /// <summary>One photo tile of a grid page (gallery page and 013 camera page), linking to <paramref name="href"/>.</summary>
+    private static ContactSheetItem GridTile(ImageDoc img, Func<string, string> url, string href)
+    {
+        var view = ViewMapper.ToView(img, url);
+        return new ContactSheetItem(
+            Image: view,
+            Href: href,
+            Title: view.Title,
+            TransitionId: img.Id,
+            PreloadSrcSet: SrcSet.Avif(view),
+            PreloadSizes: "100vw"
+        );
+    }
+
+    /// <summary>013 contracts/routes.md refusals: a camera slug as <c>Slug.From</c> writes it, plus a suffix.</summary>
+    [System.Text.RegularExpressions.GeneratedRegex("^[a-z0-9-]{1,64}$")]
+    private static partial System.Text.RegularExpressions.Regex CameraSlugRx();
 
     // Pages only build image URLs, from ImageBaseUrl. They must not resolve ImageStore: that builds
     // an S3 client, which throws when the storage credentials are absent, and research R-10 requires
@@ -269,6 +342,27 @@ public static class PublicEndpoints
         var first = items.FirstOrDefault(i => i.Image is not null);
         if (first?.Image is not null)
             headers["Link"] = ViewMapper.PreloadLink(first.Image, Sizes.ForGrid(4, 3, 1));
+
+        return new StatusAndHeadersResult(200, headers, inner, siteOptions.OutputCache ? PublicCache.PolicyName : null);
+    }
+
+    // 013 C1/C2: modelled on ApplyListingHeaders/ApplyGalleryHeaders. Never X-Robots-Tag: every camera
+    // page shows only visible photos, so it is indexable like /g (contracts/routes.md "Headers").
+    private static IResult ApplyCameraListingHeaders(IResult inner, List<ContactSheetItem> cards, SiteOptions siteOptions) =>
+        CameraGridHeaders(inner, cards, Sizes.ForGrid(3, 3, 1), siteOptions);
+
+    private static IResult ApplyCameraHeaders(IResult inner, List<ContactSheetItem> items, SiteOptions siteOptions) =>
+        CameraGridHeaders(inner, items, Sizes.ForGrid(4, 3, 1), siteOptions);
+
+    private static IResult CameraGridHeaders(IResult inner, List<ContactSheetItem> items, string sizes, SiteOptions siteOptions)
+    {
+        var headers = new Dictionary<string, string>
+        {
+            ["Cache-Control"] = PublicCache.HtmlPolicy
+        };
+        var first = items.FirstOrDefault(i => i.Image is not null);
+        if (first?.Image is not null)
+            headers["Link"] = ViewMapper.PreloadLink(first.Image, sizes);
 
         return new StatusAndHeadersResult(200, headers, inner, siteOptions.OutputCache ? PublicCache.PolicyName : null);
     }

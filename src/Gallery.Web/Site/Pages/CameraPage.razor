@@ -1,0 +1,28 @@
+@* 013 K2 (contracts/components.md): one camera's grid at /c/{slug}. GalleryPage without the
+   description, the gallery neighbours and NoIndex: everything here is visible by construction. *@
+<PublicLayout Title="@Title" Enhance="true" HeadExtra="_transitions" Crumbs="Crumbs">
+    @if (Items.Count > 0)
+    {
+        <ContactSheet Items="Items" Large="4" Medium="3" Small="1" />
+    }
+</PublicLayout>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    [Parameter] public IReadOnlyList<ContactSheetItem> Items { get; set; } = [];
+
+    /// <summary>The endpoint passes <c>Trails.UnderCameras(new Crumb(name))</c>; null renders none.</summary>
+    [Parameter] public IReadOnlyList<Crumb>? Crumbs { get; set; }
+
+    private RenderFragment _transitions => b =>
+    {
+        var sb = new System.Text.StringBuilder("<style>");
+        foreach (var item in Items)
+        {
+            if (item.TransitionId is not null)
+                sb.Append($"#p-{item.TransitionId}{{view-transition-name:img-{item.TransitionId}}}");
+        }
+        sb.Append("</style>");
+        b.AddMarkupContent(0, sb.ToString());
+    };
+}

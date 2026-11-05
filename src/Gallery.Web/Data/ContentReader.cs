@@ -93,4 +93,38 @@ public sealed class ContentReader(IMongoDatabase db, OpTimer timer)
                 .ToList();
             return ordered;
         }, isDbRead: true);
+
+    private IMongoCollection<CameraGroupDoc> Cameras =>
+        db.GetCollection<CameraGroupDoc>("cameras");
+
+    /// <summary>
+    /// 013 C1 (contracts/routes.md reader table): every camera, projecting only <c>card</c>, in
+    /// stored <c>rank</c> order. One find.
+    /// </summary>
+    public Task<IReadOnlyList<CameraGroupDoc>> CamerasAsync() =>
+        timer.Time("db.cameras.list", async () =>
+        {
+            var projection = Builders<CameraGroupDoc>.Projection.Include(c => c.Card);
+            IReadOnlyList<CameraGroupDoc> docs = await Cameras.Find(FilterDefinition<CameraGroupDoc>.Empty)
+                .Project<CameraGroupDoc>(projection)
+                .SortBy(c => c.Rank)
+                .ToListAsync();
+            return docs;
+        }, isDbRead: true);
+
+    /// <summary>
+    /// 013 C2/C3 (contracts/routes.md reader table): the camera at <paramref name="slug"/>,
+    /// projecting only <c>slug</c>, <c>name</c> and <c>items</c>; null when no camera has it.
+    /// </summary>
+    public Task<CameraGroupDoc?> CameraAsync(string slug) =>
+        timer.Time("db.camera.read", async () =>
+        {
+            var projection = Builders<CameraGroupDoc>.Projection
+                .Include(c => c.Slug)
+                .Include(c => c.Name)
+                .Include(c => c.Items);
+            return (CameraGroupDoc?)await Cameras.Find(Builders<CameraGroupDoc>.Filter.Eq(c => c.Slug, slug))
+                .Project<CameraGroupDoc>(projection)
+                .FirstOrDefaultAsync();
+        }, isDbRead: true);
 }

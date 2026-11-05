@@ -8,7 +8,7 @@ n = max(int(m) for m in re.findall(r"^\| (\d+) \|", text, re.M))
 for line in pathlib.Path(sys.argv[1]).read_text(encoding="utf-8").splitlines():
     if not line.strip():
         continue
-    kind, dec, why, piv = [x.strip() for x in line.split("|")]
+    kind, dec, why, piv = [x.strip() for x in re.split(r"(?<!\\)\|", line)]
     n += 1
     text += f"| {n} | {kind} | {dec} | {why} | {piv} |\n"
 p.write_text(text, encoding="utf-8")

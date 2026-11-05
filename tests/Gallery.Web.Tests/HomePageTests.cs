@@ -18,7 +18,7 @@ namespace Gallery.Web.Tests;
 public partial class HomePageTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixture<MongoFixture>
 {
     private const string SpeculationRule =
-        "{\"prerender\":[{\"where\":{\"or\":[{\"href_matches\":\"/g\"},{\"href_matches\":\"/g/*\"}]},\"eagerness\":\"moderate\"}]}";
+        "{\"prerender\":[{\"where\":{\"or\":[{\"href_matches\":\"/g\"},{\"href_matches\":\"/g/*\"},{\"href_matches\":\"/c\"},{\"href_matches\":\"/c/*\"}]},\"eagerness\":\"moderate\"}]}";
 
     // Scoped CSS adds a b-xxxx attribute to the layout's elements.
     [GeneratedRegex("<script type=\"speculationrules\"(?: b-[a-z0-9]{10})?>(.*?)</script>", RegexOptions.Singleline)]
@@ -32,6 +32,9 @@ public partial class HomePageTests(S3ProxyFixture s3, MongoFixture mongo) : ICla
 
     [GeneratedRegex("<a href=\"/g\"(?: b-[a-z0-9]{10})?>Galleries</a>")]
     private static partial Regex GalleriesLinkRx();
+
+    [GeneratedRegex("<a href=\"/c\"(?: b-[a-z0-9]{10})?>By Camera</a>")]
+    private static partial Regex CamerasLinkRx();
 
     [GeneratedRegex("<div class=\"cs[ \"]")]
     private static partial Regex ContactSheetRx();
@@ -110,8 +113,12 @@ public partial class HomePageTests(S3ProxyFixture s3, MongoFixture mongo) : ICla
         var navs = HomeNavRx().Matches(html);
         Assert.Single(navs);
         var nav = LibraryHtml.Element(html, "nav", navs[0].Index);
-        Assert.Single(AnchorRx().Matches(nav));
+        // 013 stated change (test-impact A): exactly two links, Galleries then By Camera.
+        var anchors = AnchorRx().Matches(nav);
+        Assert.Equal(2, anchors.Count);
         Assert.Single(GalleriesLinkRx().Matches(nav));
+        Assert.Single(CamerasLinkRx().Matches(nav));
+        Assert.True(GalleriesLinkRx().Match(nav).Index < CamerasLinkRx().Match(nav).Index, "Galleries must come before By Camera");
 
         Assert.Empty(ContactSheetRx().Matches(html));
         Assert.DoesNotContain("<a class=\"tile\"", html, StringComparison.Ordinal);
