@@ -119,8 +119,9 @@ tile.
   displayed once, using the same camera name the photo page already shows ("Canon EOS R5").
 - No listed gallery holds any photo with camera data: the "By Camera" link stays on the home page
   and the listing shows the same empty state the galleries listing shows with no galleries.
-- A wrong or stale name in a camera page address (the camera's display text changed, or was typed
-  by hand): redirects to the current address if the camera is known, otherwise not found.
+- A wrong or stale name in a camera page address (typed by hand, or a camera that has left):
+  answers not found. A camera's address does not change while its make and model are unchanged,
+  so there is no redirect (plan research R-10).
 - A camera page address must not reveal that a camera exists only in private photos: unknown and
   private-only cameras answer the same not-found page.
 - Many photos from one camera (hundreds): the camera page shows them all in one grid, as a large
@@ -162,7 +163,7 @@ Visibility (constitution II)
   show no camera detail beyond the allowlisted details the photo page already shows (III.3).
 - **FR-011**: Every owner action that changes which photos are visible, or a visible photo's title,
   cover role or position (publish, unpublish, add to or remove from a gallery, delete, rename a
-  photo, upload confirm into a public gallery), MUST be reflected on the camera listing and the
+  photo), MUST be reflected on the camera listing and the
   affected camera pages on the next load, within the same freshness bound the galleries listing
   has today, including any edge-cached copy (II.2 purge, best effort, bounded lifetime).
 - **FR-012**: Nothing on the camera pages becomes public as a side effect: the feature MUST add no
@@ -192,8 +193,7 @@ Photo view
   camera's visible photos in camera-page order, show N / total within the camera, and carry the
   breadcrumb Home / By Camera / {camera} / {photo}, the camera crumb landing on the photo's tile.
 - **FR-019**: A camera photo address MUST answer not found unless the photo is currently visible
-  under that camera (FR-008); a stale camera name in the address redirects as FR-007's edge case
-  does.
+  under that camera (FR-008).
 - **FR-020**: The camera photo view MUST be included in FR-011 freshness (a change to the camera's
   visible set changes every camera photo's neighbours and total), FR-013 consistency, FR-015
   performance and FR-016 read parity (no more reads than a gallery photo page).
