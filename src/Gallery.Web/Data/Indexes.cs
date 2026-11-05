@@ -18,6 +18,8 @@ public static class Indexes
     public const string LibraryPageIndex = "library_page";
     public const string AvifIndex = "derivatives.avif_1";
     public const string WebpIndex = "derivatives.webp_1";
+    public const string CameraSlugIndex = "slug_1";
+    public const string CameraRankIndex = "rank_1";
 
     /// <summary>
     /// Creates (or upgrades from the pre-008 non-partial form) the partial unique <c>seedKey_1</c>
@@ -54,6 +56,17 @@ public static class Indexes
             new CreateIndexModel<BsonDocument>(
                 keys.Ascending("derivatives.webp"),
                 new CreateIndexOptions { Name = WebpIndex }),
+        ], ct);
+
+        // 013 research R-04: the camera page looks a camera up by slug; the listing sorts by rank.
+        await db.GetCollection<BsonDocument>("cameras").Indexes.CreateManyAsync(
+        [
+            new CreateIndexModel<BsonDocument>(
+                keys.Ascending("slug"),
+                new CreateIndexOptions { Name = CameraSlugIndex, Unique = true }),
+            new CreateIndexModel<BsonDocument>(
+                keys.Ascending("rank"),
+                new CreateIndexOptions { Name = CameraRankIndex }),
         ], ct);
     }
 

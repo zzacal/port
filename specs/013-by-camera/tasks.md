@@ -88,7 +88,7 @@ the new files it names, in the same batch as the code.
 - `tests/Gallery.Web.Tests/CameraProjectionTests.cs` (new)
 - `tests/Gallery.Web.Tests/CameraSourceGuardTests.cs` (new)
 
-- [ ] T003 [P] Create `src/Gallery.Core/Images/CameraKey.cs`, a pure static class:
+- [X] T003 [P] Create `src/Gallery.Core/Images/CameraKey.cs`, a pure static class:
   - `Normalise(string?)`: trim, collapse whitespace runs to one space, `ToLowerInvariant`; null or
     blank → `""`.
   - `Collapse(string?)`: the same without lower-casing; blank → null.
@@ -102,12 +102,12 @@ the new files it names, in the same batch as the code.
   - both blank → null;
   - `DisplayName("Canon","Canon EOS R5")` is `"Canon EOS R5"`;
   - `DisplayName("NIKON CORPORATION","NIKON Z 8")` is `"NIKON Z 8"`.
-- [ ] T004 [P] Add `CameraGroupDoc` (`_id`, `slug`, `name`, `items`, `rank`, `card`) and
+- [X] T004 [P] Add `CameraGroupDoc` (`_id`, `slug`, `name`, `items`, `rank`, `card`) and
   `CameraCardDoc` (`slug`, `name`, `imageCount`, `cover` as `CoverImageDoc`) to
   `src/Gallery.Web/Data/Documents.cs`, with BSON element names exactly as in data-model.md and
   placed after the galleries section. In `src/Gallery.Web/Data/Indexes.cs` `EnsureAsync`, create on
   `cameras`: `slug_1` unique and `rank_1`, with name constants beside the existing ones.
-- [ ] T005 [SAFETY] In `src/Gallery.Web/Library/SiteProjector.cs`, add the pure
+- [X] T005 [SAFETY] In `src/Gallery.Web/Library/SiteProjector.cs`, add the pure
   `public static List<CameraGroupDoc> Cameras(IReadOnlyList<GalleryDoc> listed, IReadOnlyList<ImageDoc> images, IReadOnlyDictionary<string,string> storedSlugs)`.
   Follow data-model.md "Visibility", research R-02/R-03 and the `slug` rule exactly:
   - an image counts only when its id is in some `listed` gallery's `items`, `DeletingAt` is
@@ -124,7 +124,7 @@ the new files it names, in the same batch as the code.
   "Listed" is computed by the caller with the same rule as `Cards` (public and card
   `ImageCount >= 1`). Expose `public static IReadOnlyList<GalleryDoc> Listed(order, galleries)` (public: the test project has no InternalsVisibleTo, and the parent's InvariantChecker rule calls it)
   and use it in both places, so `Cards` behaviour is byte-identical.
-- [ ] T006 [SAFETY] Extend `ProjectWithNavAsync` in `src/Gallery.Web/Library/SiteProjector.cs`
+- [X] T006 [SAFETY] Extend `ProjectWithNavAsync` in `src/Gallery.Web/Library/SiteProjector.cs`
   per data-model.md "Write", after the nav loop and inside the same `db.site.project` timer:
   - one `images` find for the union of listed items, with the R-05 projection, timed as
     `db.cameras.load`, plus one `cameras` find, timed under the same name;
@@ -136,7 +136,7 @@ the new files it names, in the same batch as the code.
   `ProjectionResult` gains a third positional member,
   `IReadOnlyList<(CameraGroupDoc? Before, CameraGroupDoc? After)> Cameras`, with one entry per
   changed, added or removed key. `ProjectAsync()` is unchanged.
-- [ ] T007 [SAFETY] Write `tests/Gallery.Web.Tests/CameraProjectionTests.cs`.
+- [X] T007 [SAFETY] Write `tests/Gallery.Web.Tests/CameraProjectionTests.cs`.
 
   Pure `Cameras(...)` facts:
   - private-only photo excluded;
@@ -158,7 +158,7 @@ the new files it names, in the same batch as the code.
   - after unpublish, the camera is gone;
   - a second projection with no change makes zero `db.cameras.write` lines;
   - exactly one `op.timing db.site.project ` line per projection still holds.
-- [ ] T008 [SAFETY] Write `tests/Gallery.Web.Tests/CameraSourceGuardTests.cs`, modelled on
+- [X] T008 [SAFETY] Write `tests/Gallery.Web.Tests/CameraSourceGuardTests.cs`, modelled on
   `NavSourceGuardTests`:
   - in `src/**/*.cs` outside bin and obj, the literal `"cameras"` may appear only in
     `Library/SiteProjector.cs`, `Data/ContentReader.cs`, `Data/Indexes.cs` and

@@ -17,7 +17,8 @@ namespace Gallery.Web.Tests.Fixtures;
 /// <item>every image's <c>galleryIds</c> equals the set of galleries whose <c>items</c> hold it;</item>
 /// <item>every gallery's <c>card</c> equals <see cref="CardBuilder.Build"/> of it and its cover image;</item>
 /// <item><c>site.homeCards</c> equals what <see cref="SiteProjector"/> would write
-///   (<see cref="SiteProjector.Cards"/> over <c>homeOrder</c> and the stored galleries).</item>
+///   (<see cref="SiteProjector.Cards"/> over <c>homeOrder</c> and the stored galleries);</item>
+/// <item>(013) the stored <c>cameras</c>, by rank, equal <see cref="SiteProjector.Cameras"/>.</item>
 /// </list>
 /// </summary>
 public static class InvariantChecker
@@ -82,6 +83,18 @@ public static class InvariantChecker
         {
             violations.Add("site site: missing while a public, non-empty gallery exists");
         }
+
+        // 013 (test-impact C): the stored cameras equal the pure projection over the current data,
+        // in rank order, BSON-equal. Stored slugs feed the projection, as in the projector.
+        var cameras = await db.GetCollection<CameraGroupDoc>("cameras").Find(FilterDefinition<CameraGroupDoc>.Empty)
+            .SortBy(c => c.Rank).ToListAsync();
+        var listed = SiteProjector.Listed(site?.HomeOrder ?? [], galleries);
+        var expectedCameras = new BsonArray(SiteProjector.Cameras(listed, images,
+                cameras.ToDictionary(c => c.Id, c => c.Slug, StringComparer.Ordinal))
+            .Select(c => c.ToBsonDocument()));
+        var actualCameras = new BsonArray(cameras.Select(c => c.ToBsonDocument()));
+        if (actualCameras != expectedCameras)
+            violations.Add($"cameras: stored [{string.Join(",", cameras.Select(c => $"{c.Slug}:{c.Items.Count}"))}] differs from the projection [{string.Join(",", expectedCameras.Select(c => $"{c["slug"].AsString}:{c["items"].AsBsonArray.Count}"))}]");
 
         if (violations.Count > 0)
             throw new InvariantViolation("Data-model invariants broken:\n" + string.Join("\n", violations));
