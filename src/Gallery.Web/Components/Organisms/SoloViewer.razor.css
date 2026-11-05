@@ -2,8 +2,23 @@
     padding: 0 var(--space-s);
 }
 
-.stage {
-    height: 80vh;
+/* The stage is the photo's own letterboxed rectangle, at most 80vh tall and the column wide, so
+   no empty band sits above or below a photo wider than the stage: the gap under the header and
+   above the caption is the same as on a gallery page at every width. The sizer is in normal flow
+   (the cq-height cap needs a fixed box, so it is replaced by 80vh here). */
+.stage ::deep .fit-contain {
+    height: auto;
+    container-type: inline-size;
+}
+
+.stage ::deep .fit-contain .frame {
+    position: relative;
+    inset: auto;
+    margin: 0 auto;
+}
+
+.stage ::deep .fit-contain .sizer {
+    max-height: 80vh;
 }
 
 .solo-caption {

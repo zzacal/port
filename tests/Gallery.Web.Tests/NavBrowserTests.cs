@@ -303,7 +303,8 @@ public sealed class NavBrowserTests(NavBrowserFixture site)
 
                     // Owner review 1: Previous/Next are whole words (no ellipsis), the count sits
                     // centred in the Pager on one line, the breadcrumb (the header itself since review 2) is
-                    // one left-aligned line above the stage, and the stage keeps 80vh.
+                    // one left-aligned line above the stage, and the stage is the photo's own box, at most 80vh
+                    // tall (no empty band above or below the photo).
                     var c = await page.EvaluateAsync<double[]>("""
                         (() => {
                             const words = [...document.querySelectorAll('article.solo .pager a')]
@@ -313,11 +314,12 @@ public sealed class NavBrowserTests(NavBrowserFixture site)
                             const bc = document.querySelector('nav.breadcrumb'), ol = (() => { const r = document.createRange(); r.selectNodeContents(bc.querySelector('a')); return r.getBoundingClientRect(); })();
                             const hd = document.querySelector('header.site-header').getBoundingClientRect();
                             const st = document.querySelector('article.solo .stage').getBoundingClientRect();
+                            const fr = document.querySelector('article.solo .stage .frame').getBoundingClientRect();
                             const tops = new Set([...bc.querySelectorAll('li')].map(li => { const r = li.getBoundingClientRect(); return Math.round((r.top + r.bottom) / 2); }));
                             return [words, nr.left, nr.right, pr.left, pr.right, n.getClientRects().length,
                                     ol.left, ol.right, document.documentElement.clientWidth, tops.size,
                                     (bc.closest('header.site-header') ? hd.top : 1e9), bc.getBoundingClientRect().top, bc.getBoundingClientRect().bottom, st.top,
-                                    st.height, innerHeight, document.documentElement.scrollWidth];
+                                    st.height, innerHeight, document.documentElement.scrollWidth, fr.top, fr.bottom, st.bottom];
                         })()
                         """);
                     if (c[0] != 0) failures.Add($"{where}: {c[0]} Pager link(s) truncated or not a whole word");
@@ -329,7 +331,8 @@ public sealed class NavBrowserTests(NavBrowserFixture site)
                     if (Math.Abs(c[6] - margin) > 1) failures.Add($"{where}: breadcrumb text starts at {c[6]:0.#}px, page margin {margin}px");
                     if (c[9] != 1) failures.Add($"{where}: breadcrumb wraps onto {c[9]} lines");
                     if (!(c[10] <= c[11] + 0.5 && c[12] <= c[13] + 0.5)) failures.Add($"{where}: breadcrumb {c[11]:0.#}-{c[12]:0.#} not inside the header (top {c[10]:0.#}) and above the stage top {c[13]:0.#}");
-                    if (Math.Abs(c[14] - 0.8 * c[15]) > 0.5) failures.Add($"{where}: .stage height {c[14]:0.##} != 0.8 * innerHeight {c[15]}");
+                    if (c[14] > 0.8 * c[15] + 0.5) failures.Add($"{where}: .stage height {c[14]:0.##} > 0.8 * innerHeight {c[15]}");
+                    if (Math.Abs(c[17] - c[13]) > 0.5 || Math.Abs(c[18] - c[19]) > 0.5) failures.Add($"{where}: photo {c[17]:0.#}-{c[18]:0.#} does not fill the stage {c[13]:0.#}-{c[19]:0.#}");
                     if (c[16] > c[8] + 0.5) failures.Add($"{where}: horizontal scroll ({c[16]} > {c[8]})");
                 }
 
