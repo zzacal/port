@@ -122,7 +122,7 @@ the new files it names, in the same batch as the code.
     (call its helper if it has one; otherwise map the same five fields).
 
   "Listed" is computed by the caller with the same rule as `Cards` (public and card
-  `ImageCount >= 1`). Expose `internal static IReadOnlyList<GalleryDoc> Listed(order, galleries)`
+  `ImageCount >= 1`). Expose `public static IReadOnlyList<GalleryDoc> Listed(order, galleries)` (public: the test project has no InternalsVisibleTo, and the parent's InvariantChecker rule calls it)
   and use it in both places, so `Cards` behaviour is byte-identical.
 - [ ] T006 [SAFETY] Extend `ProjectWithNavAsync` in `src/Gallery.Web/Library/SiteProjector.cs`
   per data-model.md "Write", after the nav loop and inside the same `db.site.project` timer:

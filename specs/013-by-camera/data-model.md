@@ -40,7 +40,7 @@ never do.
 `SiteProjector.Cameras(IReadOnlyList<GalleryDoc> listed, IReadOnlyList<ImageDoc> images,
 IReadOnlyDictionary<string, string> storedSlugs) -> List<CameraGroupDoc>`
 
-This is deterministic, so equal input gives a BSON-equal output. `storedSlugs` maps key → slug
+This is deterministic, so equal input gives a BSON-equal output. `listed` comes from `public static SiteProjector.Listed(homeOrder, galleries)`, the same rule `Cards` uses. It is public so the test fixture `InvariantChecker` can call it. `storedSlugs` maps key → slug
 from the current `cameras` documents, for slug stability.
 
 ## Write (inside `ProjectWithNavAsync`, timer `db.site.project`)
