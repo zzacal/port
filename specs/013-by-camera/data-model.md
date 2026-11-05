@@ -38,7 +38,7 @@ never do.
 ## Pure projection
 
 `SiteProjector.Cameras(IReadOnlyList<GalleryDoc> listed, IReadOnlyList<ImageDoc> images,
-IReadOnlyDictionary<string, string> storedSlugs) -> List<CameraDoc>`
+IReadOnlyDictionary<string, string> storedSlugs) -> List<CameraGroupDoc>`
 
 This is deterministic, so equal input gives a BSON-equal output. `storedSlugs` maps key → slug
 from the current `cameras` documents, for slug stability.
@@ -62,6 +62,6 @@ constructor is called only in `SiteProjector.cs:131` (grep: no test constructs i
 ## Value objects (web layer)
 
 - `CameraSnapshot(Key, Slug, Items)`: what `PurgeSets.Cameras` / `CameraText` consume, built from
-  a `CameraDoc`.
+  a `CameraGroupDoc`.
 - `CameraChange`: `IReadOnlyList<(CameraSnapshot? Before, CameraSnapshot? After)>`, plus whether
   any card or rank changed (for `/c`).
