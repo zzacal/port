@@ -66,12 +66,12 @@ the new files it names, in the same batch as the code.
 
 ## Phase 1: Setup (parent)
 
-- [ ] T001 Record the baseline in `specs/013-by-camera/evidence/baseline.txt`:
+- [X] T001 Record the baseline in `specs/013-by-camera/evidence/baseline.txt`:
   - `git rev-parse HEAD`
   - the full-suite pass, fail and skip counts from
     `dotnet test Gallery.slnx --artifacts-path artifacts --blame-hang-timeout 120s`
   - `ls tests/Gallery.Web.Tests/*.cs | wc -l`
-- [ ] T002 Re-verify contracts/test-impact.md against the tree at T001 (parent, by hand):
+- [X] T002 Re-verify contracts/test-impact.md against the tree at T001 (parent, by hand):
   - grep `tests/` for `SpeculationRule`, `nav--home a`, `AnchorRx`, `"(Home|Galleries)"`,
     `ProjectionResult(`, `"cameras"` and `/c/`;
   - confirm every class A row, line for line, and that no class D assumption moved;
@@ -249,7 +249,7 @@ order; `/c` has exactly 2 tiles; each `/c/{slug}` shows exactly that camera's ph
 **Parent stated change (after Batch B)**: apply test-impact (A):
 - `HomePageTests.cs` lines 20-21 and 113-114;
 - `HomeBrowserTests.cs` lines 64-111;
-- `TrailSourceGuardTests.cs` lines 14 and 40.
+- `TrailSourceGuardTests.cs` lines 14 and 42.
 
 Log old and new values in decisions.md. Then build `-warnaserror`, run the full suite, and commit.
 
@@ -326,6 +326,9 @@ each comparing the purged set for equality.
 - [ ] T024 [US2] Write `tests/Gallery.Web.Tests/CameraTimingEvidenceTests.cs`:
   - one run that publishes, retitles and unpublishes camera photos, then GETs `/c`, `/c/{slug}`
     and (after Batch D) a camera photo page;
+  - with output cache OFF, drive 100 GETs (200s) each of `/g`, one gallery page, one photo page,
+    `/c`, `/c/{slug}` and (after Batch D) `/c/{slug}/{iid}`, so the committed `evidence/p95.sh`
+    (T030, needs n >= 100 per route and its mirror) can read the log;
   - assert an `op.timing` line exists for each of `db.cameras.load`, `db.cameras.write`,
     `db.cameras.list` and `db.camera.read`, and an `http.request` line for each camera route
     template;
@@ -401,7 +404,7 @@ Escape lands on `/c/{slug}#p-{iid}`.
 
 ## Phase 6: Polish and cross-cutting (parent unless marked)
 
-- [ ] T030 [P] Write `specs/013-by-camera/evidence/p95.sh` and `p95-selftest.sh` from 011's:
+- [X] T030 [P] Write `specs/013-by-camera/evidence/p95.sh` and `p95-selftest.sh` from 011's:
   - routes `/g`, `/g/{id}/{slug}`, `/g/{id}/{slug}/{imageId}`, `/c`, `/c/{slug}`, `/c/{slug}/{iid}`;
   - read the `http.request` lines from `evidence/camera-timings.log`;
   - assert each camera route's p95 duration ≤ its mirror's × 1.10 plus 1 ms jitter, and its
@@ -409,7 +412,7 @@ Escape lands on `/c/{slug}#p-{iid}`.
   - self-test on a plain log, an empty log (must fail), an over-limit value (fails its row only)
     and an under-sampled route;
   - tee the output to `p95-output.txt`.
-- [ ] T031 [P] VII.2 design-record update, scripted in
+- [X] T031 [P] VII.2 design-record update, scripted in
   `specs/013-by-camera/evidence/design-record-edit.py`, which asserts each old string's count
   before writing:
   - `draft/02c-decisions-content.md`: add D-26 "Camera Grouping" with Area, Status, Choice,

@@ -25,7 +25,7 @@ exact purge sets), plus a check of which fixtures give their images a camera.
 | `HomePageTests.cs:20-21` | `SpeculationRule` const | `/g`, `/g/*` | `/g`, `/g/*`, `/c`, `/c/*` (research R-07 string) |
 | `HomePageTests.cs:113-114` | anchors in `nav.nav--home` | `Assert.Single(AnchorRx…)`, `Assert.Single(GalleriesLinkRx…)` | exactly 2 anchors; first is `/g` "Galleries", second `/c` "By Camera" |
 | `HomeBrowserTests.cs:64-111` | home link geometry | exactly one `nav.nav--home a`; centre of that link | exactly two links; centring (a, b) measured on `nav.nav--home ul`; (d) 48 px and (e) ≥ 44 px tall checked on EACH link; (c) no scroll unchanged |
-| `TrailSourceGuardTests.cs:14,40` | banned literals / count in Trails.cs | `"(Home\|Galleries)"`, count 2 | `"(Home\|Galleries\|By Camera)"`, count 3 |
+| `TrailSourceGuardTests.cs:14,42` | banned literals / count in Trails.cs | `"(Home\|Galleries)"`, count 2 | `"(Home\|Galleries\|By Camera)"`, count 3 |
 
 ## (B) Scan loops over every public page: keep, and cover the new pages in NEW tests
 

@@ -1,0 +1,9 @@
+SELFTEST OK   pass-plain.log: exit 0
+SELFTEST OK   pass-json.log: exit 0
+SELFTEST OK   listing-0-reads.log: exit 1, FAIL SC-004 listing reads
+SELFTEST OK   listing-2-reads.log: exit 1, FAIL SC-004 listing reads
+SELFTEST OK   photo-slow.log: exit 1, FAIL SC-004 photo time
+SELFTEST OK   camera-99-lines.log: exit 2, FAIL SC-004 camera n too small
+SELFTEST OK   empty.log: exit 1, FAIL missing, unreadable or empty log
+
+SELFTEST ALL OK
