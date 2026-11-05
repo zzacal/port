@@ -18,7 +18,6 @@
         {
             <form id="lib-del-one" method="post" action="@($"/admin/library/images/{Open.Image.Id}/delete")" hidden>@Token<input type="hidden" name="page" value="@Data.Page"></form>
         }
-        <PageHeading Text="Library" />
         @if (Model.Status is not null)
         {
             <p class="lib-result" role="status">@Model.Status</p>

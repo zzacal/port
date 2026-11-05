@@ -4,7 +4,7 @@
    opens the New gallery dialog; reorder.js rewrites gal-order and submits it on drop.
    Owner UI rules: each card with photos links to its public page and every card to its builder
    (UI-1); status, handle, switch, View and Edit sit in .gal-row under the title (UI-2); "New gallery"
-   is the one primary (UI-3), in the page heading row beside the title (010 owner review 1); the switch renders its
+   is the one primary (UI-3), alone in the page heading row (the owner bar and breadcrumb name the page); the switch renders its
    stored state and an empty private gallery's switch is disabled with the reason (UI-5). *@
 @using Gallery.Web.Components
 @using Gallery.Web.Components.Atoms
@@ -23,7 +23,7 @@
         {
             <form id="@($"gal-vis-{row.Gallery.Id}")" method="post" action="@($"/admin/galleries/{row.Gallery.Id}/visibility")" hidden>@Token<input type="hidden" name="from" value="list"></form>
         }
-        <PageHeading Text="Galleries" Actions="@NewGallery" />
+        <PageHeading Actions="@NewGallery" />
         @if (Model.Status is not null)
         {
             <p class="gal-result" role="status">@Model.Status</p>

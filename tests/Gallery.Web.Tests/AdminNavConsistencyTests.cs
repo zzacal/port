@@ -7,7 +7,7 @@ namespace Gallery.Web.Tests;
 /// 010 owner review 1 (contracts/owner-review-1.md B6; decisions rows 42-45). The owner bar is the
 /// same on every admin page (only <c>aria-current</c> differs) and holds no page action; a page's
 /// create action sits in its heading row beside the title; the builder has a breadcrumb back to the
-/// gallery list and no "Back to galleries" link; section roots show their own name (constitution IX).
+/// gallery list and no "Back to galleries" link; section roots show their own name in the breadcrumb only, with no page title (constitution IX).
 /// </summary>
 [Collection("s3")]
 public class AdminNavConsistencyTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixture<MongoFixture>
@@ -56,19 +56,20 @@ public class AdminNavConsistencyTests(S3ProxyFixture s3, MongoFixture mongo) : I
     }
 
     [Fact]
-    public async Task New_gallery_sits_in_the_page_heading_beside_the_title()
+    public async Task New_gallery_sits_in_the_page_heading_and_section_roots_repeat_no_title()
     {
+        // Owner review: the owner bar and breadcrumb already name a section root, so the page draws
+        // no title of its own; the galleries heading row holds only New gallery.
         await using var h = await LibraryHost.CreateAsync(mongo, s3);
         var html = await GalleryHtml.GetOkAsync(h, "/admin/galleries");
-        var heading = Regex.Match(html, "<div class=\"page-heading\".*?</h1>(.*?)</div></div>", RegexOptions.Singleline);
+        var heading = Regex.Match(html, "<div class=\"page-heading\"[^>]*>(.*?)</div></div>", RegexOptions.Singleline);
         Assert.True(heading.Success, "no page heading with actions");
-        Assert.Matches("<h1[^>]*>Galleries</h1>", heading.Value);
         Assert.Matches("<button class=\"btn btn-primary\"[^>]*name=\"action\"[^>]*value=\"new-gallery\"[^>]*>\\s*New gallery\\s*</button>", heading.Groups[1].Value);
-        Assert.Single(Regex.Matches(html, "<h1[ >]"));
+        Assert.DoesNotMatch("<h1[ >]", html);
 
         var lib = await GalleryHtml.GetOkAsync(h, "/admin/library");
-        Assert.Matches("<div class=\"page-heading\"[^>]*><h1[^>]*>Library</h1></div>", lib);
-        Assert.Single(Regex.Matches(lib, "<h1[ >]"));
+        Assert.DoesNotContain("page-heading", lib);
+        Assert.DoesNotMatch("<h1[ >]", lib);
     }
 
     [Fact]
