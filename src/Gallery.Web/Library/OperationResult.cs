@@ -1,6 +1,7 @@
 using Gallery.Web.Data;
 using Gallery.Web.Edge;
 using Gallery.Web.Observability;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Gallery.Web.Library;
@@ -103,6 +104,10 @@ public sealed class OperationScope
     // 010 P-NAV (contracts/edge.md E2): every gallery whose nav any projection in this scope changed,
     // id → slug after the change (the latest projection's slug wins).
     private readonly Dictionary<string, string> _navChanged = new(StringComparer.Ordinal);
+    // 013 E3: per camera key, its BEFORE from the first projection result in this scope that names
+    // it, and its AFTER from the last (null where the key has no document).
+    private readonly Dictionary<string, CameraGroupDoc?> _camBefore = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, CameraGroupDoc?> _camAfter = new(StringComparer.Ordinal);
     private bool _completed;
 
     public string Op { get; }
@@ -170,6 +175,12 @@ public sealed class OperationScope
         var result = await _projector.ProjectWithNavAsync();
         foreach (var g in result.NavChanged)
             _navChanged[g.Id] = g.Slug;
+        foreach (var (before, after) in result.Cameras)
+        {
+            var key = (before ?? after)!.Id;
+            _camBefore.TryAdd(key, before);
+            _camAfter[key] = after;
+        }
         return result.Cards;
     }
 
@@ -253,6 +264,33 @@ public sealed class OperationScope
         if (_navChanged.Count > 0)
             sets.Add(PurgeSets.Nav(_navChanged.Select(kv => new GalleryLinkTarget(kv.Key, kv.Value)), _bases));
 
+        // 013 E3: P-CAM over every key whose first BEFORE and last AFTER differ, and P-CAMTEXT for
+        // every text-edited image over the latest AFTER cameras the scope holds.
+        var camChanges = CameraChanges();
+        if (camChanges.Count > 0)
+            sets.Add(PurgeSets.Cameras(
+                camChanges.Select(c => (Snap(c.Before), Snap(c.After))),
+                camChanges.Any(c => CardChanged(c.Before, c.After)),
+                _bases));
+        var camAfter = _camAfter.Values.OfType<CameraGroupDoc>().ToList();
+        var textImages = _touched.Values.SelectMany(e => e.TextImages).Distinct(StringComparer.Ordinal).ToList();
+        // A text edit changes no camera document, so its camera is usually not in any projection
+        // result: read the cameras holding the remaining ids (one db.cameras.load find, only then).
+        var unheld = textImages.Where(iid => !camAfter.Any(c => c.Items.Contains(iid))).ToList();
+        if (unheld.Count > 0)
+        {
+            var held = camAfter.Select(c => c.Id).ToHashSet(StringComparer.Ordinal);
+            var removed = _camAfter.Where(kv => kv.Value is null).Select(kv => kv.Key).ToHashSet(StringComparer.Ordinal);
+            camAfter.AddRange((await _projector.CamerasHoldingAsync(unheld))
+                .Where(c => !held.Contains(c.Id) && !removed.Contains(c.Id)));
+        }
+        if (textImages.Count > 0 && camAfter.Count > 0)
+        {
+            var snaps = camAfter.Select(CameraSnapshot.From).ToList();
+            foreach (var iid in textImages)
+                sets.Add(PurgeSets.CameraText(iid, snaps, _bases));
+        }
+
         var set = PurgeSet.Union(_bases, sets);
         if (set.IsEmpty) return;
 
@@ -279,13 +317,46 @@ public sealed class OperationScope
             if (parts.Length == 3) warmIds.UnionWith(g.Items.Take(4));
             else if (parts.Length == 4) warmIds.Add(parts[3]);
         }
+        // 013 E4: /c/{slug} warms its first 4 items, /c/{slug}/{iid} that photo, from the AFTER
+        // cameras the scope already holds (no read).
+        var camBySlug = camAfter.ToDictionary(c => c.Slug, StringComparer.Ordinal);
+        foreach (var path in set.PagePaths)
+        {
+            var parts = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2 || parts[0] != "c" || !camBySlug.TryGetValue(parts[1], out var cam)) continue;
+            if (parts.Length == 2) warmIds.UnionWith(cam.Items.Take(4));
+            else if (parts.Length == 3 && cam.Items.Contains(parts[2])) warmIds.Add(parts[2]);
+        }
         var avif = (await ReadImagesAsync(warmIds))
             .Where(i => i.DeletingAt is null)
             .ToDictionary(i => i.Id, i => (IReadOnlyList<string>)i.Derivatives.Select(d => d.Avif).ToList(), StringComparer.Ordinal);
-        var warm = PurgeSets.WarmFiles(set, after.Values, homeCards, iid => avif.GetValueOrDefault(iid));
+        var cameraCards = camAfter.OrderBy(c => c.Rank).Select(c => c.Card).ToList();
+        var warm = PurgeSets.WarmFiles(set, after.Values, homeCards, iid => avif.GetValueOrDefault(iid), cameraCards,
+            camAfter.Select(CameraSnapshot.From).ToList());
 
         _edge.Enqueue(set.ToWork(Op, warm, _clock.GetUtcNow()));
     }
+
+    /// <summary>013 E3: (first BEFORE, last AFTER) of every camera key whose two sides differ.</summary>
+    private List<(CameraGroupDoc? Before, CameraGroupDoc? After)> CameraChanges()
+    {
+        var changes = new List<(CameraGroupDoc? Before, CameraGroupDoc? After)>();
+        foreach (var key in _camBefore.Keys.Order(StringComparer.Ordinal))
+        {
+            var b = _camBefore[key];
+            var a = _camAfter[key];
+            if (b is null && a is null) continue;
+            if (b is not null && a is not null && b.ToBsonDocument() == a.ToBsonDocument()) continue;
+            changes.Add((b, a));
+        }
+        return changes;
+    }
+
+    private static CameraSnapshot? Snap(CameraGroupDoc? c) => c is null ? null : CameraSnapshot.From(c);
+
+    /// <summary>The <c>/c</c> listing changed: a side is missing, or the card or rank differs.</summary>
+    private static bool CardChanged(CameraGroupDoc? b, CameraGroupDoc? a) =>
+        b is null || a is null || b.Rank != a.Rank || b.Card.ToBsonDocument() != a.Card.ToBsonDocument();
 }
 
 internal static class CardCompare

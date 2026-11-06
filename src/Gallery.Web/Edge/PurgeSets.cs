@@ -26,6 +26,15 @@ public sealed record GallerySnapshot(
         new(g.Id, g.Slug, g.Visibility, g.Items.ToArray(), g.PinnedCover);
 }
 
+/// <summary>
+/// One camera's state before or after an operation (013 contracts/edge.md E1): its key, slug and
+/// visible items in stored order. A camera that does not exist on that side is passed as <c>null</c>.
+/// </summary>
+public sealed record CameraSnapshot(string Key, string Slug, IReadOnlyList<string> Items)
+{
+    public static CameraSnapshot From(CameraGroupDoc c) => new(c.Id, c.Slug, c.Items.ToArray());
+}
+
 /// <summary>Absolute-address roots: pages on <c>Edge:SiteBaseUrl</c>, files on <c>Storage:ImageBaseUrl</c>.</summary>
 public sealed record EdgeBases(string SiteBaseUrl, string ImageBaseUrl)
 {
@@ -82,6 +91,12 @@ public static class PurgeSets
     public static string GalleryPath(string gid, string slug) => $"/g/{gid}/{slug}";
     public static string PhotoPath(string gid, string slug, string iid) => $"/g/{gid}/{slug}/{iid}";
 
+    /// <summary>013 contracts/edge.md "Paths": the camera listing.</summary>
+    public const string CameraListingPath = "/c";
+
+    public static string CameraPath(string slug) => $"/c/{slug}";
+    public static string CameraPhotoPath(string slug, string iid) => $"/c/{slug}/{iid}";
+
     // ── definitions ───────────────────────────────────────────────────────────
 
     /// <summary><c>items</c> non-empty, public or private (decisions row 7).</summary>
@@ -99,10 +114,15 @@ public static class PurgeSets
     /// lists; ids in both whose neighbours differ; ids in both whose 1-based index differs (the
     /// "N / total" counter); and every id in both when the item count differs (the total changed).
     /// </summary>
-    public static IReadOnlyList<string> Changed(GallerySnapshot? before, GallerySnapshot? after)
+    public static IReadOnlyList<string> Changed(GallerySnapshot? before, GallerySnapshot? after) =>
+        ChangedItems(before?.Items ?? [], after?.Items ?? []);
+
+    /// <summary>
+    /// The <see cref="Changed"/> rule over two item lists; <see cref="Changed"/> (galleries) and
+    /// <see cref="Cameras"/> (013 E1 <c>CamChanged</c>) both call it.
+    /// </summary>
+    private static IReadOnlyList<string> ChangedItems(IReadOnlyList<string> b, IReadOnlyList<string> a)
     {
-        var b = before?.Items ?? [];
-        var a = after?.Items ?? [];
         var inB = b.ToHashSet(StringComparer.Ordinal);
         var inA = a.ToHashSet(StringComparer.Ordinal);
         var countChanged = b.Count != a.Count;
@@ -225,6 +245,53 @@ public static class PurgeSets
         return new(bases, paths, deletedKeys);
     }
 
+    // ── camera pages (013 contracts/edge.md E1, E2) ──────────────────────────
+
+    /// <summary>
+    /// P-CAM (E1): <c>/c</c> when <paramref name="cardsChanged"/>; for each pair, the camera page
+    /// under each non-null side's slug; and the camera photo page of every id the
+    /// <see cref="Changed"/> rule names over the two item lists, under the slug of each side that
+    /// holds it. Never a <c>/g/</c> path, never <c>/</c>.
+    /// </summary>
+    public static PurgeSet Cameras(
+        IEnumerable<(CameraSnapshot? Before, CameraSnapshot? After)> changes,
+        bool cardsChanged,
+        EdgeBases bases)
+    {
+        var paths = new List<string>();
+        if (cardsChanged) paths.Add(CameraListingPath);
+        foreach (var (before, after) in changes)
+        {
+            var changed = ChangedItems(before?.Items ?? [], after?.Items ?? []);
+            foreach (var c in new[] { before, after })
+            {
+                if (c is null) continue;
+                paths.Add(CameraPath(c.Slug));
+                foreach (var id in changed)
+                    if (c.Items.Contains(id))
+                        paths.Add(CameraPhotoPath(c.Slug, id));
+            }
+        }
+        return new(bases, paths, []);
+    }
+
+    /// <summary>
+    /// P-CAMTEXT (E2): for each camera in <paramref name="after"/> holding <paramref name="iid"/>,
+    /// its camera page and the photo's camera photo page. Never <c>/c</c> (the card shows the
+    /// camera name, not a photo title).
+    /// </summary>
+    public static PurgeSet CameraText(string iid, IEnumerable<CameraSnapshot> after, EdgeBases bases)
+    {
+        var paths = new List<string>();
+        foreach (var c in after)
+        {
+            if (!c.Items.Contains(iid)) continue;
+            paths.Add(CameraPath(c.Slug));
+            paths.Add(CameraPhotoPath(c.Slug, iid));
+        }
+        return new(bases, paths, []);
+    }
+
     // ── warm (FR-039) ─────────────────────────────────────────────────────────
 
     /// <summary>
@@ -236,13 +303,22 @@ public static class PurgeSets
     /// <param name="after">AFTER snapshots of the affected galleries; a gallery absent here no longer exists.</param>
     /// <param name="homeCards">The listing cards as projected after the change (covers carry their derivatives).</param>
     /// <param name="avifKeysOf">Image id → its AVIF keys, filled by the caller from the documents it read.</param>
+    /// <param name="cameraCards">
+    /// 013 E4: the camera cards after the change, in rank order. A purged <c>/c</c> warms the first
+    /// 3 card covers' AVIF keys, read from the card covers exactly as <c>/g</c> does from
+    /// <paramref name="homeCards"/>. <c>/c/{slug}</c> pages are skipped here; the caller supplies
+    /// their ids. Null or empty: today's output.
+    /// </param>
     public static IReadOnlyList<string> WarmFiles(
         PurgeSet purged,
         IEnumerable<GallerySnapshot> after,
         IReadOnlyList<GalleryCardDoc> homeCards,
-        Func<string, IReadOnlyList<string>?> avifKeysOf)
+        Func<string, IReadOnlyList<string>?> avifKeysOf,
+        IReadOnlyList<CameraCardDoc>? cameraCards = null,
+        IReadOnlyList<CameraSnapshot>? cameras = null)
     {
         var galleries = after.ToDictionary(g => g.Id, StringComparer.Ordinal);
+        var camerasBySlug = (cameras ?? []).ToDictionary(c => c.Slug, StringComparer.Ordinal);
         var deleted = purged.FileKeys.ToHashSet(StringComparer.Ordinal);
         var keys = new List<string>();
 
@@ -262,7 +338,27 @@ public static class PurgeSets
                 continue;
             }
 
+            if (path == CameraListingPath)
+            {
+                foreach (var card in (cameraCards ?? []).Take(3))
+                    if (card.Cover is not null)
+                        keys.AddRange(card.Cover.Derivatives.Select(d => d.Avif));
+                continue;
+            }
+
             var parts = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+            // 013 E4: a camera page warms its first 4 photos, a camera photo page that photo, from
+            // the AFTER cameras (a camera with no AFTER document has no page to warm).
+            if (parts.Length is 2 or 3 && parts[0] == "c" && camerasBySlug.TryGetValue(parts[1], out var cam))
+            {
+                if (parts.Length == 2)
+                    foreach (var iid in cam.Items.Take(4)) AddImage(iid);
+                else if (cam.Items.Contains(parts[2]))
+                    AddImage(parts[2]);
+                continue;
+            }
+
             if (parts.Length < 3 || parts[0] != "g") continue;
             if (!galleries.TryGetValue(parts[1], out var g) || !HasPage(g) || g.Slug != parts[2]) continue;
 

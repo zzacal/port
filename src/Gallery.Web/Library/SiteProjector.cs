@@ -299,6 +299,18 @@ public sealed class SiteProjector(IMongoDatabase db, OpTimer timer)
         return changes;
     }
 
+    /// <summary>
+    /// 013 contracts/edge.md E3 (P-CAMTEXT): the stored cameras holding any of
+    /// <paramref name="imageIds"/>, for a text edit that changed no camera document. One
+    /// <c>cameras</c> find, timed <c>db.cameras.load</c>; read-only. Kept here because the projector
+    /// owns the collection (CameraSourceGuardTests).
+    /// </summary>
+    public async Task<IReadOnlyList<CameraGroupDoc>> CamerasHoldingAsync(IReadOnlyCollection<string> imageIds) =>
+        imageIds.Count == 0
+            ? []
+            : await timer.Time("db.cameras.load", () =>
+                _cameras.Find(Builders<CameraGroupDoc>.Filter.AnyIn(c => c.Items, imageIds)).ToListAsync());
+
     private static bool SameNav(GalleryNavDoc? stored, GalleryNavDoc? computed) =>
         stored is null || computed is null
             ? stored is null && computed is null

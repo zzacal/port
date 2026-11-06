@@ -72,7 +72,13 @@ brk c2nf $EP 's/if \(camera is null \|\| camera\.Items\.Count == 0\)\n(\s*)retur
   'FullyQualifiedName~CameraRoutesTests.A_private_only_camera' 'C2 drops its not-found branch (private-only slug renders)'
 brk c1read $EP 's/(var docs = await reader\.CamerasAsync\(\);)/$1\n                _ = await reader.ImagesAsync(docs.Select(d => d.Card.Cover.ImageId).ToList(), full: false);/' \
   'FullyQualifiedName~CameraRoutesTests.Camera_routes_keep_their_exact_read_budget' 'an extra ImagesAsync read in C1'
-# Batch C guards (T022, T023, InvariantChecker): added after Batch C lands.
+# Batch C guards (T022, T023, InvariantChecker)
+brk slug $PS 's/foreach \(var c in new\[\] \{ before, after \}\)/foreach (var c in new[] { after })/' \
+  'FullyQualifiedName~CameraPurgeSetTests' 'PurgeSets.Cameras drops the before-slug side'
+brk scope $OR 's/if \(camChanges\.Count > 0\)\n(\s*)sets\.Add\(PurgeSets\.Cameras\(/if (camChanges.Count < 0)\n$1sets.Add(PurgeSets.Cameras(/' \
+  'FullyQualifiedName~CameraFreshnessTests' 'the scope skips PurgeSets.Cameras'
+brk inv $IC 's/var expectedCameras = new BsonArray\(SiteProjector\.Cameras\(listed, images,/var expectedCameras = new BsonArray(SiteProjector.Cameras([], images,/' \
+  'FullyQualifiedName~CameraFreshnessTests' 'the InvariantChecker camera rule compares against an empty projection'
 # Batch D guard (T027): added after Batch D lands.
 
 if [ "${NV_DRYRUN:-0}" != 1 ]; then

@@ -268,20 +268,20 @@ each comparing the purged set for equality.
 - `tests/Gallery.Web.Tests/CameraFreshnessTests.cs` (new)
 - `tests/Gallery.Web.Tests/CameraTimingEvidenceTests.cs` (new)
 
-- [ ] T019 [P] [US2] In `src/Gallery.Web/Edge/PurgeSets.cs`, add the following, per contracts/edge.md
+- [X] T019 [P] [US2] In `src/Gallery.Web/Edge/PurgeSets.cs`, add the following, per contracts/edge.md
   E1 and E2. Existing methods stay byte-for-byte.
   - `CameraSnapshot(Key, Slug, Items)` with `From(CameraGroupDoc)`;
   - the three path helpers;
   - `Cameras(changes, cardsChanged, bases)` (P-CAM);
   - `CameraText(iid, after, bases)` (P-CAMTEXT).
-- [ ] T020 [US2] In `src/Gallery.Web/Edge/PurgeSets.cs`, give `WarmFiles` a new optional last
+- [X] T020 [US2] In `src/Gallery.Web/Edge/PurgeSets.cs`, give `WarmFiles` a new optional last
   parameter `IReadOnlyList<CameraCardDoc>? cameraCards = null`:
   - `/c` warms the first 3 card covers' AVIF keys;
   - `/c/{slug}` and `/c/{slug}/{iid}` are skipped by the `parts[0] != "g"` branch, as today;
   - the scope supplies their ids (E4).
 
   With `cameraCards` null, the output is identical to today's for every input.
-- [ ] T021 [US2] [SAFETY] Wire the camera sets into `src/Gallery.Web/Library/OperationResult.cs`,
+- [X] T021 [US2] [SAFETY] Wire the camera sets into `src/Gallery.Web/Library/OperationResult.cs`,
   per contracts/edge.md E3 and E4:
   - keep the camera BEFORE of each key from its first appearance in any projection result in the
     scope, and its AFTER from the last;
@@ -295,14 +295,14 @@ each comparing the purged set for equality.
   - pass the AFTER camera cards sorted by rank to `WarmFiles`.
 
   It must stay ONE `Enqueue` per scope.
-- [ ] T022 [P] [US2] Write `tests/Gallery.Web.Tests/CameraPurgeSetTests.cs` with pure facts:
+- [X] T022 [P] [US2] Write `tests/Gallery.Web.Tests/CameraPurgeSetTests.cs` with pure facts:
   - every row of the edge.md worked-examples table (set equality);
   - a slug change purges both slugs;
   - `CameraText` never contains `/c`;
   - [SAFETY] no camera set ever contains a `/g/` path or `/`;
   - `WarmFiles` with `cameraCards` null equals today's result on the existing `PurgeSetTests`
     inputs (call the same fixtures through a copied helper).
-- [ ] T023 [US2] [SAFETY] Write `tests/Gallery.Web.Tests/CameraFreshnessTests.cs` (`LibraryHost`,
+- [X] T023 [US2] [SAFETY] Write `tests/Gallery.Web.Tests/CameraFreshnessTests.cs` (`LibraryHost`,
   images with cameras). For each action:
   - publish
   - unpublish
@@ -323,7 +323,7 @@ each comparing the purged set for equality.
      or absent, count, title text).
 
   The last action must remove the photo from its camera (II.2, US2 scenario 3).
-- [ ] T024 [US2] Write `tests/Gallery.Web.Tests/CameraTimingEvidenceTests.cs`:
+- [X] T024 [US2] Write `tests/Gallery.Web.Tests/CameraTimingEvidenceTests.cs`:
   - one run that publishes, retitles and unpublishes camera photos, then GETs `/c`, `/c/{slug}`
     and (after Batch D) a camera photo page;
   - with output cache OFF, drive 100 GETs (200s) each of `/g`, one gallery page, one photo page,

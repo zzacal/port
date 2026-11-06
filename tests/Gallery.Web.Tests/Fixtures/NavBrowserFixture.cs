@@ -72,6 +72,17 @@ public sealed class NavBrowserFixture : IAsyncLifetime
     public async Task<string> GalleryPathAsync(string gid) => $"/g/{gid}/{await SlugAsync(gid)}";
     public async Task<string> PhotoPathAsync(int i) => $"{await GalleryPathAsync(SeptemberId)}/{PhotoIds[i]}";
 
+    // 013 (test-impact C): every fixture photo is TESTCAM T1, so the one stored camera is testcam-t1.
+    public const string CameraSlug = "testcam-t1";
+    public Task<string> CameraPathAsync() => Task.FromResult($"/c/{CameraSlug}");
+
+    /// <summary>The camera photo page of the stored camera's <paramref name="i"/>-th item.</summary>
+    public async Task<string> CameraPhotoPathAsync(int i)
+    {
+        var cam = await Db.GetCollection<CameraGroupDoc>("cameras").Find(c => c.Slug == CameraSlug).FirstAsync();
+        return $"/c/{CameraSlug}/{cam.Items[i]}";
+    }
+
     /// <summary>Requests the image host has served for a file name since the last reset.</summary>
     public int Hits(string fileName) => _hits.GetValueOrDefault(fileName);
     public void ResetHits() => _hits.Clear();
