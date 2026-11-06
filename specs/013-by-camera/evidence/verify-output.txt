@@ -1,0 +1,18 @@
+projector: projected gallery_013verify: 11 cards, 1 camera changes
+testing /Users/zzacal/repos/gallery (pid 5645, database gallery_013verify)
+PASS GET / 200
+PASS / home links in order: /g /c
+PASS GET /c 200 with 4 tiles == 4 stored cameras
+PASS GET /c/ 301 -> /c
+PASS planted a PRIVCAM photo in a private gallery
+PASS private-only camera /c/privcam-p9 and unknown slug: identical 404 (status, headers, body)
+PASS GET /c/fujifilm-x100vi 200, no href="/g/"
+PASS camera page crumbs: Home / By Camera / FUJIFILM X100VI
+PASS camera photo crumbs: Home / By Camera / FUJIFILM X100VI / DSCF2699
+PASS prev/next stay inside /c/fujifilm-x100vi/ (2 links)
+PASS camera photo page: no href="/g/"
+PASS cams: no <script src>
+PASS cam: no <script src>
+PASS photo: no <script src>
+
+ALL PASS

@@ -1,0 +1,10 @@
+== specs/013-by-camera/evidence/camera-timings.log
+format: plain message lines
+PASS SC-004 listing reads /c n=100 every db_reads == 1
+PASS SC-004 listing time /c p95=0.35 ms <= /g p95=0.37 x1.10 +1 = 1.41
+PASS SC-004 camera reads /c/{slug} n=100 every db_reads == 2
+PASS SC-004 camera time /c/{slug} p95=0.89 ms <= /g/{id}/{slug} p95=0.96 x1.10 +1 = 2.06
+PASS SC-004 photo reads /c/{slug}/{iid} n=100 every db_reads == 2
+PASS SC-004 photo time /c/{slug}/{iid} p95=0.68 ms <= /g/{id}/{slug}/{imageId} p95=0.70 x1.10 +1 = 1.77
+
+ALL PASS

@@ -1,0 +1,3 @@
+PASS planted a private-only PRIVCAM photo in a private gallery
+FAIL private-only camera answered 200; headers/body differ from the unknown slug
+1 FAILED

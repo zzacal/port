@@ -210,10 +210,11 @@ Remaining OWNER-ONLY steps (012 tasks.md, after the build, one at a time):
 
 ### 013 By Camera
 
-**Status: built on branch `013-by-camera` (see the 013 completion commit).** Decisions, defaults and stated
+**Status: built on branch `013-by-camera`, full suite 122 + 1253 passed, 1 skipped.** Decisions, defaults and stated
 test changes in `specs/013-by-camera/decisions.md`. Evidence: `specs/013-by-camera/evidence/`
-(verify.sh live against a scratch copy of the dev data, with every new check failing on the pre-013 build in
-`verify-pre013-output.txt`; p95.sh on `camera-timings.log`; non-vacuity.sh, one break per
+(verify.sh ALL PASS (15 checks) live against a scratch copy of the dev data; all 4 new checks FAIL on the pre-013 build in
+`verify-pre013-output.txt`; p95.sh ALL PASS: `/c` 1 read p95 0.35 ms vs `/g` 0.37, `/c/{slug}` 2 reads
+0.89 vs 0.96, camera photo 2 reads 0.68 vs 0.70; non-vacuity.sh 9/9, one break per
 [SAFETY] guard; design record validate 0 failures).
 
 The home page gains a second link, "By Camera". `/c` lists every camera that took a visible photo

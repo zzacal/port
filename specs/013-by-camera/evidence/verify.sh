@@ -16,6 +16,9 @@ ROOT=$(cd "${1:-.}" && pwd)
 DLL="$ROOT/artifacts/bin/Gallery.Web/debug/Gallery.Web.dll"
 B=http://127.0.0.1:5093
 SCRATCH=gallery_013verify
+# VERIFY_PLANT_PUBLIC=1 (self-test): the "private-only" plant is made public, so the 404-parity
+# check MUST FAIL; proves the plant reaches the projector and the check is not vacuous.
+PLANT_VIS=private; [ -n "${VERIFY_PLANT_PUBLIC:-}" ] && PLANT_VIS=public
 T=$(mktemp -d /tmp/013-verify.XXXXXX)
 [ -f "$DLL" ] || { echo "FAIL no build at $DLL"; exit 1; }
 
@@ -24,7 +27,7 @@ docker exec gallery-mongo sh -c "mongodump --quiet --db gallery_dev --archive | 
 HAS_CAMERAS=0
 grep -qs CameraSlugIndex "$ROOT/src/Gallery.Web/Data/Indexes.cs" && HAS_CAMERAS=1
 if [ "$HAS_CAMERAS" = 1 ]; then
-  dotnet run --project /tmp/013-project -- mongodb://localhost:27017 "$SCRATCH" | sed 's/^/projector: /'
+  dotnet /tmp/013-project/bin/Debug/net10.0/Proj.dll mongodb://localhost:27017 "$SCRATCH" | sed 's/^/projector: /'
 else
   echo "projector: skipped (pre-013 tree has no camera projection)"
 fi
@@ -68,11 +71,14 @@ loc=$(grep -i '^Location:' "$T/slash.h" 2>/dev/null | tr -d '\r' | awk '{print $
 c=$(strip cams 2>/dev/null | grep -o '<a class="tile" href="/c/[a-z0-9-]*"' | head -1 | sed -E 's/.*href="([^"]*)"/\1/')
 if [ -n "$c" ]; then
   docker exec gallery-mongo mongosh --quiet $SCRATCH --eval '
-    const img = db.images.findOne({}); img._id = "zzzzzzzzzzzzzzzzzzzzzzzzpv"; img.camera = { make: "PRIVCAM", model: "P9" }; img.galleryIds = ["zzzzzzzzzzzzzzzzzzzzzzzzpg"];
+    const img = db.images.findOne({}); img._id = "zzzzzzzzzzzzzzzzzzzzzzzzpv"; img.camera = { make: "PRIVCAM", model: "P9" }; img.galleryIds = ["zzzzzzzzzzzzzzzzzzzzzzzzpg"]; delete img.seedKey;
     db.images.replaceOne({_id: img._id}, img, {upsert: true});
-    db.galleries.replaceOne({_id: "zzzzzzzzzzzzzzzzzzzzzzzzpg"}, {_id: "zzzzzzzzzzzzzzzzzzzzzzzzpg", slug: "priv", title: "Priv", visibility: "private", items: [img._id], updatedAt: new Date()}, {upsert: true});' >/dev/null
+    db.galleries.replaceOne({_id: "zzzzzzzzzzzzzzzzzzzzzzzzpg"}, {_id: "zzzzzzzzzzzzzzzzzzzzzzzzpg", slug: "priv", title: "Priv", visibility: "'"$PLANT_VIS"'", items: [img._id], card: {galleryId: "zzzzzzzzzzzzzzzzzzzzzzzzpg", slug: "priv", title: "Priv", imageCount: 1, cover: null}, updatedAt: new Date()}, {upsert: true});
+    db.site.updateOne({_id: "site"}, {$addToSet: {homeOrder: "zzzzzzzzzzzzzzzzzzzzzzzzpg"}});' >/dev/null
   [ "$HAS_CAMERAS" = 1 ] \
-    && dotnet run --project /tmp/013-project -- mongodb://localhost:27017 "$SCRATCH" > /dev/null
+    && dotnet /tmp/013-project/bin/Debug/net10.0/Proj.dll mongodb://localhost:27017 "$SCRATCH" > /dev/null
+  planted=$(docker exec gallery-mongo mongosh --quiet $SCRATCH --eval 'db.images.countDocuments({_id: "zzzzzzzzzzzzzzzzzzzzzzzzpv", "camera.make": "PRIVCAM"}) + db.galleries.countDocuments({_id: "zzzzzzzzzzzzzzzzzzzzzzzzpg", visibility: "'"$PLANT_VIS"'"})' | tr -d '\r')
+  [ "$planted" = 2 ] && ok "planted a PRIVCAM photo in a $PLANT_VIS gallery" || bad "private-only plant missing ($planted of 2): the 404 check below would be vacuous"
   get priv /c/privcam-p9 > /dev/null; get unk /c/no-such-camera > /dev/null
   hp=$(grep -iE '^(HTTP|cache-control|x-robots-tag)' "$T/priv.h" | tr -d '\r'); hu=$(grep -iE '^(HTTP|cache-control|x-robots-tag)' "$T/unk.h" | tr -d '\r')
   st=$(head -1 "$T/priv.h" | awk '{print $2}')

@@ -427,12 +427,12 @@ Escape lands on `/c/{slug}#p-{iid}`.
 
   Then run `assemble.sh` and `validate.sh`, teeing to `evidence/design-validate.txt` (0 failures),
   and `git show --stat` must list `docs/design.md`.
-- [ ] T032 [P] Write `specs/013-by-camera/evidence/verify.sh`, a read-only live check on a
+- [X] T032 [P] Write `specs/013-by-camera/evidence/verify.sh`, a read-only live check on a
   `--no-launch-profile --urls http://127.0.0.1:5093` instance started from `artifacts/` against a
   seeded dev database, stopping only its own PID. Checks per quickstart.md §2 verify.sh. Run it on
   the T001 commit in a throwaway worktree first (every new-mechanism check must FAIL there), then on
   the feature tree; tee to `verify-output.txt`.
-- [ ] T033 Write `specs/013-by-camera/evidence/non-vacuity.sh` from
+- [X] T033 Write `specs/013-by-camera/evidence/non-vacuity.sh` from
   `templates/non-vacuity.sh`, with one break per [SAFETY] guard:
   - `Cameras()` ignores visibility (uses every gallery) → T007 red;
   - `Cameras()` ignores `DeletingAt` → T007 red;
@@ -447,9 +447,9 @@ Escape lands on `/c/{slug}#p-{iid}`.
 
   Dry-run with `NV_DRYRUN=1`, then do the real run. Each break must fail on its assertion. Tee to
   `non-vacuity.txt`.
-- [ ] T034 Fold every executor `decisions_made` into `specs/013-by-camera/decisions.md`
+- [X] T034 Fold every executor `decisions_made` into `specs/013-by-camera/decisions.md`
   (accepted or REJECTED rows), plus one STATED-CHANGE row per existing test file edited.
-- [ ] T035 Update `docs/roadmap.md` with a 013 entry (status, evidence paths, OWNER-ONLY checks)
+- [X] T035 Update `docs/roadmap.md` with a 013 entry (status, evidence paths, OWNER-ONLY checks)
   and a coverage row for D-26. Then run `dotnet clean`, build `-warnaserror`, and run the full
   suite. `git checkout --` any evidence logs the suite regenerates, then commit.
 - [ ] T036 Merge to main and push (parent). Watch the deploy job go green. Then the production
