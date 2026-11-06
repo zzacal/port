@@ -353,11 +353,11 @@ Escape lands on `/c/{slug}#p-{iid}`.
 - `tests/Gallery.Web.Tests/CameraPhotoRoutesTests.cs` (new)
 - `tests/Gallery.Web.Tests/CameraBrowserTests.cs` (new)
 
-- [ ] T025 [US3] `src/Gallery.Web/Site/Pages/PhotoPage.razor`: add the optional `Crumbs` parameter (K3).
+- [X] T025 [US3] `src/Gallery.Web/Site/Pages/PhotoPage.razor`: add the optional `Crumbs` parameter (K3).
   The `Crumbs` private property becomes `CrumbsParam ?? (old expression)`. Rename the private
   property if needed; the public parameter is named `Crumbs`. With it unset, the output is
   byte-identical: `PageComponentTests` and `NavComponentTests` stay green unmodified.
-- [ ] T026 [US3] [SAFETY] Add C3 `/c/{slug}/{iid}` to `src/Gallery.Web/Site/PublicEndpoints.cs`
+- [X] T026 [US3] [SAFETY] Add C3 `/c/{slug}/{iid}` to `src/Gallery.Web/Site/PublicEndpoints.cs`
   per contracts/routes.md:
   - `OpaqueId.IsValid` is checked before any read;
   - `CameraAsync`; `iid` must be in `items`;
@@ -369,7 +369,7 @@ Escape lands on `/c/{slug}#p-{iid}`.
     `Crumbs = Trails.UnderCameras(new(name, $"/c/{slug}#p-{iid}"), new(title))`,
     `Index` and `Total` over `items`, and `NoIndex` false;
   - `ApplyPhotoHeaders` without noindex.
-- [ ] T027 [US3] Write `tests/Gallery.Web.Tests/CameraPhotoRoutesTests.cs` (`LibraryHost`):
+- [X] T027 [US3] Write `tests/Gallery.Web.Tests/CameraPhotoRoutesTests.cs` (`LibraryHost`):
   - crumbs (label, href) are Home `/`, By Camera `/c`, {camera} `/c/{slug}#p-{iid}`, {title};
   - `PhotoCount` is `N / total`;
   - prev/next follow `items`, with none at the ends;
@@ -380,7 +380,7 @@ Escape lands on `/c/{slug}#p-{iid}`.
   - [SAFETY] 404 parity (status, headers, body bytes) for: an invalid iid; a valid iid not in
     the camera; a valid iid of a private-only photo; an iid of another camera; an unknown slug;
   - [SAFETY] no `href="/g/` anywhere on the page.
-- [ ] T028 [US3] Write `tests/Gallery.Web.Tests/CameraBrowserTests.cs` on `NavBrowserFixture`,
+- [X] T028 [US3] Write `tests/Gallery.Web.Tests/CameraBrowserTests.cs` on `NavBrowserFixture`,
   collection `nav-browser`. The fixture's photos are all `TESTCAM T1`, so the slug is
   `testcam-t1`. Collect failures and assert once; park the pointer at (0,0) before each `GotoAsync`.
   - At 320 and 1440 px: `/c` → click the tile → `/c/testcam-t1` → click the first tile → photo.
@@ -391,7 +391,7 @@ Escape lands on `/c/{slug}#p-{iid}`.
     `naturalWidth > 0`, there is no layout shift from images (a `PerformanceObserver`
     `layout-shift` sum of 0 after load), and the test-impact (B) browser scans (no
     `/admin-assets/` request; no key-hint text; no duplicate header link destination).
-- [ ] T029 [US3] Add the camera photo route to the path arrays in `CameraRoutesTests` (T018 marker)
+- [X] T029 [US3] Add the camera photo route to the path arrays in `CameraRoutesTests` (T018 marker)
   and `CameraTimingEvidenceTests` (T024). Both files are new, so this is the Batch D executor's
   edit; run both classes.
 

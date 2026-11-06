@@ -311,11 +311,12 @@ public partial class CameraRoutesTests(S3ProxyFixture s3, MongoFixture mongo) : 
 
     // ── T018 part 3: test-impact (B) scans over the camera pages ─────────────
 
-    private static string[] CameraPaths() =>
+    private static string[] CameraPaths(Lib lib) =>
     [
         "/c",
         $"/c/{SlugA}",
         // T029 adds the photo route
+        $"/c/{SlugA}/{lib.A[0]}",
     ];
 
     /// <summary>Copy of <c>LibrarySourceGuardTests.AssertNoOwnerMarkup</c> (that file is not ours to edit).</summary>
@@ -338,7 +339,7 @@ public partial class CameraRoutesTests(S3ProxyFixture s3, MongoFixture mongo) : 
     public async Task Camera_pages_carry_no_owner_markup_with_or_without_the_owner_session()
     {
         await using var h = await LibraryHost.CreateAsync(mongo, s3);
-        await BuildAsync(h);
+        var built = await BuildAsync(h);
 
         // Non-vacuity: the owner session is live (an admin page renders the owner bar).
         var lib = await h.GetAsync("/admin/library");
@@ -348,7 +349,7 @@ public partial class CameraRoutesTests(S3ProxyFixture s3, MongoFixture mongo) : 
         foreach (var session in new[] { "with the owner session", "anonymous" })
         {
             if (session == "anonymous") h.Host.ClearCookies();
-            foreach (var path in CameraPaths())
+            foreach (var path in CameraPaths(built))
             {
                 var resp = await h.GetAsync(path);
                 Assert.True(resp.StatusCode == HttpStatusCode.OK, $"GET {path} ({session}) answered {(int)resp.StatusCode}");
@@ -367,9 +368,9 @@ public partial class CameraRoutesTests(S3ProxyFixture s3, MongoFixture mongo) : 
     public async Task Speculation_rule_is_exact_on_every_camera_page()
     {
         await using var h = await LibraryHost.CreateAsync(mongo, s3);
-        await BuildAsync(h);
+        var built = await BuildAsync(h);
 
-        foreach (var path in CameraPaths())
+        foreach (var path in CameraPaths(built))
         {
             var html = await HtmlAsync(h, path);
             var rules = SpeculationRx().Matches(html);

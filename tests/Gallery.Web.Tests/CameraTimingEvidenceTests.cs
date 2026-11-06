@@ -79,8 +79,9 @@ public class CameraTimingEvidenceTests(S3ProxyFixture s3, MongoFixture mongo) : 
             "/c",
             $"/c/{camera.Slug}",
             // T029 adds the camera photo route
+            $"/c/{camera.Slug}/{camera.Items[5]}",
         };
-        string[] templates = ["/g", "/g/{id}/{slug}", "/g/{id}/{slug}/{imageId}", "/c", "/c/{slug}"];
+        string[] templates = ["/g", "/g/{id}/{slug}", "/g/{id}/{slug}/{imageId}", "/c", "/c/{slug}", "/c/{slug}/{iid}"];
 
         foreach (var path in routes)
             for (var i = 0; i < WarmUp; i++)
@@ -106,7 +107,7 @@ public class CameraTimingEvidenceTests(S3ProxyFixture s3, MongoFixture mongo) : 
 
         var missingOps = CameraOps.Where(op => !lines.Any(l => l.StartsWith($"op.timing {op} ", StringComparison.Ordinal))).ToList();
         Assert.True(missingOps.Count == 0, "no op.timing line for: " + string.Join(", ", missingOps));
-        foreach (var template in new[] { "/c", "/c/{slug}" })
+        foreach (var template in new[] { "/c", "/c/{slug}", "/c/{slug}/{iid}" })
             Assert.Contains(lines, l => l.StartsWith($"http.request GET {template} 200 ", StringComparison.Ordinal));
 
         var outPath = Environment.GetEnvironmentVariable("CAMERA_TIMINGS_OUT") is { Length: > 0 } env

@@ -53,6 +53,10 @@ public sealed class PublicLayoutConsistencyBrowserTests(NavBrowserFixture site)
             ("gallery", await site.GalleryPathAsync(NavBrowserFixture.SeptemberId)),
             ("photo", await site.PhotoPathAsync(4)),
             ("404", "/g/zzzzzzzzzzzzzzzzzzzzzzzzzz/none"),
+            // 013 FR-013 (test-impact C): the camera pages share the same chrome.
+            ("cameras", "/c"),
+            ("camera", await site.CameraPathAsync()),
+            ("camera-photo", await site.CameraPhotoPathAsync(0)),
         };
         var failures = new List<string>();
         foreach (var width in new[] { 320, 390, 600, 1024, 1440 })

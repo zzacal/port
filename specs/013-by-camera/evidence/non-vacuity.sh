@@ -79,7 +79,9 @@ brk scope $OR 's/if \(camChanges\.Count > 0\)\n(\s*)sets\.Add\(PurgeSets\.Camera
   'FullyQualifiedName~CameraFreshnessTests' 'the scope skips PurgeSets.Cameras'
 brk inv $IC 's/var expectedCameras = new BsonArray\(SiteProjector\.Cameras\(listed, images,/var expectedCameras = new BsonArray(SiteProjector.Cameras([], images,/' \
   'FullyQualifiedName~CameraFreshnessTests' 'the InvariantChecker camera rule compares against an empty projection'
-# Batch D guard (T027): added after Batch D lands.
+# Batch D guard (T027)
+brk c3item $EP 's/if \(camera is null \|\| !camera\.Items\.Contains\(iid\)\)/if (camera is null)/' \
+  'FullyQualifiedName~CameraPhotoRoutesTests' 'C3 skips the items.Contains check'
 
 if [ "${NV_DRYRUN:-0}" != 1 ]; then
   dotnet build "$SLN" -warnaserror --artifacts-path "$ART" -nologo -v q >/dev/null 2>&1 \

@@ -13,7 +13,7 @@ namespace Gallery.Web.Site;
 
 /// <summary>
 /// Maps public routes: / (home), /g (listing), /g/{id}, /g/{id}/{slug}, /g/{id}/{slug}/{imageId},
-/// /c (013: cameras) and /c/{slug} (013: one camera).
+/// /c (013: cameras), /c/{slug} (013: one camera) and /c/{slug}/{iid} (013: a camera photo).
 /// GET and HEAD only. Replaces the Hello World stub from AppBuilder.
 /// </summary>
 public static partial class PublicEndpoints
@@ -146,13 +146,7 @@ public static partial class PublicEndpoints
                     return NotFoundResult();
 
                 var (prevId, nextId) = GalleryNav.Neighbours(gallery.Items, imageId);
-                var idsToFetch = new[] { prevId, imageId, nextId }
-                    .Where(x => x is not null)
-                    .Cast<string>()
-                    .Distinct()
-                    .ToList();
-
-                var imageDocs = await reader.ImagesAsync(idsToFetch, full: true);
+                var imageDocs = await reader.ImagesAsync(PhotoReadIds(prevId, imageId, nextId), full: true);
                 var imageIndex = imageDocs.ToDictionary(d => d.Id);
 
                 if (!imageIndex.TryGetValue(imageId, out var currentDoc))
@@ -164,17 +158,7 @@ public static partial class PublicEndpoints
 
                 string? prevHref = prevId is not null ? $"/g/{id}/{slug}/{prevId}" : null;
                 string? nextHref = nextId is not null ? $"/g/{id}/{slug}/{nextId}" : null;
-
-                // PrefetchUrls: each neighbour's AVIF srcset, the candidates its photo page's first
-                // <source> offers at sizes=100vw, so the loader's preload is the exact file that page
-                // uses. Srcsets contain spaces and commas, hence the "|" separator. Missing neighbours
-                // are omitted.
-                var prefetchParts = new List<string>();
-                if (prevId is not null && imageIndex.TryGetValue(prevId, out var prevDoc))
-                    prefetchParts.Add(SrcSet.Avif(ViewMapper.ToView(prevDoc, url)));
-                if (nextId is not null && imageIndex.TryGetValue(nextId, out var nextDoc))
-                    prefetchParts.Add(SrcSet.Avif(ViewMapper.ToView(nextDoc, url)));
-                var prefetchUrls = prefetchParts.Count > 0 ? string.Join("|", prefetchParts) : null;
+                var prefetchUrls = PrefetchUrls(imageIndex, prevId, nextId, url);
 
                 IResult result = new RazorComponentResult<PhotoPage>(new Dictionary<string, object?>
                 {
@@ -262,6 +246,55 @@ public static partial class PublicEndpoints
             }
         });
 
+        // 013 C3 (contracts/routes.md): a camera photo. Mirrors the photo page (PhotoPage reused with
+        // the camera trail): two reads, prev/next and N / total over the camera's items.
+        var cameraPhotoPage = app.MapMethods("/c/{slug}/{iid}", verbs, async (string slug, string iid, ContentReader reader, StorageOptions storage) =>
+        {
+            // [SAFETY] FR-009: junk never reaches the reader, and every refusal is the same 404.
+            if (!CameraSlugRx().IsMatch(slug) || !OpaqueId.IsValid(iid))
+                return NotFoundResult();
+
+            try
+            {
+                var camera = await reader.CameraAsync(slug);
+                if (camera is null || !camera.Items.Contains(iid))
+                    return NotFoundResult();
+
+                var (prevId, nextId) = GalleryNav.Neighbours(camera.Items, iid);
+                var imageDocs = await reader.ImagesAsync(PhotoReadIds(prevId, iid, nextId), full: true);
+                // Research R-09 render-time guard: a tombstoned document is never shown or prefetched.
+                var imageIndex = imageDocs.Where(d => d.DeletingAt is null).ToDictionary(d => d.Id);
+
+                if (!imageIndex.TryGetValue(iid, out var currentDoc))
+                    return NotFoundResult();
+
+                var url = MakeUrl(storage);
+                var currentView = ViewMapper.ToView(currentDoc, url);
+
+                IResult result = new RazorComponentResult<PhotoPage>(new Dictionary<string, object?>
+                {
+                    [nameof(PhotoPage.Image)] = currentView,
+                    [nameof(PhotoPage.Caption)] = currentDoc.Caption,
+                    [nameof(PhotoPage.PrevHref)] = prevId is not null ? $"/c/{slug}/{prevId}" : null,
+                    [nameof(PhotoPage.NextHref)] = nextId is not null ? $"/c/{slug}/{nextId}" : null,
+                    [nameof(PhotoPage.PrefetchUrls)] = PrefetchUrls(imageIndex, prevId, nextId, url),
+                    [nameof(PhotoPage.NoIndex)] = false,
+                    [nameof(PhotoPage.GalleryTitle)] = camera.Name,
+                    // FR-010: Home, By Camera, the camera (landing on this photo's tile), the photo.
+                    [nameof(PhotoPage.Crumbs)] = Trails.UnderCameras(
+                        new Crumb(camera.Name, $"/c/{slug}#p-{iid}"), new Crumb(currentView.Title)),
+                    [nameof(PhotoPage.Index)] = camera.Items.IndexOf(iid) + 1,
+                    [nameof(PhotoPage.Total)] = camera.Items.Count,
+                });
+
+                return ApplyPhotoHeaders(result, currentView, noIndex: false, siteOptions);
+            }
+            catch (Exception ex) when (IsDataException(ex))
+            {
+                return TypedResults.Text("Something went wrong", statusCode: 500);
+            }
+        });
+
         // 009 T002 (research R-07): the 006 policy only applies to endpoints that carry it, so the
         // page routes (011: home and listing too) attach it explicitly. The /g/{id} short route is not cached, and the
         // policy's default rules cache only 200 responses (never a 301 or 404).
@@ -273,10 +306,35 @@ public static partial class PublicEndpoints
             photoPage.CacheOutput(PublicCache.PolicyName);
             cameras.CacheOutput(PublicCache.PolicyName);
             cameraPage.CacheOutput(PublicCache.PolicyName);
+            cameraPhotoPage.CacheOutput(PublicCache.PolicyName);
         }
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────
+
+    /// <summary>The ≤ 3 ids a photo page reads (gallery photo page and 013 camera photo page): previous, current, next.</summary>
+    private static List<string> PhotoReadIds(string? prevId, string imageId, string? nextId) =>
+        new[] { prevId, imageId, nextId }
+            .Where(x => x is not null)
+            .Cast<string>()
+            .Distinct()
+            .ToList();
+
+    /// <summary>
+    /// PrefetchUrls: each neighbour's AVIF srcset, the candidates its photo page's first
+    /// &lt;source&gt; offers at sizes=100vw, so the loader's preload is the exact file that page
+    /// uses. Srcsets contain spaces and commas, hence the "|" separator. Missing neighbours
+    /// are omitted. Shared by the gallery photo page and the 013 camera photo page.
+    /// </summary>
+    private static string? PrefetchUrls(Dictionary<string, ImageDoc> imageIndex, string? prevId, string? nextId, Func<string, string> url)
+    {
+        var prefetchParts = new List<string>();
+        if (prevId is not null && imageIndex.TryGetValue(prevId, out var prevDoc))
+            prefetchParts.Add(SrcSet.Avif(ViewMapper.ToView(prevDoc, url)));
+        if (nextId is not null && imageIndex.TryGetValue(nextId, out var nextDoc))
+            prefetchParts.Add(SrcSet.Avif(ViewMapper.ToView(nextDoc, url)));
+        return prefetchParts.Count > 0 ? string.Join("|", prefetchParts) : null;
+    }
 
     /// <summary>One photo tile of a grid page (gallery page and 013 camera page), linking to <paramref name="href"/>.</summary>
     private static ContactSheetItem GridTile(ImageDoc img, Func<string, string> url, string href)

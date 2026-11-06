@@ -1,0 +1,9 @@
+projector: skipped (pre-013 tree has no camera projection)
+testing /tmp/gallery-pre013 (pid 312, database gallery_013verify)
+PASS GET / 200
+FAIL / home links '/g', expected '/g /c'
+FAIL GET /c 404, 0 tiles, 0 stored cameras
+FAIL GET /c/ 404 -> none
+FAIL no camera tile on /c to follow
+
+4 FAILED
