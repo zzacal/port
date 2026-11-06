@@ -208,6 +208,29 @@ Remaining OWNER-ONLY steps (012 tasks.md, after the build, one at a time):
 - [ ] O-07 `verify-prod.sh`, `drive-prod.sh`, then `kql.sh all`.
 - [ ] O-08 Drift test: Always On off, `check.sh` shows `FAIL AZ-03`, then back on.
 
+### 013 By Camera
+
+**Status: built on branch `013-by-camera`, full suite 122 + 1253 passed, 1 skipped.** Decisions, defaults and stated
+test changes in `specs/013-by-camera/decisions.md`. Evidence: `specs/013-by-camera/evidence/`
+(verify.sh ALL PASS (15 checks) live against a scratch copy of the dev data; all 4 new checks FAIL on the pre-013 build in
+`verify-pre013-output.txt`; p95.sh ALL PASS: `/c` 1 read p95 0.35 ms vs `/g` 0.36, `/c/{slug}` 2 reads
+0.80 vs 0.88, camera photo 2 reads 0.64 vs 0.66; non-vacuity.sh 9/9, one break per
+[SAFETY] guard; design record validate 0 failures).
+
+The home page gains a second link, "By Camera". `/c` lists every camera that took a visible photo
+(most photos first), `/c/{slug}` shows that camera's photos newest first, and `/c/{slug}/{photo}`
+steps through them with the camera breadcrumb and `N / total`. A photo counts only while it is in
+at least one public, non-empty gallery, so private and library-only photos never appear, and a
+private-only camera answers the same not-found page as an unknown one. Pages read the same number
+of documents as the gallery pages (1 / 2 / 2) and are purged and warmed by every owner action that
+changes them. Adds D-26 (derived `cameras` collection, written only by the site projection) and
+amends D-21, the content model, L-07/08/09/11/12/17 and the II.2/IV.9 traceability rows.
+
+OWNER-ONLY (after merge and deploy, not gates):
+
+- [ ] O-01 Look over `/c`, one camera page and stepping through its photos on the live site, at
+  desktop and phone widths.
+
 ## Not a feature
 
 - **Cost cap (D-18, E-19)**: no budget alert (constitution 6.0.0 withdrew the $7 alert). The
@@ -228,6 +251,7 @@ Remaining OWNER-ONLY steps (012 tasks.md, after the build, one at a time):
 | D-04, D-06 | 007 |
 | D-08, D-09, D-10, D-11 | 008 |
 | D-01, D-02, D-03, D-05, D-12, D-18, D-24, D-25 | 012 |
+| D-26 | 013 |
 | L-01 to L-06 | 008 |
 | L-07 to L-17 | 009 |
 | E-01, E-02 | 007 |

@@ -61,16 +61,32 @@ public sealed class HomeBrowserTests(NavBrowserFixture site)
         var at = $"{width}x{height}";
 
         await Go(page, "/");
+        // 013 stated change (test-impact A): two links. Centring (a, b) is measured on the link
+        // list as a whole; (d) and (e) on each link; (c) unchanged.
         var count = await page.EvaluateAsync<int>("document.querySelectorAll('nav.nav--home a').length");
-        if (count != 1)
+        if (count != 2)
         {
-            failures.Add($"{at}: expected one 'nav.nav--home a', found {count}");
+            failures.Add($"{at}: expected two 'nav.nav--home a', found {count}");
         }
         else
         {
+            foreach (var i in new[] { 0, 1 })
+            {
+                var l = await page.EvaluateAsync<double[]>($$"""
+                    (() => {
+                        const a = document.querySelectorAll('nav.nav--home a')[{{i}}], r = a.getBoundingClientRect();
+                        return [r.top, r.bottom, parseFloat(getComputedStyle(a).fontSize)];
+                    })()
+                    """);
+                if (l[2] != 48)
+                    failures.Add($"{at}: (d) link {i} font-size {F(l[2])}px, expected 48px");
+                if (l[1] - l[0] < 44)
+                    failures.Add($"{at}: (e) link {i} height {F(l[1] - l[0])} < 44");
+            }
+
             var m = await page.EvaluateAsync<double[]>("""
                 (() => {
-                    const a = document.querySelector('nav.nav--home a'), r = a.getBoundingClientRect();
+                    const a = document.querySelector('nav.nav--home ul'), r = a.getBoundingClientRect();
                     const h = document.querySelector('header.site-header').getBoundingClientRect();
                     const d = document.documentElement;
                     return [r.left, r.right, r.top, r.bottom, h.bottom, innerWidth, innerHeight,

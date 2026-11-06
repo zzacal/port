@@ -1,4 +1,4 @@
-<PublicLayout Title="@($"{Image.Title} — {GalleryTitle}")" NoIndex="@NoIndex" Enhance="true" HeadExtra="_transitions" Crumbs="Crumbs">
+<PublicLayout Title="@($"{Image.Title} — {GalleryTitle}")" NoIndex="@NoIndex" Enhance="true" HeadExtra="_transitions" Crumbs="Trail">
     <SoloViewer Image="Image" Caption="@Caption" PrevHref="@PrevHref" NextHref="@NextHref"
                 TransitionId="@Image.Id" PrefetchUrls="@PrefetchUrls" Here="Here" />
 </PublicLayout>
@@ -20,9 +20,14 @@
     [Parameter] public int Index { get; set; }
     [Parameter] public int Total { get; set; }
 
-    private IReadOnlyList<Crumb>? Crumbs => GalleryHref is null
+    /// <summary>
+    /// 013 K3: an explicit trail (the camera photo page). Optional: null keeps the GalleryHref rule.
+    /// </summary>
+    [Parameter] public IReadOnlyList<Crumb>? Crumbs { get; set; }
+
+    private IReadOnlyList<Crumb>? Trail => Crumbs ?? (GalleryHref is null
         ? null
-        : Trails.Under(new Crumb(GalleryTitle, GalleryHref), new Crumb(Image.Title));
+        : Trails.Under(new Crumb(GalleryTitle, GalleryHref), new Crumb(Image.Title)));
 
     private RenderFragment? Here => Total <= 0
         ? null

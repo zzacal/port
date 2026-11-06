@@ -16,7 +16,7 @@
     <SiteHeader Crumbs="@(Crumbs ?? Trails.Default)" />
     <main class="public-main">@ChildContent</main>@if (Enhance)
 {
-    <script type="speculationrules">{"prerender":[{"where":{"or":[{"href_matches":"/g"},{"href_matches":"/g/*"}]},"eagerness":"moderate"}]}</script>
+    <script type="speculationrules">{"prerender":[{"where":{"or":[{"href_matches":"/g"},{"href_matches":"/g/*"},{"href_matches":"/c"},{"href_matches":"/c/*"}]},"eagerness":"moderate"}]}</script>
     <script type="module">(() => {
 document.addEventListener('keydown', e => {
 const k = { ArrowLeft: 'article.solo a[rel=prev]', ArrowRight: 'article.solo a[rel=next]', Escape: '.breadcrumb a[href*="#p-"]' }[e.key];

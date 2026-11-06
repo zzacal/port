@@ -116,6 +116,33 @@ public sealed class GalleryDoc
 }
 
 // ---------------------------------------------------------------------------
+// cameras collection (013 data-model; derived, single writer SiteProjector)
+// ---------------------------------------------------------------------------
+
+/// <summary>013 data-model "CameraCard": denormalised so the camera listing is one read.</summary>
+public sealed class CameraCardDoc
+{
+    [BsonElement("slug")]       public string Slug      { get; set; } = string.Empty;
+    [BsonElement("name")]       public string Name      { get; set; } = string.Empty;
+    [BsonElement("imageCount")] public int ImageCount   { get; set; }
+    [BsonElement("cover")]      public CoverImageDoc Cover { get; set; } = new();
+}
+
+/// <summary>
+/// 013 data-model: one camera with at least one visible photo. Written ONLY by
+/// <c>SiteProjector</c>; <c>_id</c> is the <c>CameraKey.Key</c> grouping key.
+/// </summary>
+public sealed class CameraGroupDoc
+{
+    [BsonElement("_id")]   public string Id    { get; set; } = string.Empty;
+    [BsonElement("slug")]  public string Slug  { get; set; } = string.Empty;
+    [BsonElement("name")]  public string Name  { get; set; } = string.Empty;
+    [BsonElement("items")] public List<string> Items { get; set; } = [];
+    [BsonElement("rank")]  public int Rank     { get; set; }
+    [BsonElement("card")]  public CameraCardDoc Card { get; set; } = new();
+}
+
+// ---------------------------------------------------------------------------
 // site collection (single document _id="site")
 // ---------------------------------------------------------------------------
 

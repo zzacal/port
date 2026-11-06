@@ -1,0 +1,12 @@
+OK 02c-decisions-content.md: 1x 'and requires an edge-purge of the full public namespace and a full dat'
+OK 04-content-model.md: 1x '\n### Upload Batch (collection `batches`, at most one with `state: open'
+OK 02d-decisions-delivery.md: 1x '`/g/{id}/{slug}/{imageId}` is `PublicLayout` + `SoloViewer`;'
+OK 07-traceability.md: 1x 'source scan: only the site projection writes `nav` (feature 010) |'
+OK 07-traceability.md: 1x 'and the home page `/` none (`op.timing` count; feature 011) |'
+OK 05-lifecycle.md: 1x '(the first photo added to an empty public gallery lists it), as comput'
+OK 05-lifecycle.md: 1x '(removing the last photo of a listed gallery unlists it), as computed '
+OK 05-lifecycle.md: 1x '(a gallery left empty is unlisted), as computed by the site projection'
+OK 05-lifecycle.md: 1x 'the published gallery and its new neighbours, as computed by the site '
+OK 05-lifecycle.md: 1x 'so its cached page stops showing neighbour links (II.2), as computed b'
+OK 05-lifecycle.md: 1x 'purged: its old neighbours, as computed by the site projection.'
+wrote 5 drafts

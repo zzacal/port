@@ -3,5 +3,6 @@
 </PublicLayout>
 
 @code {
-    private static readonly IReadOnlyList<NavItem> Links = [new(Trails.ListingLabel, Trails.ListingHref)];
+    private static readonly IReadOnlyList<NavItem> Links =
+        [new(Trails.ListingLabel, Trails.ListingHref), new(Trails.CamerasLabel, Trails.CamerasHref)];
 }

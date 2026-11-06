@@ -1,0 +1,7 @@
+OK A HomePageTests.cs x1: '"{\\"prerender\\":[{\\"where\\":{\\"or\\":[{\\"href_matches\\":\\"/g\\"},{\\"href_matches\\"' -> '"{\\"prerender\\":[{\\"where\\":{\\"or\\":[{\\"href_matches\\":\\"/g\\"},{\\"href_matches\\"'
+OK A HomePageTests.cs x1: '[GeneratedRegex("<a href=\\"/g\\"(?: b-[a-z0-9]{10})?>Galleries</a>")]' -> '[GeneratedRegex("<a href=\\"/g\\"(?: b-[a-z0-9]{10})?>Galleries</a>")]'
+OK A HomePageTests.cs x1: 'Assert.Single(AnchorRx().Matches(nav));' -> '// 013 stated change (test-impact A): exactly two links, Galleries then By Camer'
+OK A HomeBrowserTests.cs x1: 'var count = await page.EvaluateAsync<int>("document.querySelectorAll(\'nav.nav--h' -> '// 013 stated change (test-impact A): two links. Centring (a, b) is measured on '
+OK A TrailSourceGuardTests.cs x1: 'private static readonly Regex Literal = new("\\"(Home|Galleries)\\"", RegexOptions' -> 'private static readonly Regex Literal = new("\\"(Home|Galleries|By Camera)\\"", Re'
+OK A TrailSourceGuardTests.cs x1: 'Assert.Equal(2, inTrails);' -> 'Assert.Equal(3, inTrails);'
+wrote 3 files

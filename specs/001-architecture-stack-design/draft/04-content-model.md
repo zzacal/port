@@ -52,6 +52,20 @@ coverHeight, coverDerivatives, imageCount }`. The cover is `pinnedCover` if set,
 `items[0]`. When the gallery has no items, the cover is null and the card is kept out of
 `homeCards` (II.6, E-16).
 
+### Camera group (collection `cameras`, derived; amended by feature 013)
+
+Written only by the site projection (D-26). Deleting the collection and running any projection
+rebuilds it. A camera with no visible photo has no document, so its address is not found.
+
+| Field | Type | Rule |
+|---|---|---|
+| _id | string | Grouping key: normalised make + U+001F + normalised model (trim, collapse whitespace, lower-case invariant). Never both empty. |
+| slug | string | From the display name; unique (indexed). A key keeps its stored slug while it stays unique; a new colliding key takes `-2`, `-3`... |
+| name | string | The photo page's camera formatter over the newest visible photo's make and model. |
+| items | id[] | Visible photo ids, `createdAt` desc then `_id` asc, each once. Visible = in a listed gallery, not deleting, has a make or model. |
+| rank | int | Listing position: count desc, then name ignore-case, then key (indexed). |
+| card | CameraCard | `{ slug, name, imageCount, cover }`, cover in the GalleryCard cover shape for `items[0]`, so `/c` is one read (IV.9). |
+
 ### Upload Batch (collection `batches`, at most one with `state: open`)
 
 A unique partial index on `{state:"open"}` enforces a single open batch (FR-029, D-11).

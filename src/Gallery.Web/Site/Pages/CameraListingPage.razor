@@ -1,0 +1,11 @@
+@* 013 K1 (contracts/components.md): the camera listing at /c, the same frame as ListingPage. *@
+<PublicLayout Title="@Trails.CamerasLabel" Enhance="true" Crumbs="Trails.Cameras">
+    @if (Cards.Count > 0)
+    {
+        <ContactSheet Items="Cards" Large="3" Medium="3" Small="1" />
+    }
+</PublicLayout>
+
+@code {
+    [Parameter] public IReadOnlyList<ContactSheetItem> Cards { get; set; } = [];
+}

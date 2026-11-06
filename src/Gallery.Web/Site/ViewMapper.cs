@@ -61,14 +61,19 @@ public static class ViewMapper
         if (card.Cover is null)
             return new ContactSheetItem(null, href, card.Title);
 
-        var cover = card.Cover;
+        return new ContactSheetItem(CoverView(card.Cover, card.Title, url), href, card.Title);
+    }
+
+    /// <summary>The cover of a card as an <see cref="ImageView"/> titled <paramref name="title"/> (gallery and camera cards).</summary>
+    private static ImageView CoverView(CoverImageDoc cover, string title, Func<string, string> url)
+    {
         var variants = cover.Derivatives
             .Select(d => new Variant(d.W, url(d.Avif), url(d.Webp)))
             .ToList();
 
-        var image = new ImageView(
+        return new ImageView(
             Id: cover.ImageId,
-            Title: card.Title,
+            Title: title,
             Width: cover.Width,
             Height: cover.Height,
             Variants: variants,
@@ -76,9 +81,15 @@ public static class ViewMapper
             DominantColor: cover.Placeholder.Color,
             Exif: null
         );
-
-        return new ContactSheetItem(image, href, card.Title);
     }
+
+    /// <summary>
+    /// 013 (contracts/components.md, camera listing tiles): maps a <see cref="CameraCardDoc"/> to a
+    /// <see cref="ContactSheetItem"/>, the same shape as <see cref="ToCard"/>: href <c>/c/{slug}</c>,
+    /// title = the camera name. A camera always has a cover, so there is no empty tile.
+    /// </summary>
+    public static ContactSheetItem ToCameraCard(CameraCardDoc card, Func<string, string> url) =>
+        new(CoverView(card.Cover, card.Name, url), $"/c/{card.Slug}", card.Name);
 
     /// <summary>
     /// Builds the <c>Link</c> response header value for the primary image preload

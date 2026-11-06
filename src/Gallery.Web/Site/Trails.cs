@@ -18,4 +18,12 @@ public static class Trails
     public static readonly IReadOnlyList<Crumb> Default  = [new(HomeLabel, HomeHref)];
     public static IReadOnlyList<Crumb> Under(params Crumb[] tail) =>
         [new(HomeLabel, HomeHref), new(ListingLabel, ListingHref), .. tail];
+
+    // 013 (contracts/routes.md, Breadcrumbs): the camera trails. Like Under, UnderCameras only puts
+    // Home and By Camera ahead of the caller's crumbs, so a camera page names no gallery (FR-010).
+    public const string CamerasLabel = "By Camera";
+    public const string CamerasHref = "/c";
+    public static readonly IReadOnlyList<Crumb> Cameras = [new(HomeLabel, HomeHref), new(CamerasLabel)];
+    public static IReadOnlyList<Crumb> UnderCameras(params Crumb[] tail) =>
+        [new(HomeLabel, HomeHref), new(CamerasLabel, CamerasHref), .. tail];
 }
