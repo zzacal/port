@@ -87,7 +87,7 @@ brk band $TILECSS 's/background: rgba\(0, 0, 0, \.6\);/background: transparent;/
 # SC-001 one row (tasks.md: "flex-wrap: wrap plus a 4th dummy button"; done as one CSS change that
 # forces the same symptom, a wrapped row, since a brk edits one file).
 brk wrap $PACSS 's/flex-wrap: nowrap;/flex-wrap: wrap; width: 90px;/' \
-  'FullyQualifiedName~TileIconBrowserTests' \
+  'FullyQualifiedName~TileIconBrowserTests.SC001_the_icon_row_is_one_tap_high' \
   'the photo-actions row wraps'
 # FR-018 nothing unused shipped: an extra unused key.
 brk registry $ICONS 's/(\["pencil"\] = )/["unused-x"] = "<path d=\\"M0 0\\" \/>",\n        $1/' \
