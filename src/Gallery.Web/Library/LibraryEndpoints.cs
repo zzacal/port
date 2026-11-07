@@ -19,6 +19,9 @@ namespace Gallery.Web.Library;
 /// </summary>
 /// <param name="Status">The <c>role="status"</c> line: the PRG result or a refusal reason.</param>
 /// <param name="EditTitle">The side panel's title value (the submitted one after a refused save, else stored).</param>
+/// <param name="EditAdd">014: the pending <c>add</c> ids after a 422-refused save (null otherwise), so the panel keeps them.</param>
+/// <param name="EditCreate">014: the pending <c>create</c> titles after a 422-refused save (null otherwise).</param>
+/// <param name="EditLeave">014: the pending <c>leave</c> ids after a 422-refused save (null otherwise).</param>
 public sealed record LibraryPageModel(
     LibraryPageData Data,
     LibraryOptions Options,
@@ -27,7 +30,10 @@ public sealed record LibraryPageModel(
     string? Status = null,
     bool Saved = false,
     string? EditTitle = null,
-    string? EditCaption = null);
+    string? EditCaption = null,
+    IReadOnlyList<string>? EditAdd = null,
+    IReadOnlyList<string>? EditCreate = null,
+    IReadOnlyList<string>? EditLeave = null);
 
 /// <summary>One card of the gallery list (contracts/components.md C2).</summary>
 /// <param name="Cover">The card's cover (the gallery title as its title), or null for a gallery with no photos.</param>
@@ -139,14 +145,20 @@ public static class LibraryEndpoints
         var title = Field(form, "title");
         var caption = Field(form, "caption");
 
-        var r = await images.UpdateTextAsync(iid, title, caption);
+        // 014: the repeated gallery-membership fields (contracts/http.md); absent means no change.
+        var edit = MembershipEdit.Normalise(Ids(form, "add"), Ids(form, "create"), Ids(form, "leave"));
+
+        var r = await images.SavePanelAsync(iid, title, caption, edit);
+        // A 422 keeps the pending tokens; a 404 gallery refusal shows the current memberships.
+        var keep = r.StatusCode == 422;
         return r.Status switch
         {
             OperationStatus.Ok => SeeOther($"{LibraryPath}?page={page}&open={iid}&saved=1"),
             OperationStatus.NotFound => await RenderLibraryAsync(ctx, reader, options, antiforgery, assets, page,
                 null, 404, "That photo no longer exists."),
             _ => await RenderLibraryAsync(ctx, reader, options, antiforgery, assets, page,
-                iid, r.StatusCode, r.Reason, editTitle: title, editCaption: caption),
+                iid, r.StatusCode, r.Reason, editTitle: title, editCaption: caption,
+                editAdd: keep ? edit.Add : null, editCreate: keep ? edit.Create : null, editLeave: keep ? edit.Leave : null),
         };
     }
 
@@ -376,7 +388,8 @@ public static class LibraryEndpoints
     private static async Task<IResult> RenderLibraryAsync(
         HttpContext ctx, LibraryReader reader, LibraryOptions options, IAntiforgery antiforgery, AdminAssets assets,
         int page, string? open, int statusCode, string? status, bool saved = false, bool statusFromQuery = false,
-        string? editTitle = null, string? editCaption = null)
+        string? editTitle = null, string? editCaption = null,
+        IReadOnlyList<string>? editAdd = null, IReadOnlyList<string>? editCreate = null, IReadOnlyList<string>? editLeave = null)
     {
         var data = await reader.PageAsync(page, open);
         if (statusFromQuery) status = StatusFromQuery(ctx.Request.Query, data.Galleries);
@@ -386,7 +399,8 @@ public static class LibraryEndpoints
             assets.UrlFor(AdminAssets.LibraryScriptPath),
             status, saved && data.Open is not null,
             editTitle ?? data.Open?.Image.Title,
-            editCaption ?? data.Open?.Caption);
+            editCaption ?? data.Open?.Caption,
+            editAdd, editCreate, editLeave);
 
         return new RazorComponentResult<LibraryPage>(new Dictionary<string, object?>
         {

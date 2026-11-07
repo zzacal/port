@@ -1,0 +1,160 @@
+@* Admin token-combobox molecule (feature 014, contracts K1): a generic multi-value combobox. The current
+   values are tokens (a link or text, plus a × remove button), and a text box filters the options below
+   it; a "+ text" row offers to create a value from the typed text. Nothing is saved until the form is
+   submitted: picks and removals become hidden inputs named AddName / CreateName / RemoveName.
+   Behaviour script: a consumer page MUST load admin-assets/library.js (section "combobox
+   (TokenCombobox molecule)"), which mirrors TokenCombobox.Match and clones the three <template>s below
+   so added tokens carry this component's CSS scope. The component renders no <script> and no style=.
+   Query / Highlight are for the /ui specimens only: they render the list open per Match. *@
+<div class="combobox" id="@Id" data-max-shown="@MaxShown" data-create-max="@(CreateMax?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "")" data-allow-create="@(AllowCreate ? "true" : "false")" data-add-name="@AddName" data-create-name="@CreateName" data-remove-name="@RemoveName" data-remove-label="@RemoveLabel" data-form-id="@FormId">
+    <label for="@InputId">@Label</label>
+    <div class="cb-box">
+        <ul class="cb-tokens" aria-label="@Label">
+            @foreach (var token in Tokens)
+            {
+                <li class="@(token.Pending == ComboPending.No ? "cb-token" : "cb-token is-pending")" data-id="@token.Id" data-kind="@KindOf(token)">
+                    @if (token.Href is not null)
+                    {
+                        <a href="@token.Href" title="@token.Label">@token.Label</a>
+                    }
+                    else
+                    {
+                        <span title="@token.Label">@token.Label</span>
+                    }
+                    <button type="button" class="cb-x" aria-label="@string.Format(RemoveLabel, token.Label)">×</button>
+                    @if (token.Pending == ComboPending.Add)
+                    {
+                        <input type="hidden" name="@AddName" value="@token.Id" form="@FormId">
+                    }
+                    else if (token.Pending == ComboPending.Create)
+                    {
+                        <input type="hidden" name="@CreateName" value="@token.Id" form="@FormId">
+                    }
+                </li>
+            }
+        </ul>
+        <input id="@InputId" class="cb-input" type="text" role="combobox" autocomplete="off" aria-expanded="@(Open ? "true" : "false")" aria-controls="@ListId" aria-autocomplete="list" aria-describedby="@HelpId" aria-activedescendant="@ActiveId" value="@Query">
+    </div>
+    @if (EmptyText is not null)
+    {
+        <p class="cb-empty" hidden="@(Tokens.Count > 0)">@EmptyText</p>
+    }
+    <p id="@HelpId" class="vh">Type to search. Backspace removes the last one.</p>
+    <ul id="@ListId" class="cb-list" role="listbox" aria-label="@Label" hidden="@(!Open)">
+        @foreach (var row in OptionRows)
+        {
+            <li id="@($"{Id}-o-{row.Option.Id}")" role="option" class="cb-opt" data-id="@row.Option.Id" data-label="@row.Option.Label" data-warning="@row.Option.Warning" aria-selected="@(row.Index >= 0 && row.Index == HighlightIndex ? "true" : "false")" hidden="@(row.Index < 0)">@row.Option.Label@(row.Option.Detail is null ? "" : " · " + row.Option.Detail)</li>
+        }
+        <li id="@($"{Id}-new")" role="option" class="cb-opt cb-new" aria-selected="@(CreateIndex >= 0 && CreateIndex == HighlightIndex ? "true" : "false")" hidden="@(CreateIndex < 0)">+ @Result?.CreateLabel</li>
+    </ul>
+    <p class="cb-msg">@Result?.Message</p>
+    <p class="cb-warn" hidden="@(WarnText.Length == 0)">@WarnText</p>
+    <p class="cb-status vh" role="status" aria-live="polite">@Result?.Status</p>
+    @foreach (var id in Removed)
+    {
+        <input type="hidden" name="@RemoveName" value="@id" form="@FormId">
+    }
+    <template class="cb-tpl-add"><li class="cb-token is-pending" data-kind="add"><span></span><button type="button" class="cb-x"></button><input type="hidden" name="@AddName" form="@FormId"></li></template>
+    <template class="cb-tpl-create"><li class="cb-token is-pending" data-kind="create"><span></span><button type="button" class="cb-x"></button><input type="hidden" name="@CreateName" form="@FormId"></li></template>
+    <template class="cb-tpl-remove"><input type="hidden" name="@RemoveName" form="@FormId"></template>
+</div>
+
+@code {
+    /// <summary>Prefix for every element id.</summary>
+    [Parameter, EditorRequired] public string Id { get; set; } = "";
+
+    /// <summary>Visible label above the field.</summary>
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+
+    /// <summary>Current values, rendered in the order given.</summary>
+    [Parameter] public IReadOnlyList<ComboToken> Tokens { get; set; } = [];
+
+    /// <summary>Everything searchable.</summary>
+    [Parameter] public IReadOnlyList<ComboOption> Options { get; set; } = [];
+
+    [Parameter] public string AddName { get; set; } = "add";
+    [Parameter] public string CreateName { get; set; } = "create";
+    [Parameter] public string RemoveName { get; set; } = "remove";
+
+    /// <summary>Ids already removed (a re-render after a refusal); each becomes a hidden <see cref="RemoveName"/> input.</summary>
+    [Parameter] public IReadOnlyList<string> Removed { get; set; } = [];
+
+    /// <summary>Offer the "+ text" row.</summary>
+    [Parameter] public bool AllowCreate { get; set; }
+
+    /// <summary>Create-text limit; null = none.</summary>
+    [Parameter] public int? CreateMax { get; set; }
+
+    [Parameter] public int MaxShown { get; set; } = 10;
+
+    /// <summary>Visible line shown when there are no tokens (never a placeholder).</summary>
+    [Parameter] public string? EmptyText { get; set; }
+
+    /// <summary>Format for the × accessible name; {0} = the token label.</summary>
+    [Parameter] public string RemoveLabel { get; set; } = "Remove {0}";
+
+    /// <summary>Format for the pending-warning line; {0} = the option's Warning.</summary>
+    [Parameter] public string WarningFormat { get; set; } = "{0}";
+
+    /// <summary>Catalogue specimens only: renders this text with the list open per <see cref="Match"/>.</summary>
+    [Parameter] public string? Query { get; set; }
+
+    /// <summary>Catalogue specimens only: overrides the default first-row highlight; -1 = none.</summary>
+    [Parameter] public int? Highlight { get; set; }
+
+    /// <summary><c>form=</c> on the hidden inputs when the field sits outside its form.</summary>
+    [Parameter] public string? FormId { get; set; }
+
+    private string InputId => $"{Id}-input";
+    private string ListId => $"{Id}-list";
+    private string HelpId => $"{Id}-help";
+
+    private ComboMatch? Result;
+    private IReadOnlyList<(ComboOption Option, int Index)> OptionRows = [];
+    private int CreateIndex = -1;
+    private int VisibleCount;
+    private int HighlightIndex = -1;
+    private string WarnText = "";
+
+    private bool Open => VisibleCount > 0;
+
+    private string? ActiveId => HighlightIndex < 0 ? null
+        : HighlightIndex == CreateIndex ? $"{Id}-new"
+        : $"{Id}-o-{OptionRows[HighlightIndex].Option.Id}";
+
+    protected override void OnParametersSet()
+    {
+        Result = Query is null ? null : Match(Query, Options, Tokens, MaxShown, CreateMax, AllowCreate);
+
+        if (Result is null)
+        {
+            OptionRows = Options.Select(o => (o, -1)).ToList();
+            CreateIndex = -1;
+        }
+        else
+        {
+            // Shown rows first, in Match order; the hidden rest after them, in Options order.
+            var shown = Result.Shown.Select((o, i) => (o, i)).ToList();
+            var hidden = Options.Where(o => !Result.Shown.Contains(o)).Select(o => (o, -1));
+            OptionRows = shown.Concat(hidden).ToList();
+            CreateIndex = Result.CreateLabel is null ? -1 : shown.Count;
+        }
+
+        VisibleCount = OptionRows.Count(r => r.Index >= 0) + (CreateIndex >= 0 ? 1 : 0);
+        var h = Highlight ?? 0;
+        HighlightIndex = h >= 0 && h < VisibleCount ? h : -1;
+
+        WarnText = string.Join(" ", Tokens
+            .Where(t => t.Pending == ComboPending.Add)
+            .Select(t => Options.FirstOrDefault(o => o.Id == t.Id)?.Warning)
+            .Where(w => w is not null)
+            .Select(w => string.Format(WarningFormat, w)));
+    }
+
+    private static string KindOf(ComboToken token) => token.Pending switch
+    {
+        ComboPending.Add => "add",
+        ComboPending.Create => "create",
+        _ => "saved",
+    };
+}

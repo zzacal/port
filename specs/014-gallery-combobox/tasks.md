@@ -93,10 +93,10 @@ Batch A. Owns `src/Gallery.Web/Components/Molecules/TokenCombobox.cs`, `TokenCom
 `src/Gallery.Web/Ui/UiCatalog.cs` (one inserted line), and the new
 `tests/Gallery.Web.Tests/TokenComboboxTests.cs`.
 
-- [ ] T004 [P] Write `src/Gallery.Web/Components/Molecules/TokenCombobox.cs`: the records and enum,
+- [X] T004 [P] Write `src/Gallery.Web/Components/Molecules/TokenCombobox.cs`: the records and enum,
   and `public static ComboMatch Match(...)`, exactly per contracts/components.md K1 "Value types".
   It is a pure function with no I/O.
-- [ ] T005 Write `src/Gallery.Web/Components/Molecules/TokenCombobox.razor` and
+- [X] T005 Write `src/Gallery.Web/Components/Molecules/TokenCombobox.razor` and
   `TokenCombobox.razor.css`, per K1 "Parameters", "Markup" and "CSS" (the three `<template>`s,
   the `cb-empty`/`cb-msg`/`cb-warn`/`cb-status` lines, the visually-hidden help text, the
   component's own `.vh` rule, no `placeholder`):
@@ -107,10 +107,10 @@ Batch A. Owns `src/Gallery.Web/Components/Molecules/TokenCombobox.cs`, `TokenCom
     `aria-selected`/`aria-activedescendant`) all come from `Match` (no second copy of the rules);
   - the Input atom's border/radius/focus values are copied as token references from
     `Components/Atoms/Input.razor.css` (same `var(--…)` names).
-- [ ] T006 Write `src/Gallery.Web/Ui/Pages/TokenComboboxPage.razor` with the 10 specimens of K2
+- [X] T006 Write `src/Gallery.Web/Ui/Pages/TokenComboboxPage.razor` with the 10 specimens of K2
   (labels verbatim, `Width="w-480"`). Insert the catalogue entry in
   `src/Gallery.Web/Ui/UiCatalog.cs` directly after the `VisibilityToggle` line.
-- [ ] T007 Write `tests/Gallery.Web.Tests/TokenComboboxTests.cs`:
+- [X] T007 Write `tests/Gallery.Web.Tests/TokenComboboxTests.cs`:
   - `Match` theory rows:
     - empty and whitespace queries;
     - a case-insensitive substring;
@@ -175,13 +175,13 @@ Batch B (server). Owns `src/Gallery.Web/Library/MembershipEdit.cs` (new),
 `src/Gallery.Web/Library/LibraryEndpoints.cs`, and the new
 `tests/Gallery.Web.Tests/LibraryMembershipEditTests.cs`.
 
-- [ ] T008 [P] [US1] Write `src/Gallery.Web/Library/MembershipEdit.cs`:
+- [X] T008 [P] [US1] Write `src/Gallery.Web/Library/MembershipEdit.cs`:
   - `public sealed record MembershipEdit(IReadOnlyList<string> Add, IReadOnlyList<string> Create, IReadOnlyList<string> Leave)`
     with `IsEmpty`;
   - `static MembershipEdit Normalise(add, create, leave)`, per data-model.md and research R-04:
     ordinal dedupe of ids; create titles trimmed, blank ones dropped, deduped
     `OrdinalIgnoreCase`; ids in both Add and Leave dropped from both.
-- [ ] T009 [US2] In `src/Gallery.Web/Library/GalleryService.cs`, add
+- [X] T009 [US2] In `src/Gallery.Web/Library/GalleryService.cs`, add
   `public async Task<OperationResult> RemoveOneAsync(string gid, string iid, OperationScope scope)`
   by moving `RemoveAsync`'s body after the scope creation:
   - `RemoveOneAsync` loads the gallery, and returns NotFound / Ok with `Removed = 0` as today;
@@ -191,7 +191,7 @@ Batch B (server). Owns `src/Gallery.Web/Library/MembershipEdit.cs` (new),
   `RemoveAsync` becomes `Begin("gallery.remove")` → `RemoveOneAsync` → `CompleteAsync` →
   return. Its output, log lines and purge set must be identical; `BuilderTests` stay green
   unmodified. This is used by US3, but it lives here because the batch owns the file.
-- [ ] T010 [US1] [SAFETY] In `src/Gallery.Web/Library/ImageService.cs`, add
+- [X] T010 [US1] [SAFETY] In `src/Gallery.Web/Library/ImageService.cs`, add
   `public Task<OperationResult> SavePanelAsync(string iid, string? title, string? caption, MembershipEdit edit)`,
   exactly per contracts/http.md "Processing order" steps 1–7:
   - validate everything before any write: text, the image, every create title through
@@ -208,7 +208,7 @@ Batch B (server). Owns `src/Gallery.Web/Library/MembershipEdit.cs` (new),
     `OpTiming.Log(log, "library.image.memberships", 0, "refused"|"notfound")`. An empty edit
     logs no line.
   - No visibility write.
-- [ ] T011 [US1] In `src/Gallery.Web/Library/LibraryEndpoints.cs`:
+- [X] T011 [US1] In `src/Gallery.Web/Library/LibraryEndpoints.cs`:
   - add optional trailing params `IReadOnlyList<string>? EditAdd = null`, `EditCreate`,
     `EditLeave` to `LibraryPageModel`, and matching optional params to `RenderLibraryAsync`;
   - `SaveImage` reads the repeated `add`/`create`/`leave` with the existing `Ids` helper
@@ -218,13 +218,16 @@ Batch B (server). Owns `src/Gallery.Web/Library/MembershipEdit.cs` (new),
     `EditAdd/EditCreate/EditLeave` from the normalised edit only when the refusal is a 422.
     A 404 gallery refusal passes none, so the panel shows current memberships;
   - the routes and other handlers are unchanged.
-- [ ] T012 [US1] [SAFETY] Write `tests/Gallery.Web.Tests/LibraryMembershipEditTests.cs`
+- [X] T012 [US1] [SAFETY] Write `tests/Gallery.Web.Tests/LibraryMembershipEditTests.cs`
   (`[Collection("s3")]`, `LibraryHost`, modelled on `LibraryEditTests`):
   - `add=` an existing gallery → 303 `…&saved=1`; `items` and `galleryIds` gain the photo; the
     purge set EQUALS the bulk add's set for the same gallery and photo (compute it by running L3
     on a twin host or the same host before/after, whichever the existing tests use);
   - `create=Night walks` → one new gallery: `Visibility == "private"`, `Items == [iid]`, last in
-    `homeOrder`; empty purge set when it is the only change (L-10). [SAFETY II.5]
+    `homeOrder`; the create itself purges nothing (L-10), and the save's purge set EQUALS the
+    one L3 produces for a bulk add into a new gallery (the new gallery page and its photo page).
+    AMENDED at implement (decision 23): "empty purge set" contradicted calling `AddOneAsync`
+    unchanged. [SAFETY II.5]
   - `create` + `add` + `title` in one POST → all applied; exactly one `library.image.memberships`
     `ok` line;
   - `create=` 201 chars → 422 with `"The title can be at most 200 characters."`; NOTHING
