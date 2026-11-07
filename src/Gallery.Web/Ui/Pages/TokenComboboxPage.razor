@@ -1,0 +1,64 @@
+@* /ui catalogue page for the TokenCombobox molecule (feature 014, contracts K2). The list-open
+   specimens use Query/Highlight, so the page is static (no script). *@
+<UiLayout Title="TokenCombobox">
+    <Specimen Label="Empty" Width="w-480">
+        <TokenCombobox Id="tc-empty" Label="Galleries" Options="@Options" AllowCreate="true" CreateMax="200" RemoveLabel="@RemoveLabel" EmptyText="@EmptyText" WarningFormat="@WarningFormat" />
+    </Specimen>
+    <Specimen Label="With values" Width="w-480">
+        <TokenCombobox Id="tc-values" Label="Galleries" Options="@Options" Tokens="@([Coast, Birds])" AllowCreate="true" CreateMax="200" RemoveLabel="@RemoveLabel" EmptyText="@EmptyText" WarningFormat="@WarningFormat" />
+    </Specimen>
+    <Specimen Label="Typing, matches and create" Width="w-480">
+        <TokenCombobox Id="tc-typing" Label="Galleries" Options="@Options" Tokens="@([Coast])" Query="coa" AllowCreate="true" CreateMax="200" RemoveLabel="@RemoveLabel" EmptyText="@EmptyText" WarningFormat="@WarningFormat" />
+    </Specimen>
+    <Specimen Label="Arrow to the create row" Width="w-480">
+        <TokenCombobox Id="tc-arrow" Label="Galleries" Options="@Options" Tokens="@([Coast])" Query="coa" Highlight="1" AllowCreate="true" CreateMax="200" RemoveLabel="@RemoveLabel" EmptyText="@EmptyText" WarningFormat="@WarningFormat" />
+    </Specimen>
+    <Specimen Label="Exact match, no create" Width="w-480">
+        <TokenCombobox Id="tc-exact" Label="Galleries" Options="@Options" Query="Desert" AllowCreate="true" CreateMax="200" RemoveLabel="@RemoveLabel" EmptyText="@EmptyText" WarningFormat="@WarningFormat" />
+    </Specimen>
+    <Specimen Label="Already added" Width="w-480">
+        <TokenCombobox Id="tc-added" Label="Galleries" Options="@Options" Tokens="@([Desert])" Query="desert" AllowCreate="true" CreateMax="200" RemoveLabel="@RemoveLabel" EmptyText="@EmptyText" WarningFormat="@WarningFormat" />
+    </Specimen>
+    <Specimen Label="Only create" Width="w-480">
+        <TokenCombobox Id="tc-create" Label="Galleries" Options="@Options" Query="Night walks" AllowCreate="true" CreateMax="200" RemoveLabel="@RemoveLabel" EmptyText="@EmptyText" WarningFormat="@WarningFormat" />
+    </Specimen>
+    <Specimen Label="Pending values" Width="w-480">
+        <TokenCombobox Id="tc-pending" Label="Galleries" Options="@Options" Tokens="@([Coast, BirdsPending, NightWalks])" AllowCreate="true" CreateMax="200" RemoveLabel="@RemoveLabel" EmptyText="@EmptyText" WarningFormat="@WarningFormat" />
+    </Specimen>
+    <Specimen Label="Too long" Width="w-480">
+        <TokenCombobox Id="tc-long" Label="Galleries" Options="@Options" Query="@(new string('a', 201))" AllowCreate="true" CreateMax="200" RemoveLabel="@RemoveLabel" EmptyText="@EmptyText" WarningFormat="@WarningFormat" />
+    </Specimen>
+    <Specimen Label="Long labels" Width="w-480">
+        <TokenCombobox Id="tc-labels" Label="Galleries" Options="@LongOptions" Tokens="@([LongToken])" Query="long" AllowCreate="true" CreateMax="200" RemoveLabel="@RemoveLabel" EmptyText="@EmptyText" WarningFormat="@WarningFormat" />
+    </Specimen>
+</UiLayout>
+
+@code {
+    private const string RemoveLabel = "Remove from {0}";
+    private const string EmptyText = "In no gallery yet";
+    private const string WarningFormat = "{0}: visitors will see this photo after you save.";
+
+    /// <summary>60 characters each (specimen 10).</summary>
+    internal const string LongTokenLabel = "Long weekend walking the cliffs between the two old harbours";
+    internal const string LongOptionLabel = "Long evenings watching the light fade over the northern bays";
+
+    private static readonly IReadOnlyList<ComboOption> Options =
+    [
+        new("g-alpine", "Alpine", "Private"),
+        new("g-birds", "Birds", "Public", "Birds is public"),
+        new("g-coast", "Coast", "Public", "Coast is public"),
+        new("g-coastline", "Coastline", "Private"),
+        new("g-desert", "Desert", "Private"),
+        new("g-harbour", "Harbour", "Private"),
+    ];
+
+    private static readonly IReadOnlyList<ComboOption> LongOptions =
+        [.. Options, new("g-long-evenings", LongOptionLabel, "Private")];
+
+    private static readonly ComboToken Coast = new("g-coast", "Coast", "#g-coast");
+    private static readonly ComboToken Birds = new("g-birds", "Birds", "#g-birds");
+    private static readonly ComboToken Desert = new("g-desert", "Desert", "#g-desert");
+    private static readonly ComboToken BirdsPending = new("g-birds", "Birds", Pending: ComboPending.Add);
+    private static readonly ComboToken NightWalks = new("Night walks", "Night walks", Pending: ComboPending.Create);
+    private static readonly ComboToken LongToken = new("g-long-weekend", LongTokenLabel, "#g-long-weekend");
+}

@@ -1,0 +1,8 @@
+SELFTEST OK   pass-plain.log: exit 0
+SELFTEST OK   pass-json.log: exit 0
+SELFTEST OK   save-slow.log: exit 1, FAIL SC-002 save
+SELFTEST OK   memberships-99.log: exit 1, FAIL SC-002 memberships
+SELFTEST OK   empty.log: exit 1, FAIL missing
+SELFTEST OK   does-not-exist.log: exit 1, FAIL missing
+
+SELFTEST ALL OK

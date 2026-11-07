@@ -1,0 +1,12 @@
+PASS (order) SavePanelAsync skips the gallery-existence check (writes before refusing) -> red:   Failed Gallery.Web.Tests.LibraryMembershipEditTests.An_unknown_add_id_with_a_create_is_404_and_creates_nothing |  Assert.Equal() Failure: Values differ Expected: NotFound 
+PASS (title) SavePanelAsync drops the create-title check -> red:   Failed Gallery.Web.Tests.LibraryMembershipEditTests.A_201_char_create_title_is_422_and_writes_nothing |  Assert.Equal() Failure: Values differ Expected: UnprocessableEntity 
+PASS (private) CreateAsync makes the gallery public -> red:   Failed Gallery.Web.Tests.LibraryMembershipEditTests.Create_makes_one_private_gallery_holding_the_photo_last_in_homeOrder_with_no_purge |  Assert.Equal() Failure: Strings differ  ↓ (pos 1) 
+PASS (csrf) AdminAntiforgeryFilter skips validation for forms with an add field -> red:   Failed Gallery.Web.Tests.LibraryMembershipEditTests.With_a_session_and_no_antiforgery_token_add_and_create_are_400_and_store_nothing |  Assert.Equal() Failure: Values differ Expected: BadRequest 
+PASS (taken) Match ignores taken ids -> red:   Failed Gallery.Web.Tests.TokenComboboxTests.Match_follows_the_K1_rules(query: "desert", options: "six", tokens: "desert", createMax: 200, allowCreate: True, shown: |  Assert.Equal() Failure: Collections differ Expected: [] 
+PASS (sink) library.js uses innerHTML -> red:   Failed Gallery.Web.Tests.LibrarySourceGuardTests.Library_script_has_no_html_injection_sink(file: "library.js") |  admin-assets/library.js uses innerHTML 
+PASS (jsrank) library.js drops the rank step (title order only) -> red:   Failed Gallery.Web.Tests.GalleryFieldBrowserTests.Rows_highlight_and_status_equal_TokenCombobox_Match_for_each_query |  query "beach": rows [Alpine beach · Private | Beach · Private | Beaches · Private], Match [Beach · Private | Beaches · Private | Alpine beach · Private] 
+PASS (jstaken) library.js ignores taken ids -> red:   Failed Gallery.Web.Tests.GalleryFieldBrowserTests.Rows_highlight_and_status_equal_TokenCombobox_Match_for_each_query |  query "coa": rows [Coast · Public | Coastline · Private | + coa], Match [Coastline · Private | + coa] 
+restored: build clean
+
+ALL PASS
+exit 0

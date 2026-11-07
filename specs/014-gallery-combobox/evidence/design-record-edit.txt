@@ -1,0 +1,4 @@
+OK 02d-decisions-delivery.md: 1x 'admin molecules `BatchItem`, `CoverMarker`, `DragHandle`, `SelectionBa'
+OK 02d-decisions-delivery.md: 1x 'A component is extracted only when it has a second consumer.'
+OK 02d-decisions-delivery.md: 1x 'and title and caption editing in the side panel.'
+wrote 1 drafts

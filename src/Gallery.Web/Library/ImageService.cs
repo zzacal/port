@@ -1,3 +1,4 @@
+using Gallery.Core.Ids;
 using Gallery.Web.Data;
 using Gallery.Web.Edge;
 using Gallery.Web.Observability;
@@ -26,11 +27,9 @@ public sealed class ImageService(
     /// </summary>
     public async Task<OperationResult> UpdateTextAsync(string iid, string? title, string? caption)
     {
-        if (title is not null && GalleryService.TitleProblem(title, options) is { } problem)
+        if (TextProblem(title, caption) is { } problem)
             return Refuse(problem);
         var cap = caption?.Trim();
-        if (cap is not null && cap.Length > options.CaptionMax)
-            return Refuse($"The caption can be at most {options.CaptionMax} characters.");
 
         var image = await timer.Time("db.gallery.load", () =>
             _images.Find(Builders<ImageDoc>.Filter.Eq(i => i.Id, iid)).FirstOrDefaultAsync());
@@ -53,6 +52,102 @@ public sealed class ImageService(
             scope.TouchText(GallerySnapshot.From(g), iid);
         await scope.CompleteAsync();
         return OperationResult.Ok();
+    }
+
+    public const string MembershipsOp = "library.image.memberships";
+    public const string NoGalleryReason = "That gallery no longer exists.";
+
+    /// <summary>
+    /// 014 L2 with gallery membership (contracts/http.md "Processing order"). EVERYTHING is
+    /// validated before any write (FR-014): (1) the text, through <see cref="UpdateTextAsync"/>'s
+    /// refusal; (2) an empty <paramref name="edit"/> is exactly <see cref="UpdateTextAsync"/>; (3) the
+    /// image (NotFound); (4) every create title (<see cref="GalleryService.TitleProblem"/>, 422);
+    /// (5) every add/leave id (<c>OpaqueId.IsValid</c>, then ONE <c>db.gallery.load</c> find), a
+    /// missing one refused 404 "That gallery no longer exists.". Then (6) the text write and (7) ONE
+    /// <c>image.memberships</c> scope, timed as <c>library.image.memberships</c>: leave, add, create
+    /// (each create is <see cref="GalleryService.CreateAsync"/> then
+    /// <see cref="GalleryService.AddOneAsync"/>). [SAFETY] II.5: no visibility write; created
+    /// galleries are private.
+    /// </summary>
+    public async Task<OperationResult> SavePanelAsync(string iid, string? title, string? caption, MembershipEdit edit)
+    {
+        // 1. Text problem: UpdateTextAsync refuses it (422) and writes nothing.
+        if (TextProblem(title, caption) is not null)
+        {
+            if (!edit.IsEmpty) Outcome("refused");
+            return await UpdateTextAsync(iid, title, caption);
+        }
+
+        // 2. No membership work: exactly today's L2.
+        if (edit.IsEmpty) return await UpdateTextAsync(iid, title, caption);
+
+        // 3. The photo.
+        var image = await timer.Time("db.gallery.load", () =>
+            _images.Find(Builders<ImageDoc>.Filter.Eq(i => i.Id, iid)).Project(i => new { i.Id, i.DeletingAt }).FirstOrDefaultAsync());
+        if (image is null || image.DeletingAt is not null)
+        {
+            Outcome("notfound");
+            return OperationResult.NotFound();
+        }
+
+        // 4. Every create title.
+        foreach (var t in edit.Create)
+        {
+            if (GalleryService.TitleProblem(t, options) is { } problem)
+            {
+                Outcome("refused");
+                return OperationResult.Refused(422, problem);
+            }
+        }
+
+        // 5. Every named gallery exists (one find).
+        var named = edit.Add.Concat(edit.Leave).Distinct(StringComparer.Ordinal).ToList();
+        if (named.Count > 0)
+        {
+            if (!named.All(OpaqueId.IsValid)) return NoGallery();
+            var found = await timer.Time("db.gallery.load", () =>
+                _galleries.Find(Builders<GalleryDoc>.Filter.In(g => g.Id, named)).Project(g => g.Id).ToListAsync());
+            if (!found.ToHashSet(StringComparer.Ordinal).SetEquals(named)) return NoGallery();
+        }
+
+        // 6. The text (own scope, P-TEXT when it changed).
+        var text = await UpdateTextAsync(iid, title, caption);
+        if (!text.IsOk) return text;
+
+        // 7. The membership writes in ONE scope: leave, add, create.
+        return await timer.Time(MembershipsOp, async () =>
+        {
+            var scope = galleries.Begin("image.memberships");
+            foreach (var gid in edit.Leave)
+                await galleries.RemoveOneAsync(gid, iid, scope);
+            foreach (var gid in edit.Add)
+                await galleries.AddOneAsync(gid, iid, scope);
+            foreach (var t in edit.Create)
+            {
+                var created = await galleries.CreateAsync(t);
+                if (created.IsOk) await galleries.AddOneAsync(created.GalleryId!, iid, scope);
+            }
+            await scope.CompleteAsync();
+            return OperationResult.Ok();
+        });
+
+        OperationResult NoGallery()
+        {
+            Outcome("notfound");
+            return OperationResult.Refused(404, NoGalleryReason);
+        }
+    }
+
+    private void Outcome(string outcome) => OpTiming.Log(log, MembershipsOp, 0, outcome);
+
+    /// <summary>The L2 text rules: title (when sent) per <see cref="GalleryService.TitleProblem"/>, caption 0..<c>CaptionMax</c>. Null when valid.</summary>
+    private string? TextProblem(string? title, string? caption)
+    {
+        if (title is not null && GalleryService.TitleProblem(title, options) is { } problem) return problem;
+        var cap = caption?.Trim();
+        if (cap is not null && cap.Length > options.CaptionMax)
+            return $"The caption can be at most {options.CaptionMax} characters.";
+        return null;
     }
 
     /// <summary>

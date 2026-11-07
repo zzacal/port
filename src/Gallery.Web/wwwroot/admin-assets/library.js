@@ -17,10 +17,17 @@
 //     (publish/unpublish at once, no confirm). The builder's switch belongs to its Save form and
 //     submits nothing on change (owner feedback: typed edits are never lost).
 //   - The page heading's "New gallery" opens <dialog id="gal-new">; Cancel closes it.
+//   Combobox (TokenCombobox molecule, feature 014 K1; the photo panel's Galleries field):
+//   - Typing filters the options by the rules of TokenCombobox.Match (mirrored here), with the
+//     first row highlighted and a "+ text" create row; Down/Up move, Enter or a mousedown picks,
+//     Esc closes an open list (and stops there), Backspace in an empty input removes the last token.
+//   - A pick clones the component's <template> into a pending token with its hidden add/create
+//     input; × removes a token (a saved one leaves a hidden remove input) and focus moves to the
+//     next ×. cb-empty / cb-warn are kept current and .cb-status announces each change.
 //
 // Elements are resolved when an event happens (event delegation on the document), never cached at
 // load, so markup declared after the script, or replaced later, is always found. Text is set with
-// textContent and elements are built with createElement only.
+// textContent and elements are built with createElement or cloned from a <template> only.
 
 const ids = (root) => [...root.querySelectorAll('input[type="checkbox"][name="ids"]')];
 const ticked = (root) => ids(root).filter((box) => box.checked);
@@ -160,6 +167,330 @@ document.addEventListener('close', (e) => {
   openers.delete(dialog);
   if (opener?.isConnected && !opener.disabled) opener.focus();
 }, true);
+
+// ── combobox (TokenCombobox molecule) ─────────────────────────────────────────
+// contracts/components.md K1 "Behaviour". The filter rules MIRROR TokenCombobox.Match (C#), pinned
+// by GalleryFieldBrowserTests' parity test: change one, change both.
+
+const cbOf = (el) => (el instanceof Element ? el.closest('.combobox') : null);
+const cbInput = (root) => root.querySelector('.cb-input');
+const cbList = (root) => root.querySelector('.cb-list');
+const cbNewRow = (root) => root.querySelector('.cb-list > .cb-new');
+const cbOptionRows = (root) => [...root.querySelectorAll('.cb-list > .cb-opt:not(.cb-new)')];
+const cbTokenItems = (root) => [...root.querySelectorAll('.cb-tokens > .cb-token')];
+const cbVisibleRows = (root) => [...root.querySelectorAll('.cb-list > .cb-opt')].filter((r) => !r.hidden);
+const cbIsOpen = (root) => cbInput(root)?.getAttribute('aria-expanded') === 'true';
+
+/** `string.Format`-style `{0}` replacement. */
+const cbFormat = (format, arg) => (format ?? '{0}').split('{0}').join(arg);
+
+/** A token's label: the text of its link or span. */
+const cbTokenLabel = (li) => li.querySelector(':scope > a, :scope > span')?.textContent ?? '';
+
+/** Ordinal comparison (UTF-16 code units, as .NET's StringComparer.Ordinal). */
+const cbOrdinal = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+
+/**
+ * TokenCombobox.Match, mirrored. options: [{ id, label }]; tokens: [{ id, label, kind }] where
+ * kind is 'saved' | 'add' | 'create'. Case-insensitive tests compare lower-cased strings; the label
+ * tie-break compares upper-cased strings with plain < (never localeCompare): .NET's
+ * StringComparer.OrdinalIgnoreCase orders by the upper-cased code units.
+ */
+function cbMatch(query, options, tokens, maxShown, createMax, allowCreate) {
+  const q = (query ?? '').trim();
+  if (q.length === 0) return { shown: [], createLabel: null, message: null, status: '' };
+  const ql = q.toLowerCase();
+  const taken = new Set(tokens.filter((t) => t.kind !== 'create').map((t) => t.id));
+  const rank = (label) => {
+    const l = label.toLowerCase();
+    return l === ql ? 0 : l.startsWith(ql) ? 1 : 2;
+  };
+
+  const shown = options
+    .filter((o) => o.label.toLowerCase().includes(ql) && !taken.has(o.id))
+    .map((o) => ({ o, r: rank(o.label), k: o.label.toUpperCase() }))
+    .sort((a, b) => a.r - b.r || cbOrdinal(a.k, b.k) || cbOrdinal(a.o.id, b.o.id))
+    .slice(0, Math.max(0, maxShown))
+    .map((x) => x.o);
+
+  const exact = options.some((o) => o.label.toLowerCase() === ql)
+    || tokens.some((t) => t.kind === 'create' && t.label.toLowerCase() === ql);
+
+  let createLabel = null;
+  let message = null;
+  if (allowCreate && createMax !== null && q.length > createMax) {
+    message = `Too long: at most ${createMax} characters.`;
+  } else {
+    createLabel = allowCreate && !exact ? q : null;
+  }
+
+  const n = shown.length + (createLabel === null ? 0 : 1);
+  const status = n === 0 && exact ? 'Already added'
+    : n === 0 ? 'No matches'
+    : n === 1 ? '1 option'
+    : `${n} options`;
+  return { shown, createLabel, message, status };
+}
+
+function cbSettings(root) {
+  const max = Number(root.dataset.maxShown);
+  const createMax = root.dataset.createMax === '' || root.dataset.createMax === undefined
+    ? null : Number(root.dataset.createMax);
+  return {
+    maxShown: Number.isFinite(max) ? max : 10,
+    createMax: Number.isFinite(createMax) ? createMax : null,
+    allowCreate: root.dataset.allowCreate === 'true',
+  };
+}
+
+function cbTokens(root) {
+  return cbTokenItems(root).map((li) => ({ id: li.dataset.id ?? '', label: cbTokenLabel(li), kind: li.dataset.kind ?? 'saved' }));
+}
+
+function cbSay(root, text) {
+  const status = root.querySelector('.cb-status');
+  if (status) status.textContent = text;
+}
+
+/** Highlights visible row i (or none when i < 0): aria-selected plus aria-activedescendant. */
+function cbHighlight(root, i) {
+  const input = cbInput(root);
+  const visible = cbVisibleRows(root);
+  for (const row of root.querySelectorAll('.cb-list > .cb-opt')) row.setAttribute('aria-selected', 'false');
+  const row = i >= 0 && i < visible.length ? visible[i] : null;
+  if (row) {
+    row.setAttribute('aria-selected', 'true');
+    input?.setAttribute('aria-activedescendant', row.id);
+    if (typeof row.scrollIntoView === 'function') row.scrollIntoView({ block: 'nearest' });
+  } else {
+    input?.removeAttribute('aria-activedescendant');
+  }
+}
+
+function cbHighlighted(root) {
+  return cbVisibleRows(root).findIndex((r) => r.getAttribute('aria-selected') === 'true');
+}
+
+function cbClose(root) {
+  const list = cbList(root);
+  if (list) list.hidden = true;
+  cbInput(root)?.setAttribute('aria-expanded', 'false');
+  cbHighlight(root, -1);
+}
+
+/** Re-filters the rows for the input's text (K1: show/hide, re-order, the + row, message, status). */
+function cbFilter(root) {
+  const input = cbInput(root);
+  const list = cbList(root);
+  const newRow = cbNewRow(root);
+  if (!input || !list || !newRow) return;
+  const { maxShown, createMax, allowCreate } = cbSettings(root);
+  const rows = cbOptionRows(root);
+  const options = rows.map((row) => ({ id: row.dataset.id ?? '', label: row.dataset.label ?? '', row }));
+  const m = cbMatch(input.value, options, cbTokens(root), maxShown, createMax, allowCreate);
+
+  const shown = new Set(m.shown.map((o) => o.row));
+  for (const row of rows) row.hidden = !shown.has(row);
+  for (const o of m.shown) list.insertBefore(o.row, newRow);
+  newRow.hidden = m.createLabel === null;
+  newRow.textContent = m.createLabel === null ? '+ ' : `+ ${m.createLabel}`;
+
+  const msg = root.querySelector('.cb-msg');
+  if (msg) msg.textContent = m.message ?? '';
+
+  const open = m.shown.length > 0 || m.createLabel !== null;
+  list.hidden = !open;
+  input.setAttribute('aria-expanded', open ? 'true' : 'false');
+  cbHighlight(root, open ? 0 : -1);
+  cbSay(root, m.status);
+}
+
+/** cb-empty shows only with no tokens; cb-warn lists each pending add's formatted warning. */
+function cbRefresh(root) {
+  const items = cbTokenItems(root);
+  const empty = root.querySelector('.cb-empty');
+  if (empty) empty.hidden = items.length > 0;
+  const warn = root.querySelector('.cb-warn');
+  if (!warn) return;
+  const rows = cbOptionRows(root);
+  const text = items
+    .filter((li) => li.dataset.kind === 'add')
+    .map((li) => rows.find((r) => r.dataset.id === li.dataset.id)?.dataset.warning)
+    .filter((w) => w !== undefined && w !== null)
+    .map((w) => cbFormat(root.dataset.warningFormat, w))
+    .join(' ');
+  warn.textContent = text;
+  warn.hidden = text.length === 0;
+}
+
+/** A fresh token from the add or create template: span text and title, data-id, × name, input value. */
+function cbFromTemplate(root, cls, id, label) {
+  const tpl = root.querySelector(`template.${cls}`);
+  const li = tpl?.content.firstElementChild?.cloneNode(true);
+  if (!(li instanceof Element)) return null;
+  li.setAttribute('data-id', id);
+  const span = li.querySelector('span');
+  if (span) {
+    span.textContent = label;
+    span.setAttribute('title', label);
+  }
+  const x = li.querySelector('.cb-x');
+  if (x) {
+    x.textContent = '×';
+    x.setAttribute('aria-label', cbFormat(root.dataset.removeLabel, label));
+  }
+  const hidden = li.querySelector('input[type="hidden"]');
+  if (hidden) hidden.value = id;
+  return li;
+}
+
+/** The hidden RemoveName input holding <paramref name="id"/>, if the token was removed this visit. */
+function cbRemoveInput(root, id) {
+  const name = root.dataset.removeName ?? 'remove';
+  return [...root.querySelectorAll(':scope > input[type="hidden"]')].find((i) => i.name === name && i.value === id) ?? null;
+}
+
+function cbPick(root, row) {
+  const input = cbInput(root);
+  const ul = root.querySelector('.cb-tokens');
+  if (!input || !ul) return;
+  let li;
+  let said;
+  if (row.classList.contains('cb-new')) {
+    const q = input.value.trim();
+    if (q.length === 0) return;
+    li = cbFromTemplate(root, 'cb-tpl-create', q, q);
+    said = `Added new ${q}`;
+  } else {
+    const id = row.dataset.id ?? '';
+    const label = row.dataset.label ?? '';
+    li = cbFromTemplate(root, 'cb-tpl-add', id, label);
+    const removed = cbRemoveInput(root, id);
+    if (li && removed) {
+      // Re-picking a saved token removed this visit restores it: no leave, no add.
+      removed.remove();
+      li.querySelector('input[type="hidden"]')?.remove();
+      li.setAttribute('data-kind', 'saved');
+      li.classList.remove('is-pending');
+    }
+    said = `Added ${label}`;
+  }
+  if (!li) return;
+  ul.append(li);
+  input.value = '';
+  cbClose(root);
+  input.focus();
+  cbRefresh(root);
+  cbSay(root, said);
+}
+
+/** Removes a token: a saved one leaves a RemoveName input; focus to the next ×, else the input. */
+function cbRemove(root, li, moveFocus) {
+  const label = cbTokenLabel(li);
+  if (li.dataset.kind === 'saved') {
+    const tpl = root.querySelector('template.cb-tpl-remove');
+    const hidden = tpl?.content.firstElementChild?.cloneNode(true);
+    if (hidden instanceof HTMLInputElement) {
+      hidden.value = li.dataset.id ?? '';
+      root.append(hidden);
+    }
+  }
+  const next = li.nextElementSibling;
+  li.remove();
+  cbRefresh(root);
+  cbSay(root, `Removed ${label}`);
+  if (moveFocus) {
+    const x = next?.querySelector('.cb-x');
+    if (x instanceof HTMLElement) x.focus();
+    else cbInput(root)?.focus();
+  }
+}
+
+document.addEventListener('input', (e) => {
+  const el = e.target;
+  if (!(el instanceof HTMLInputElement) || !el.classList.contains('cb-input')) return;
+  const root = cbOf(el);
+  if (root) cbFilter(root);
+});
+
+// Capture phase, so Esc's stopPropagation keeps a list-closing Esc from reaching any outer handler.
+document.addEventListener('keydown', (e) => {
+  const el = e.target;
+  if (!(el instanceof HTMLInputElement) || !el.classList.contains('cb-input')) return;
+  const root = cbOf(el);
+  if (!root) return;
+  const open = cbIsOpen(root);
+
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    if (!open) {
+      if (el.value.trim().length === 0) return;
+      cbFilter(root);
+      e.preventDefault();
+      return;
+    }
+    e.preventDefault();
+    const n = cbVisibleRows(root).length;
+    if (n === 0) return;
+    const at = cbHighlighted(root);
+    const step = e.key === 'ArrowDown' ? 1 : -1;
+    cbHighlight(root, at < 0 ? (step > 0 ? 0 : n - 1) : (at + step + n) % n);
+    return;
+  }
+  if (e.key === 'Enter') {
+    if (!open) return;
+    e.preventDefault();
+    const row = cbVisibleRows(root)[cbHighlighted(root)];
+    if (row) cbPick(root, row);
+    return;
+  }
+  if (e.key === 'Escape') {
+    if (!open) return;
+    e.preventDefault();
+    e.stopPropagation();
+    cbClose(root);
+    return;
+  }
+  if (e.key === 'Backspace' && el.value.length === 0) {
+    const items = cbTokenItems(root);
+    const last = items[items.length - 1];
+    if (last) {
+      e.preventDefault();
+      cbRemove(root, last, false);
+    }
+  }
+}, true);
+
+// A row is picked on mousedown, with the default prevented, so focus stays in the input (P5).
+document.addEventListener('mousedown', (e) => {
+  const row = e.target instanceof Element ? e.target.closest('.combobox .cb-list > .cb-opt') : null;
+  if (!row || row.hidden) return;
+  const root = cbOf(row);
+  if (!root) return;
+  e.preventDefault();
+  cbPick(root, row);
+});
+
+document.addEventListener('click', (e) => {
+  const x = e.target instanceof Element ? e.target.closest('.combobox .cb-tokens .cb-x') : null;
+  if (!x) return;
+  const root = cbOf(x);
+  const li = x.closest('.cb-token');
+  if (!root || !li) return;
+  e.preventDefault();
+  cbRemove(root, li, true);
+});
+
+// Leaving the field with text that was never picked: say so and keep the text (never saved).
+document.addEventListener('focusout', (e) => {
+  const el = e.target;
+  if (!(el instanceof HTMLInputElement) || !el.classList.contains('cb-input')) return;
+  const root = cbOf(el);
+  if (!root) return;
+  const to = e.relatedTarget;
+  if (to instanceof Node && cbList(root)?.contains(to)) return;
+  cbClose(root);
+  if (el.value.trim().length > 0) cbSay(root, 'Not added');
+});
 
 // ── events ────────────────────────────────────────────────────────────────────
 

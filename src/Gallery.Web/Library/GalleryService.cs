@@ -198,19 +198,40 @@ public sealed class GalleryService
     /// </summary>
     public async Task<OperationResult> RemoveAsync(string gid, string iid)
     {
+        // The NotFound / non-member answers stay BEFORE Begin: completing even an empty scope runs
+        // the site projection (and its log lines), which B5 never did for those cases.
         var gallery = await LoadAsync(gid);
         if (gallery is null) return OperationResult.NotFound();
         if (!gallery.Items.Contains(iid))
             return OperationResult.Ok() with { Removed = 0, GalleryId = gid };
 
-        await Indexes.EnsureOnceAsync(_db);
         var scope = Begin("gallery.remove");
+        var r = await RemoveOneAsync(gid, iid, scope, gallery);
+        await scope.CompleteAsync();
+        return r;
+    }
+
+    /// <summary>
+    /// The single-item remove (B5's body, 014 research R-03) inside the caller's
+    /// <paramref name="scope"/>: loads the gallery (or uses the caller's just-loaded
+    /// <paramref name="loaded"/>), answers NotFound for an unknown gallery and Ok with
+    /// <c>Removed = 0</c> for a non-member; otherwise touches it with <see cref="PurgeKind.Members"/>,
+    /// <see cref="PullAsync"/>s the image and <c>$pull</c>s the gallery id from its <c>galleryIds</c>.
+    /// The caller completes the scope.
+    /// </summary>
+    public async Task<OperationResult> RemoveOneAsync(string gid, string iid, OperationScope scope, GalleryDoc? loaded = null)
+    {
+        var gallery = loaded ?? await LoadAsync(gid);
+        if (gallery is null) return OperationResult.NotFound();
+        if (!gallery.Items.Contains(iid))
+            return OperationResult.Ok() with { Removed = 0, GalleryId = gid };
+
+        await Indexes.EnsureOnceAsync(_db);
         scope.Touch(GallerySnapshot.From(gallery), PurgeKind.Members);
         await PullAsync(gid, iid);
         await _timer.Time("db.image.update", () => _images.UpdateOneAsync(
             Builders<ImageDoc>.Filter.Eq(i => i.Id, iid),
             Builders<ImageDoc>.Update.Pull(i => i.GalleryIds, gid)));
-        await scope.CompleteAsync();
         return OperationResult.Ok() with { Removed = 1, GalleryId = gid };
     }
 

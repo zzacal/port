@@ -181,7 +181,7 @@ public class LibraryEditTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         await h.SettleAsync();
 
         var aside = Aside(await LibraryHtml.BodyAsync(await h.GetAsync($"/admin/library?open={img.Id}")));
-        var list = Regex.Match(aside, "<ul class=\"lib-galleries\".*?</ul>", RegexOptions.Singleline).Value;
+        var list = Regex.Match(aside, "<ul class=\"cb-tokens\".*?</ul>", RegexOptions.Singleline).Value;
         Assert.Equal([$"/admin/galleries/{a}", $"/admin/galleries/{b}"],
             Regex.Matches(list, "href=\"([^\"]+)\"").Select(m => m.Groups[1].Value).ToList());
         Assert.Contains(

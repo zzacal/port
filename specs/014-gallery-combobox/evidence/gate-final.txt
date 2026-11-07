@@ -1,0 +1,20 @@
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.85
+build exit 0
+Test run for /Users/zzacal/repos/gallery/artifacts/bin/Gallery.Core.Tests/debug/Gallery.Core.Tests.dll (.NETCoreApp,Version=v10.0)
+Test run for /Users/zzacal/repos/gallery/artifacts/bin/Gallery.Web.Tests/debug/Gallery.Web.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+A total of 1 test files matched the specified pattern.
+Data collector 'Blame' message: All tests finished running, Sequence file will not be generated.
+
+Passed!  - Failed:     0, Passed:   122, Skipped:     0, Total:   122, Duration: 105 ms - Gallery.Core.Tests.dll (net10.0)
+[xUnit.net 00:00:58.14]     Gallery.Web.Tests.NavBrowserTests.Hover_then_click_activates_a_prerendered_gallery_page_at_the_tile [SKIP]
+  Skipped Gallery.Web.Tests.NavBrowserTests.Hover_then_click_activates_a_prerendered_gallery_page_at_the_tile [1 ms]
+Data collector 'Blame' message: All tests finished running, Sequence file will not be generated.
+
+Passed!  - Failed:     0, Passed:  1328, Skipped:     1, Total:  1329, Duration: 4 m 17 s - Gallery.Web.Tests.dll (net10.0)
+test exit 0
