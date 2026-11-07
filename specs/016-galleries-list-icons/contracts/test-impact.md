@@ -7,7 +7,7 @@ unmodified.
 
 | # | Test | Change |
 |---|---|---|
-| A1 | `GalleryListTests.Card_statuses_dimming_View_and_Edit_links_and_switch_states` | The status span, the text View/Edit links, the `.gal-row` parts and `SwitchOf` become `GalleryActions` assertions: the eye or eye-off and its label per state; the view link `/g/{id}/{slug}` or the "No public page yet" span; the edit href, last; the visibility `form="gal-vis-{gid}"`. The dimming assertions are unchanged. Rename: `Card_states_dimming_and_icon_row`. |
+| A1 | `GalleryListTests.Card_statuses_dimming_View_and_Edit_links_and_switch_states` | The status span, the text View/Edit links, the `.gal-row` parts and `SwitchOf` become `GalleryActions` assertions: the eye or eye-off and its label per state; the view link `/g/{id}/{slug}` or the "No public page" span; the edit href, last; the visibility `form="gal-vis-{gid}"`. The dimming assertions are unchanged. Rename: `Card_states_dimming_and_icon_row`. |
 | A2 | `GalleryListTests` helpers `SwitchOf` (and any `.gal-status` helper) | Replaced by a `VisibilityOf(row)` helper. `CardOf` is unchanged. |
 | A3 | `BuilderTests:357-361` | The list status "Public · hidden until it has a photo" plus an enabled, checked switch become the eye label "Public, hidden until it has a photo. Make private" on an enabled submit button with no `name="public"`. |
 | A4 | `PublishRefusalTests:207-218` (list half) | The disabled switch plus the visible reason hint become the unavailable eye-off span labelled "Private. Add a photo before making this gallery public". The builder half is unchanged. |

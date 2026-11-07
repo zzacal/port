@@ -33,7 +33,7 @@ The visibility state determines the icon, the availability and the name:
 | false | false | `eye-off` | unavailable span | "Private. Add a photo before making this gallery public" | nothing |
 
 View: a link to `ViewHref`, with a new-tab marker, named "View {Title} (opens in a new tab)".
-When `ViewHref` is null it is an unavailable span named "No public page yet".
+When `ViewHref` is null it is an unavailable span named "No public page".
 
 Edit: a link to `EditHref`, named "Edit {Title}". It is always present and always last.
 

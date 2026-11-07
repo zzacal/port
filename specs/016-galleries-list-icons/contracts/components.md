@@ -19,6 +19,10 @@ The parameters and the state table are in [data-model.md](../data-model.md).
   3. view: an `IconButton` link with `Target="_blank"`, or the unavailable span;
   4. edit: an `IconButton` link.
   Edit is the last child on every card.
+- Classes, verbatim: root `gallery-actions`; `IconButton CssClass` `ga-vis`, `ga-view` and
+  `ga-edit` (as PhotoActions' `pa-view`). The move control keeps DragHandle's own `handle` class.
+  Icon names: `grip-vertical` (DragHandle icon mode, as 015), `eye`/`eye-off`,
+  `square-arrow-out-up-right` (view, as PhotoActions), `pencil` (edit, as PhotoActions).
 - G2a, visibility:
   - Available: `IconButton Type="submit" FormId="{VisibilityForm}"`. `Name="public" Value="on"`
     is set only when the gallery is private (to publish); the public case sends no `public`
