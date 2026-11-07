@@ -235,7 +235,7 @@ public sealed class LibraryBrowserTests(LibraryBrowserFixture fx)
         var page = await site.OpenAsync("/admin/galleries");
 
         var grid = page.Locator("section.gal reorder-grid");
-        var from = await grid.Locator(".cs > *").Nth(2).Locator(".gal-row .handle").BoundingBoxAsync();
+        var from = await grid.Locator(".cs > *").Nth(2).Locator(".gallery-actions .handle").BoundingBoxAsync();
         var target = await grid.Locator(".cs > *").Nth(0).Locator(".cell").BoundingBoxAsync();
 
         await page.Mouse.MoveAsync(from!.X + from.Width / 2, from.Y + from.Height / 2);
@@ -406,22 +406,22 @@ public sealed class LibraryBrowserTests(LibraryBrowserFixture fx)
         var gid = await site.GalleryAsync("Coast", ids);
         var page = await site.OpenAsync("/admin/galleries");
 
-        var card = page.Locator($"section.gal reorder-grid .cs > *:has(a[href='/admin/galleries/{gid}'])");
-        var input = card.Locator(".gal-row input[role='switch']");
-        Assert.False(await input.EvaluateAsync<bool>("i => i.checked"), "a private gallery's switch is checked after load");
+        // 016 A6 (stated change): the switch is now the visibility icon, a submit button on gal-vis-{gid}.
+        var card = $"section.gal reorder-grid .cs > *:has(a[href='/admin/galleries/{gid}'])";
+        Task<string?> IconAsync() => page.Locator($"{card} .gallery-actions .ga-vis svg").GetAttributeAsync("data-icon");
+        Assert.Equal("eye-off", await IconAsync());
 
-        // No confirmation step on the list (DEFAULT decision): the switch publishes at once.
-        await NavigatesAsync(page, () => card.Locator(".gal-row label.switch").ClickAsync());
+        // No confirmation step on the list (DEFAULT decision): the icon publishes at once.
+        await NavigatesAsync(page, () => page.Locator($"{card} .gallery-actions .ga-vis").ClickAsync());
         Assert.Equal("public", (await site.GalleryDocAsync(gid)).Visibility);
         Assert.Equal(0, await page.Locator(".publish-warning").CountAsync());
         Assert.Equal(["New gallery"], (await FilledAsync(page)).Outside);
-        var after = page.Locator($"section.gal reorder-grid .cs > *:has(a[href='/admin/galleries/{gid}']) .gal-row input[role='switch']");
-        Assert.True(await after.EvaluateAsync<bool>("i => i.checked"));
+        Assert.Equal("eye", await IconAsync());
 
-        // And off again: unpublished at once.
-        await NavigatesAsync(page, () =>
-            page.Locator($"section.gal reorder-grid .cs > *:has(a[href='/admin/galleries/{gid}']) .gal-row label.switch").ClickAsync());
+        // And again: unpublished at once.
+        await NavigatesAsync(page, () => page.Locator($"{card} .gallery-actions .ga-vis").ClickAsync());
         Assert.Equal("private", (await site.GalleryDocAsync(gid)).Visibility);
+        Assert.Equal("eye-off", await IconAsync());
     }
 
     [Fact]
@@ -493,7 +493,7 @@ public sealed class LibraryBrowserTests(LibraryBrowserFixture fx)
         Assert.Empty(await AssertRowsUnderCellsAsync(builder, ".builder .cs > .tile", ".b-ctl", $"builder @{width}"));
 
         var list = await site.OpenAsync("/admin/galleries", width);
-        Assert.Empty(await AssertRowsUnderCellsAsync(list, "section.gal .cs > *", ".gal-row", $"gallery list @{width}"));
+        Assert.Empty(await AssertRowsUnderCellsAsync(list, "section.gal .cs > *", ".gallery-actions", $"gallery list @{width}"));
     }
 
     // ── UI-3 / UI-4 per state ──────────────────────────────────────────────────────────────

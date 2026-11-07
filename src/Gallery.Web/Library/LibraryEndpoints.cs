@@ -40,15 +40,6 @@ public sealed record LibraryPageModel(
 public sealed record GalleryRow(GalleryRef Gallery, ImageView? Cover)
 {
     public bool HasPhotos => Gallery.PhotoCount > 0;
-
-    /// <summary>The C2 status line.</summary>
-    public string Status => (Gallery.IsPublic, HasPhotos) switch
-    {
-        (true, true) => "Public",
-        (true, false) => "Public · hidden until it has a photo",
-        (false, true) => "Private",
-        (false, false) => "Private · no photos",
-    };
 }
 
 /// <summary>What the gallery list (C2, G1) renders, built by <see cref="LibraryEndpoints"/>.</summary>

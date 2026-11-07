@@ -354,12 +354,15 @@ public class BuilderTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixture
         Assert.Contains($"/g/{later}/later", home);
         Assert.Equal(HttpStatusCode.NotFound, (await h.GetAsync($"/g/{gid}/coast")).StatusCode);
         var list = await GalleryHtml.GetOkAsync(h, "/admin/galleries");
-        Assert.Equal("Public · hidden until it has a photo",
-            Regex.Match(GalleryHtml.CardOf(list, gid), "<span class=\"gal-status\"[^>]*>([^<]*)</span>").Groups[1].Value);
-        // An empty PUBLIC gallery keeps a working switch (checked, not disabled) so it can be unpublished.
-        var sw = GalleryHtml.SwitchOf(GalleryHtml.CardOf(list, gid));
-        Assert.True(GalleryHtml.HasAttr(sw, "checked"), sw);
-        Assert.False(GalleryHtml.HasAttr(sw, "disabled"), sw);
+        // 016 A3 (stated change): the list card's eye names the state, and an empty PUBLIC gallery keeps
+        // a working control (an enabled submit button with no public field) so it can be unpublished.
+        var vis = GalleryHtml.VisibilityOf(GalleryHtml.CardOf(list, gid));
+        var visTag = Regex.Match(vis, "^<[^>]*>").Value;
+        Assert.StartsWith("<button ", visTag);
+        Assert.Contains("aria-label=\"Public, hidden until it has a photo. Make private\"", visTag);
+        Assert.Contains("type=\"submit\"", visTag);
+        Assert.False(GalleryHtml.HasAttr(visTag, "name"), visTag);
+        Assert.False(GalleryHtml.HasAttr(visTag, "disabled"), visTag);
 
         // The empty builder: the existing copy with the library link. 010 owner review 1 (stated change,
         // decisions row 47): no "Back to galleries" and no View link; the breadcrumb leads back.

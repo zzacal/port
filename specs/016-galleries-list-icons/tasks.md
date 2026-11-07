@@ -182,7 +182,7 @@ Batch B owns:
 - `src/Gallery.Web/wwwroot/admin-assets/library.js` (J1 only);
 - the new `tests/Gallery.Web.Tests/GalleryListBrowserTests.cs`.
 
-- [ ] T012 [US1] In `src/Gallery.Web/Admin/Pages/GalleriesPage.razor`, apply G3:
+- [X] T012 [US1] In `src/Gallery.Web/Admin/Pages/GalleriesPage.razor`, apply G3:
   - a cover card is `Tile TitleOnPhoto="true"` with a GalleryActions caption;
   - an empty card is `.gal-tile.tile-empty`, with `<span class="gal-band">` holding the title
     inside `.cell` (replacing the `Title` under it), followed by GalleryActions;
@@ -192,20 +192,20 @@ Batch B owns:
     only when HasPhotos; EditHref `/admin/galleries/{id}`; DragLabel `Move {title}`;
     Position/Total;
   - update the header comment (UI-2: the icon row).
-- [ ] T013 [US1] In `GalleriesPage.razor.css`:
+- [X] T013 [US1] In `GalleriesPage.razor.css`:
   - remove `.gal-row` and `.gal-status`;
   - add `.gal-tile .cell` `position: relative`, plus `.gal-band`, an absolutely positioned
     bottom band with the values of 015's `.on-photo` (copy them from `Tile.razor.css`): one line
     with an ellipsis, and the full title in a `title` attribute on the band span.
-- [ ] T014 [US1] In `src/Gallery.Web/Library/LibraryEndpoints.cs`, remove `GalleryRow.Status` and
+- [X] T014 [US1] In `src/Gallery.Web/Library/LibraryEndpoints.cs`, remove `GalleryRow.Status` and
   its doc comment (R-04). Grep `src/` for any other `.Status` consumer of GalleryRow first; R-09
   found none.
-- [ ] T015 [US2] [SAFETY] In `src/Gallery.Web/wwwroot/admin-assets/library.js`, apply J1:
+- [X] T015 [US2] [SAFETY] In `src/Gallery.Web/wwwroot/admin-assets/library.js`, apply J1:
   - remove the `gal-vis-` submit branch in the `change` handler, keeping the builder switch's
     return-early path, so a non-gal-vis switch still submits nothing;
   - remove the header comment's gal-vis line.
   Leave the visibility route, the forms and `from=list` untouched.
-- [ ] T016 [US1] [US2] Write `tests/Gallery.Web.Tests/GalleryListBrowserTests.cs`
+- [X] T016 [US1] [US2] Write `tests/Gallery.Web.Tests/GalleryListBrowserTests.cs`
   (`[Collection("library-browser")]`, `LibraryBrowserFixture`):
   - US1, at 390, 900 and 1440:
     - every card's `.gallery-actions` children in order EQUAL
@@ -260,9 +260,9 @@ Batch C owns:
   `GalleryBuilder.razor.css`, with `b-sheet` (PARENT-FIX, was `b-grid`) and `991.98px`. Keep every builder hook
   (`reorder-grid` must still find `.cs`; check that `reorder.js`'s `querySelector('.cs')` still
   resolves inside the wrapper).
-- [ ] T019 [US3] Galleries list: `ContactSheet Large="3" Medium="2" Small="1"` and
+- [X] T019 [US3] Galleries list: `ContactSheet Large="3" Medium="2" Small="1"` and
   `Sizes.ForGrid(3, 2, 1)` in `GalleriesPage.razor`. No container query (R-07).
-- [ ] T020 [US3] Write `tests/Gallery.Web.Tests/GridWidthBrowserTests.cs` (SC-007):
+- [X] T020 [US3] Write `tests/Gallery.Web.Tests/GridWidthBrowserTests.cs` (SC-007):
   - widths 600, 700, 760, 900, 1199, 1200, 1300, 1440 and 1920;
   - grids:
     - library (panel closed; panel open via `?open={id}`);
@@ -282,7 +282,7 @@ Batch C owns:
 
 ## Phase 5: Polish and cross-cutting (parent unless marked)
 
-- [ ] T021 [P] Check `IconRegistryGuardTests`: it passes unmodified, and the used-name set
+- [X] T021 [P] Check `IconRegistryGuardTests`: it passes unmodified, and the used-name set
   includes `eye` and `eye-off`. If it misses them (a new call shape), escalate; don't edit it.
 - [X] T022 [P] VII.2 design-record update, scripted in
   `specs/016-galleries-list-icons/evidence/design-record-edit.py` (counts asserted), in
