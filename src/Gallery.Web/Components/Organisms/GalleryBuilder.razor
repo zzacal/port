@@ -18,7 +18,8 @@
         }
         else
         {
-            <ContactSheet Large="4" Medium="3" Small="1">
+            <div class="b-sheet">
+            <ContactSheet Large="4" Medium="2" Small="1">
                 @for (var i = 0; i < Items.Count; i++)
                 {
                     var index = i;
@@ -39,7 +40,7 @@
                     {
                         <div class="drop-slot" aria-hidden="true"></div>
                     }
-                    <Tile Image="item" Href="@((string?)null)" Sizes="@Sizes.ForGrid(4, 3, 1)" CssClass="@cssClass" TitleOnPhoto="true">
+                    <Tile Image="item" Href="@((string?)null)" Sizes="@Sizes.ForGrid(4, 2, 1)" CssClass="@cssClass" TitleOnPhoto="true">
                         <Caption>
                             <div class="b-ctl">
                                 <DragHandle Label="@($"Move {tileTitle}")" State="@handleState" Position="@(index + 1)" Total="@Items.Count" Icon="true" />
@@ -49,6 +50,7 @@
                     </Tile>
                 }
             </ContactSheet>
+            </div>
         }@ReorderClose
     </section>
     <SidePanel Heading="Gallery" State="SaveState.Idle" FormId="@FormId" SaveVariant="ButtonVariant.Primary">

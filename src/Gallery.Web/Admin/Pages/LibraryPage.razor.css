@@ -35,3 +35,15 @@
     white-space: nowrap;
     border: 0;
 }
+
+/* 016 G5 (R-07): the grid's own width decides the large column count. A 4-column row of tiles
+   needs 4 x 140 px rows + 240 px of gaps and padding = 800 px; with the side panel open the grid
+   is narrower than that from 1200 to about 1250 px, so it shows 2 columns there. The wrapper is the container
+   (section.lib holds the sticky selection bar, which containment would affect). */
+.lib-grid { container-type: inline-size; }
+
+@media (min-width: 1200px) {
+    @container (max-width: 799.98px) {
+        .lib-grid ::deep .cs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+}

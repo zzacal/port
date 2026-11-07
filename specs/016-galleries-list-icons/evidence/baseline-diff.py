@@ -75,7 +75,26 @@ def strip_builder(text: str) -> str:
         raise ValueError(f"cs-m2 x{n1}, new sizes x{n2} (expected both > 0)")
     if "cs-m3" in text or SIZES_OLD in text:
         raise ValueError("old cs-m3 or old sizes term still present")
-    return text.replace("cs-m2", "cs-m3").replace(SIZES_NEW, SIZES_OLD)
+    text = text.replace("cs-m2", "cs-m3").replace(SIZES_NEW, SIZES_OLD)
+    # The b-sheet wrapper: <div class="b-sheet" b-x><div class="cs ...">…</div></div> -> the inner div.
+    out, n, i = [], 0, 0
+    opener = re.compile(rf'<div class="b-sheet"{A}>')
+    while (m := opener.search(text, i)):
+        out.append(text[i:m.start()])
+        j, depth = m.end(), 1
+        tag = re.compile(r'<div\b|</div>')
+        while depth:
+            t = tag.search(text, j)
+            if t is None:
+                raise ValueError("unbalanced b-sheet wrapper")
+            depth += 1 if t.group(0) == "<div" else -1
+            j = t.end()
+        out.append(text[m.end():j - len("</div>")])
+        i, n = j, n + 1
+    out.append(text[i:])
+    if n == 0:
+        raise ValueError("no b-sheet wrapper")
+    return "".join(out)
 
 
 def plan(expect: set[str]):
@@ -163,7 +182,19 @@ def selftest() -> int:
         bp.write_text(t[:mm.end()] + add + t[mm.end():], encoding="utf-8")
         # B4
         gb = live / "organisms/gallery-builder.html"
-        gb.write_text(gb.read_text(encoding="utf-8").replace("cs-m3", "cs-m2").replace(SIZES_OLD, SIZES_NEW), encoding="utf-8")
+        t = gb.read_text(encoding="utf-8").replace("cs-m3", "cs-m2").replace(SIZES_OLD, SIZES_NEW)
+        # Wrap each cs div exactly: open before it, close after its balanced </div>.
+        out, i = [], 0
+        for m in list(re.finditer(r'<div class="cs cs-l4 cs-m2 cs-s1"(?: b-[a-z0-9]{10})*>', t)):
+            j, depth = m.end(), 1
+            while depth:
+                tt = re.compile(r'<div\b|</div>').search(t, j)
+                depth += 1 if tt.group(0) == "<div" else -1
+                j = tt.end()
+            out.append(t[i:m.start()] + '<div class="b-sheet" b-h86mnbxqdw>' + t[m.start():j] + "</div>")
+            i = j
+        out.append(t[i:])
+        gb.write_text("".join(out), encoding="utf-8")
         # B2
         (live / "molecules/gallery-actions.html").write_text("new", encoding="utf-8")
 

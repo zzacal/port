@@ -64,7 +64,7 @@ The parameters and the state table are in [data-model.md](../data-model.md).
   - list: `Large=3 Medium=2 Small=1`.
 - Each page's `Sizes.ForGrid(...)` call takes the same three numbers.
 - Library and builder: the `ContactSheet` sits in a wrapper `div` with
-  `container-type: inline-size` (class `lib-grid` and `b-grid`).
+  `container-type: inline-size` (class `lib-grid` and `b-sheet`; AMENDED at implement: `b-grid` is already the builder section's class).
 - Inside `@media (min-width: 1200px)`, `@container (max-width: N)` sets
   `.cs { grid-template-columns: repeat(2, minmax(0, 1fr)) }`:
   - library: N = 799.98px;

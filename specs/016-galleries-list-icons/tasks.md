@@ -48,7 +48,7 @@ names, in the same batch as the code.
   - type `GalleryActions`, with `VisibilityLabel(bool isPublic, bool hasPhotos)` as a public static
     method in `GalleryActions.cs`;
   - page `GalleryActionsPage`;
-  - classes `gallery-actions`, `ga-vis`, `ga-view`, `ga-edit`, `gal-band`, `lib-grid`, `b-grid`;
+  - classes `gallery-actions`, `ga-vis`, `ga-view`, `ga-edit`, `gal-band`, `lib-grid`, `b-sheet` (PARENT-FIX: was `b-grid`, which the builder's section already carries);
   - catalogue slug `molecules/gallery-actions`;
   - every label in data-model.md, verbatim.
 - **Icons**: copy `eye` and `eye-off` from
@@ -248,7 +248,7 @@ Batch C owns:
   Batch B lands (the parent sequences it);
 - the new `tests/Gallery.Web.Tests/GridWidthBrowserTests.cs`.
 
-- [ ] T017 [US3] Library, per G5:
+- [X] T017 [US3] Library, per G5:
   - in `LibraryPage.razor`, set `ContactSheet Large="4" Medium="2" Small="1"`;
   - change `GridSizes` to `Sizes.ForGrid(4, 2, 1)`;
   - wrap the ContactSheet in `<div class="lib-grid">`;
@@ -256,8 +256,8 @@ Batch C owns:
     `@media (min-width: 1200px)`, add `@container (max-width: 799.98px)` with
     `::deep .cs { grid-template-columns: repeat(2, minmax(0, 1fr)); }`. Confirm that the scoped
     selector reaches the ContactSheet's `.cs` (check the computed style in the browser test).
-- [ ] T018 [US3] Builder, per G5: the same change in `GalleryBuilder.razor` and
-  `GalleryBuilder.razor.css`, with `b-grid` and `991.98px`. Keep every builder hook
+- [X] T018 [US3] Builder, per G5: the same change in `GalleryBuilder.razor` and
+  `GalleryBuilder.razor.css`, with `b-sheet` (PARENT-FIX, was `b-grid`) and `991.98px`. Keep every builder hook
   (`reorder-grid` must still find `.cs`; check that `reorder.js`'s `querySelector('.cs')` still
   resolves inside the wrapper).
 - [ ] T019 [US3] Galleries list: `ContactSheet Large="3" Medium="2" Small="1"` and

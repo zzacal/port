@@ -24,7 +24,7 @@ unmodified.
 | B1 | `index.html` | +1 `li` (Gallery actions). |
 | B2 | `molecules/gallery-actions.html` | new. |
 | B3 | `atoms/icon.html`, `atoms/icon-button.html` | eye and eye-off specimens only. |
-| B4 | `organisms/gallery-builder.html` | `cs-m3` → `cs-m2`; the `sizes` medium term goes from 3 columns to 2; the `b-grid` wrapper `div`. |
+| B4 | `organisms/gallery-builder.html` | `cs-m3` → `cs-m2`; the `sizes` medium term goes from 3 columns to 2; the `b-sheet` wrapper `div` (AMENDED at implement, was `b-grid`). |
 | B5 | every other page | byte-identical. Review with `baseline-diff.py` (copied from 015). |
 
 ## (C) Unchanged by design

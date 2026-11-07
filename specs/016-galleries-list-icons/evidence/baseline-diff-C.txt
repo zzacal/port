@@ -1,0 +1,43 @@
+EQUAL atoms/button.html
+EQUAL atoms/exif-field.html
+EQUAL atoms/icon-button.html (after strip)
+EQUAL atoms/icon.html (after strip)
+EQUAL atoms/input.html
+EQUAL atoms/picture.html
+EQUAL atoms/select-mark.html
+EQUAL atoms/switch.html
+EQUAL atoms/text-link.html
+EQUAL atoms/title.html
+EQUAL index.html (after strip)
+EQUAL molecules/batch-item.html
+EQUAL molecules/brand.html
+EQUAL molecules/breadcrumb.html
+EQUAL molecules/cover-marker.html
+EQUAL molecules/danger-confirm.html
+EQUAL molecules/drag-handle.html
+NEW (review by eye) molecules/gallery-actions.html
+EQUAL molecules/gallery-neighbours.html
+EQUAL molecules/metadata-bar.html
+EQUAL molecules/nav.html
+EQUAL molecules/page-heading.html
+EQUAL molecules/pager.html
+EQUAL molecules/photo-actions.html
+EQUAL molecules/photo-count.html
+EQUAL molecules/selection-bar.html
+EQUAL molecules/tile.html
+EQUAL molecules/token-combobox.html
+EQUAL molecules/visibility-toggle.html
+EQUAL organisms/batch-footer.html
+EQUAL organisms/contact-sheet.html
+EQUAL organisms/gallery-builder.html (after strip)
+EQUAL organisms/owner-bar.html
+EQUAL organisms/side-panel.html
+EQUAL organisms/sign-in-card.html
+EQUAL organisms/site-header.html
+EQUAL organisms/solo-viewer.html
+EQUAL organisms/upload-dropzone.html
+EQUAL templates/admin-layout.html
+EQUAL templates/public-layout.html
+EQUAL tokens.html
+
+ALL EQUAL (expect A,C)
