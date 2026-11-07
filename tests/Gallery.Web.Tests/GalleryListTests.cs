@@ -78,6 +78,17 @@ internal static class GalleryHtml
         return m.Value;
     }
 
+    /// <summary>
+    /// 016 A2: the gallery-list card's visibility control inside <paramref name="html"/>: the
+    /// <c>ga-vis</c> submit button, or the unavailable <c>ga-vis</c> span (exactly one).
+    /// </summary>
+    public static string VisibilityOf(string html)
+    {
+        var all = LibraryHtml.Blocks(html, "button", "ga-vis").Concat(LibraryHtml.Blocks(html, "span", "ga-vis")).ToList();
+        Assert.True(all.Count == 1, $"{all.Count} visibility controls in: " + html);
+        return all[0];
+    }
+
     public static bool HasAttr(string tag, string name) => Regex.IsMatch(tag, $"\\s{Regex.Escape(name)}(=|\\s|/?>)");
 
     /// <summary>Text of every filled (btn-primary) control outside &lt;dialog&gt; elements.</summary>
@@ -122,7 +133,7 @@ public class GalleryListTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
     }
 
     [Fact]
-    public async Task Card_statuses_dimming_View_and_Edit_links_and_switch_states()
+    public async Task Card_states_dimming_and_icon_row()
     {
         await using var h = await LibraryHost.CreateAsync(mongo, s3);
         var ids = await GalleryHtml.ImageIdsAsync(h, 3);
@@ -134,13 +145,51 @@ public class GalleryListTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         await h.SettleAsync();
 
         var html = await GalleryHtml.GetOkAsync(h, "/admin/galleries");
-        string Status(string gid) =>
-            Regex.Match(GalleryHtml.CardOf(html, gid), "<span class=\"gal-status\"[^>]*>([^<]*)</span>").Groups[1].Value;
 
-        Assert.Equal("Public", Status(pub));
-        Assert.Equal("Private", Status(priv));
-        Assert.Equal("Public · hidden until it has a photo", Status(hidden));
-        Assert.Equal("Private · no photos", Status(empty));
+        // 016 A1 (stated change, FR-004–FR-008): no status words, no switch, no text links; one icon
+        // row per card (GalleryActions): move, visibility, view, edit. The state reads from the
+        // visibility icon and its label (data-model.md).
+        static string Tag(string el) => Regex.Match(el, "^<[^>]*>").Value;
+        static string? Attr(string el, string name)
+        {
+            var m = Regex.Match(Tag(el), $"\\s{Regex.Escape(name)}=\"([^\"]*)\"");
+            return m.Success ? m.Groups[1].Value : null;
+        }
+        static string IconOf(string el) => Regex.Match(el, "data-icon=\"([^\"]*)\"").Groups[1].Value;
+
+        var expected = new Dictionary<string, (string Icon, string Label, bool Button, string? Public)>
+        {
+            [pub] = ("eye", "Public. Make private", true, null),
+            [priv] = ("eye-off", "Private. Make public", true, "on"),
+            [hidden] = ("eye", "Public, hidden until it has a photo. Make private", true, null),
+            [empty] = ("eye-off", "Private. Add a photo before making this gallery public", false, null),
+        };
+        foreach (var (gid, want) in expected)
+        {
+            var vis = GalleryHtml.VisibilityOf(GalleryHtml.CardOf(html, gid));
+            Assert.Equal(want.Icon, IconOf(vis));
+            Assert.Equal(want.Label, Attr(vis, "aria-label"));
+            Assert.Equal(want.Label, Attr(vis, "title"));
+            Assert.Null(Attr(vis, "aria-pressed"));
+            if (want.Button)
+            {
+                Assert.StartsWith("<button ", vis);
+                Assert.Equal("submit", Attr(vis, "type"));
+                Assert.Equal($"gal-vis-{gid}", Attr(vis, "form"));
+                Assert.Equal(want.Public is null ? null : "public", Attr(vis, "name"));
+                Assert.Equal(want.Public, Attr(vis, "value"));
+            }
+            else
+            {
+                Assert.StartsWith("<span ", vis);
+                Assert.Equal("img", Attr(vis, "role"));
+                Assert.Null(Attr(vis, "form"));
+                Assert.Null(Attr(vis, "name"));
+            }
+        }
+        Assert.Empty(LibraryHtml.Blocks(html, "span", "gal-status"));
+        Assert.Empty(LibraryHtml.Blocks(html, "div", "gal-row"));
+        Assert.DoesNotMatch("<input\\b[^>]*role=\"switch\"", string.Concat(GalleryHtml.Cards(html)));
 
         // Dimmed is-private on the private cards only.
         Assert.Matches("^<div class=\"tile is-private\"", GalleryHtml.CardOf(html, priv));
@@ -148,46 +197,48 @@ public class GalleryListTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         Assert.DoesNotContain("is-private", Regex.Match(GalleryHtml.CardOf(html, pub), "^<div[^>]*>").Value);
         Assert.DoesNotContain("is-private", Regex.Match(GalleryHtml.CardOf(html, hidden), "^<div[^>]*>").Value);
 
-        // UI-1: View ↗ only when the gallery has photos; Edit to the builder on every card.
-        Assert.Matches($"<a class=\"text-link\" href=\"/g/{pub}/coast\"[^>]*>View ↗</a>", GalleryHtml.CardOf(html, pub));
-        Assert.Matches($"<a class=\"text-link\" href=\"/g/{priv}/studio\"[^>]*>View ↗</a>", GalleryHtml.CardOf(html, priv));
+        // UI-1: the view icon links the public page (new tab) only when the gallery has photos; it is
+        // unavailable in the same place otherwise. Edit links the builder on every card.
+        foreach (var (gid, slug) in new[] { (pub, "coast"), (priv, "studio") })
+        {
+            var view = Assert.Single(LibraryHtml.Blocks(GalleryHtml.CardOf(html, gid), "a", "ga-view"));
+            Assert.Equal($"/g/{gid}/{slug}", Attr(view, "href"));
+            Assert.Equal("_blank", Attr(view, "target"));
+            Assert.Equal("noopener", Attr(view, "rel"));
+        }
         foreach (var gid in new[] { hidden, empty })
         {
-            Assert.DoesNotContain("View ↗", GalleryHtml.CardOf(html, gid));
-            Assert.DoesNotContain("/g/", GalleryHtml.CardOf(html, gid));
+            var card = GalleryHtml.CardOf(html, gid);
+            Assert.Empty(LibraryHtml.Blocks(card, "a", "ga-view"));
+            var view = Assert.Single(LibraryHtml.Blocks(card, "span", "ga-view"));
+            Assert.Equal("No public page", Attr(view, "aria-label"));
+            Assert.DoesNotContain("/g/", card);
         }
-        foreach (var gid in new[] { pub, priv, hidden, empty })
-            Assert.Matches($"<a class=\"text-link\" href=\"/admin/galleries/{gid}\"[^>]*>Edit</a>", GalleryHtml.CardOf(html, gid));
 
-        // UI-2: status, handle, switch, View and Edit sit in .gal-row under the title, outside the cell; no overlay.
+        // UI-2: the row sits under the cell, in the order move, visibility, view, edit (edit last);
+        // the title is on the cover (or the blank cell's band); no overlay.
         foreach (var gid in new[] { pub, priv, hidden, empty })
         {
             var card = GalleryHtml.CardOf(html, gid);
-            var row = LibraryHtml.Blocks(card, "div", "gal-row").Single();
+            var row = LibraryHtml.Blocks(card, "div", "gallery-actions").Single();
             var cell = LibraryHtml.Blocks(card, "div", "cell").Single();
             Assert.True(card.IndexOf(cell, StringComparison.Ordinal) + cell.Length <= card.IndexOf(row, StringComparison.Ordinal));
-            Assert.True(card.IndexOf("class=\"title\"", StringComparison.Ordinal) < card.IndexOf(row, StringComparison.Ordinal));
-            foreach (var part in new[] { "class=\"gal-status\"", "class=\"handle\"", "role=\"switch\"", ">Edit</a>" })
-                Assert.Contains(part, row);
+            var parts = Regex.Matches(row, "<(?:button|a|span)\\b[^>]*\\sclass=\"([^\"]*)\"")
+                .Select(m => m.Groups[1].Value.Split(' ').First(c => c == "handle" || c.StartsWith("ga-", StringComparison.Ordinal)))
+                .ToList();
+            Assert.Equal(["handle", "ga-vis", "ga-view", "ga-edit"], parts);
+            var edit = Assert.Single(LibraryHtml.Blocks(row, "a", "ga-edit"));
+            Assert.Equal($"/admin/galleries/{gid}", Attr(edit, "href"));
             Assert.DoesNotContain("class=\"overlay\"", card);
             Assert.DoesNotContain("pos-", card);
-            Assert.Matches($"form=\"gal-vis-{gid}\"", GalleryHtml.SwitchOf(row));
         }
-
-        // UI-5: the public card's switch has checked; the private card's has NO checked attribute at all.
-        var pubSwitch = GalleryHtml.SwitchOf(GalleryHtml.CardOf(html, pub));
-        var privSwitch = GalleryHtml.SwitchOf(GalleryHtml.CardOf(html, priv));
-        Assert.True(GalleryHtml.HasAttr(pubSwitch, "checked"), pubSwitch);
-        Assert.False(GalleryHtml.HasAttr(privSwitch, "checked"), privSwitch);
-        // The empty card's switch is disabled with the reason; a non-empty card's has no disabled attribute.
-        var emptyCard = GalleryHtml.CardOf(html, empty);
-        Assert.True(GalleryHtml.HasAttr(GalleryHtml.SwitchOf(emptyCard), "disabled"), emptyCard);
-        Assert.Contains("Add a photo before making this gallery public", emptyCard);
         foreach (var gid in new[] { pub, priv })
+            Assert.Contains("class=\"title\"", LibraryHtml.Blocks(LibraryHtml.Blocks(GalleryHtml.CardOf(html, gid), "div", "cell").Single(), "div", "on-photo").Single());
+        foreach (var (gid, title) in new[] { (hidden, "Harbour"), (empty, "Empty") })
         {
-            var card = GalleryHtml.CardOf(html, gid);
-            Assert.False(GalleryHtml.HasAttr(GalleryHtml.SwitchOf(card), "disabled"), card);
-            Assert.DoesNotContain("Add a photo before making this gallery public", card);
+            var band = Assert.Single(LibraryHtml.Blocks(LibraryHtml.Blocks(GalleryHtml.CardOf(html, gid), "div", "cell").Single(), "span", "gal-band"));
+            Assert.Equal(title, Regex.Replace(band, "<[^>]*>", "").Trim());
+            Assert.Equal(title, Attr(band, "title"));
         }
         Assert.DoesNotContain("checked=\"False\"", html, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("disabled=\"False\"", html, StringComparison.OrdinalIgnoreCase);
@@ -215,8 +266,11 @@ public class GalleryListTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         // "Make public"; New gallery stays the one primary.
         var card = GalleryHtml.CardOf(html, gid);
         Assert.DoesNotContain("publish-warning", card);
-        Assert.DoesNotContain("Make public", html);
-        Assert.DoesNotContain("Keep private", html);
+        // 016 A10 (stated change): the confirm-step guard reads visible text; the eye's name
+        // ("Private. Make public") is an attribute, not a button's text.
+        var visible = Regex.Replace(html, "<[^>]*>", "");
+        Assert.DoesNotContain("Make public", visible);
+        Assert.DoesNotContain("Keep private", visible);
         Assert.DoesNotContain("name=\"vis\"", card);
         Assert.Empty(await h.SettleAsync());
     }

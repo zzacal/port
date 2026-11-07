@@ -7,30 +7,39 @@
 reorder-grid { display: block; }
 
 /* A gallery with no photos: the same 4:3 cell as Tile's, left blank (Tile's empty branch has no
-   caption slot, so the card is drawn here). */
+   caption slot, so the card is drawn here). Its title sits in a band on the cell's bottom edge, the
+   values of 015's .on-photo (Tile.razor.css; photo-overlay values, not tokens) and the Title atom's
+   font, so it reads like a cover card's on-photo title. The icon row follows the cell, as Tile's
+   caption does. */
 .gal-tile { display: block; min-width: 0; text-align: center; }
 .gal-tile .cell {
+    position: relative;
     aspect-ratio: var(--cell-ratio);
     width: 100%;
     margin-bottom: 8px;
     background: var(--color-surface);
     border-radius: 4px;
 }
+.gal-band {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: block;
+    background: rgba(0, 0, 0, .6);
+    color: #fff;
+    padding: 4px 8px;
+    text-align: left;
+    font-size: var(--type-caption);
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
 /* Private galleries are dimmed (photo only; the controls stay full strength). */
 .gal ::deep .is-private .cell { opacity: 0.55; }
-
-/* UI-2: status, handle, switch, View and Edit sit under the title, never over the photo. */
-.gal-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 4px 12px;
-    margin-top: 4px;
-    font-size: var(--type-caption);
-}
-.gal-status { color: var(--color-muted); }
 
 /* New gallery dialog */
 .gal-new {

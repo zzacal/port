@@ -1,0 +1,12 @@
+OK src/Gallery.Web/Components/Organisms/GalleryBuilder.razor: '<div class="b-grid">'
+OK src/Gallery.Web/Components/Organisms/GalleryBuilder.razor.css: 'narrower than that up to about 1440 px, so it show'
+OK src/Gallery.Web/Components/Organisms/GalleryBuilder.razor.css: '        div.b-grid ::deep .cs {'
+OK src/Gallery.Web/Admin/Pages/LibraryPage.razor.css: 'with the side panel open the grid\n   is narrower t'
+OK tests/Gallery.Web.Tests/GridWidthBrowserTests.cs: '".builder div.b-grid"'
+OK tests/Gallery.Web.Tests/GridWidthBrowserTests.cs: "cs.parentElement.matches('div.b-grid')"
+OK tests/Gallery.Web.Tests/GridWidthBrowserTests.cs: 'does not hold div.b-grid > .cs'
+OK specs/016-galleries-list-icons/tasks.md: '`gal-band`, `lib-grid`, `b-grid`;'
+OK specs/016-galleries-list-icons/tasks.md: 'with `b-grid` and `991.98px`.'
+OK specs/016-galleries-list-icons/contracts/components.md: '(class `lib-grid` and `b-grid`).'
+OK specs/016-galleries-list-icons/contracts/test-impact.md: 'the `b-grid` wrapper `div`.'
+wrote 7 files

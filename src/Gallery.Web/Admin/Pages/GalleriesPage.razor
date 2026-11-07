@@ -1,11 +1,13 @@
 @* 009 gallery list (contracts/components.md C2, contracts/http.md G1). Server-rendered from the 005
-   components; library.js (Batch F) submits a card's visibility form when its switch changes, which
-   publishes or unpublishes at once (no confirmation step; DEFAULT decision, owner may overturn), and
-   opens the New gallery dialog; reorder.js rewrites gal-order and submits it on drop.
+   components; a card's eye is a submit button on its visibility form, which
+   publishes or unpublishes at once (no confirmation step; DEFAULT decision, owner may overturn);
+   library.js opens the New gallery dialog; reorder.js rewrites gal-order and submits it on drop.
    Owner UI rules: each card with photos links to its public page and every card to its builder
-   (UI-1); status, handle, switch, View and Edit sit in .gal-row under the title (UI-2); "New gallery"
-   is the one primary (UI-3), alone in the page heading row (the owner bar and breadcrumb name the page); the switch renders its
-   stored state and an empty private gallery's switch is disabled with the reason (UI-5). *@
+   (UI-1); the title sits on the cover (an empty card draws it in the cell's .gal-band) and one
+   GalleryActions icon row (move, visibility eye / eye-off, view, edit) sits under the cell (UI-2,
+   feature 016); "New gallery" is the one primary (UI-3), alone in the page heading row (the owner bar
+   and breadcrumb name the page); the eye renders the stored state, submits its gal-vis form with no
+   script, and an empty private gallery's eye is unavailable with the reason in its name (UI-5). *@
 @using Gallery.Web.Components
 @using Gallery.Web.Components.Atoms
 @using Gallery.Web.Components.Molecules
@@ -35,7 +37,7 @@
         else
         {
             <reorder-grid data-form="gal-order">
-                <ContactSheet Large="3" Medium="3" Small="1">
+                <ContactSheet Large="3" Medium="2" Small="1">
                     @for (var i = 0; i < Model.Rows.Count; i++)
                     {
                         var row = Model.Rows[i];
@@ -67,7 +69,7 @@
     /// <summary>The single-line title rule the server applies (not whitespace-only, FR-010).</summary>
     public const string TitlePattern = @".*\S.*";
 
-    private static readonly string GridSizes = Gallery.Core.Images.Sizes.ForGrid(3, 3, 1);
+    private static readonly string GridSizes = Gallery.Core.Images.Sizes.ForGrid(3, 2, 1);
 
     private RenderFragment NewGallery =>
         @<Button Variant="ButtonVariant.Primary" Type="button" Name="action" Value="new-gallery">New gallery</Button>;
@@ -78,22 +80,18 @@
 
     /// <summary>
     /// The disabled reason (K3) for a gallery that cannot be published: empty AND private. An empty
-    /// PUBLIC gallery keeps a working switch so the owner can still unpublish it.
+    /// PUBLIC gallery keeps a working control so the owner can still unpublish it.
     /// </summary>
     public static string? DisabledReasonFor(GalleryRef g) =>
         g.PhotoCount == 0 && !g.IsPublic ? GalleryService.EmptyPublishReason : null;
 
     private RenderFragment CardFor(GalleryRow row, int position) => row.Cover is null
-        ? @<div class="@EmptyClass(row)"><div class="cell"></div><Title Text="@row.Gallery.Title" />@RowFor(row, position)</div>
-        : @<Tile Image="@row.Cover" Sizes="@GridSizes" CssClass="@CardClass(row)" Caption="@RowFor(row, position)" />;
+        ? @<div class="@EmptyClass(row)"><div class="cell"><span class="gal-band" title="@row.Gallery.Title">@row.Gallery.Title</span></div>@ActionsFor(row, position)</div>
+        : @<Tile Image="@row.Cover" Sizes="@GridSizes" CssClass="@CardClass(row)" TitleOnPhoto="true" Caption="@ActionsFor(row, position)" />;
 
     private static string EmptyClass(GalleryRow row) =>
         row.Gallery.IsPublic ? "gal-tile tile-empty" : "gal-tile tile-empty is-private";
 
-    private RenderFragment RowFor(GalleryRow row, int position) =>
-        @<div class="gal-row"><span class="gal-status">@row.Status</span><DragHandle Label="@($"Move {row.Gallery.Title}")" Position="@position" Total="@Model.Rows.Count" /><VisibilityToggle Public="@row.Gallery.IsPublic" FormId="@($"gal-vis-{row.Gallery.Id}")" GalleryTitle="@row.Gallery.Title" PhotoCount="@row.Gallery.PhotoCount" DisabledReason="@DisabledReasonFor(row.Gallery)" />@ViewFor(row)<TextLink Href="@($"/admin/galleries/{row.Gallery.Id}")">Edit</TextLink></div>;
-
-    private static RenderFragment? ViewFor(GalleryRow row) => row.HasPhotos
-        ? @<TextLink Href="@($"/g/{row.Gallery.Id}/{row.Gallery.Slug}")" Target="_blank">View &#x2197;</TextLink>
-        : null;
+    private RenderFragment ActionsFor(GalleryRow row, int position) =>
+        @<GalleryActions Title="@row.Gallery.Title" IsPublic="@row.Gallery.IsPublic" HasPhotos="@row.HasPhotos" VisibilityForm="@($"gal-vis-{row.Gallery.Id}")" ViewHref="@(row.HasPhotos ? $"/g/{row.Gallery.Id}/{row.Gallery.Slug}" : null)" EditHref="@($"/admin/galleries/{row.Gallery.Id}")" DragLabel="@($"Move {row.Gallery.Title}")" Position="@position" Total="@Model.Rows.Count" />;
 }

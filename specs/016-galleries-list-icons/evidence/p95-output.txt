@@ -1,0 +1,7 @@
+== pre:  specs/016-galleries-list-icons/evidence/pre-timings.log
+== post: specs/016-galleries-list-icons/evidence/list-timings.log
+PASS SC-005 list n pre=100 post=100
+PASS SC-005 list p95 post=7.74 ms <= pre 9.23 * 1.10 + 1 = 11.15
+PASS SC-005 list db_reads every post line == 3
+
+ALL PASS

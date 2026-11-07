@@ -1,0 +1,22 @@
+@inject SampleCatalog Samples
+<UiLayout Title="GalleryActions">
+    <Specimen Label="Public" Width="w-320"><Tile Image="Samples.Landscape[0]" Sizes="320px" TitleOnPhoto="true" Caption="@Row(Samples.Landscape[0].Title, true, true, 1)" /></Specimen>
+    <Specimen Label="Private" Width="w-320"><Tile Image="Samples.Portrait[0]" Sizes="320px" TitleOnPhoto="true" Caption="@Row(Samples.Portrait[0].Title, false, true, 2)" /></Specimen>
+    <Specimen Label="Public, no photos" Width="w-320"><Tile Sizes="320px" EmptyTitle="Empty and public" />@Row("Empty and public", true, false, 3)</Specimen>
+    <Specimen Label="Private, no photos" Width="w-320"><Tile Sizes="320px" EmptyTitle="Empty and private" />@Row("Empty and private", false, false, 4)</Specimen>
+    <Specimen Label="Long title" Width="w-320"><Tile Image="LongTitled" Sizes="320px" TitleOnPhoto="true" Caption="@Row(LongTitled.Title, true, true, 5)" /></Specimen>
+</UiLayout>
+
+@code {
+    // 60 characters: the band truncates it with an ellipsis and keeps the full text in title.
+    private ImageView LongTitled => Samples.Landscape[3] with
+    {
+        Title = "A slow walk along the northern ridge above the lake at dusk."
+    };
+
+    // Fake hrefs: the catalogue builds no admin address. A gallery with no photos has no public page.
+    private static RenderFragment Row(string title, bool isPublic, bool hasPhotos, int position) =>
+        @<GalleryActions Title="@title" IsPublic="isPublic" HasPhotos="hasPhotos" VisibilityForm="@($"gal-vis-sample-{position}")"
+                         ViewHref="@(hasPhotos ? $"#view-{position}" : null)" EditHref="#" DragLabel="@($"Move {title}")"
+                         Position="position" Total="5" />;
+}

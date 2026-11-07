@@ -1,0 +1,11 @@
+PASS (publish) the private eye omits name=public -> red:   Failed Gallery.Web.Tests.GalleryListBrowserTests.US2_the_eye_off_publishes_and_the_eye_unpublishes_read_from_storage(script: True) |  Assert.Equal() Failure: Values differ Expected: 1 
+PASS (emptybtn) the empty-private control is a submit button -> red:   Failed Gallery.Web.Tests.GalleryActionsTests.Private_empty_visibility_is_an_unavailable_span_with_no_form |  Assert.StartsWith() Failure: String start does not match String: "<button class="icon-button ga-vis" type=""··· 
+PASS (order) edit renders before view -> red:   Failed Gallery.Web.Tests.GalleryActionsTests.Four_children_in_order_move_visibility_view_edit_with_edit_last(isPublic: False, hasPhotos: True) |  Assert.Equal() Failure: Collections differ  ↓ (pos 2) 
+PASS (names) VisibilityLabel names a public gallery private -> red:   Failed Gallery.Web.Tests.GalleryActionsTests.Visibility_rules_follow_the_data_model_table(isPublic: True, hasPhotos: True, icon: "eye", canToggle: True, label: "Public. Make private") |  Assert.Equal() Failure: Strings differ  ↓ (pos 1) 
+PASS (wrap) the gallery-actions row wraps -> red:   Failed Gallery.Web.Tests.GalleryListBrowserTests.US1_one_icon_row_per_card_edit_last_44px_targets_and_the_title_band_inside_the_cell(width: 900, height: 900) |  White @900px: the row is not one line (tops 458.5, 458.5, 506.5, 506.5) Black @900px: the row is not one line (tops 458.5, 458.5, 506.5, 506.5) 
+PASS (libmed) the library shows 3 columns at medium widths -> red:   Failed Gallery.Web.Tests.GridWidthBrowserTests.SC007_library_with_the_panel_closed_is_1_2_4_and_every_row_fits_its_tile |  Library @600px: 3 columns, the rule wants 2 (container 536.0 px) Library @600px: 3 columns, the table wants 2 (container 536.0 px) 
+PASS (builderq) the builder container query never applies -> red:   Failed Gallery.Web.Tests.GridWidthBrowserTests.SC007_builder_drops_to_2_columns_when_its_grid_is_under_992px |  Builder @1200px: 4 columns, the rule wants 2 (container 752.0 px) Builder @1200px: 4 columns, the table wants 2 (container 752.0 px) 
+PASS (registry) Icons.Paths gains an unused key -> red:   Failed Gallery.Web.Tests.IconRegistryGuardTests.Every_registered_icon_is_used_and_every_used_icon_is_registered |  registered icon 'unused-x' is used nowhere in the product 
+restored: build clean
+
+ALL PASS

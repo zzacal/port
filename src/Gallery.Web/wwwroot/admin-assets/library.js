@@ -13,9 +13,8 @@
 //     photos?"; the ticked ids are copied into the hidden `lib-delete` form when it opens, on every
 //     tick change while open, and again when it submits. Cancel/Esc close it; focus goes back.
 //   Gallery list (C2) and builder (C3):
-//   - A gallery-list visibility switch (form="gal-vis-{gid}") submits its form when it changes
-//     (publish/unpublish at once, no confirm). The builder's switch belongs to its Save form and
-//     submits nothing on change (owner feedback: typed edits are never lost).
+//   - The builder's switch belongs to its Save form and submits nothing on change (owner
+//     feedback: typed edits are never lost).
 //   - The page heading's "New gallery" opens <dialog id="gal-new">; Cancel closes it.
 //   Combobox (TokenCombobox molecule, feature 014 K1; the photo panel's Galleries field):
 //   - Typing filters the options by the rules of TokenCombobox.Match (mirrored here), with the
@@ -502,15 +501,9 @@ document.addEventListener('change', (e) => {
   const el = e.target;
   if (!(el instanceof HTMLInputElement)) return;
 
-  // A gallery-list switch posts its own form at once (K1/K3: form="gal-vis-{gid}"; no confirm step).
   // The builder's switch is a field of its Save form (b-panel): changing it submits nothing, so typed
   // edits are kept; CSS shows the publish warning while it is on.
-  if (el.type === 'checkbox' && el.getAttribute('role') === 'switch' && el.form && !el.disabled) {
-    if (!el.form.id.startsWith('gal-vis-')) return;
-    if (typeof el.form.requestSubmit === 'function') el.form.requestSubmit();
-    else el.form.submit();
-    return;
-  }
+  if (el.type === 'checkbox' && el.getAttribute('role') === 'switch') return;
 
   // Picker radio: keep newTitle's `required` in step with the picked option.
   if (el.type === 'radio' && el.name === 'gallery') {

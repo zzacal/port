@@ -1,0 +1,54 @@
+@* GalleryActions molecule (feature 016, G2): the galleries-list card's one row of icon controls, in
+   the order move, visibility, view, edit (edit always last). Rendering only: the page supplies every
+   href and the visibility form id; the molecule builds no address and reads no service. Visibility
+   (G2a) is a submit button on the page's form: private with photos sends public=on (publish), public
+   sends no public field (unpublish), private and empty is unavailable. No aria-pressed: the label
+   states both the state and the action. Icon names are literal here so the icon registry guard sees
+   them; they follow VisibilityIcon in GalleryActions.cs. *@
+<div class="gallery-actions">
+    <DragHandle Icon="true" Label="@DragLabel" Position="Position" Total="Total" />
+    @Visibility
+    @View
+    <IconButton Icon="pencil" Label="@($"Edit {Title}")" Href="@EditHref" CssClass="ga-edit" />
+</div>
+
+@code {
+    /// <summary>The gallery title used in the labels.</summary>
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+
+    /// <summary>The stored visibility.</summary>
+    [Parameter] public bool IsPublic { get; set; }
+
+    /// <summary>The gallery holds at least one photo.</summary>
+    [Parameter] public bool HasPhotos { get; set; }
+
+    /// <summary>The id of the page's visibility form (gal-vis-{id}).</summary>
+    [Parameter, EditorRequired] public string VisibilityForm { get; set; } = "";
+
+    /// <summary>The public page (opens in a new tab); null renders the view icon unavailable.</summary>
+    [Parameter] public string? ViewHref { get; set; }
+
+    /// <summary>Where the edit icon goes.</summary>
+    [Parameter, EditorRequired] public string EditHref { get; set; } = "";
+
+    /// <summary>The move control's name.</summary>
+    [Parameter, EditorRequired] public string DragLabel { get; set; } = "";
+
+    /// <summary>Passed to DragHandle.</summary>
+    [Parameter] public int Position { get; set; }
+
+    /// <summary>Passed to DragHandle.</summary>
+    [Parameter] public int Total { get; set; }
+
+    private string VisLabel => VisibilityLabel(IsPublic, HasPhotos);
+
+    private RenderFragment Visibility => IsPublic
+        ? @<IconButton Icon="eye" Label="@VisLabel" Type="submit" FormId="@VisibilityForm" CssClass="ga-vis" />
+        : CanToggle(IsPublic, HasPhotos)
+            ? @<IconButton Icon="eye-off" Label="@VisLabel" Type="submit" FormId="@VisibilityForm" Name="public" Value="on" CssClass="ga-vis" />
+            : @<IconButton Icon="eye-off" Label="@VisLabel" Unavailable="true" CssClass="ga-vis" />;
+
+    private RenderFragment View => ViewHref is null
+        ? @<IconButton Icon="square-arrow-out-up-right" Label="No public page" Unavailable="true" CssClass="ga-view" />
+        : @<IconButton Icon="square-arrow-out-up-right" Label="@($"View {Title} (opens in a new tab)")" Href="@ViewHref" Target="_blank" CssClass="ga-view" />;
+}

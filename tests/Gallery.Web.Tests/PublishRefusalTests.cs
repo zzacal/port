@@ -212,10 +212,15 @@ public class PublishRefusalTests(S3ProxyFixture s3, MongoFixture mongo) : IClass
 
         var list = await GalleryHtml.GetOkAsync(h, "/admin/galleries");
         var card = GalleryHtml.CardOf(list, gid);
-        var cardSwitch = GalleryHtml.SwitchOf(card);
-        Assert.True(GalleryHtml.HasAttr(cardSwitch, "disabled"), cardSwitch);
-        Assert.False(GalleryHtml.HasAttr(cardSwitch, "checked"), cardSwitch);
-        Assert.Matches($"<p class=\"hint\"[^>]*>{Regex.Escape(Reason)}</p>", card);
+        // 016 A4 (stated change): the empty private card's eye-off is an unavailable span (no form, no
+        // button) carrying the reason in its label.
+        var vis = GalleryHtml.VisibilityOf(card);
+        var visTag = Regex.Match(vis, "^<[^>]*>").Value;
+        Assert.StartsWith("<span ", visTag);
+        Assert.Contains("role=\"img\"", visTag);
+        Assert.Contains($"aria-label=\"Private. {Reason}\"", visTag);
+        Assert.False(GalleryHtml.HasAttr(visTag, "form"), visTag);
+        Assert.DoesNotContain("<button", vis);
 
         var builder = await GalleryHtml.GetOkAsync(h, $"/admin/galleries/{gid}");
         var aside = Regex.Match(builder, "<aside class=\"side-panel\".*?</aside>", RegexOptions.Singleline).Value;

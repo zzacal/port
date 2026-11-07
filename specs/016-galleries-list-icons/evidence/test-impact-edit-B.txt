@@ -1,0 +1,9 @@
+OK A1 tests/Gallery.Web.Tests/GalleryListTests.cs x1: '    public async Task Card_statuses_dimming_View_a' -> '    public async Task Card_states_dimming_and_icon'
+OK A2 tests/Gallery.Web.Tests/GalleryListTests.cs x1: '    public static bool HasAttr(string tag, string ' -> '    /// <summary>\n    /// 016 A2: the gallery-list'
+OK A3 tests/Gallery.Web.Tests/BuilderTests.cs x1: '        Assert.Equal("Public · hidden until it has' -> "        // 016 A3 (stated change): the list card's"
+OK A4 tests/Gallery.Web.Tests/PublishRefusalTests.cs x1: '        var cardSwitch = GalleryHtml.SwitchOf(card' -> '        // 016 A4 (stated change): the empty priva'
+OK A5 tests/Gallery.Web.Tests/LibraryBrowserTests.cs x1: '.Nth(2).Locator(".gal-row .handle")' -> '.Nth(2).Locator(".gallery-actions .handle")'
+OK A7 tests/Gallery.Web.Tests/LibraryBrowserTests.cs x1: '"section.gal .cs > *", ".gal-row", $"gallery list ' -> '"section.gal .cs > *", ".gallery-actions", $"galle'
+OK A6 tests/Gallery.Web.Tests/LibraryBrowserTests.cs x1: '        var card = page.Locator($"section.gal reor' -> '        // 016 A6 (stated change): the switch is n'
+OK A10 tests/Gallery.Web.Tests/GalleryListTests.cs x1: '        Assert.DoesNotContain("Make public", html)' -> '        // 016 A10 (stated change): the confirm-st'
+wrote 4 files

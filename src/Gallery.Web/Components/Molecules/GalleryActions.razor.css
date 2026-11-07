@@ -1,0 +1,10 @@
+/* GalleryActions (016 G2): one row that never wraps, the same box as .photo-actions;
+   4 x 44 + 3 x 4 = 188 px. */
+.gallery-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    height: var(--tap);
+}

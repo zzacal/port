@@ -29,7 +29,8 @@
         }
         else
         {
-            <ContactSheet Large="4" Medium="3" Small="1">
+            <div class="lib-grid">
+            <ContactSheet Large="4" Medium="2" Small="1">
                 @for (var i = 0; i < Data.Tiles.Count; i++)
                 {
                     var tile = Data.Tiles[i];
@@ -38,6 +39,7 @@
                           Overlay="@MarkFor(tile)" Caption="@RowFor(tile)" />
                 }
             </ContactSheet>
+            </div>
             <SelectionBar Render="true" Count="0" Total="@Data.Tiles.Count" SelectAllLabel="Select all on this page" Limit="@Model.Options.PageSize">
                 <Button Variant="@AddVariant" Type="button" Name="action" Value="add">Add to gallery&#x2026;</Button>
                 <Button Variant="ButtonVariant.Danger" Type="button" Name="action" Value="delete">Delete&#x2026;</Button>
@@ -83,7 +85,7 @@
     /// <summary>The single-line title rule the server applies (not whitespace-only, FR-010).</summary>
     public const string TitlePattern = @".*\S.*";
 
-    private static readonly string GridSizes = Gallery.Core.Images.Sizes.ForGrid(4, 3, 1);
+    private static readonly string GridSizes = Gallery.Core.Images.Sizes.ForGrid(4, 2, 1);
 
     private LibraryPageData Data => Model.Data;
     private LibraryTile? Open => Data.Open;

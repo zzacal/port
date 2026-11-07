@@ -272,6 +272,27 @@ OWNER-ONLY (after merge and deploy, not gates):
   port.zacal.me toggle edit on two photos, open a photo through its folder icon, and pin a cover in a
   builder.
 
+### 016 Icon controls on the galleries list
+
+**Status: built on branch `016-galleries-list-icons`; merge pending (T027 final gate, T028).**
+Decisions, defaults and stated test changes in `specs/016-galleries-list-icons/decisions.md`.
+Evidence: `specs/016-galleries-list-icons/evidence/` (gate, baseline-diff ALL EQUAL, non-vacuity,
+p95, design record validate 0 failures).
+
+Each card on `/admin/galleries` shows its title on the cover (on the blank cell for an empty
+gallery), with one row of icons under it: move, visibility (eye / crossed-out eye), view and edit,
+with edit last. The eye publishes or unpublishes through the unchanged form, and it works without JS.
+The status words are gone. The library, builder and list grids show 2 columns at medium widths. The
+library and builder also drop to 2 at large widths while the side panel leaves the grid too narrow
+for 4. This fixes 015's sub-44 px builder icons at tablet and panel widths. Two more Lucide icons:
+`eye` and `eye-off`. `GalleryActions` has its own `/ui` page. Amends D-20, D-21 and D-23.
+
+OWNER-ONLY (after merge and deploy, not gates):
+
+- [ ] O-01 On port.zacal.me, check that `/admin/galleries` cards show the icon row with edit last.
+  Toggle one gallery's eye twice. Resize to tablet width. Open a library photo's panel at about
+  1300 px and check that every photo shows its full icon row.
+
 ## Not a feature
 
 - **Cost cap (D-18, E-19)**: no budget alert (constitution 6.0.0 withdrew the $7 alert). The
