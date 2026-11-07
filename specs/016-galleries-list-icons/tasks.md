@@ -73,12 +73,12 @@ names, in the same batch as the code.
 
 ## Phase 1: Setup (parent)
 
-- [ ] T001 Record the baseline in `specs/016-galleries-list-icons/evidence/baseline.txt`:
+- [X] T001 Record the baseline in `specs/016-galleries-list-icons/evidence/baseline.txt`:
   `git rev-parse HEAD`, the full-suite counts, and `ls tests/Gallery.Web.Tests/*.cs | wc -l`.
-- [ ] T002 Copy `specs/015-tile-icon-controls/evidence/gate.sh` to
+- [X] T002 Copy `specs/015-tile-icon-controls/evidence/gate.sh` to
   `specs/016-galleries-list-icons/evidence/gate.sh`. Use output `/tmp/016-gate-$L.txt`, and add
   `specs/015-tile-icon-controls/evidence` to the restored dirs.
-- [ ] T003 Freeze the pre-change snapshots by copying
+- [X] T003 Freeze the pre-change snapshots by copying
   `specs/006-public-site-local/evidence/ui-baseline/` to
   `specs/016-galleries-list-icons/evidence/pre-016-ui-baseline/`. Then write
   `specs/016-galleries-list-icons/evidence/baseline-diff.py` from 015's:
@@ -89,7 +89,7 @@ names, in the same batch as the code.
   - assert that each changed file DIFFERS from its frozen copy before stripping;
   - include a `--selftest` mode (intended edits give EQUAL; one stray edit gives RESIDUE).
   Save the selftest output to `evidence/baseline-diff-selftest.txt`.
-- [ ] T004 Write `tests/Gallery.Web.Tests/GalleryListTimingEvidenceTests.cs` (Category=Evidence,
+- [X] T004 Write `tests/Gallery.Web.Tests/GalleryListTimingEvidenceTests.cs` (Category=Evidence,
   modelled on 015's `TileTimingEvidenceTests`):
   - 30 galleries: 24 with photos (half of them public), 6 empty (3 of those public, published
     before their photos were removed);
@@ -100,13 +100,13 @@ names, in the same batch as the code.
   Run it NOW on the unchanged tree, with
   `LIST_TIMING_LOG=specs/016-galleries-list-icons/evidence/pre-timings.log` (the SC-005 pre-change
   capture). Commit both files.
-- [ ] T005 Copy 015's `p95.sh` and `p95-selftest.sh` to `specs/016-galleries-list-icons/evidence/`:
+- [X] T005 Copy 015's `p95.sh` and `p95-selftest.sh` to `specs/016-galleries-list-icons/evidence/`:
   - one route row, `GET /admin/galleries`: p95 ≤ pre × 1.10 + 1 ms, and `db_reads` EQUAL on every
     line;
   - n ≥ 100;
   - output to `p95-output.txt`; run the selftest into `p95-selftest.txt`.
   Run `p95.sh pre-timings.log pre-timings.log` once: ALL PASS.
-- [ ] T006 Write `specs/016-galleries-list-icons/evidence/test-impact-edit.py` from 015's:
+- [X] T006 Write `specs/016-galleries-list-icons/evidence/test-impact-edit.py` from 015's:
   - rows A1–A10 as count-asserting (file, old, new, count) replacements;
   - a `DRYRUN=1` mode and a row filter by id;
   - A1 and A6 rewrite whole facts, so the script carries their full new bodies (written from

@@ -1,0 +1,9 @@
+SELFTEST OK   pass.log: exit 0
+SELFTEST OK   pass-json.log: exit 0
+SELFTEST OK   slow.log: exit 1, FAIL SC-005 list p95
+SELFTEST OK   extra-read.log: exit 1, FAIL SC-005 list db_reads
+SELFTEST OK   list-99.log: exit 1, FAIL SC-005 list n
+SELFTEST OK   empty.log: exit 1, FAIL missing
+SELFTEST OK   does-not-exist.log: exit 1, FAIL missing
+
+SELFTEST ALL OK

@@ -1,0 +1,10 @@
+HEAD 91ef9477 (git rev-parse below)
+web test files: 131 (before T004's GalleryListTimingEvidenceTests.cs; 132 after)
+gate (bash specs/016-galleries-list-icons/evidence/gate.sh baseline, at 91ef947, before T004):
+build exit 0
+Passed!  - Failed:     0, Passed:   122, Skipped:     0, Total:   122, Duration: 113 ms - Gallery.Core.Tests.dll (net10.0)
+Passed!  - Failed:     0, Passed:  1455, Skipped:     1, Total:  1456, Duration: 4 m 36 s - Gallery.Web.Tests.dll (net10.0)
+test exit 0
+T004 pre-change capture: GalleryListTimingEvidenceTests on the unchanged tree -> evidence/pre-timings.log
+  (100 lines "http.request GET /admin/galleries 200", db_reads 3 on every line)
+91ef947c1426c82276040237c9ff18b710a775d3
