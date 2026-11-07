@@ -324,12 +324,12 @@ Batch C owns:
   2. `p95.sh` result recorded; `baseline-diff.py` EQUAL.
   3. `git checkout --` the earlier features' regenerated logs.
   4. Commit.
-- [ ] T028 Merge to main (`--no-ff`, with a body as in 015's) and push. Watch the deploy job go
+- [X] T028 Merge to main (`--no-ff`, with a body as in 015's) and push. Watch the deploy job go
   green. Then save the production check to `evidence/browser-prod.txt`:
   - `/admin/galleries` and `/ui/molecules/gallery-actions` answer 302 to sign-in;
   - public `/g` is 200 and unchanged.
   Do not change data on production.
-- [ ] T029 Create a GitHub issue for the open OWNER item, as with 015 (#4).
+- [X] T029 Create a GitHub issue for the open OWNER item, as with 015 (#4).
 
 ## OWNER-ONLY (after the build; not gates)
 

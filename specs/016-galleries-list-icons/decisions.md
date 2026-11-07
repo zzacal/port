@@ -32,3 +32,5 @@
 | 28 | PARENT | T025 SC-005: list p95 7.74 ms <= pre 9.23 x 1.10 + 1 = 11.15 ms; db_reads 3 on every line, as before (evidence/p95-output.txt) | R-08 | none |
 | 29 | PARENT | T026 non-vacuity 8/8: each deliberate break (2 [SAFETY]: private eye without name=public, empty-private as a button; edit before view; swapped names; wrapping row; library medium 3; builder query off; unused icon key) turned its named test red on an assertion (evidence/non-vacuity.txt) | Guards proven able to fail | none |
 | 30 | PARENT | T027 final gate after dotnet clean: build -warnaserror 0 warnings; Core 122/122, Web 1502 passed + 1 skipped (baseline 1455 + 47 new) | evidence/gate-final.txt | none |
+| 31 | PARENT | T028 merged to main 031a350 (--no-ff), pushed; CI 42412530059 build, test, deploy success. Production probes (evidence/browser-prod.txt): /admin/galleries and /ui/molecules/gallery-actions 302 to sign-in; /g 200, unchanged 3/3/1, no admin markup. The first probe hit the post-deploy restart (502/404), and 20 s later everything was correct | Read-only; no production data changed | none |
+| 32 | PARENT | T029 owner check O-01 filed as issue #5 | As with 015 (#4) | none |
