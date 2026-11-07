@@ -1,8 +1,8 @@
 # Research: 016 Icon Controls on the Galleries List
 
 Code findings are from `016-galleries-list-icons` at eef9585 (main a87360e plus the spec). The
-probes were `/tmp/probe-016.sh`, `/tmp/probe-016b.sh` and a measured browser probe of the row
-widths (R-07). One decision is still OPEN: R-07, the row width at tablet widths.
+probes were `/tmp/probe-016.sh`, `/tmp/probe-016b.sh` and `/tmp/probe-016c.sh`, plus two measured
+browser probes of row and grid widths (R-07). No open questions remain.
 
 ## R-01 Reuse 015's atoms: one new molecule, `GalleryActions`
 
@@ -88,31 +88,65 @@ widths (R-07). One decision is still OPEN: R-07, the row width at tablet widths.
 - The ContactSheet page's "Admin gallery list, 2 private" specimen is not touched. It is pinned
   byte-identical by the pre-005 public-output baseline (spec FR-014 amended at plan time).
 
-## R-07 Row width at tablet widths: OPEN (owner)
+## R-07 Grid columns: 2 wherever a photo would be narrower than its row (owner, Q2)
 
-Measured in Chromium (LibraryBrowserFixture). Tile widths and the existing rows:
+Owner rule: the icons are spread across the photo's whole width, so a photo must be at least as
+wide as its row, and below that width the grid shows 2 columns. Rows never wrap and never shrink.
 
-| width | list tile | builder tile | 015 builder row (4 icons) | today's list row |
-|---|---|---|---|---|
-| 600 | 136 px | 136 px | icons squeezed to 34 px | 5 lines, 107 px tall |
-| 700 | 169 | 169 | icons squeezed to 42 px | 5 lines, 85 px |
-| 760 | 189 | 189 | fits | 5 lines, 70 px |
-| 800–1199 | 203–304 | 203–303 | fits | 5 lines, 51–70 px |
-| ≥1200 | 304–384 | 128–188 | fits | 5 lines, 47–51 px |
+Measured in Chromium (`/tmp/016-grid.txt`, LibraryBrowserFixture). Each row's minimum width is
+n × 44 px + (n − 1) × 4 px gaps:
 
-- A row of four 44 px icons needs 188 px. Between 600 and about 755 px wide, the 3-column grids
-  give cards 136–188 px, so a one-row, four-icon card can't keep 44 px targets there.
-- The same squeeze already exists in feature 015's builder: its icons shrink below 44 px in that
-  window. 015's browser tests measured 390, 800 and 1440 px, so they missed it.
-- Options:
-  - A: 2 columns at medium width on the list and the builder (grids 3/2/1 and 4/2/1). One row and
-    44 px everywhere, larger thumbnails on tablets. Amends the design record (D-20/D-23 grids)
-    and changes both pages' image `sizes`.
-  - B: let the row wrap into two rows of two only while it does not fit. CSS only, a shared rule
-    for the list and builder rows. 44 px targets kept everywhere; the row is 92 px tall in that
-    window. Every card at a given width wraps the same way, so equal heights hold (IX.3).
-  - C: accept squeezed targets in that window, as 015 does today. Fails the 44 px target rule
-    (015 FR-009).
+- library: 3 icons, 140 px;
+- galleries list: 4 icons, 188 px;
+- builder: 4 icons, 188 px.
+
+| window | grid as today | library tile | library + panel | builder tile | list tile |
+|---|---|---|---|---|---|
+| 600 | 3 cols (medium) | 136 | 136 | 136 | 136 |
+| 700 | 3 | 169 | 169 | 169 | 169 |
+| 760 | 3 | 189 | 189 | 189 | 189 |
+| 1199 | 3 | 336 | 336 | 336 | 336 |
+| 1200 | 4 (lib, builder) / 3 (list) | 216 | **128** | **128** | 304 |
+| 1300 | | 241 | **153** | **153** | 337 |
+| 1440 | | 276 | 188 | 188 | 384 |
+| 1920 | | 396 | 308 | 308 | 544 |
+
+Two separate squeezes:
+
+1. Medium widths (600–1199): 3 columns give tiles of 136–188 px from 600 to about 760 px. At
+   2 columns the narrowest medium tile is (536 − 2·32 − 32) / 2 = 220 px (the grid is 536 px wide
+   at a 600 px window). Every row fits, so medium is 2 columns on all three grids.
+2. Large widths with a panel beside the grid (the library's side panel, and the builder's
+   always-present panel column): the grid is 352 px narrower than main, so 4 columns give
+   128–188 px tiles up to about 1440 px. The width that decides this is the grid's own, not the
+   window's.
+
+Decision:
+
+- Medium column count 3 → 2 on the library (4/2/1), the builder (4/2/1) and the galleries list
+  (3/2/1). The `sizes` attribute follows from the same counts (`Sizes.ForGrid`, D-20: one config
+  produces both), so the browser still picks the right derivative.
+- At large widths, a CSS container query on a wrapper around each icon-row grid switches the
+  4-column grids to 2 columns when the grid itself is narrower than a 4-column row needs:
+  - 4 tiles need 4 × row + 3 × 48 px gaps + 2 × 48 px padding;
+  - library: 4 × 140 + 240 = 800 px;
+  - builder: 4 × 188 + 240 = 992 px.
+  The queries sit inside `@media (min-width: 1200px)`, so the one-column phone layout and the
+  medium rule are untouched.
+  - Precedent: SoloViewer already uses `container-type: inline-size`.
+  - A wrapper `div` is needed because a container query reads an ancestor's width, never the
+    grid's own, and `section.lib` holds the sticky selection bar, which containment would affect.
+- The list keeps 3 columns at large: its narrowest large tile is 304 px, and it has no panel.
+- `sizes` at large stays the 4-column value. Inside the container rule the tile can be up to
+  about 2× wider than `sizes` says. The browser then fetches a smaller derivative than ideal in
+  that case only (the panel open at 1200–1440 px). Accepted: owner-only pages, and the image is
+  still shown contain-fit, not upscaled past its derivative.
+- Rejected:
+  - wrapping or shrinking rows (owner: a row narrower than the photo is a design error);
+  - 2 columns at large for every width (it throws away the 4-column grid at 1440+ where it fits).
+
+Scope: the three owner grids with icon rows (spec FR-015). The upload grid (4/3/2, no icon row) and
+every public grid (D-20 counts) are unchanged.
 
 ## R-08 Timing evidence (FR-012, SC-005)
 
@@ -148,10 +182,17 @@ Measured in Chromium (LibraryBrowserFixture). Tile widths and the existing rows:
   - `LibraryBrowserTests:496`: row selector `.gal-row` becomes `.gallery-actions`.
   - `IconTests`: Keys +2, two hashes, the counts above.
   - `IndexTests`: 39 → 40.
-- (B) baselines: `index.html` (+1 `li`); new `molecules/gallery-actions.html`. Every other page
-  is byte-identical: Tile, DragHandle and IconButton defaults are untouched; IconPage and
+- (B) baselines: `index.html` (+1 `li`); new `molecules/gallery-actions.html`;
+  `organisms/gallery-builder.html` (grid class `cs-m3` → `cs-m2`, the tiles' `sizes` medium term
+  `/ 3` → `/ 2` with the medium gap, and the new grid wrapper `div`). Every other page is
+  byte-identical: Tile, DragHandle and IconButton defaults are untouched; IconPage and
   IconButtonPage move only through the two new icons (`atoms/icon.html` and
   `atoms/icon-button.html` regenerate, and the diff must be only the eye/eye-off additions).
+- R-07 grid change, (C) unchanged: no test pins the admin pages' column counts. The `cs-m3`
+  assertions (`OrganismPageTests:19-20`, `OrganismStatePageTests:67-68`, `CameraPageComponentTests`,
+  `PageComponentTests:99`, `TileContactSheetAdditionsTests:51`) render the ContactSheet catalogue
+  page and the public pages, which keep their counts. Browser tests that index tiles (`Nth(n)`) or
+  measure one tile are column-agnostic.
 - (C) unchanged: `NewTabLinkTests` (the view icon carries the boxed ↗; the rule from 015 R-06
   holds), `AdminNavConsistencyTests`, `LayoutConsistencyBrowserTests`, `LibrarySourceGuardTests`
   (no `gal-` class reaches a public page), `PublicOutputUnchangedTests`, `OrganismStatePageTests`

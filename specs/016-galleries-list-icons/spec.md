@@ -15,6 +15,12 @@
 - Plan research (2026-11-07): FR-006 names extended to the two empty cases; FR-014 moved from the
   contact-sheet specimen (pinned byte-identical by the public-output guard) to the controls' own
   catalogue page.
+- Q2 (plan, R-07): what happens where a photo is narrower than its icon row? → Owner: "in
+  narrower view widths, make the grid 2 column". Owner rule: the icons are arranged across the
+  photo's whole width, so a photo must be at least as wide as its row. The library, builder and
+  galleries-list grids show 2 columns wherever 3 or 4 columns would make a photo narrower than its
+  row (FR-015). This also corrects feature 015's builder, whose icons shrink below 44 px at those
+  widths.
 - Q1: What replaces the list's Public switch? → A: an eye icon for public and a crossed-out eye
   for private. Hover text and accessible name: "Public. Make private" / "Private. Make public"
   (FR-006). The empty-private case keeps today's reason as its name.
@@ -154,6 +160,11 @@ follow. Lift a card with the keyboard, move it and drop it; the position is anno
   public, a private, an empty-public and an empty-private card, so the owner can review them. The
   existing gallery-list specimen on the contact-sheet page stays as it is (it is pinned as a
   pre-admin reference).
+- **FR-015**: On the library, the gallery builder and the galleries list, every photo MUST be at
+  least as wide as its icon row, at every window width and whether or not the side panel is open.
+  Where 3 or 4 columns would make a photo narrower than that, the grid MUST show 2 columns instead.
+  The icon rows never wrap and never shrink their 44 px targets. The phone layout (one column)
+  and the public pages' grids are unchanged.
 
 ### Key Entities
 
@@ -175,6 +186,9 @@ follow. Lift a card with the keyboard, move it and drop it; the position is anno
   the pre-change measurement, with the same number of data reads per request, read from logs.
 - **SC-006**: Every visibility control shows the eye that matches the gallery's stored state, and
   its name matches that state (checked over public, private and empty-private galleries).
+- **SC-007**: At window widths from 600 to 1920 px, with and without the side panel open, every
+  library, builder and galleries-list photo is at least as wide as its icon row, and every icon
+  target is at least 44 × 44 px.
 
 ## Assumptions
 
@@ -203,4 +217,6 @@ follow. Lift a card with the keyboard, move it and drop it; the position is anno
 - Open performance item: 015's SC-005 miss (issue #3) comes from the per-icon component. The list
   has at most a few dozen cards, so its rendering cost is far smaller, but FR-012 still needs a
   measured pre/post capture. Fixing #3 first would remove that risk for this page too.
+- FR-015 scope: the three owner grids that carry an icon row. The upload grid (no icon row) and
+  every public grid keep their columns.
 - Stack (planning input only): .NET 10 Razor components, existing atoms; no new package.
