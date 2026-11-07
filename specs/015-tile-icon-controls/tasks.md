@@ -119,23 +119,23 @@ Batch A owns:
 - `src/Gallery.Web/Ui/UiCatalog.cs` (two inserted lines);
 - the new `tests/Gallery.Web.Tests/IconTests.cs` and `tests/Gallery.Web.Tests/TileOnPhotoTests.cs`.
 
-- [ ] T007 [P] Write `src/Gallery.Web/Components/Atoms/Icons.cs`:
+- [X] T007 [P] Write `src/Gallery.Web/Components/Atoms/Icons.cs`:
   - the 8 paths and the `Source` and `License` constants, exactly per K1 and the R-01 table;
   - the ISC notice in the file header.
-- [ ] T008 Write `Icon.razor` and `Icon.razor.css` (K1: exact markup, unknown name throws), then
+- [X] T008 Write `Icon.razor` and `Icon.razor.css` (K1: exact markup, unknown name throws), then
   `IconButton.razor` and `IconButton.razor.css` (K2: link, button and unavailable forms;
   `aria-current`/`aria-pressed` rules; the CSS values). Use `var(--tap)` and existing colour
   tokens only.
-- [ ] T009 [SAFETY] In `src/Gallery.Web/Components/Molecules/Tile.razor` and `Tile.razor.css`, add
+- [X] T009 [SAFETY] In `src/Gallery.Web/Components/Molecules/Tile.razor` and `Tile.razor.css`, add
   `TitleOnPhoto` and `Id` per K3:
   - the band is a sibling AFTER `.overlay` inside Picture's frame, with z-index 1;
   - with both at their defaults the output is byte-identical (`PublicOutputUnchangedTests` and
     every `UiPagesUnchangedTests` slug stay green, unmodified).
-- [ ] T010 [P] Write `src/Gallery.Web/Ui/Pages/IconPage.razor` and `IconButtonPage.razor`
+- [X] T010 [P] Write `src/Gallery.Web/Ui/Pages/IconPage.razor` and `IconButtonPage.razor`
   with the K8 specimens (labels verbatim). In `src/Gallery.Web/Ui/UiCatalog.cs`, insert the Icon
   and IconButton entries directly after the `SelectMark` line. In `TilePage.razor`, append the
   three "Title on photo, …" specimens after the existing ones.
-- [ ] T011 Write `tests/Gallery.Web.Tests/IconTests.cs`:
+- [X] T011 Write `tests/Gallery.Web.Tests/IconTests.cs`:
   - K1 markup for each icon:
     - `data-icon`, `viewBox="0 0 24 24"`, `stroke="currentColor"`;
     - `fill` is `none`, and `currentColor` when Filled;
@@ -155,7 +155,7 @@ Batch A owns:
   - no `btn-primary`;
   - `IconPage` renders every key with its name, plus the Source and License text; `IconButtonPage`
     renders the K8 labels in order.
-- [ ] T012 Write `tests/Gallery.Web.Tests/TileOnPhotoTests.cs`:
+- [X] T012 Write `tests/Gallery.Web.Tests/TileOnPhotoTests.cs`:
   - with `TitleOnPhoto`:
     - the `.on-photo` `Title` is inside the cell;
     - it comes after the `.overlay` (when an Overlay is passed) and is NOT inside it;

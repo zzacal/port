@@ -1,0 +1,19 @@
+@* Icon atom (feature 015, K1): one inline Lucide SVG in the text colour. The accessible name lives
+   on the control that holds it (IconButton), so the SVG is aria-hidden and has no <title>. *@
+<svg class="icon" data-icon="@Name" width="@Size" height="@Size" viewBox="0 0 24 24" fill="@(Filled ? "currentColor" : "none")" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">@((MarkupString)Icons.Paths[Name])</svg>
+
+@code {
+    /// <summary>A key of Icons.Paths.</summary>
+    [Parameter, EditorRequired] public string Name { get; set; } = "";
+
+    [Parameter] public int Size { get; set; } = 24;
+
+    /// <summary>Fill the glyph with the text colour (the pinned star).</summary>
+    [Parameter] public bool Filled { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (string.IsNullOrEmpty(Name) || !Icons.Paths.ContainsKey(Name))
+            throw new ArgumentException($"Unknown icon '{Name}'.", nameof(Name));
+    }
+}

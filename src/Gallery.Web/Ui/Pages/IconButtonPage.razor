@@ -1,0 +1,25 @@
+<UiLayout Title="IconButton">
+    <Specimen Label="Link">
+        <IconButton Icon="pencil" Label="Edit Pier" Href="#" />
+    </Specimen>
+    <Specimen Label="Link, active">
+        <IconButton Icon="pencil" Label="Close the editor for Pier" Href="#" Active="true" />
+    </Specimen>
+    <Specimen Label="Button">
+        <IconButton Icon="image-minus" Label="Remove Pier from this gallery" Type="button" />
+    </Specimen>
+    <Specimen Label="Toggle button, pressed">
+        <IconButton Icon="star" Label="Unpin cover" Type="button" Filled="true" Active="true" Toggle="true" />
+    </Specimen>
+    <Specimen Label="Unavailable">
+        <IconButton Icon="square-arrow-out-up-right" Label="No public page" Unavailable="true" />
+    </Specimen>
+    <Specimen Label="Every icon">
+        <div>
+            @foreach (var name in Icons.Paths.Keys)
+            {
+                <IconButton Icon="@name" Label="@name" Type="button" />
+            }
+        </div>
+    </Specimen>
+</UiLayout>

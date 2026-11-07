@@ -1,0 +1,26 @@
+<UiLayout Title="Icon">
+    <Specimen Label="Icons, 24 px">
+        <div class="icon-grid">
+            @foreach (var name in Icons.Paths.Keys)
+            {
+                <figure><Icon Name="@name" /><figcaption>@name</figcaption></figure>
+            }
+        </div>
+    </Specimen>
+    <Specimen Label="Icons, 16 px">
+        <div class="icon-grid">
+            @foreach (var name in Icons.Paths.Keys)
+            {
+                <figure><Icon Name="@name" Size="16" /><figcaption>@name</figcaption></figure>
+            }
+        </div>
+    </Specimen>
+    <Specimen Label="Filled">
+        <div class="icon-grid">
+            <figure><Icon Name="star" Filled="true" /><figcaption>star</figcaption></figure>
+        </div>
+    </Specimen>
+    <Specimen Label="Source">
+        <p class="icon-source">@($"{Icons.Source}, {Icons.License}") <a href="https://lucide.dev">https://lucide.dev</a></p>
+    </Specimen>
+</UiLayout>

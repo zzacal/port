@@ -24,6 +24,8 @@ public static class UiCatalog
         new(UiLevel.Atoms, "Input", "atoms/input", typeof(InputPage)),
         new(UiLevel.Atoms, "Switch", "atoms/switch", typeof(SwitchPage)),
         new(UiLevel.Atoms, "SelectMark", "atoms/select-mark", typeof(SelectMarkPage)),
+        new(UiLevel.Atoms, "Icon", "atoms/icon", typeof(IconPage)),
+        new(UiLevel.Atoms, "IconButton", "atoms/icon-button", typeof(IconButtonPage)),
 
         new(UiLevel.Molecules, "Tile", "molecules/tile", typeof(TilePage)),
         new(UiLevel.Molecules, "MetadataBar", "molecules/metadata-bar", typeof(MetadataBarPage)),

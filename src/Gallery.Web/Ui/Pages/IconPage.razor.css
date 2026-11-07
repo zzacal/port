@@ -1,0 +1,4 @@
+.icon-grid { display: flex; flex-wrap: wrap; gap: var(--space-s); }
+.icon-grid figure { margin: 0; width: 120px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.icon-grid figcaption { font-size: var(--type-caption); color: var(--color-muted); text-align: center; overflow-wrap: anywhere; }
+.icon-source { margin: 0; font-size: var(--type-caption); }
