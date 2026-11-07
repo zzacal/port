@@ -1,0 +1,22 @@
+016 T027 final gate (942b3a4 + docs), after dotnet clean:
+    0 Warning(s)
+    0 Error(s)
+build exit 0
+Passed!  - Failed:     0, Passed:   122, Skipped:     0, Total:   122, Duration: 108 ms - Gallery.Core.Tests.dll (net10.0)
+Passed!  - Failed:     0, Passed:  1502, Skipped:     1, Total:  1503, Duration: 4 m 33 s - Gallery.Web.Tests.dll (net10.0)
+test exit 0
+
+p95 (T025):
+== pre:  specs/016-galleries-list-icons/evidence/pre-timings.log
+== post: specs/016-galleries-list-icons/evidence/list-timings.log
+PASS SC-005 list n pre=100 post=100
+PASS SC-005 list p95 post=7.74 ms <= pre 9.23 * 1.10 + 1 = 11.15
+PASS SC-005 list db_reads every post line == 3
+
+ALL PASS
+
+baseline-diff:
+ALL EQUAL (expect A,C)
+
+non-vacuity:
+ALL PASS

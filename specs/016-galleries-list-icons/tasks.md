@@ -294,16 +294,16 @@ Batch C owns:
     becomes "Each card has its title on the cover and one icon row: move, visibility (eye /
     crossed-out eye), view, edit (feature 016)".
   Then run `assemble.sh` and `validate.sh`, teeing to `evidence/design-validate.txt` (0 failures).
-- [ ] T023 Write `specs/016-galleries-list-icons/decisions.md` with `add-decisions.py`, copied
+- [X] T023 Write `specs/016-galleries-list-icons/decisions.md` with `add-decisions.py`, copied
   from 015:
   - every executor `decisions_made`;
   - one STATED-CHANGE row per A1–A10 and B1–B4;
   - the Q1 and Q2 owner answers.
-- [ ] T024 Write the 016 entry in `docs/roadmap.md`: its status, the evidence paths, the
+- [X] T024 Write the 016 entry in `docs/roadmap.md`: its status, the evidence paths, the
   OWNER-ONLY review, and the note "fixes 015's sub-44 px builder icons at tablet and panel widths".
-- [ ] T025 Run the evidence test (default path), then
+- [X] T025 Run the evidence test (default path), then
   `p95.sh pre-timings.log list-timings.log`. A miss is recorded, not tuned (owner rule).
-- [ ] T026 Write `specs/016-galleries-list-icons/evidence/non-vacuity.sh` from 015's, with one
+- [X] T026 Write `specs/016-galleries-list-icons/evidence/non-vacuity.sh` from 015's, with one
   break per guard:
   - [SAFETY] the private-with-photos eye omits `name="public"` → GalleryListBrowserTests publish
     red;
@@ -318,7 +318,7 @@ Batch C owns:
   - an extra unused key in `Icons.Paths` → IconRegistryGuardTests red.
   Run `NV_DRYRUN=1`, then the real run. Each break must fail on its own assertion. Tee to
   `non-vacuity.txt`.
-- [ ] T027 Final gate (`evidence/gate-final.txt`):
+- [X] T027 Final gate (`evidence/gate-final.txt`):
   1. `dotnet clean`, then a `-warnaserror` build and the full suite, including Evidence and
      Browser.
   2. `p95.sh` result recorded; `baseline-diff.py` EQUAL.

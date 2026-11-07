@@ -1,0 +1,3 @@
+PARENT | T025 SC-005: list p95 7.74 ms <= pre 9.23 x 1.10 + 1 = 11.15 ms; db_reads 3 on every line, as before (evidence/p95-output.txt) | R-08 | none
+PARENT | T026 non-vacuity 8/8: each deliberate break (2 [SAFETY]: private eye without name=public, empty-private as a button; edit before view; swapped names; wrapping row; library medium 3; builder query off; unused icon key) turned its named test red on an assertion (evidence/non-vacuity.txt) | Guards proven able to fail | none
+PARENT | T027 final gate after dotnet clean: build -warnaserror 0 warnings; Core 122/122, Web 1502 passed + 1 skipped (baseline 1455 + 47 new) | evidence/gate-final.txt | none
