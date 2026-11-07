@@ -12,6 +12,9 @@
 
 ### Session 2026-11-07
 
+- Plan research (2026-11-07): FR-006 names extended to the two empty cases; FR-014 moved from the
+  contact-sheet specimen (pinned byte-identical by the public-output guard) to the controls' own
+  catalogue page.
 - Q1: What replaces the list's Public switch? → A: an eye icon for public and a crossed-out eye
   for private. Hover text and accessible name: "Public. Make private" / "Private. Make public"
   (FR-006). The empty-private case keeps today's reason as its name.
@@ -69,8 +72,8 @@ gallery the control cannot be activated and its name gives the reason.
 2. **Given** a public gallery, **When** the owner activates its visibility control, **Then** it
    becomes private in one step.
 3. **Given** an empty private gallery, **When** the owner tries to activate its visibility control,
-   **Then** nothing changes, and the control's name says "Add a photo before making this gallery
-   public" (today's reason).
+   **Then** nothing changes, and the control's name says "Private. Add a photo before making this
+   gallery public" (today's reason).
 4. **Given** scripting is off, **When** the owner activates the visibility control, **Then** it
    still publishes or unpublishes.
 
@@ -128,8 +131,10 @@ follow. Lift a card with the keyboard, move it and drop it; the position is anno
   private gallery's control MUST be unavailable, and its name MUST give today's reason. The control
   MUST show an open eye for a public gallery and a crossed-out eye for a private one. Its name,
   shown on hover and given to assistive technology, MUST state the current state and what
-  activating it does: "Public. Make private" or "Private. Make public". An unavailable control
-  is named with the reason instead.
+  activating it does: "Public. Make private" or "Private. Make public". A public gallery with
+  no photos is named "Public, hidden until it has a photo. Make private". An empty private
+  gallery's control is unavailable and named "Private. Add a photo before making this gallery
+  public" (today's reason, after the state).
 - **FR-007**: The move control MUST keep today's drag and keyboard reorder behaviour, its hooks and
   its announcements.
 - **FR-008**: The status words ("Public", "Private", "Public · hidden until it has a photo") MUST
@@ -145,8 +150,10 @@ follow. Lift a card with the keyboard, move it and drop it; the position is anno
   MUST meet the same timing budget rule as feature 015 (p95 within 10% + 1 ms of a pre-change
   capture), measured from logs.
 - **FR-013**: Public pages MUST stay byte-identical.
-- **FR-014**: The catalogue's admin gallery-list specimen MUST show the new card look, so the owner
-  can review it in the component library.
+- **FR-014**: The new card controls MUST have their own page in the component library, showing a
+  public, a private, an empty-public and an empty-private card, so the owner can review them. The
+  existing gallery-list specimen on the contact-sheet page stays as it is (it is pinned as a
+  pre-admin reference).
 
 ### Key Entities
 
@@ -192,7 +199,7 @@ follow. Lift a card with the keyboard, move it and drop it; the position is anno
   - the title on the cover (FR-001): the request names the action buttons, and "same treatment"
     implies it. Cut: keep the title under the cover;
   - removing the status words (FR-008). Cut: keep them as text;
-  - the catalogue specimen update (FR-014): needed for the component-library review.
+  - the catalogue page for the card controls (FR-014): needed for the component-library review.
 - Open performance item: 015's SC-005 miss (issue #3) comes from the per-icon component. The list
   has at most a few dozen cards, so its rendering cost is far smaller, but FR-012 still needs a
   measured pre/post capture. Fixing #3 first would remove that risk for this page too.
