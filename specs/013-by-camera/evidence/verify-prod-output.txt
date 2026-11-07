@@ -1,0 +1,64 @@
+base https://port.zacal.me  origin https://portfolio-web-dud0bbfsapg8cgg6.westus-01.azurewebsites.net  edge yes  origin-secret unset
+PASS GET / 200
+PASS / has nav.nav--home
+PASS / links Galleries to /g
+PASS / has no ContactSheet element
+PASS GET /g 200
+PASS /g lists tiles (3)
+PASS GET /g/ 301 -> /g
+PASS GET gallery /g/rjzvdeluih6j6pyaem7xbhtixe/minimal-bird-pics 200
+PASS GET photo /g/rjzvdeluih6j6pyaem7xbhtixe/minimal-bird-pics/32pnsjzhjq5uyuroytpcbosdty 200
+PASS wrong slug -> 301 /g/rjzvdeluih6j6pyaem7xbhtixe/minimal-bird-pics
+PASS /g/{id} -> 301, Cache-Control public, max-age=0, s-maxage=300
+PASS malformed id -> 404
+PASS unknown id -> 404 page, noindex
+PASS breadcrumb root on home is Home
+PASS breadcrumb root on listing is Home
+PASS breadcrumb root on gallery is Home
+PASS breadcrumb root on photo is Home
+PASS breadcrumb root on missing is Home
+PASS home Cache-Control public, max-age=0, s-maxage=86400
+PASS home Server-Timing app;dur
+PASS home has Speculation Rules
+PASS home inline CSS has @view-transition
+PASS home scripts: 2 inline, no external script or stylesheet
+PASS home sets no cookie
+PASS listing Cache-Control public, max-age=0, s-maxage=86400
+PASS listing Server-Timing app;dur
+PASS listing has Speculation Rules
+PASS listing inline CSS has @view-transition
+PASS listing scripts: 2 inline, no external script or stylesheet
+PASS listing sets no cookie
+PASS gallery Cache-Control public, max-age=0, s-maxage=86400
+PASS gallery Server-Timing app;dur
+PASS gallery has Speculation Rules
+PASS gallery inline CSS has @view-transition
+PASS gallery scripts: 2 inline, no external script or stylesheet
+PASS gallery sets no cookie
+PASS photo Cache-Control public, max-age=0, s-maxage=86400
+PASS photo Server-Timing app;dur
+PASS photo has Speculation Rules
+PASS photo inline CSS has @view-transition
+PASS photo scripts: 2 inline, no external script or stylesheet
+PASS photo sets no cookie
+PASS gallery names view transitions
+PASS photo names view transitions
+PASS photo links back to /g/rjzvdeluih6j6pyaem7xbhtixe/minimal-bird-pics#p-32pnsjzhjq5uyuroytpcbosdty
+PASS photo has the pager nav
+PASS first photo of 2 links rel=next
+PASS images: 48 distinct URLs on listing+gallery, all start with https://img.zacal.me/
+PASS no public page names r2.cloudflarestorage.com or r2.dev
+PASS SC-001 TLS to port.zacal.me: curl verified the chain and host name
+PASS SC-001 certificate chain verifies and SAN covers port.zacal.me (DNS:zacal.me,DNS:*.zacal.me)
+PASS http://port.zacal.me/g -> 301 https://port.zacal.me/g
+PASS SC-002 20/20 direct GETs to https://portfolio-web-dud0bbfsapg8cgg6.westus-01.azurewebsites.net/ (no secret) -> 403
+PASS SC-002 20/20 GETs to https://portfolio-web-dud0bbfsapg8cgg6.westus-01.azurewebsites.net/ with Host: port.zacal.me (no secret) -> 403
+     SC-003 started 20261107T000854Z (use kql.sh cachehits --since <this time> for the R-09 cross-check)
+PASS SC-003 home /?sc003=20261107T000854Z: 200 MISS then HIT
+PASS SC-003 listing /g?sc003=20261107T000854Z: 200 MISS then HIT
+PASS SC-003 gallery /g/rjzvdeluih6j6pyaem7xbhtixe/minimal-bird-pics?sc003=20261107T000854Z: 200 MISS then HIT
+PASS SC-003 photo /g/rjzvdeluih6j6pyaem7xbhtixe/minimal-bird-pics/32pnsjzhjq5uyuroytpcbosdty?sc003=20261107T000854Z: 200 MISS then HIT
+PASS owner cookie GET / -> cf-cache-status DYNAMIC
+SKIP SC-009 secret scan (infra/.secrets.local not found)
+
+ALL PASS

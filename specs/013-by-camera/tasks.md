@@ -452,13 +452,13 @@ Escape lands on `/c/{slug}#p-{iid}`.
 - [X] T035 Update `docs/roadmap.md` with a 013 entry (status, evidence paths, OWNER-ONLY checks)
   and a coverage row for D-26. Then run `dotnet clean`, build `-warnaserror`, and run the full
   suite. `git checkout --` any evidence logs the suite regenerates, then commit.
-- [ ] T036 Merge to main and push (parent). Watch the deploy job go green. Then the production
+- [X] T036 Merge to main and push (parent). Watch the deploy job go green. Then the production
   pass from quickstart.md §3: run `verify-prod.sh` and a browser pass on port.zacal.me for `/c`,
   one camera and one camera photo page, saved to `evidence/browser-prod.txt`.
 
 ## OWNER-ONLY (after the build; not gates)
 
-- [ ] O-01 Look over `/c`, one camera page and stepping through its photos on the live site, at
+- [X] O-01 Look over `/c`, one camera page and stepping through its photos on the live site, at
   desktop and phone widths.
 
 ## Dependencies and execution order

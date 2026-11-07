@@ -210,7 +210,7 @@ Remaining OWNER-ONLY steps (012 tasks.md, after the build, one at a time):
 
 ### 013 By Camera
 
-**Status: built on branch `013-by-camera`, full suite 122 + 1253 passed, 1 skipped.** Decisions, defaults and stated
+**Status: live at https://port.zacal.me (merged 66759a2, 2026-11-05); full suite 122 + 1253 passed, 1 skipped; production browser check in `browser-prod.txt`; O-01 passed (owner).** Decisions, defaults and stated
 test changes in `specs/013-by-camera/decisions.md`. Evidence: `specs/013-by-camera/evidence/`
 (verify.sh ALL PASS (15 checks) live against a scratch copy of the dev data; all 4 new checks FAIL on the pre-013 build in
 `verify-pre013-output.txt`; p95.sh ALL PASS: `/c` 1 read p95 0.35 ms vs `/g` 0.36, `/c/{slug}` 2 reads
@@ -228,7 +228,7 @@ amends D-21, the content model, L-07/08/09/11/12/17 and the II.2/IV.9 traceabili
 
 OWNER-ONLY (after merge and deploy, not gates):
 
-- [ ] O-01 Look over `/c`, one camera page and stepping through its photos on the live site, at
+- [x] O-01 Look over `/c`, one camera page and stepping through its photos on the live site, at
   desktop and phone widths.
 
 ## Not a feature

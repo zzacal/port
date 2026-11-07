@@ -1,0 +1,22 @@
+013 T036 production browser check, live https://port.zacal.me (2026-11-05, real Chrome via CDP, from the owner's machine)
+
+Production has camera documents after the owner's edit: /c lists 2 cameras
+(fujifilm-gfx100rf, sony-ilce-1m2). Home shows "Galleries" then "By Camera".
+
+Widths 390 (phone) and 1440 (desktop), after scrolling each page so lazy images load:
+  /c                                     no horizontal scroll, 4 imgs, 0 broken, CLS 0, crumbs Home / By Camera, 2 tiles
+  /c/fujifilm-gfx100rf                   no horizontal scroll, 10 imgs, 0 broken, CLS 0, crumbs Home / By Camera / FUJIFILM GFX100RF, 5 tiles
+  /c/fujifilm-gfx100rf/5xmutmpsi4zia52o5qnhx4j66a
+                                         no horizontal scroll, 3 imgs, 0 broken, CLS 0,
+                                         crumbs Home / By Camera / FUJIFILM GFX100RF / casual conversation
+
+Keyboard, 1440: from the first tile's photo, ArrowRight x4 visits the camera's 5 photos in grid
+order (matches the tile hrefs exactly); ArrowRight on the last stays put; ArrowLeft goes back one;
+Escape lands on /c/fujifilm-gfx100rf#p-43lhq47oxwvtv3hqiu5hw4y5le (the photo's tile).
+
+Navigation timing, 3 loads each at 1440 (TTFB ms / load ms / CLS):
+  /c            36/40/0    51/59/0    50/58/0
+  camera        34/39/0    55/66/0    37/45/0
+  camera photo  32/37/0    35/41/0    34/44/0
+
+verify-prod.sh https://port.zacal.me <origin>: 59 PASS, ALL PASS (SC-009 SKIP: no infra/.secrets.local) -> verify-prod-output.txt
