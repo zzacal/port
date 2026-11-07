@@ -10,7 +10,7 @@ namespace Gallery.Web.Tests;
 public partial class IconTests
 {
     private static readonly string[] Keys =
-        ["folder-plus", "folder", "folders", "square-arrow-out-up-right", "pencil", "grip-vertical", "star", "image-minus"];
+        ["folder-plus", "folder", "folders", "square-arrow-out-up-right", "pencil", "grip-vertical", "star", "image-minus", "eye", "eye-off"]; // + eye, eye-off (016 A8)
 
     // SHA-256 (UTF-8, lowercase hex) of the inner markup of each Lucide 1.70.0 file, whitespace
     // collapsed to single spaces and trimmed. Computed once from
@@ -25,6 +25,9 @@ public partial class IconTests
         ["grip-vertical"] = "da817c9af2134c8ea3f2bcbb22f681ba76f33a3fc10d057d1542f4fe7c082e91",
         ["star"] = "4e08f97ac63c79593a4d3e7d734e21332fd42a1102d175fa9d3e4b6a5e9b86be",
         ["image-minus"] = "0a8d1271d947f0a2820b285cbe5744b3ce2acdb2eedc454c1cb023050e3a7645",
+        // 016 A8: computed from the 1.70.0 files the same way (2026-11-07).
+        ["eye"] = "cb512bc1a85788de62b5886469fd3ce472c2cd4f3dabab7e55518e710c455a59",
+        ["eye-off"] = "1bc7a8e704dc680819a0b56aa6eb014e37155a634238988817cdf0715ff2b0aa",
     };
 
     public static TheoryData<string> IconKeys()
@@ -259,7 +262,7 @@ public partial class IconTests
             Assert.Equal(key == "star" ? 3 : 2, Regex.Matches(html, $"<figcaption[^>]*>{Regex.Escape(key)}</figcaption>").Count);
         }
         var sizes = Regex.Matches(html, "<svg class=\"icon\"[^>]*\\swidth=\"(\\d+)\"").Select(m => m.Groups[1].Value).ToArray();
-        Assert.Equal(Enumerable.Repeat("24", 8).Concat(Enumerable.Repeat("16", 8)).Append("24"), sizes);
+        Assert.Equal(Enumerable.Repeat("24", 10).Concat(Enumerable.Repeat("16", 10)).Append("24"), sizes); // 016 A8: 8+8+1 -> 10+10+1
         Assert.Contains("Lucide 1.70.0, ISC License, Copyright (c) 2026 Lucide Icons and Contributors", html);
         Assert.Matches("<a href=\"https://lucide.dev\"", html);
         Assert.Equal(1, Guards.Count(html, "fill=\"currentColor\""));

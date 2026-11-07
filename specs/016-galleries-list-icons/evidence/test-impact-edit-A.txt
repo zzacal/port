@@ -1,0 +1,5 @@
+OK A8 tests/Gallery.Web.Tests/IconTests.cs x1: '["folder-plus", "folder", "folders", "square-arrow' -> '["folder-plus", "folder", "folders", "square-arrow'
+OK A8 tests/Gallery.Web.Tests/IconTests.cs x1: '        ["image-minus"] = "0a8d1271d947f0a2820b285' -> '        ["image-minus"] = "0a8d1271d947f0a2820b285'
+OK A8 tests/Gallery.Web.Tests/IconTests.cs x1: 'Assert.Equal(Enumerable.Repeat("24", 8).Concat(Enu' -> 'Assert.Equal(Enumerable.Repeat("24", 10).Concat(En'
+OK A9 tests/Gallery.Web.Tests/IndexTests.cs x1: 'Assert.Equal(39, hrefs.Count); // 14 from feature ' -> 'Assert.Equal(40, hrefs.Count); // 14 from feature '
+wrote 2 files

@@ -123,22 +123,22 @@ Batch A owns:
 - `src/Gallery.Web/Ui/UiCatalog.cs` (one inserted line);
 - the new `tests/Gallery.Web.Tests/GalleryActionsTests.cs`.
 
-- [ ] T007 Add `eye` and `eye-off` to `Icons.Paths` in
+- [X] T007 Add `eye` and `eye-off` to `Icons.Paths` in
   `src/Gallery.Web/Components/Atoms/Icons.cs` (G1), from the fetched Lucide 1.70.0 files. Put the
   two SHA-256 values in the JSON report's `decisions_made`; the parent pins them through A8.
-- [ ] T008 Write `src/Gallery.Web/Components/Molecules/GalleryActions.cs`, the pure rules:
+- [X] T008 Write `src/Gallery.Web/Components/Molecules/GalleryActions.cs`, the pure rules:
   - `VisibilityLabel(isPublic, hasPhotos)` returns the four names in data-model.md, verbatim;
   - the empty-private name is built as `$"Private. {GalleryService.EmptyPublishReason}"`;
   - an icon rule (public → `eye`, private → `eye-off`);
   - `CanToggle(isPublic, hasPhotos)` is false only for private and empty.
-- [ ] T009 Write `GalleryActions.razor` and `GalleryActions.razor.css` per G2 and G2a:
+- [X] T009 Write `GalleryActions.razor` and `GalleryActions.razor.css` per G2 and G2a:
   - the parameters are those in data-model.md;
   - the order is the DragHandle with `Icon="true"`, `ga-vis`, `ga-view`, `ga-edit`;
   - `Name="public" Value="on"` only when private with photos;
   - no `Toggle`;
   - the CSS mirrors `.photo-actions`: flex, `nowrap`, gap 4px, height `var(--tap)`, centred.
   For each RenderFragment, use expressions that render null rather than `@if` blocks.
-- [ ] T010 [P] Write `src/Gallery.Web/Ui/Pages/GalleryActionsPage.razor` (G6):
+- [X] T010 [P] Write `src/Gallery.Web/Ui/Pages/GalleryActionsPage.razor` (G6):
   - 5 specimens, each a `w-320` Tile with `TitleOnPhoto="true"` and a GalleryActions caption;
   - the labels are "Public", "Private", "Public, no photos", "Private, no photos", "Long title";
   - use a catalogue sample image as on TilePage;
@@ -146,7 +146,7 @@ Batch A owns:
     real band for empty cards is G3's.
   In `src/Gallery.Web/Ui/UiCatalog.cs`, insert the entry directly after the `VisibilityToggle`
   line.
-- [ ] T011 Write `tests/Gallery.Web.Tests/GalleryActionsTests.cs`:
+- [X] T011 Write `tests/Gallery.Web.Tests/GalleryActionsTests.cs`:
   - the label rule over the 4 states (EQUALITY with the data-model strings);
   - child order EQUALS [handle, ga-vis, ga-view, ga-edit] for every state, with edit last;
   - visibility:
