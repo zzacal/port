@@ -10,7 +10,11 @@
 
 ## Clarifications
 
-*(none yet; see the open questions in the specify report)*
+### Session 2026-11-07
+
+- Q1: What replaces the list's Public switch? → A: an eye icon for public and a crossed-out eye
+  for private. Hover text and accessible name: "Public. Make private" / "Private. Make public"
+  (FR-006). The empty-private case keeps today's reason as its name.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -38,8 +42,8 @@ a word link or a text button.
    shows as unavailable in its usual place, so edit stays right-most and in the same position as
    on every other card.
 3. **Given** any card, **When** the owner hovers or focuses an icon, **Then** it shows its name
-   ("Edit {title}", "View {title} (opens in a new tab)", "Move {title}", and the visibility name
-   per FR-006).
+   ("Edit {title}", "View {title} (opens in a new tab)", "Move {title}", and "Public. Make
+   private" / "Private. Make public" on the eye).
 4. **Given** the edit icon, **When** the owner activates it, **Then** the gallery's builder opens,
    exactly as the "Edit" word link does today.
 
@@ -121,10 +125,11 @@ follow. Lift a card with the keyboard, move it and drop it; the position is anno
   photos. Otherwise it MUST show as unavailable in the same position.
 - **FR-006**: The visibility control MUST keep today's behaviour exactly: one activation publishes
   or unpublishes at once, with no confirmation, through the same form and server rule. An empty
-  private gallery's control MUST be unavailable, and its name MUST give today's reason. Its name
-  MUST state the current state and what activating it does: [NEEDS CLARIFICATION: which icon
-  shows public vs private, and are the words "Public, make private" / "Private, make public" the
-  right accessible names?].
+  private gallery's control MUST be unavailable, and its name MUST give today's reason. The control
+  MUST show an open eye for a public gallery and a crossed-out eye for a private one. Its name,
+  shown on hover and given to assistive technology, MUST state the current state and what
+  activating it does: "Public. Make private" or "Private. Make public". An unavailable control
+  is named with the reason instead.
 - **FR-007**: The move control MUST keep today's drag and keyboard reorder behaviour, its hooks and
   its announcements.
 - **FR-008**: The status words ("Public", "Private", "Public · hidden until it has a photo") MUST
@@ -161,6 +166,8 @@ follow. Lift a card with the keyboard, move it and drop it; the position is anno
   4.5:1).
 - **SC-005**: The galleries list's server time at the 95th percentile stays within 10% (+1 ms) of
   the pre-change measurement, with the same number of data reads per request, read from logs.
+- **SC-006**: Every visibility control shows the eye that matches the gallery's stored state, and
+  its name matches that state (checked over public, private and empty-private galleries).
 
 ## Assumptions
 

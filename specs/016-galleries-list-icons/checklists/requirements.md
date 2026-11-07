@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,8 +31,8 @@
 
 ## Notes
 
-- 1 open marker: FR-006, the visibility icon and its names. It needs the owner's answer before
-  `/speckit-plan`.
+- FR-006 resolved (owner, Q1 A): eye / crossed-out eye, named "Public. Make private" /
+  "Private. Make public". SC-006 added to check that the icon matches the stored state.
 - File and component names appear only in Assumptions, as reuse pointers for planning, as in prior
   specs. Requirements and success criteria are free of them.
 - Severable seams, beyond the literal request "action buttons inherit the icon style":
