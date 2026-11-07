@@ -508,4 +508,148 @@ public sealed class GalleryFieldBrowserTests(LibraryBrowserFixture fx)
         await Input(page).FillAsync("x");
         Assert.False(await NewRow(page).IsVisibleAsync(), "a second + x is offered (case differing)");
     }
+
+    // ── T018 US3: remove a gallery token ───────────────────────────────────────────────────
+
+    private static ILocator LeaveInputs(IPage page) => page.Locator($"{Field} input[type='hidden'][name='leave']");
+
+    private static Task<string[]> LeaveValuesAsync(IPage page) =>
+        LeaveInputs(page).EvaluateAllAsync<string[]>("els => els.map(i => i.value)");
+
+    private static Task<string[]> TokenIdsAsync(IPage page) =>
+        page.Locator($"{Field} .cb-tokens > .cb-token").EvaluateAllAsync<string[]>("els => els.map(li => li.dataset.id)");
+
+    private static async Task AssertInLibraryAsync(LibrarySite site, string iid)
+    {
+        var doc = await site.Images.Find(i => i.Id == iid).SingleAsync();
+        Assert.Null(doc.DeletingAt);
+    }
+
+    private static List<string> MembershipLines(LibrarySite site) =>
+        site.LogLines.Where(l => l.StartsWith("op.timing library.image.memberships ", StringComparison.Ordinal)).ToList();
+
+    [Fact]
+    public async Task Clicking_x_on_a_saved_token_then_Save_takes_the_photo_out_and_keeps_it_in_the_library()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var s = await SeedAsync(site);
+        var p = s.Ids[0];
+        var page = await OpenAsync(site, $"/admin/library?open={p}");
+        var coast = s.G["Coast"];
+        Assert.Equal([coast], await TokenIdsAsync(page));
+
+        await page.Locator($"{Field} .cb-token[data-id='{coast}'] .cb-x").ClickAsync();
+        await page.Mouse.MoveAsync(0, 0);
+        Assert.Empty(await TokenIdsAsync(page));
+        Assert.Equal([coast], await LeaveValuesAsync(page));
+        Assert.Equal("Removed Coast", await StatusAsync(page));
+
+        await SaveAsync(page);
+
+        Assert.DoesNotContain(p, (await site.GalleryDocAsync(coast)).Items);
+        Assert.Empty(await HoldersOfAsync(site, p));
+        Assert.Empty((await site.Images.Find(i => i.Id == p).SingleAsync()).GalleryIds);
+        await AssertInLibraryAsync(site, p);
+        Assert.Empty(await TokenIdsAsync(page));
+        Assert.Equal(0, await LeaveInputs(page).CountAsync());
+    }
+
+    [Fact]
+    public async Task Backspace_in_the_empty_input_removes_the_last_token()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var s = await SeedAsync(site);
+        var p = s.Ids[0];
+        // A second holder of P, after Coast in title order (tokens render in title order).
+        var pierWalks = await site.GalleryAsync("Pier walks", [p]);
+        var page = await OpenAsync(site, $"/admin/library?open={p}");
+        Assert.Equal([s.G["Coast"], pierWalks], await TokenIdsAsync(page));
+
+        await Input(page).FocusAsync();
+        Assert.Equal("", await Input(page).InputValueAsync());
+        await page.Keyboard.PressAsync("Backspace");
+
+        Assert.Equal([s.G["Coast"]], await TokenIdsAsync(page));
+        Assert.Equal([pierWalks], await LeaveValuesAsync(page));
+        Assert.Equal("Removed Pier walks", await StatusAsync(page));
+        Assert.True(await Input(page).EvaluateAsync<bool>("el => el === document.activeElement"), "focus left the input after Backspace");
+
+        await SaveAsync(page);
+        Assert.Equal([s.G["Coast"]], await HoldersOfAsync(site, p));
+        Assert.DoesNotContain(p, (await site.GalleryDocAsync(pierWalks)).Items);
+        await AssertInLibraryAsync(site, p);
+    }
+
+    [Fact]
+    public async Task Removing_a_saved_token_then_re_picking_it_leaves_no_leave_input_and_Save_changes_nothing()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var s = await SeedAsync(site);
+        var p = s.Ids[0];
+        var coast = s.G["Coast"];
+        var itemsBefore = (await site.GalleryDocAsync(coast)).Items.ToList();
+        var page = await OpenAsync(site, $"/admin/library?open={p}");
+
+        await page.Locator($"{Field} .cb-token[data-id='{coast}'] .cb-x").ClickAsync();
+        await page.Mouse.MoveAsync(0, 0);
+        Assert.Equal([coast], await LeaveValuesAsync(page));
+
+        await Input(page).FillAsync("coast");
+        await Row(page, coast).ClickAsync();
+        await page.Mouse.MoveAsync(0, 0);
+
+        Assert.Equal(0, await LeaveInputs(page).CountAsync());
+        Assert.Equal(0, await page.Locator($"{Field} input[type='hidden'][name='add']").CountAsync());
+        Assert.Equal([coast], await TokenIdsAsync(page));
+        var token = page.Locator($"{Field} .cb-token[data-id='{coast}']");
+        Assert.Equal("saved", await token.GetAttributeAsync("data-kind"));
+        Assert.Equal(0, await page.Locator($"{Field} .cb-token.is-pending").CountAsync());
+
+        await SaveAsync(page);
+
+        Assert.Equal(itemsBefore, (await site.GalleryDocAsync(coast)).Items);
+        Assert.Equal([coast], await HoldersOfAsync(site, p));
+        Assert.Equal([coast], (await site.Images.Find(i => i.Id == p).SingleAsync()).GalleryIds);
+        Assert.Empty(MembershipLines(site));
+    }
+
+    [Fact]
+    public async Task Keyboard_only_Tab_to_x_and_Enter_removes_the_token_and_Save_takes_the_photo_out()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var s = await SeedAsync(site);
+        var p = s.Ids[0];
+        var coast = s.G["Coast"];
+        var page = await OpenAsync(site, $"/admin/library?open={p}");
+
+        await page.Locator(".side-panel textarea[name='caption']").FocusAsync();
+        var onX = false;
+        for (var i = 0; i < 4 && !onX; i++)
+        {
+            await page.Keyboard.PressAsync("Tab");
+            onX = await page.EvaluateAsync<bool>(
+                $"() => document.activeElement?.matches(\"{Field} .cb-token[data-id='{coast}'] .cb-x\") === true");
+        }
+        Assert.True(onX, "Tab did not reach the saved token's ×");
+        await page.Keyboard.PressAsync("Enter");
+
+        Assert.Empty(await TokenIdsAsync(page));
+        Assert.Equal([coast], await LeaveValuesAsync(page));
+        Assert.Equal("Removed Coast", await StatusAsync(page));
+        Assert.True(await Input(page).EvaluateAsync<bool>("el => el === document.activeElement"), "focus did not move to the input after the last ×");
+
+        var onSave = false;
+        for (var i = 0; i < 6 && !onSave; i++)
+        {
+            await page.Keyboard.PressAsync("Tab");
+            onSave = await page.EvaluateAsync<bool>("() => document.activeElement?.matches('.side-panel .sp-save button') === true");
+        }
+        Assert.True(onSave, "Tab did not reach Save");
+        await page.Mouse.MoveAsync(0, 0);
+        await NavigatesAsync(page, () => page.Keyboard.PressAsync("Enter"));
+
+        Assert.DoesNotContain(p, (await site.GalleryDocAsync(coast)).Items);
+        Assert.Empty(await HoldersOfAsync(site, p));
+        await AssertInLibraryAsync(site, p);
+    }
 }

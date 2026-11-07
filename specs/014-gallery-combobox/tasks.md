@@ -312,13 +312,13 @@ Batch B (model params).
 Batch D. Owns only additions to the two new test files. The code already landed in T009, T010
 and T014.
 
-- [ ] T017 [US3] Add to `LibraryMembershipEditTests.cs`:
+- [X] T017 [US3] Add to `LibraryMembershipEditTests.cs`:
   - `leave=` a holding gallery → the photo is out of `items` and `galleryIds`, and
     `pinnedCover` is cleared when it was the cover; the purge set EQUALS B5's for the same pair;
   - a public gallery whose last photo is removed stays `public` and drops out of `/g` after
     settle (II.6);
   - `leave` + `add` of the same id → no change (R-04).
-- [ ] T018 [US3] Add to `GalleryFieldBrowserTests.cs`:
+- [X] T018 [US3] Add to `GalleryFieldBrowserTests.cs`:
   - click × on a saved token, Save, and the gallery no longer holds the photo; the photo is still
     in the library;
   - Backspace in the empty input removes the last token;

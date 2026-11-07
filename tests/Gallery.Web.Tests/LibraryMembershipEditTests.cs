@@ -318,4 +318,93 @@ public class LibraryMembershipEditTests(S3ProxyFixture s3, MongoFixture mongo) :
         Assert.Equal([gid], (await ImageAsync(h, img.Id)).GalleryIds);
         await h.SettleAsync();
     }
+
+    // ── T017 US3: remove a gallery token (leave) ───────────────────────────────────────────
+
+    [Fact]
+    public async Task Leave_takes_the_photo_out_clears_its_pinned_cover_and_purges_exactly_what_B5_purges()
+    {
+        await using var h = await LibraryHost.CreateAsync(mongo, s3);
+        var other = await h.InsertUploadedImageAsync(files: false, title: "Other");
+        var img = await h.InsertUploadedImageAsync(files: false, title: "Pier");
+        var gid = await GalleryAsync(h, "Coast", [other.Id, img.Id], publish: true);
+        var keep = await GalleryAsync(h, "Harbour", [img.Id]);
+        var cover = await h.PostFormAsync($"/admin/galleries/{gid}/cover", [F("image", img.Id)]);
+        Assert.Equal(HttpStatusCode.SeeOther, cover.StatusCode);
+        Assert.Equal(img.Id, (await LoadAsync(h, gid)).PinnedCover);
+        await h.SettleAsync();
+
+        var resp = await SaveAsync(h, img.Id, ("leave", gid));
+        Assert.Equal(HttpStatusCode.SeeOther, resp.StatusCode);
+        Assert.Equal($"/admin/library?page=1&open={img.Id}&saved=1", resp.Headers.Location?.ToString());
+        var g = await LoadAsync(h, gid);
+        Assert.Equal([other.Id], g.Items);
+        Assert.Null(g.PinnedCover);
+        Assert.Equal([keep], (await ImageAsync(h, img.Id)).GalleryIds);
+        Assert.Equal([img.Id], (await LoadAsync(h, keep)).Items);
+        Assert.Null((await ImageAsync(h, img.Id)).DeletingAt);
+        var panel = await h.SettleAsync();
+        Assert.NotEmpty(panel);
+        Assert.Single(Lines(h, Op), l => l.EndsWith(" ok", StringComparison.Ordinal));
+
+        // Same host, same state again (the photo back in, pinned as the cover), then B5 removes it.
+        Assert.True((await Gs(h, s => s.AddAsync(gid, [img.Id]))).IsOk);
+        Assert.True((await Gs(h, s => s.SetCoverAsync(gid, img.Id))).IsOk);
+        await h.SettleAsync();
+        Assert.Equal([other.Id, img.Id], (await LoadAsync(h, gid)).Items);
+        Assert.Equal(img.Id, (await LoadAsync(h, gid)).PinnedCover);
+        var b5 = await h.PostFormAsync($"/admin/galleries/{gid}/remove", [F("image", img.Id)]);
+        Assert.Equal(HttpStatusCode.SeeOther, b5.StatusCode);
+        Assert.Equal(Sorted(await h.SettleAsync()), Sorted(panel));
+    }
+
+    [Fact]
+    public async Task Leaving_a_public_gallery_s_last_photo_keeps_it_public_and_drops_it_from_g()
+    {
+        await using var h = await LibraryHost.CreateAsync(mongo, s3);
+        var img = await h.InsertUploadedImageAsync(files: false, title: "Pier");
+        var later = await h.InsertUploadedImageAsync(files: false, title: "Later");
+        var gid = await GalleryAsync(h, "Coast", [img.Id], publish: true);
+        var laterGid = await GalleryAsync(h, "Later", [later.Id], publish: true);
+        await h.SettleAsync();
+        var slug = (await LoadAsync(h, gid)).Slug;
+        var laterSlug = (await LoadAsync(h, laterGid)).Slug;
+        var homeBefore = await GalleryHtml.HomeRawAsync(h);
+        Assert.Contains($"href=\"/g/{gid}/{slug}\"", homeBefore);
+        Assert.Contains($"href=\"/g/{laterGid}/{laterSlug}\"", homeBefore);
+
+        var resp = await SaveAsync(h, img.Id, ("leave", gid));
+        Assert.Equal(HttpStatusCode.SeeOther, resp.StatusCode);
+        await h.SettleAsync();
+
+        var g = await LoadAsync(h, gid);
+        Assert.Equal("public", g.Visibility);
+        Assert.Empty(g.Items);
+        Assert.Empty((await ImageAsync(h, img.Id)).GalleryIds);
+        var home = await GalleryHtml.HomeRawAsync(h);
+        Assert.DoesNotContain($"/g/{gid}/", home);
+        Assert.Contains($"href=\"/g/{laterGid}/{laterSlug}\"", home);
+        Assert.Equal(HttpStatusCode.NotFound, (await h.GetAsync($"/g/{gid}/{slug}")).StatusCode);
+    }
+
+    [Fact]
+    public async Task Leave_and_add_of_the_same_id_is_303_and_changes_nothing()
+    {
+        await using var h = await LibraryHost.CreateAsync(mongo, s3);
+        var img = await h.InsertUploadedImageAsync(files: false, title: "Pier");
+        var held = await GalleryAsync(h, "Coast", [img.Id], publish: true);
+        var notHeld = await GalleryAsync(h, "Harbour", []);
+        await h.SettleAsync();
+        var before = await SnapAsync(h);
+
+        var resp = await SaveAsync(h, img.Id, ("leave", held), ("add", held), ("add", notHeld), ("leave", notHeld));
+
+        Assert.Equal(HttpStatusCode.SeeOther, resp.StatusCode);
+        AssertSame(before, await SnapAsync(h));
+        Assert.Equal([img.Id], (await LoadAsync(h, held)).Items);
+        Assert.Empty((await LoadAsync(h, notHeld)).Items);
+        Assert.Equal([held], (await ImageAsync(h, img.Id)).GalleryIds);
+        Assert.Empty(Lines(h, Op));
+        Assert.Empty(await h.SettleAsync());
+    }
 }
