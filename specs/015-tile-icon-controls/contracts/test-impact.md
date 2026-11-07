@@ -23,6 +23,7 @@ Grepped the whole `tests/` tree (source-only) for every marker this feature chan
 | A12 | `NavComponentTests.cs:308-330` (K8 MembershipStatus, 2 facts) | MembershipStatus markup | deleted with the component; replaced by `PhotoActionsTests` (new file). Requirement change (decisions). |
 | A13 | `IndexTests.cs:16` | `Assert.Equal(37, …)` | `39`, comment `+ 2 from 015 (Icon, IconButton) and MembershipStatus → PhotoActions` |
 | A14 | `NewTabLinkTests.cs:27-37` | arrow = text ends in ↗ | arrow = text ends in ↗ OR the anchor's inner markup holds `data-icon="square-arrow-out-up-right"` (R-06); both directions kept |
+| A15 | `MoleculePageTests.cs:16-17` (found at implement; missed in plan) | TilePage has exactly 3 `<a class="tile"` and 3 `<div class="cell"` | still 3 `<a class="tile"` (the K8 "Title on photo" specimens take no Href, like library tiles); 6 `<div class="cell"`, comment `+ 3 Title on photo specimens (015 K8)` |
 
 ## (B) Baselines (`specs/006-public-site-local/evidence/ui-baseline/`, strict byte identity)
 

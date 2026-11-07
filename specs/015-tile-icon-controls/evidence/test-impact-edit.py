@@ -109,6 +109,9 @@ ROWS = [
     ('A14', T / 'NewTabLinkTests.cs',
      '                Assert.True(l.Text.EndsWith(\'↗\'), $"{path}: \'{l.Text}\' opens a new tab but has no ↗ arrow");',
      '                Assert.True(Cue(l), $"{path}: \'{l.Text}\' opens a new tab but has no ↗ arrow");', 1),
+    ('A15', T / 'MoleculePageTests.cs',
+     '        Assert.Equal(3, Guards.Count(html, "<div class=\\"cell\\""));',
+     '        Assert.Equal(6, Guards.Count(html, "<div class=\\"cell\\"")); // + 3 Title on photo specimens (015 K8, test-impact A15)', 1),
 ]
 
 def main() -> int:

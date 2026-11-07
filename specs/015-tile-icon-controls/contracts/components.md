@@ -55,6 +55,7 @@ Parameters:
 | `Type` | string | `"submit"` | button only |
 | `FormId`, `Name`, `Value` | string? | null | button only: `form`, `name`, `value` |
 | `CssClass` | string? | null | extra class on the root |
+| `Toggle` | bool | false | button only: renders `aria-pressed="true"`/`"false"` from `Active` (amended at implement: the parameter that "marks a toggle" was unnamed) |
 
 Markup (exact; `{c}` = `"icon-button"` + `" is-active"` when Active + `" " + CssClass` when set):
 
@@ -171,10 +172,10 @@ one row that never wraps; 3 × 44 + 2 × 4 = 140 px fits the smallest phone tile
     `background:transparent; }`. `Icon` defaults to false, so the gallery list's handle is
     unchanged.
   - `<CoverMarker … Icon="true" />`, keeping the `<div class="cover-marker">` root:
-    - Unpinned: `<IconButton Icon="star" Label="Make {ImageTitle} the cover" Type="{as today}" FormId Name="image" Value="{ImageId}" />`
+    - Unpinned: `<IconButton Icon="star" Label="Make {ImageTitle} the cover" Type="{as today}" FormId Name="image" Value="{ImageId}" Toggle="true" />`
       with `aria-pressed="false"`;
     - Automatic: `<IconButton Icon="star" Filled="true" Unavailable="true" Label="Cover: first photo" />`;
-    - Pinned: `<IconButton Icon="star" Filled="true" Active="true" Label="Unpin cover" Type="{as today}" FormId="{UnpinFormId ?? FormId}" />`
+    - Pinned: `<IconButton Icon="star" Filled="true" Active="true" Toggle="true" Label="Unpin cover" Type="{as today}" FormId="{UnpinFormId ?? FormId}" />`
       with `aria-pressed="true"`.
     - `Icon` defaults to false: the word markup is unchanged.
   - Remove: `<IconButton Icon="image-minus" Label="Remove {title} from this gallery" FormId="{RemoveFormId}" Name="image" Value="{id}" />`.
@@ -228,7 +229,9 @@ New section `// ── panel into view (015 R-03)`, at most 8 lines:
     - "Edit active": Count 2, Active;
     - "Long title": a 60-character title, Count 1.
   - `TilePage`: append "Title on photo, landscape", "Title on photo, portrait" and "Title on
-    photo, long title", after the existing specimens.
+    photo, long title", after the existing specimens. They take `TitleOnPhoto="true"`,
+    `Width="w-320"`, `Sizes="320px"` and NO `Href` (a library tile is not a link; test-impact A15),
+    using `Samples.Landscape[0]`, `Samples.Portrait[0]` and the page's existing `LongTitled`.
   - `DragHandlePage`: append "Icon".
   - `CoverMarkerPage`: append "Icon, unpinned", "Icon, automatic" and "Icon, pinned".
   - `GalleryBuilderPage`: unchanged source; its markup changes through K6.

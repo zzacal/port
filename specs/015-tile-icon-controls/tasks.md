@@ -165,7 +165,7 @@ Batch A owns:
   - defaults equal omitted parameters byte for byte, for an image tile and an empty tile.
 
 **Checkpoint (parent)**:
-1. Apply test-impact A13 (`IndexTests` 37 → 39) and A14 (`NewTabLinkTests`: icon counts as ↗;
+1. Apply test-impact A13 (`IndexTests` 37 → 39), A15 (`MoleculePageTests` TilePage cells 3 → 6) and A14 (`NewTabLinkTests`: icon counts as ↗;
    the amended test passes on the pre-change markup too).
 2. Run `UiPagesUnchangedTests` once; it writes B7 (`atoms/icon.html`, `atoms/icon-button.html`).
 3. Regenerate B1 (`index.html`) and B2 (`molecules/tile.html`), then run `baseline-diff.py`:
