@@ -44,6 +44,30 @@ body.admin {
     margin-top: 0;
 }
 
+/* reorder.js pointer drag, one look for every admin grid (gallery list and builder): the dragged
+   tile is hidden, a dashed slot of its size (height set by the script) holds the landing cell, and
+   a copy of the tile follows the pointer. */
+.admin-main ::deep .cs > .is-dragging {
+    display: none;
+}
+
+.admin-main ::deep .cs > .drop-slot {
+    box-sizing: border-box;
+    aspect-ratio: auto; /* the script sets the dragged tile's height; a ratio would widen the box past its track */
+    border: 2px dashed var(--color-text);
+    background: var(--color-surface);
+    border-radius: 4px;
+}
+
+.admin-main ::deep .drag-preview {
+    position: fixed;
+    z-index: 10;
+    margin: 0;
+    pointer-events: none;
+    background: var(--color-bg);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .25);
+}
+
 .admin-aside {
     min-width: 0;
 }

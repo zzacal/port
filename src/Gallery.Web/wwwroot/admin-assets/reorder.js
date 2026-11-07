@@ -2,9 +2,10 @@
 // ContactSheet whose direct children are the tiles, in the same order as the `order` inputs of
 // the hidden form named by data-form (G3 gal-order, B3 b-order).
 //
-//   - Pointer: press a tile's .handle and drag. While the pointer is down the tile is dimmed
-//     (is-dragging) and a .drop-slot ghost (the existing 005 class) sits in the grid at the landing
-//     index. Releasing over a new place rewrites the form's `order` inputs and submits it.
+//   - Pointer: press a tile's .handle and drag. A copy of the tile (.drag-preview) follows the
+//     pointer; the tile itself is hidden (is-dragging) and a .drop-slot of its size holds its cell,
+//     then moves to the landing index, so the grid keeps one cell per tile. Releasing over a new
+//     place rewrites the form's `order` inputs and submits it.
 //   - Keyboard: Space/Enter on a focused handle lifts the tile (aria-pressed="true", the lift help
 //     text), arrows move it one place, Space/Enter drops it (rewrite + submit), Escape restores the
 //     original order and submits nothing. Each move updates a polite live region "Position p of n".
@@ -95,24 +96,43 @@ class ReorderGrid extends HTMLElement {
     const from = tiles.indexOf(tile);
     e.preventDefault();
 
-    // Hit-test against the cell positions as they were when the drag started: inserting the slot
+    // Hit-test against the cell positions as they were when the drag started: moving the slot
     // reflows the grid, and live positions would make the landing index oscillate.
     const rects = tiles.map((t) => t.getBoundingClientRect());
+    const r = rects[from];
+    // The slot takes the dragged tile's place in the grid (same size), and the tile itself is hidden,
+    // so the grid keeps exactly one cell per tile: nothing shifts until the landing place changes.
     const slot = document.createElement('div');
     slot.className = 'drop-slot';
     slot.setAttribute('aria-hidden', 'true');
     // The .drop-slot rule is scoped to the component that renders the grid's wrapper (the
-    // GalleryBuilder's section, or the page that declares this element).
+    // GalleryBuilder's section, or the page that declares this element); AdminLayout styles both.
     copyScope(this, slot);
     copyScope(this.parentElement, slot);
+    slot.style.height = `${r.height}px`;
+    // A copy of the tile follows the pointer (fixed, moved by transform; inert and hidden from AT).
+    const preview = tile.cloneNode(true);
+    preview.classList.add('drag-preview');
+    preview.removeAttribute('id');
+    for (const n of preview.querySelectorAll('[id]')) n.removeAttribute('id');
+    preview.setAttribute('aria-hidden', 'true');
+    preview.inert = true;
+    preview.style.left = `${r.left}px`;
+    preview.style.top = `${r.top}px`;
+    preview.style.width = `${r.width}px`;
+    tile.before(slot);
     tile.classList.add('is-dragging');
+    this.append(preview);
 
-    const drag = { handle, tile, from, to: from, rects, slot, pointerId: e.pointerId };
+    const x0 = e.clientX;
+    const y0 = e.clientY;
+    const drag = { handle, tile, from, to: from, rects, slot, preview, pointerId: e.pointerId };
     this._drag = drag;
     try { handle.setPointerCapture(e.pointerId); } catch { /* capture is best effort */ }
 
     const move = (ev) => {
       if (ev.pointerId !== drag.pointerId) return;
+      preview.style.transform = `translate(${ev.clientX - x0}px, ${ev.clientY - y0}px)`;
       const to = landingIndex(rects, ev.clientX, ev.clientY);
       if (to !== null && to !== drag.to) {
         drag.to = to;
@@ -125,20 +145,23 @@ class ReorderGrid extends HTMLElement {
       handle.removeEventListener('pointerup', end);
       handle.removeEventListener('pointercancel', end);
       try { handle.releasePointerCapture(drag.pointerId); } catch { /* already released */ }
-      slot.remove();
+      preview.remove();
+      const drop = ev.type === 'pointerup' && drag.to !== drag.from;
+      // On a drop the tile shows where it landed while the form submits; otherwise where it was.
+      if (drop) slot.replaceWith(tile); else slot.remove();
       tile.classList.remove('is-dragging');
       this._drag = null;
-      if (ev.type === 'pointerup' && drag.to !== drag.from) this.submitMove(drag.from, drag.to);
+      if (drop) this.submitMove(drag.from, drag.to);
     };
     handle.addEventListener('pointermove', move);
     handle.addEventListener('pointerup', end);
     handle.addEventListener('pointercancel', end);
   }
 
-  /** Puts the ghost where the tile would land: before the target cell when moving back, after it when moving forward. */
+  /** Puts the slot where the tile would land: before the target cell when moving back, after it when moving forward, in the tile's own place otherwise. */
   placeSlot(drag) {
     const tiles = this.tiles();
-    if (drag.to === drag.from) { drag.slot.remove(); return; }
+    if (drag.to === drag.from) { drag.tile.before(drag.slot); return; }
     const target = tiles[drag.to];
     if (drag.to < drag.from) target.before(drag.slot);
     else target.after(drag.slot);
