@@ -66,7 +66,7 @@ rules, and `library.js` mirrors them; a browser parity test pins the two togethe
 ```
 <div class="combobox" id="{Id}" data-max-shown="{MaxShown}" data-create-max="{CreateMax or ''}"
      data-allow-create="{true|false}" data-add-name="{AddName}" data-create-name="{CreateName}"
-     data-remove-name="{RemoveName}" data-remove-label="{RemoveLabel}" [data-form-id="{FormId}"]>
+     data-remove-name="{RemoveName}" data-remove-label="{RemoveLabel}" data-warning-format="{WarningFormat}" [data-form-id="{FormId}"]>
   <label for="{Id}-input">{Label}</label>
   <div class="cb-box">
     <ul class="cb-tokens" aria-label="{Label}">

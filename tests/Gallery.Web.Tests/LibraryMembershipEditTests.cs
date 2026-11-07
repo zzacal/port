@@ -220,7 +220,8 @@ public class LibraryMembershipEditTests(S3ProxyFixture s3, MongoFixture mongo) :
         Assert.True(tokens.Success, "no ul.cb-tokens in the panel");
         Assert.Equal([$"/admin/galleries/{alpha}", $"/admin/galleries/{bravo}"],
             Regex.Matches(tokens.Value, "href=\"([^\"]+)\"").Select(m => m.Groups[1].Value).ToList());
-        Assert.DoesNotMatch("class=\"[^\"]*\\bis-pending\\b", aside);
+        // Scoped to the token list: the molecule always renders a pending-kind <template> (K1).
+        Assert.DoesNotMatch("class=\"[^\"]*\\bis-pending\\b", tokens.Value);
     }
 
     [Fact]

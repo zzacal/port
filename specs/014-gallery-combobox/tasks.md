@@ -251,11 +251,11 @@ Batch C (client and panel). Owns `src/Gallery.Web/Admin/Pages/LibraryPage.razor`
 `tests/Gallery.Web.Tests/GalleryFieldBrowserTests.cs`. It depends on Batch A (molecule) and
 Batch B (model params).
 
-- [ ] T013 [US1] In `src/Gallery.Web/Admin/Pages/LibraryPage.razor`, replace the `lib-in` div and
+- [X] T013 [US1] In `src/Gallery.Web/Admin/Pages/LibraryPage.razor`, replace the `lib-in` div and
   the `GalleriesOf` fragment with the `<TokenCombobox …>` of K3, plus `TokensFor`/`GalleryOptions`
   exactly as K3 says. Remove the `.lib-in`, `.lib-galleries` and `.lib-none` rules from
   `LibraryPage.razor.css`. The bulk picker is untouched.
-- [ ] T014 [US1] In `src/Gallery.Web/wwwroot/admin-assets/library.js`, add the section
+- [X] T014 [US1] In `src/Gallery.Web/wwwroot/admin-assets/library.js`, add the section
   `// ── combobox (TokenCombobox molecule)` per K1 "Behaviour":
   - input filter with the first row highlighted;
   - keyboard and mousedown pick;
@@ -265,7 +265,7 @@ Batch B (model params).
   - status announcements, and "Not added" on blur. The rules
   mirror `TokenCombobox.Match`. Update the file's header comment to list the combobox. Add no
   injection sink.
-- [ ] T015 [US1] Write `tests/Gallery.Web.Tests/GalleryFieldBrowserTests.cs`
+- [X] T015 [US1] Write `tests/Gallery.Web.Tests/GalleryFieldBrowserTests.cs`
   (`[Collection("library-browser")]`, `[Trait("Category","Browser")]`, `LibraryBrowserFixture`):
   - US1 keyboard only (SC-005): open `?open={id}`, focus the input with Tab, type `coa`, Enter
     (the first row is highlighted, so Enter takes it), then Tab to Save and Enter. The stored `items` hold the photo, and the reloaded panel
@@ -293,7 +293,7 @@ Batch B (model params).
     < 100 ms; take the median of 5 keys;
   - the panel's filled buttons are exactly `["Save"]` (reuse the `FilledButtonsJs` approach by
     copying the probe into this file, because the original is private).
-- [ ] T016 [US2] Add to `GalleryFieldBrowserTests.cs`:
+- [X] T016 [US2] Add to `GalleryFieldBrowserTests.cs`:
   - type `Night walks`, and the last row reads `+ Night walks`;
   - pick it and Save, and one private gallery "Night walks" exists holding the photo;
   - type ` coast ` with no `+` row;

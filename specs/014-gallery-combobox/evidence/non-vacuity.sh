@@ -83,7 +83,12 @@ brk taken $TC 's/ && !taken\.Contains\(o\.Id\)//' \
 brk sink $JS 's/\z/\ndocument.createElement("i").innerHTML = "";\n/' \
   'FullyQualifiedName~LibrarySourceGuardTests' \
   'library.js uses innerHTML'
-# JS-side breaks (parity test, Batch C) are appended after Batch C lands.
+brk jsrank $JS 's/\.sort\(\(a, b\) => a\.r - b\.r \|\| /.sort((a, b) => /' \
+  'FullyQualifiedName~GalleryFieldBrowserTests.Rows_highlight_and_status_equal_TokenCombobox_Match' \
+  'library.js drops the rank step (title order only)'
+brk jstaken $JS 's/ && !taken\.has\(o\.id\)//' \
+  'FullyQualifiedName~GalleryFieldBrowserTests.Rows_highlight_and_status_equal_TokenCombobox_Match' \
+  'library.js ignores taken ids'
 
 if [ "${NV_DRYRUN:-0}" != 1 ]; then
   dotnet build "$SLN" -warnaserror --artifacts-path "$ART" -nologo -v q >/dev/null 2>&1 \

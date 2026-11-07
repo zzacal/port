@@ -117,20 +117,43 @@
             <SidePanel Heading="Photo" FormId="lib-edit" State="@(Model.Saved ? SaveState.Saved : SaveState.Idle)" Danger="@DangerFor(open)">
                 <Input Label="Title" Name="title" Value="@Model.EditTitle" MaxLength="@Model.Options.TitleMax" Required="true" Pattern="@TitlePattern" />
                 <Input Label="Caption" Name="caption" Multiline="true" Value="@Model.EditCaption" MaxLength="@Model.Options.CaptionMax" />
-                <div class="lib-in">
-                    <h3>In galleries</h3>
-                    @GalleriesOf(open)
-                </div>
+                <TokenCombobox Id="lib-gf" Label="Galleries" Tokens="@TokensFor(open)" Options="@GalleryOptions"
+                               AddName="add" CreateName="create" RemoveName="leave" Removed="@(Model.EditLeave ?? [])"
+                               AllowCreate="true" CreateMax="@Model.Options.TitleMax" MaxShown="10"
+                               EmptyText="Not in a gallery" RemoveLabel="Remove from {0}"
+                               WarningFormat="{0}: visitors will see this photo after you save." />
                 @ViewFor(open.ViewHref)
             </SidePanel>
         </form>;
 
-    private static RenderFragment GalleriesOf(LibraryTile open) => open.Galleries.Count == 0
-        ? @<p class="lib-none">Not in a gallery</p>
-        : @<ul class="lib-galleries">@foreach (var g in open.Galleries)
-            {
-                <li><a href="@($"/admin/galleries/{g.Id}")">@g.Title</a></li>
-            }</ul>;
+    /// <summary>
+    /// 014 K3: the photo's holders by title (ignore-case, then id) as saved tokens, minus any id the
+    /// refused save was leaving; then the refused save's pending adds (skipped when the gallery is
+    /// gone) and pending creates, so a 422 re-render keeps what the owner picked.
+    /// </summary>
+    private IReadOnlyList<ComboToken> TokensFor(LibraryTile open)
+    {
+        var leave = Model.EditLeave ?? [];
+        var tokens = open.Galleries
+            .Where(g => !leave.Contains(g.Id, StringComparer.Ordinal))
+            .OrderBy(g => g.Title, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(g => g.Id, StringComparer.Ordinal)
+            .Select(g => new ComboToken(g.Id, g.Title, $"/admin/galleries/{g.Id}"))
+            .ToList();
+        foreach (var id in Model.EditAdd ?? [])
+        {
+            var g = Data.Galleries.FirstOrDefault(x => x.Id == id);
+            if (g is not null) tokens.Add(new ComboToken(g.Id, g.Title, Pending: ComboPending.Add));
+        }
+        foreach (var title in Model.EditCreate ?? [])
+            tokens.Add(new ComboToken(title, title, Pending: ComboPending.Create));
+        return tokens;
+    }
+
+    /// <summary>014 K3: every gallery as a combobox option; a public one carries the visitor warning.</summary>
+    private IReadOnlyList<ComboOption> GalleryOptions => Data.Galleries
+        .Select(g => new ComboOption(g.Id, g.Title, g.IsPublic ? "Public" : "Private", g.IsPublic ? $"{g.Title} is public" : null))
+        .ToList();
 
     private static RenderFragment DangerFor(LibraryTile open) =>
         @<DangerConfirm Action="Delete photo" Target="@open.Image.Title" Title="@($"Delete \u201C{open.Image.Title}\u201D?")" Consequence="@DeleteConsequence(open.GalleryCount)"

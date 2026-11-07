@@ -6,7 +6,7 @@
    (TokenCombobox molecule)"), which mirrors TokenCombobox.Match and clones the three <template>s below
    so added tokens carry this component's CSS scope. The component renders no <script> and no style=.
    Query / Highlight are for the /ui specimens only: they render the list open per Match. *@
-<div class="combobox" id="@Id" data-max-shown="@MaxShown" data-create-max="@(CreateMax?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "")" data-allow-create="@(AllowCreate ? "true" : "false")" data-add-name="@AddName" data-create-name="@CreateName" data-remove-name="@RemoveName" data-remove-label="@RemoveLabel" data-form-id="@FormId">
+<div class="combobox" id="@Id" data-max-shown="@MaxShown" data-create-max="@(CreateMax?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "")" data-allow-create="@(AllowCreate ? "true" : "false")" data-add-name="@AddName" data-create-name="@CreateName" data-remove-name="@RemoveName" data-remove-label="@RemoveLabel" data-warning-format="@WarningFormat" data-form-id="@FormId">
     <label for="@InputId">@Label</label>
     <div class="cb-box">
         <ul class="cb-tokens" aria-label="@Label">

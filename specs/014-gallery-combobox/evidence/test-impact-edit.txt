@@ -1,2 +1,4 @@
 OK A2 tests/Gallery.Web.Tests/IndexTests.cs x1: 'Assert.Equal(36, hrefs.Count); // 14 from feature ' -> 'Assert.Equal(37, hrefs.Count); // 14 from feature '
 wrote 1 files
+OK A1 tests/Gallery.Web.Tests/LibraryEditTests.cs x1: 'Regex.Match(aside, "<ul class=\\"lib-galleries\\".*?' -> 'Regex.Match(aside, "<ul class=\\"cb-tokens\\".*?</ul'
+wrote 1 files
