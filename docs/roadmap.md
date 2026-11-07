@@ -251,12 +251,13 @@ OWNER-ONLY (after merge and deploy, not gates):
 
 ### 015 Icon controls on library photos
 
-**Status: built on branch `015-tile-icon-controls`, not merged.** Decisions, defaults and stated test
+**Status: live at https://port.zacal.me (merged 12a812c, 2026-11-06; deploy green); full suite 122 + 1455 passed, 1 skipped.** Decisions, defaults and stated test
 changes in `specs/015-tile-icon-controls/decisions.md`. Evidence: `specs/015-tile-icon-controls/evidence/`
-(non-vacuity.sh 10/10; baseline-diff.py ALL EQUAL; design record validate 0 failures;
-**p95.sh FAILS SC-005**: library p95 22.4 ms vs limit 18.7, builder 11.7 vs 8.7, same reads.
-Reproduced in an A/B against the pre-change tree, `p95-ab.txt`. It is extra server rendering for
-inline SVGs, not more reads. Owner decision pending, decisions row 42).
+(non-vacuity.sh 10/10; baseline-diff.py ALL EQUAL; design record validate 0 failures).
+**SC-005 missed, parked in the backlog** ([#3](https://github.com/zzacal/port/issues/3)): library p95
+22.4 ms against a limit of 18.7 ms, builder 11.7 ms against 8.7 ms, with the same database reads.
+Research (`evidence/opt/`, decisions row 44): the cost is the extra Icon component inside each
+IconButton. Removing it brings both pages under the limit with byte-identical output.
 
 Library and gallery-builder tiles show the title on the photo's bottom edge, in a dark band. Under
 each photo is one row of icons. Library: gallery (folder-plus/folder/folders, labelled with the count),
@@ -267,7 +268,7 @@ removed. Amends D-21 and D-23.
 
 OWNER-ONLY (after merge and deploy, not gates):
 
-- [ ] O-01 Review `/ui/atoms/icon`, `/ui/atoms/icon-button` and `/ui/molecules/photo-actions`. Then on
+- [ ] O-01 ([#4](https://github.com/zzacal/port/issues/4)) Review `/ui/atoms/icon`, `/ui/atoms/icon-button` and `/ui/molecules/photo-actions`. Then on
   port.zacal.me toggle edit on two photos, open a photo through its folder icon, and pin a cover in a
   builder.
 

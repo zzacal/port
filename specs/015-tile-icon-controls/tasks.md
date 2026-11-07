@@ -366,7 +366,7 @@ It depends on Batch A (Icon, IconButton, Tile.TitleOnPhoto) and runs in parallel
   - the CoverMarker Icon pinned state drops `aria-pressed` → `BuilderIconTests` red.
   Run `NV_DRYRUN=1`, then the real run. Each break must fail on its assertion. Tee to
   `non-vacuity.txt`.
-- [ ] T030 Final gate:
+- [X] T030 Final gate (evidence/gate-final.txt):
   1. `dotnet clean`, then build with `-warnaserror` and the full suite including Evidence and
      Browser.
   2. `p95.sh` ALL PASS; `baseline-diff.py` EQUAL.
@@ -380,7 +380,7 @@ It depends on Batch A (Icon, IconButton, Tile.TitleOnPhoto) and runs in parallel
     horizontal scroll) runs only if the automation browser has an owner session. Otherwise it
     folds into O-01.
   Do not change data on production.
-- [ ] T032 Create GitHub issues for the open OWNER item(s), as with 014.
+- [X] T032 (#3 SC-005 backlog, #4 O-01) Create GitHub issues for the open OWNER item(s), as with 014.
 
 ## OWNER-ONLY (after the build; not gates)
 
