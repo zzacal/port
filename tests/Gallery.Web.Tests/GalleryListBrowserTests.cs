@@ -462,4 +462,111 @@ public sealed class GalleryListBrowserTests(LibraryBrowserFixture fx)
         await NavigatesAsync(page, () => page.Mouse.UpAsync());
         Assert.Equal([c, a, b], await site.HomeOrderAsync());
     }
+
+    // ── Drag feedback (owner report after 016: "the image doesn't smoothly drag around; it creates an
+    //    empty space where it goes") ────────────────────────────────────────────────────────────
+
+    private const string DragStateJs = """
+        ({ gridSel, x, y }) => {
+          const grid = document.querySelector(gridSel);
+          const cs = grid.querySelector('.cs');
+          const box = e => { const r = e.getBoundingClientRect(); return { l: r.left, t: r.top, w: r.width, h: r.height }; };
+          const slot = cs.querySelector(':scope > .drop-slot');
+          const previews = document.querySelectorAll('.drag-preview');
+          const preview = previews.length === 1 ? previews[0] : null;
+          const dragged = [...cs.children].find(k => k.classList.contains('is-dragging'));
+          const s = slot ? getComputedStyle(slot) : null;
+          return {
+            previews: previews.length,
+            preview: preview ? box(preview) : null,
+            previewTouchesPointer: preview ? (() => { const r = preview.getBoundingClientRect(); return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom; })() : false,
+            slot: slot ? box(slot) : null,
+            slotIndex: slot ? [...cs.children].indexOf(slot) : -1,
+            slotBorder: s ? `${s.borderTopStyle} ${s.borderTopWidth}` : null,
+            draggedVisible: dragged ? dragged.getClientRects().length > 0 : null,
+            tiles: [...cs.children].filter(k => !k.classList.contains('drop-slot') && k.getClientRects().length > 0).map(box),
+          };
+        }
+        """;
+
+    /// <summary>
+    /// While a card or photo is dragged: a preview follows the pointer (its box moves by exactly the
+    /// pointer's movement), the original is hidden, and a dashed slot the size of the dragged tile holds
+    /// its cell, so the grid does not move until the landing place changes; then the slot moves there.
+    /// </summary>
+    [Theory]
+    [InlineData("list")]
+    [InlineData("builder")]
+    public async Task Drag_a_preview_follows_the_pointer_and_a_tile_sized_slot_marks_the_landing_place(string which)
+    {
+        await using var site = await fx.NewSiteAsync();
+        var ids = await site.ImagesAsync(4);
+        string path, gridSel, handleSel;
+        if (which == "list")
+        {
+            for (var i = 0; i < 4; i++) await site.GalleryAsync($"G{i}", [ids[i]]);
+            (path, gridSel, handleSel) = (List, "section.gal reorder-grid", ".gallery-actions .handle");
+        }
+        else
+        {
+            var gid = await site.GalleryAsync("Coast", ids);
+            (path, gridSel, handleSel) = ($"/admin/galleries/{gid}", ".builder reorder-grid", ".b-ctl .handle");
+        }
+        var page = await OpenAsync(site, path, 1440, 900);
+        var cards = page.Locator($"{gridSel} .cs > *");
+        var tileBox = (await cards.Nth(2).BoundingBoxAsync())!;
+        var others = new[] { 0, 1, 3 };
+        var before = new List<(float X, float Y)>();
+        foreach (var i in others) { var b = (await cards.Nth(i).BoundingBoxAsync())!; before.Add((b.X, b.Y)); }
+        var h = (await cards.Nth(2).Locator(handleSel).BoundingBoxAsync())!;
+        var (x0, y0) = (h.X + h.Width / 2, h.Y + h.Height / 2);
+
+        await page.Mouse.MoveAsync(x0, y0);
+        await page.Mouse.DownAsync();
+        // A small move that stays over the tile's own cell: nothing in the grid may move.
+        var (x1, y1) = (x0 + 30, y0 - 40);
+        await page.Mouse.MoveAsync(x1, y1, new() { Steps = 4 });
+        var mid = await page.EvaluateAsync<JsonElement>(DragStateJs, new { gridSel, x = (double)x1, y = (double)y1 });
+
+        var errors = new List<string>();
+        double D(JsonElement e, string p) => e.GetProperty(p).GetDouble();
+        if (mid.GetProperty("previews").GetInt32() != 1) errors.Add($"{which}: {mid.GetProperty("previews").GetInt32()} drag previews (want 1)");
+        else
+        {
+            var p = mid.GetProperty("preview");
+            if (Math.Abs(D(p, "l") - (tileBox.X + 30)) > 1 || Math.Abs(D(p, "t") - (tileBox.Y - 40)) > 1)
+                errors.Add($"{which}: preview at {D(p, "l"):F1},{D(p, "t"):F1}, want {tileBox.X + 30:F1},{tileBox.Y - 40:F1} (it does not follow the pointer)");
+            if (Math.Abs(D(p, "w") - tileBox.Width) > 1) errors.Add($"{which}: preview width {D(p, "w"):F1} != tile {tileBox.Width:F1}");
+            if (!mid.GetProperty("previewTouchesPointer").GetBoolean()) errors.Add($"{which}: the pointer is not over the preview");
+        }
+        if (mid.GetProperty("draggedVisible").ValueKind != JsonValueKind.False) errors.Add($"{which}: the dragged original is still visible");
+        if (mid.GetProperty("slot").ValueKind != JsonValueKind.Object) errors.Add($"{which}: no slot while dragging");
+        else
+        {
+            var s = mid.GetProperty("slot");
+            if (Math.Abs(D(s, "l") - tileBox.X) > 1 || Math.Abs(D(s, "t") - tileBox.Y) > 1 || Math.Abs(D(s, "w") - tileBox.Width) > 1 || Math.Abs(D(s, "h") - tileBox.Height) > 1)
+                errors.Add($"{which}: slot {D(s, "l"):F1},{D(s, "t"):F1} {D(s, "w"):F1}x{D(s, "h"):F1} is not the dragged tile's cell {tileBox.X:F1},{tileBox.Y:F1} {tileBox.Width:F1}x{tileBox.Height:F1}");
+            if (!mid.GetProperty("slotBorder").GetString()!.StartsWith("dashed", StringComparison.Ordinal))
+                errors.Add($"{which}: the slot is not drawn (border '{mid.GetProperty("slotBorder").GetString()}')");
+        }
+        var nowTiles = mid.GetProperty("tiles").EnumerateArray().Select(t => (X: D(t, "l"), Y: D(t, "t"))).ToList();
+        if (nowTiles.Count != 3) errors.Add($"{which}: {nowTiles.Count} visible tiles in the grid (want the 3 others)");
+        else
+            for (var i = 0; i < 3; i++)
+                if (Math.Abs(nowTiles[i].X - before[i].X) > 1 || Math.Abs(nowTiles[i].Y - before[i].Y) > 1)
+                    errors.Add($"{which}: tile {others[i]} moved from {before[i].X:F0},{before[i].Y:F0} to {nowTiles[i].X:F0},{nowTiles[i].Y:F0} before any landing change");
+
+        // Over the first cell: the slot moves to index 0 and keeps the tile's size; the preview is under the pointer.
+        var first = (await cards.Nth(0).Locator(".cell").BoundingBoxAsync())!;
+        var (x2, y2) = (first.X + first.Width / 2, first.Y + first.Height / 2);
+        await page.Mouse.MoveAsync(x2, y2, new() { Steps = 12 });
+        var over = await page.EvaluateAsync<JsonElement>(DragStateJs, new { gridSel, x = (double)x2, y = (double)y2 });
+        if (over.GetProperty("slotIndex").GetInt32() != 0) errors.Add($"{which}: slot index {over.GetProperty("slotIndex").GetInt32()} over the first cell (want 0)");
+        else if (Math.Abs(D(over.GetProperty("slot"), "h") - tileBox.Height) > 1) errors.Add($"{which}: landing slot height {D(over.GetProperty("slot"), "h"):F1} != tile {tileBox.Height:F1}");
+        if (!over.GetProperty("previewTouchesPointer").GetBoolean()) errors.Add($"{which}: the preview did not follow the pointer to the first cell");
+
+        await NavigatesAsync(page, () => page.Mouse.UpAsync());
+        Assert.True(errors.Count == 0, string.Join("\n", errors));
+        Assert.Equal(0, await page.Locator(".drag-preview, .drop-slot").CountAsync());
+    }
 }
