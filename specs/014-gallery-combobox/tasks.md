@@ -354,12 +354,12 @@ and T014.
 
   Then run `assemble.sh` and `validate.sh`, teeing to `evidence/design-validate.txt` (0
   failures). `git show --stat` must list `docs/design.md`.
-- [ ] T022 Fold every executor `decisions_made` into `specs/014-gallery-combobox/decisions.md`,
+- [X] T022 Fold every executor `decisions_made` into `specs/014-gallery-combobox/decisions.md`,
   plus one STATED-CHANGE row each for A1, A2, A3 and B1. The A3 row names its precedent:
   feature 010 regenerated `ui-baseline/index.html` as a stated change when it added catalogue
   entries (commits 201d72c, 158dc3f). This is the same case: a new entry, not a changed component.
-- [ ] T023 Write `docs/roadmap.md` 014 entry (status, evidence paths, OWNER-ONLY check).
-- [ ] T024 Write `specs/014-gallery-combobox/evidence/non-vacuity.sh` from speckit-orchestration
+- [X] T023 Write `docs/roadmap.md` 014 entry (status, evidence paths, OWNER-ONLY check).
+- [X] T024 Write `specs/014-gallery-combobox/evidence/non-vacuity.sh` from speckit-orchestration
   `templates/non-vacuity.sh`, with one break per [SAFETY] guard:
   - `SavePanelAsync` creates before validating add ids (move step 5 after step 7) → T012
     "unknown add + create" red;
@@ -376,7 +376,7 @@ and T014.
 
   Dry-run with `NV_DRYRUN=1`, then run it for real. Each break must fail on its assertion. Tee
   to `non-vacuity.txt`.
-- [ ] T025 Final gate:
+- [X] T025 Final gate:
   1. `dotnet clean`, then build `-warnaserror`, then run the full suite including Evidence.
   2. `p95.sh` ALL PASS.
   3. `git checkout --` the earlier features' regenerated logs.

@@ -1,6 +1,6 @@
 == specs/014-gallery-combobox/evidence/membership-timings.log
 format: plain message lines
-PASS SC-002 memberships op.timing library.image.memberships ok n=100 p95=19.02 ms < 1000
-PASS SC-002 save http.request POST /admin/library/images/{iid} 303 n=100 p95=21.70 ms < 1000
+PASS SC-002 memberships op.timing library.image.memberships ok n=100 p95=8.83 ms < 1000
+PASS SC-002 save http.request POST /admin/library/images/{iid} 303 n=100 p95=10.43 ms < 1000
 
 ALL PASS
