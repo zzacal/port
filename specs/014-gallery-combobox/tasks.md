@@ -327,7 +327,7 @@ and T014.
 
 ## Phase 5: Polish and cross-cutting (parent unless marked)
 
-- [ ] T019 [P] Write `tests/Gallery.Web.Tests/MembershipTimingEvidenceTests.cs`
+- [X] T019 [P] Write `tests/Gallery.Web.Tests/MembershipTimingEvidenceTests.cs`
   (Category=Evidence, modelled on `LibraryTimingEvidenceTests`):
   - 100 L2 saves, each with one `create` and one `add`;
   - assert ≥ 100 `op.timing library.image.memberships … ok` lines;
