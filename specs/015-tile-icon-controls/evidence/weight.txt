@@ -1,0 +1,14 @@
+015 T028 page weight (R-09: measured, not gated)
+
+Same fixture both sides: one LibraryHost, 100 photos, gallery "Coast" holding 40; one GET each,
+body bytes raw and gzip (CompressionLevel.Optimal). Throwaway test (/tmp/015-ZzTmpWeight.cs) run in a
+worktree at b2d261f (pre-change src) and on 8207167 (Batches A-C).
+
+page                      pre raw   post raw   delta raw       pre gzip  post gzip  delta gzip
+/admin/library            217037    371097     +154060 (+71%)  19110     23509      +4399 (+23%)
+/admin/galleries/{gid}    100925    180502     +79577  (+79%)  10590     12801      +2211 (+21%)
+
+Research R-02 estimated +118 KB raw / +1.1 KB gzip for the library page. Measured is higher on both:
+the 3 inline SVGs per tile carry their full attribute set (≈ 9 attributes + scope attribute) and
+each IconButton repeats its label in aria-label and title. Over the wire this is +4.4 KB per
+100-tile page (owner-only pages).

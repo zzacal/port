@@ -1,0 +1,10 @@
+== pre:  specs/015-tile-icon-controls/evidence/pre-timings.log
+== post: specs/015-tile-icon-controls/evidence/tile-timings.log
+PASS SC-005 library n pre=100 post=100
+FAIL SC-005 library p95 post=22.43 ms > pre 16.09 * 1.10 + 1 = 18.70
+PASS SC-005 library db_reads every post line == 4
+PASS SC-005 builder n pre=100 post=100
+FAIL SC-005 builder p95 post=11.74 ms > pre 7.00 * 1.10 + 1 = 8.70
+PASS SC-005 builder db_reads every post line == 1
+
+2 FAILED

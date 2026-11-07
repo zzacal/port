@@ -249,6 +249,28 @@ OWNER-ONLY (after merge and deploy, not gates):
 - [ ] O-01 On port.zacal.me, open a photo's Edit panel, add it to an existing gallery and to a new
   one, then remove one token. Look over `/ui/molecules/token-combobox`.
 
+### 015 Icon controls on library photos
+
+**Status: built on branch `015-tile-icon-controls`, not merged.** Decisions, defaults and stated test
+changes in `specs/015-tile-icon-controls/decisions.md`. Evidence: `specs/015-tile-icon-controls/evidence/`
+(non-vacuity.sh 10/10; baseline-diff.py ALL EQUAL; design record validate 0 failures;
+**p95.sh FAILS SC-005**: library p95 22.4 ms vs limit 18.7, builder 11.7 vs 8.7, same reads.
+Reproduced in an A/B against the pre-change tree, `p95-ab.txt`. It is extra server rendering for
+inline SVGs, not more reads. Owner decision pending, decisions row 42).
+
+Library and gallery-builder tiles show the title on the photo's bottom edge, in a dark band. Under
+each photo is one row of icons. Library: gallery (folder-plus/folder/folders, labelled with the count),
+view (new tab), edit. Builder: move, cover star, remove, view. Edit and the gallery icon toggle the side
+panel, with one photo active at a time, and work without JS. 8 Lucide 1.70.0 icons (ISC) are copied in
+as inline SVG. `Icon`, `IconButton` and `PhotoActions` each have a `/ui` page; `MembershipStatus` is
+removed. Amends D-21 and D-23.
+
+OWNER-ONLY (after merge and deploy, not gates):
+
+- [ ] O-01 Review `/ui/atoms/icon`, `/ui/atoms/icon-button` and `/ui/molecules/photo-actions`. Then on
+  port.zacal.me toggle edit on two photos, open a photo through its folder icon, and pin a cover in a
+  builder.
+
 ## Not a feature
 
 - **Cost cap (D-18, E-19)**: no budget alert (constitution 6.0.0 withdrew the $7 alert). The

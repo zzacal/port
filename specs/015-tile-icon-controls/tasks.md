@@ -348,11 +348,11 @@ It depends on Batch A (Icon, IconButton, Tile.TitleOnPhoto) and runs in parallel
 - [X] T026 Fold every executor `decisions_made` into `decisions.md`, plus one STATED-CHANGE row
   per A1–A14 and B1–B7 (A3 and A12 as requirement changes from clarify; B5 as a stated
   builder-markup change).
-- [ ] T027 Write the 015 entry in `docs/roadmap.md`: status, evidence paths, the OWNER-ONLY review.
-- [ ] T028 Run the evidence test (default path), then `p95.sh pre-timings.log tile-timings.log`
+- [X] T027 Write the 015 entry in `docs/roadmap.md`: status, evidence paths, the OWNER-ONLY review.
+- [X] T028 (RUN; SC-005 p95 FAILS, recorded as decisions row 42, owner decision) Run the evidence test (default path), then `p95.sh pre-timings.log tile-timings.log`
   (ALL PASS). Record the library page's transfer size before and after in `evidence/weight.txt`
   (one curl each against a LibraryHost, gzip size); it is measured, not gated (R-09).
-- [ ] T029 Write `specs/015-tile-icon-controls/evidence/non-vacuity.sh` from the 014 script, with
+- [X] T029 Write `specs/015-tile-icon-controls/evidence/non-vacuity.sh` from the 014 script, with
   one break per guard:
   - [SAFETY] Tile `TitleOnPhoto` defaults to true → `PublicOutputUnchangedTests` red;
   - `PhotoActions` sets `Active` on every tile → `PhotoActionsTests` (exactly one active) red;
