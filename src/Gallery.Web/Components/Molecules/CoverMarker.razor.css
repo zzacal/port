@@ -7,6 +7,12 @@
     padding: 2px;
 }
 
+/* 015 K6: the icon mode has no plate; the star button is the 44x44 control. */
+.cover-marker:has(> .icon-button) {
+    background: transparent;
+    padding: 0;
+}
+
 .cover-tag {
     display: inline-block;
     background: var(--color-text);

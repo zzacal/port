@@ -23,15 +23,16 @@
     border-radius: 4px;
 }
 
-/* Per-tile control row under the title (authored here, so no ::deep). */
+/* Per-tile icon row under the photo (authored here, so no ::deep). 015 K6: one row of four 44 px
+   icons (4 x 44 + 3 x 4 = 188 px), centred, never wrapping. */
 .b-ctl {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     gap: 4px;
     margin-top: 4px;
-    min-height: 28px;
+    min-height: var(--tap);
 }
 
 .b-view {

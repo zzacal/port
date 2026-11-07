@@ -1,0 +1,7 @@
+OK A13 tests/Gallery.Web.Tests/IndexTests.cs x1: '        Assert.Equal(37, hrefs.Count); // 14 from ' -> '        Assert.Equal(39, hrefs.Count); // 14 from '
+OK A14 tests/Gallery.Web.Tests/NewTabLinkTests.cs x1: '/// Owner rule (2026-11-01): the ↗ arrow means "op' -> '/// Owner rule (2026-11-01): the ↗ arrow means "op'
+OK A14 tests/Gallery.Web.Tests/NewTabLinkTests.cs x1: 'var links = Anchor().Matches(html).Select(m => (At' -> 'var links = Anchor().Matches(html).Select(m => (At'
+OK A14 tests/Gallery.Web.Tests/NewTabLinkTests.cs x1: "var arrow = links.Where(l => l.Text.EndsWith('↗'))" -> 'var arrow = links.Where(Cue).ToList();'
+OK A14 tests/Gallery.Web.Tests/NewTabLinkTests.cs x1: "                Assert.True(l.Text.EndsWith('↗'), " -> '                Assert.True(Cue(l), $"{path}: \'{l.'
+OK A15 tests/Gallery.Web.Tests/MoleculePageTests.cs x1: '        Assert.Equal(3, Guards.Count(html, "<div c' -> '        Assert.Equal(6, Guards.Count(html, "<div c'
+wrote 3 files

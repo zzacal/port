@@ -1,9 +1,15 @@
 @* Admin cover-marker molecule (feature 005): pinned/automatic/unpinned cover tag with action. *@
 @* 009 K4: with ImageId set, "Make cover" submits name="image" value="{ImageId}" on FormId; with
    UnpinFormId set, "Unpin" submits that form (no image field = unpin). Expressions only, so the
-   default render is byte-identical. *@
+   default render is byte-identical.
+   015 K6: Icon (default false) renders the star icon controls instead of the words, with the same
+   form/name/value and the same Type rule; an arm of the existing chain, so the words are unchanged. *@
 <div class="cover-marker">
-    @if (State == CoverState.Pinned)
+    @if (Icon)
+    {
+        @IconContent
+    }
+    else if (State == CoverState.Pinned)
     {
         <span class="cover-tag">Cover</span>
         <Button Variant="ButtonVariant.Quiet" Type="@(UnpinFormId is null ? "button" : "submit")" AriaLabel="Unpin cover" FormId="@(UnpinFormId ?? FormId)">Unpin</Button>
@@ -28,4 +34,14 @@
 
     /// <summary>009 K4: the hidden unpin form "Unpin" submits; null leaves it a plain button.</summary>
     [Parameter] public string? UnpinFormId { get; set; }
+
+    /// <summary>015 K6: star icon controls instead of the words (the gallery builder).</summary>
+    [Parameter] public bool Icon { get; set; }
+
+    private RenderFragment IconContent => State switch
+    {
+        CoverState.Pinned => @<IconButton Icon="star" Filled="true" Active="true" Toggle="true" Label="Unpin cover" Type="@(UnpinFormId is null ? "button" : "submit")" FormId="@(UnpinFormId ?? FormId)" />,
+        CoverState.Automatic => @<IconButton Icon="star" Filled="true" Unavailable="true" Label="Cover: first photo" />,
+        _ => @<IconButton Icon="star" Toggle="true" Label="@($"Make {ImageTitle} the cover")" Type="@(ImageId is null ? "button" : "submit")" FormId="@FormId" Name="@(ImageId is null ? null : "image")" Value="@ImageId" />,
+    };
 }

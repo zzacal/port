@@ -24,6 +24,8 @@ public static class UiCatalog
         new(UiLevel.Atoms, "Input", "atoms/input", typeof(InputPage)),
         new(UiLevel.Atoms, "Switch", "atoms/switch", typeof(SwitchPage)),
         new(UiLevel.Atoms, "SelectMark", "atoms/select-mark", typeof(SelectMarkPage)),
+        new(UiLevel.Atoms, "Icon", "atoms/icon", typeof(IconPage)),
+        new(UiLevel.Atoms, "IconButton", "atoms/icon-button", typeof(IconButtonPage)),
 
         new(UiLevel.Molecules, "Tile", "molecules/tile", typeof(TilePage)),
         new(UiLevel.Molecules, "MetadataBar", "molecules/metadata-bar", typeof(MetadataBarPage)),
@@ -39,7 +41,7 @@ public static class UiCatalog
         new(UiLevel.Molecules, "TokenCombobox", "molecules/token-combobox", typeof(TokenComboboxPage)),
         new(UiLevel.Molecules, "PhotoCount", "molecules/photo-count", typeof(PhotoCountPage)),
         new(UiLevel.Molecules, "GalleryNeighbours", "molecules/gallery-neighbours", typeof(GalleryNeighboursPage)),
-        new(UiLevel.Molecules, "MembershipStatus", "molecules/membership-status", typeof(MembershipStatusPage)),
+        new(UiLevel.Molecules, "PhotoActions", "molecules/photo-actions", typeof(PhotoActionsPage)),
         new(UiLevel.Molecules, "Breadcrumb", "molecules/breadcrumb", typeof(BreadcrumbPage)),
         new(UiLevel.Molecules, "PageHeading", "molecules/page-heading", typeof(PageHeadingPage)),
 

@@ -1,0 +1,53 @@
+@* IconButton atom (feature 015, K2): a 44x44 control showing one icon. A link when Href is set, a
+   button otherwise, a non-interactive span when Unavailable. aria-label and title carry the name. *@
+@if (Unavailable)
+{
+<span class="@(RootClass + " is-unavailable")" role="img" aria-label="@Label" title="@Label"><Icon Name="@Icon" Filled="Filled" /></span>
+}
+else if (Href is not null)
+{
+<a class="@RootClass" href="@Href" aria-label="@Label" title="@Label" aria-current="@(Active ? "true" : null)" target="@Target" rel="@(Target == "_blank" ? "noopener" : null)"><Icon Name="@Icon" Filled="Filled" /></a>
+}
+else
+{
+<button class="@RootClass" type="@Type" aria-label="@Label" title="@Label" aria-pressed="@(Toggle ? (Active ? "true" : "false") : null)" form="@FormId" name="@Name" value="@Value"><Icon Name="@Icon" Filled="Filled" /></button>
+}
+
+@code {
+    /// <summary>A key of Icons.Paths.</summary>
+    [Parameter, EditorRequired] public string Icon { get; set; } = "";
+
+    /// <summary>Accessible name and hover text (aria-label and title).</summary>
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+
+    /// <summary>Renders an &lt;a&gt; when set.</summary>
+    [Parameter] public string? Href { get; set; }
+
+    /// <summary>Link only; "_blank" adds rel="noopener".</summary>
+    [Parameter] public string? Target { get; set; }
+
+    /// <summary>Link: aria-current="true"; toggle button: aria-pressed="true". Adds is-active.</summary>
+    [Parameter] public bool Active { get; set; }
+
+    /// <summary>Renders a non-interactive span (role="img").</summary>
+    [Parameter] public bool Unavailable { get; set; }
+
+    /// <summary>Passed to Icon (the pinned star).</summary>
+    [Parameter] public bool Filled { get; set; }
+
+    /// <summary>Button only.</summary>
+    [Parameter] public string Type { get; set; } = "submit";
+
+    [Parameter] public string? FormId { get; set; }
+    [Parameter] public string? Name { get; set; }
+    [Parameter] public string? Value { get; set; }
+
+    /// <summary>Extra class on the root.</summary>
+    [Parameter] public string? CssClass { get; set; }
+
+    /// <summary>Button only: render aria-pressed="true"/"false" from Active.</summary>
+    [Parameter] public bool Toggle { get; set; }
+
+    private string RootClass =>
+        "icon-button" + (Active ? " is-active" : "") + (string.IsNullOrEmpty(CssClass) ? "" : " " + CssClass);
+}

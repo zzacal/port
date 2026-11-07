@@ -6,9 +6,11 @@ using Gallery.Web.Tests.Fixtures;
 namespace Gallery.Web.Tests;
 
 /// <summary>
-/// 010 T034 (US5, FR-011, SC-009): the library tile's <c>lib-status</c> links the first gallery by
-/// title (case-insensitive, any visibility), then " +N" for the others, then " · public in M".
-/// Galleries are built through <see cref="GalleryService"/>, the way the owner builds them.
+/// 015 A3 (requirement change, owner clarify: count only; replaces 010 T034's lib-status facts):
+/// the library tile's gallery icon (<c>.pa-group</c>) shows the membership state as its glyph
+/// (<c>folder-plus</c> / <c>folder</c> / <c>folders</c>) and the count as its label ("Not in a
+/// gallery", "In 1 gallery", "In {n} galleries"). It never names a gallery and never counts public
+/// ones. Galleries are built through <see cref="GalleryService"/>, the way the owner builds them.
 /// </summary>
 [Collection("s3")]
 public class LibraryMembershipTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixture<MongoFixture>
@@ -32,27 +34,14 @@ public class LibraryMembershipTests(S3ProxyFixture s3, MongoFixture mongo) : ICl
         return await LibraryHtml.BodyAsync(resp);
     }
 
-    /// <summary>The (decoded) inner markup of the tile's single <c>span.lib-status</c>.</summary>
-    private static string StatusOf(string html, string iid)
-    {
-        var span = Assert.Single(LibraryHtml.Blocks(LibraryHtml.TileOf(html, iid), "span", "lib-status"));
-        return Regex.Match(span, "^<span\\b[^>]*>(.*)</span>$", RegexOptions.Singleline).Groups[1].Value;
-    }
+    /// <summary>The tile's single gallery icon link.</summary>
+    private static string GroupOf(string html, string iid) =>
+        Assert.Single(LibraryHtml.Blocks(LibraryHtml.TileOf(html, iid), "a", "pa-group"));
 
-    private static string TextOf(string inner) => Regex.Replace(inner, "<[^>]*>", "");
+    private static string Attr(string element, string name) =>
+        Regex.Match(element, $"\\s{name}=\"([^\"]*)\"").Groups[1].Value;
 
-    /// <summary>Asserts the inner markup is exactly one builder link to <paramref name="gid"/> titled <paramref name="title"/>, then <paramref name="tail"/>.</summary>
-    private static void AssertLinked(string inner, string gid, string title, string tail)
-    {
-        var m = Regex.Match(inner, "^<a class=\"text-link\" href=\"([^\"]*)\"[^>]*>([^<]*)</a>(.*)$", RegexOptions.Singleline);
-        Assert.True(m.Success, $"not a leading link: {inner}");
-        Assert.Equal($"/admin/galleries/{gid}", m.Groups[1].Value);
-        Assert.Equal(title, m.Groups[2].Value);
-        Assert.Equal(tail, m.Groups[3].Value);
-        Assert.Single(Regex.Matches(inner, "<a\\b"));
-    }
-
-    private sealed record Setup(string Html, string None, string One, string Three, string Coast, string Alpine, string Birds);
+    private sealed record Setup(string Html, string None, string One, string Three);
 
     private static async Task<Setup> ArrangeAsync(LibraryHost h)
     {
@@ -60,73 +49,69 @@ public class LibraryMembershipTests(S3ProxyFixture s3, MongoFixture mongo) : ICl
         var one = await h.InsertUploadedImageAsync(files: false);
         var three = await h.InsertUploadedImageAsync(files: false);
 
-        // Home order: coast, Alpine, birds. Only "coast" is public.
-        var coast = await GalleryAsync(h, "coast", [three.Id], publish: true);
-        var alpine = await GalleryAsync(h, "Alpine", [three.Id]);
-        var birds = await GalleryAsync(h, "birds", [one.Id, three.Id]);
+        // Only "coast" is public.
+        await GalleryAsync(h, "coast", [three.Id], publish: true);
+        await GalleryAsync(h, "Alpine", [three.Id]);
+        await GalleryAsync(h, "birds", [one.Id, three.Id]);
         await h.SettleAsync();
-
-        var order = (await h.SiteAsync()).HomeOrder;
-        Assert.Equal(coast, order[0]);
-        Assert.True(order.IndexOf(coast) < order.IndexOf(alpine));
 
         var html = await GetOkAsync(h, "/admin/library");
-        return new Setup(html, none.Id, one.Id, three.Id, coast, alpine, birds);
+        return new Setup(html, none.Id, one.Id, three.Id);
     }
 
     [Fact]
-    public async Task Zero_galleries_is_plain_text_with_no_link()
+    public async Task Zero_galleries_is_folder_plus_and_not_in_a_gallery()
     {
         await using var h = await LibraryHost.CreateAsync(mongo, s3);
         var s = await ArrangeAsync(h);
 
-        var inner = StatusOf(s.Html, s.None);
-        Assert.Equal("Not in a gallery", inner);
-        Assert.DoesNotContain("<a", inner);
+        var group = GroupOf(s.Html, s.None);
+        Assert.Equal(("folder-plus", "Not in a gallery", "Not in a gallery"), (Attr(group, "data-icon"), Attr(group, "aria-label"), Attr(group, "title")));
     }
 
     [Fact]
-    public async Task One_gallery_links_to_its_builder_with_the_title()
+    public async Task One_gallery_is_folder_and_in_1_gallery()
     {
         await using var h = await LibraryHost.CreateAsync(mongo, s3);
         var s = await ArrangeAsync(h);
 
-        var inner = StatusOf(s.Html, s.One);
-        AssertLinked(inner, s.Birds, "birds", "");
-        Assert.Equal("birds", TextOf(inner));
+        var group = GroupOf(s.Html, s.One);
+        Assert.Equal(("folder", "In 1 gallery", "In 1 gallery"), (Attr(group, "data-icon"), Attr(group, "aria-label"), Attr(group, "title")));
     }
 
     [Fact]
-    public async Task Three_galleries_link_the_first_by_title_case_insensitive_then_others_and_public_count()
+    public async Task Three_galleries_is_folders_and_in_3_galleries_whatever_their_visibility()
     {
         await using var h = await LibraryHost.CreateAsync(mongo, s3);
         var s = await ArrangeAsync(h);
 
-        var inner = StatusOf(s.Html, s.Three);
-        // "Alpine" < "birds" < "coast" case-insensitively, though "coast" is first in home order
-        // (and the only public one): the private "Alpine" is still chosen.
-        AssertLinked(inner, s.Alpine, "Alpine", " +2 · public in 1");
-        Assert.Equal("Alpine +2 · public in 1", TextOf(inner));
-        Assert.DoesNotContain($"/admin/galleries/{s.Coast}", inner);
-        Assert.DoesNotContain($"/admin/galleries/{s.Birds}", inner);
+        var group = GroupOf(s.Html, s.Three);
+        Assert.Equal(("folders", "In 3 galleries", "In 3 galleries"), (Attr(group, "data-icon"), Attr(group, "aria-label"), Attr(group, "title")));
     }
 
     [Fact]
-    public async Task A_private_only_first_gallery_is_still_chosen()
+    public async Task The_label_never_names_a_gallery_or_counts_public_ones()
     {
         await using var h = await LibraryHost.CreateAsync(mongo, s3);
-        var photo = await h.InsertUploadedImageAsync(files: false);
-        var zed = await GalleryAsync(h, "Zed", [photo.Id], publish: true);     // first in home order, public
-        var amber = await GalleryAsync(h, "amber", [photo.Id]);               // private, first by title
-        await h.SettleAsync();
+        var s = await ArrangeAsync(h);
 
-        var inner = StatusOf(await GetOkAsync(h, "/admin/library"), photo.Id);
-        AssertLinked(inner, amber, "amber", " +1 · public in 1");
-        Assert.DoesNotContain(zed, inner);
+        foreach (var iid in new[] { s.None, s.One, s.Three })
+        {
+            var row = Assert.Single(LibraryHtml.Blocks(LibraryHtml.TileOf(s.Html, iid), "div", "photo-actions"));
+            // What the owner reads or hears: the row's text and every aria-label/title value (the view
+            // link's href legitimately holds the gallery slug, so raw markup is not checked).
+            var words = Regex.Replace(row, "<[^>]*>", " ") + " "
+                + string.Join(" ", Regex.Matches(row, "(?:aria-label|title)=\"([^\"]*)\"").Select(m => m.Groups[1].Value));
+            foreach (var title in new[] { "coast", "Alpine", "birds" })
+                Assert.DoesNotContain(title, words, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("public in", words, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("public", Attr(GroupOf(s.Html, iid), "aria-label"), StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("/admin/galleries/", row);
+        }
     }
 
     [Fact]
-    public async Task SC009_every_tile_in_a_gallery_has_exactly_one_builder_link_in_its_status()
+    public async Task SC002_every_tile_has_exactly_one_gallery_icon_that_opens_the_photo_like_edit()
     {
         await using var h = await LibraryHost.CreateAsync(mongo, s3);
         var s = await ArrangeAsync(h);
@@ -135,8 +120,11 @@ public class LibraryMembershipTests(S3ProxyFixture s3, MongoFixture mongo) : ICl
         Assert.Equal(3, ids.Count);
         foreach (var iid in ids)
         {
-            var links = Regex.Matches(StatusOf(s.Html, iid), "href=\"/admin/galleries/").Count;
-            Assert.Equal(iid == s.None ? 0 : 1, links);
+            var tile = LibraryHtml.TileOf(s.Html, iid);
+            var group = GroupOf(s.Html, iid);
+            var edit = Assert.Single(LibraryHtml.Blocks(tile, "a", "pa-edit"));
+            Assert.Equal($"?page=1&open={iid}#t-{iid}", Attr(group, "href"));
+            Assert.Equal(Attr(edit, "href"), Attr(group, "href"));
         }
     }
 }

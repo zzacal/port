@@ -305,29 +305,8 @@ public partial class NavComponentTests
         Assert.Contains("<a class=\"text-link tap\" href=\"/g/a/alpine\" rel=\"prev\">← alpine</a>", bare);
     }
 
-    // ── K8 MembershipStatus ──────────────────────────────────────────────────
-
-    [Fact]
-    public async Task MembershipStatus_in_no_gallery_is_plain_text()
-    {
-        var html = await Render.Html<MembershipStatus>(new { FirstId = (string?)null, FirstTitle = (string?)null, Others = 0, Public = 0 });
-        Assert.Equal("Not in a gallery", Bare(html));
-        Assert.DoesNotContain("<", html);
-    }
-
-    [Theory]
-    [InlineData(0, 0, "")]
-    [InlineData(2, 0, " +2")]
-    [InlineData(0, 1, " · public in 1")]
-    [InlineData(2, 1, " +2 · public in 1")]
-    public async Task MembershipStatus_links_the_first_gallery_then_others_then_public(int others, int pub, string suffix)
-    {
-        var html = await Render.Html<MembershipStatus>(new { FirstId = "g1", FirstTitle = "Alpine", Others = others, Public = pub });
-        Assert.Equal($"<a class=\"text-link\" href=\"/admin/galleries/g1\">Alpine</a>{suffix}", Bare(html));
-        Assert.StartsWith("<a ", html);
-        Assert.DoesNotContain("<span", html);
-        Assert.Equal(1, Guards.Count(html, "<a "));
-    }
+    // 015 A12 (requirement change): the K8 MembershipStatus facts were deleted with the component;
+    // PhotoActionsTests covers its replacement.
 
     // ── K6 SiteHeader ────────────────────────────────────────────────────────
 

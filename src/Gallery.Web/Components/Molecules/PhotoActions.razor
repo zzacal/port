@@ -1,0 +1,33 @@
+@* PhotoActions molecule (feature 015, K4): one row of three icon controls under a photo, in the
+   order group, view, edit (FR-005). Data-agnostic (FR-020): the page supplies every href; the
+   molecule builds no addresses and knows no data types. The group and edit controls share Active
+   (one item open at a time). An item with no public page shows the view icon as unavailable. *@
+<div class="photo-actions">
+    <IconButton Icon="@IconOf(MembershipOf(Count))" Label="@CountLabel(Count)" Href="@GroupHref" Active="Active" CssClass="pa-group" />
+    @View
+    <IconButton Icon="pencil" Label="@(Active ? $"Close the editor for {ItemLabel}" : $"Edit {ItemLabel}")" Href="@EditHref" Active="Active" CssClass="pa-edit" />
+</div>
+
+@code {
+    /// <summary>How many containers hold the item.</summary>
+    [Parameter] public int Count { get; set; }
+
+    /// <summary>Where the group icon goes.</summary>
+    [Parameter, EditorRequired] public string GroupHref { get; set; } = "";
+
+    /// <summary>The item's public page (opens in a new tab); null renders the view icon unavailable.</summary>
+    [Parameter] public string? ViewHref { get; set; }
+
+    /// <summary>Where the edit icon goes.</summary>
+    [Parameter, EditorRequired] public string EditHref { get; set; } = "";
+
+    /// <summary>The item is the one open for editing: group and edit carry aria-current.</summary>
+    [Parameter] public bool Active { get; set; }
+
+    /// <summary>The item title used in the labels.</summary>
+    [Parameter, EditorRequired] public string ItemLabel { get; set; } = "";
+
+    private RenderFragment View => ViewHref is null
+        ? @<IconButton Icon="square-arrow-out-up-right" Label="No public page" Unavailable="true" CssClass="pa-view" />
+        : @<IconButton Icon="square-arrow-out-up-right" Label="@($"View {ItemLabel} (opens in a new tab)")" Href="@ViewHref" Target="_blank" CssClass="pa-view" />;
+}

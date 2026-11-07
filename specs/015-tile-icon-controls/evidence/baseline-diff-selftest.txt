@@ -1,0 +1,178 @@
+== selftest 1: intended edits only (must be ALL EQUAL)
+EQUAL atoms/button.html
+EQUAL atoms/exif-field.html
+NEW atoms/icon-button.html
+NEW atoms/icon.html
+EQUAL atoms/input.html
+EQUAL atoms/picture.html
+EQUAL atoms/select-mark.html
+EQUAL atoms/switch.html
+EQUAL atoms/text-link.html
+EQUAL atoms/title.html
+EQUAL index.html (after strip)
+EQUAL molecules/batch-item.html
+EQUAL molecules/brand.html
+EQUAL molecules/breadcrumb.html
+EQUAL molecules/cover-marker.html (after strip)
+EQUAL molecules/danger-confirm.html
+EQUAL molecules/drag-handle.html (after strip)
+EQUAL molecules/gallery-neighbours.html
+DELETED molecules/membership-status.html
+EQUAL molecules/metadata-bar.html
+EQUAL molecules/nav.html
+EQUAL molecules/page-heading.html
+EQUAL molecules/pager.html
+NEW molecules/photo-actions.html
+EQUAL molecules/photo-count.html
+EQUAL molecules/selection-bar.html
+EQUAL molecules/tile.html (after strip)
+EQUAL molecules/token-combobox.html
+EQUAL molecules/visibility-toggle.html
+EQUAL organisms/batch-footer.html
+EQUAL organisms/contact-sheet.html
+STATED (review by eye) organisms/gallery-builder.html
+EQUAL organisms/owner-bar.html
+EQUAL organisms/side-panel.html
+EQUAL organisms/sign-in-card.html
+EQUAL organisms/site-header.html
+EQUAL organisms/solo-viewer.html
+EQUAL organisms/upload-dropzone.html
+EQUAL templates/admin-layout.html
+EQUAL templates/public-layout.html
+EQUAL tokens.html
+
+ALL EQUAL (expect A,B,C)
+
+== selftest 2: + a stray edit to atoms/button.html (must be RESIDUE)
+RESIDUE atoms/button.html
+EQUAL atoms/exif-field.html
+NEW atoms/icon-button.html
+NEW atoms/icon.html
+EQUAL atoms/input.html
+EQUAL atoms/picture.html
+EQUAL atoms/select-mark.html
+EQUAL atoms/switch.html
+EQUAL atoms/text-link.html
+EQUAL atoms/title.html
+EQUAL index.html (after strip)
+EQUAL molecules/batch-item.html
+EQUAL molecules/brand.html
+EQUAL molecules/breadcrumb.html
+EQUAL molecules/cover-marker.html (after strip)
+EQUAL molecules/danger-confirm.html
+EQUAL molecules/drag-handle.html (after strip)
+EQUAL molecules/gallery-neighbours.html
+DELETED molecules/membership-status.html
+EQUAL molecules/metadata-bar.html
+EQUAL molecules/nav.html
+EQUAL molecules/page-heading.html
+EQUAL molecules/pager.html
+NEW molecules/photo-actions.html
+EQUAL molecules/photo-count.html
+EQUAL molecules/selection-bar.html
+EQUAL molecules/tile.html (after strip)
+EQUAL molecules/token-combobox.html
+EQUAL molecules/visibility-toggle.html
+EQUAL organisms/batch-footer.html
+EQUAL organisms/contact-sheet.html
+STATED (review by eye) organisms/gallery-builder.html
+EQUAL organisms/owner-bar.html
+EQUAL organisms/side-panel.html
+EQUAL organisms/sign-in-card.html
+EQUAL organisms/site-header.html
+EQUAL organisms/solo-viewer.html
+EQUAL organisms/upload-dropzone.html
+EQUAL templates/admin-layout.html
+EQUAL templates/public-layout.html
+EQUAL tokens.html
+
+1 FAILED (expect A,B,C)
+
+== selftest 3: + a stray edit inside an EARLIER tile specimen (must be RESIDUE)
+EQUAL atoms/button.html
+EQUAL atoms/exif-field.html
+NEW atoms/icon-button.html
+NEW atoms/icon.html
+EQUAL atoms/input.html
+EQUAL atoms/picture.html
+EQUAL atoms/select-mark.html
+EQUAL atoms/switch.html
+EQUAL atoms/text-link.html
+EQUAL atoms/title.html
+EQUAL index.html (after strip)
+EQUAL molecules/batch-item.html
+EQUAL molecules/brand.html
+EQUAL molecules/breadcrumb.html
+EQUAL molecules/cover-marker.html (after strip)
+EQUAL molecules/danger-confirm.html
+EQUAL molecules/drag-handle.html (after strip)
+EQUAL molecules/gallery-neighbours.html
+DELETED molecules/membership-status.html
+EQUAL molecules/metadata-bar.html
+EQUAL molecules/nav.html
+EQUAL molecules/page-heading.html
+EQUAL molecules/pager.html
+NEW molecules/photo-actions.html
+EQUAL molecules/photo-count.html
+EQUAL molecules/selection-bar.html
+RESIDUE molecules/tile.html
+EQUAL molecules/token-combobox.html
+EQUAL molecules/visibility-toggle.html
+EQUAL organisms/batch-footer.html
+EQUAL organisms/contact-sheet.html
+STATED (review by eye) organisms/gallery-builder.html
+EQUAL organisms/owner-bar.html
+EQUAL organisms/side-panel.html
+EQUAL organisms/sign-in-card.html
+EQUAL organisms/site-header.html
+EQUAL organisms/solo-viewer.html
+EQUAL organisms/upload-dropzone.html
+EQUAL templates/admin-layout.html
+EQUAL templates/public-layout.html
+EQUAL tokens.html
+
+1 FAILED (expect A,B,C)
+
+== selftest 4: stage A only against the unchanged tree (must FAIL as vacuous)
+EQUAL atoms/button.html
+EQUAL atoms/exif-field.html
+EQUAL atoms/input.html
+EQUAL atoms/picture.html
+EQUAL atoms/select-mark.html
+EQUAL atoms/switch.html
+EQUAL atoms/text-link.html
+EQUAL atoms/title.html
+FAIL vacuous: index.html does not differ from its frozen copy
+EQUAL molecules/batch-item.html
+EQUAL molecules/brand.html
+EQUAL molecules/breadcrumb.html
+EQUAL molecules/cover-marker.html
+EQUAL molecules/danger-confirm.html
+EQUAL molecules/drag-handle.html
+EQUAL molecules/gallery-neighbours.html
+EQUAL molecules/membership-status.html
+EQUAL molecules/metadata-bar.html
+EQUAL molecules/nav.html
+EQUAL molecules/page-heading.html
+EQUAL molecules/pager.html
+EQUAL molecules/photo-count.html
+EQUAL molecules/selection-bar.html
+FAIL vacuous: molecules/tile.html does not differ from its frozen copy
+EQUAL molecules/token-combobox.html
+EQUAL molecules/visibility-toggle.html
+EQUAL organisms/batch-footer.html
+EQUAL organisms/contact-sheet.html
+EQUAL organisms/gallery-builder.html
+EQUAL organisms/owner-bar.html
+EQUAL organisms/side-panel.html
+EQUAL organisms/sign-in-card.html
+EQUAL organisms/site-header.html
+EQUAL organisms/solo-viewer.html
+EQUAL organisms/upload-dropzone.html
+EQUAL templates/admin-layout.html
+EQUAL templates/public-layout.html
+EQUAL tokens.html
+
+2 FAILED (expect A)
+
+SELFTEST ALL OK

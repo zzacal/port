@@ -1,0 +1,13 @@
+PASS (safety) Tile.TitleOnPhoto defaults to true -> red:   Failed Gallery.Web.Tests.PublicOutputUnchangedTests.Public_page_markup_is_byte_identical_to_the_pre_005_baseline(page: "ContactSheetPage") |  Assert.Equal() Failure: Strings differ  ↓ (pos 1962) 
+PASS (active) PhotoActions marks the edit icon active on every tile -> red:   Failed Gallery.Web.Tests.PhotoActionsTests.Open_photo_is_the_one_active_tile_and_its_icons_close_the_editor |  Assert.Equal() Failure: Strings differ Expected: null 
+PASS (close) the open tile's edit href keeps open= (no close) -> red:   Failed Gallery.Web.Tests.PhotoActionsTests.Open_photo_is_the_one_active_tile_and_its_icons_close_the_editor |  Assert.Equal() Failure: Strings differ  ↓ (pos 7) 
+PASS (glyph) IconOf(One) returns folders -> red:   Failed Gallery.Web.Tests.PhotoActionsTests.Count_maps_to_membership_icon_and_label(count: 1, membership: One, icon: "folder", label: "In 1 gallery") |  Assert.Equal() Failure: Strings differ Expected: "folder" 
+PASS (unavail) an unavailable view renders a link -> red:   Failed Gallery.Web.Tests.PhotoActionsTests.No_view_href_renders_an_unavailable_span_with_no_href |  Assert.StartsWith() Failure: String start does not match String: "<a class="icon-button pa-view" href="#" a"··· 
+PASS (band) the title band is transparent -> red:   Failed Gallery.Web.Tests.TileIconBrowserTests.SC004_band_text_contrast_is_at_least_4_5_over_white_black_and_grey_photos |  the band has no background 
+PASS (wrap) the photo-actions row wraps -> red:   Failed Gallery.Web.Tests.TileIconBrowserTests.SC001_the_icon_row_is_one_tap_high_with_three_44px_buttons_on_one_row(width: 1440, height: 900) |  @1440px buttons wrap: tops 356, 404, 452 @1440px buttons wrap: tops 356, 404, 452 
+PASS (registry) Icons.Paths gains an unused key -> red:   Failed Gallery.Web.Tests.IconRegistryGuardTests.Every_registered_icon_is_used_and_every_used_icon_is_registered |  registered icon 'unused-x' is used nowhere in the product 
+PASS (newtab) the view icon opens in the same tab -> red:   Failed Gallery.Web.Tests.NewTabLinkTests.Arrow_links_open_a_new_tab_and_only_arrow_links_do |  /admin/library: '' has the ↗ arrow but no target="_blank" 
+PASS (pressed) the pinned cover icon drops aria-pressed -> red:   Failed Gallery.Web.Tests.BuilderIconTests.CoverMarker_Icon_mode_keeps_the_root_form_name_value_and_type_of_the_word_mode(state: Pinned, form: "b-cover", image: "id-a", unpin: "b-unpin") |  Assert.Equal() Failure: Strings differ Expected: "true" 
+restored: build clean
+
+ALL PASS

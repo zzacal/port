@@ -13,7 +13,7 @@ public class MoleculePageTests
     {
         var html = await Render.Html<TilePage>();
         Assert.Equal(3, Guards.Count(html, "<a class=\"tile\""));
-        Assert.Equal(3, Guards.Count(html, "<div class=\"cell\""));
+        Assert.Equal(6, Guards.Count(html, "<div class=\"cell\"")); // + 3 Title on photo specimens (015 K8, test-impact A15)
         Assert.Contains("Mountain Lake", html);
         Assert.Contains("Long title", html);
         Guards.AssertNoInlineStyle(html);

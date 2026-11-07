@@ -6,7 +6,8 @@ namespace Gallery.Web.Tests;
 /// <summary>
 /// Owner rule (2026-11-01): the ↗ arrow means "opens in a new tab". Every link whose text ends in ↗
 /// MUST carry target="_blank" (with rel="noopener"), and no link may carry target="_blank" without
-/// the arrow. Checked on every owner page that has visitor-view links: library, gallery list and
+/// the arrow. 015 A14 (R-06, stated change): the square-arrow-out-up-right icon (a boxed ↗) counts as
+/// the arrow, in both directions. Checked on every owner page that has visitor-view links: library, gallery list and
 /// gallery builder, with photos in a public and a private gallery so every View link renders.
 /// </summary>
 [Collection("s3")]
@@ -24,9 +25,11 @@ public partial class NewTabLinkTests(S3ProxyFixture s3, MongoFixture mongo) : IC
         foreach (var path in new[] { "/admin/library", "/admin/galleries", $"/admin/galleries/{pub}", $"/admin/galleries/{priv}" })
         {
             var html = await GalleryHtml.GetOkAsync(h, path);
-            var links = Anchor().Matches(html).Select(m => (Attrs: m.Groups[1].Value, Text: Regex.Replace(m.Groups[2].Value, "<[^>]*>", "").Trim())).ToList();
+            var links = Anchor().Matches(html).Select(m => (Attrs: m.Groups[1].Value, Text: Regex.Replace(m.Groups[2].Value, "<[^>]*>", "").Trim(), Inner: m.Groups[2].Value)).ToList();
+            static bool Cue((string Attrs, string Text, string Inner) l) =>
+                l.Text.EndsWith('↗') || l.Inner.Contains("data-icon=\"square-arrow-out-up-right\"", StringComparison.Ordinal);
 
-            var arrow = links.Where(l => l.Text.EndsWith('↗')).ToList();
+            var arrow = links.Where(Cue).ToList();
             Assert.True(arrow.Count > 0, $"{path}: no ↗ link rendered, so the rule was not exercised");
             foreach (var l in arrow)
             {
@@ -34,7 +37,7 @@ public partial class NewTabLinkTests(S3ProxyFixture s3, MongoFixture mongo) : IC
                 Assert.True(l.Attrs.Contains("rel=\"noopener\""), $"{path}: '{l.Text}' opens a new tab without rel=\"noopener\"");
             }
             foreach (var l in links.Where(l => l.Attrs.Contains("target=\"_blank\"")))
-                Assert.True(l.Text.EndsWith('↗'), $"{path}: '{l.Text}' opens a new tab but has no ↗ arrow");
+                Assert.True(Cue(l), $"{path}: '{l.Text}' opens a new tab but has no ↗ arrow");
         }
     }
 

@@ -485,7 +485,7 @@ public sealed class LibraryBrowserTests(LibraryBrowserFixture fx)
         await site.GalleryAsync("Harbour", [ids[0]]);
 
         var library = await site.OpenAsync("/admin/library", width);
-        var libHits = await AssertRowsUnderCellsAsync(library, "section.lib .cs > .tile", ".lib-row", $"library @{width}");
+        var libHits = await AssertRowsUnderCellsAsync(library, "section.lib .cs > .tile", ".photo-actions", $"library @{width}");
         Assert.Equal(3, libHits.Count);
         Assert.All(libHits, h => Assert.EndsWith(": select-mark", h));
 
