@@ -1,0 +1,4 @@
+OK 02d-decisions-delivery.md: 1x 'Each usage sets its own counts: the listing is 3 / 3 / 1 and gallery i'
+OK 02d-decisions-delivery.md: 1x "replaced by feature 015 with `PhotoActions`, the library tile's galler"
+OK 02d-decisions-delivery.md: 1x '- **Gallery list**: the listing grid, with private galleries dimmed. E'
+wrote 1 drafts

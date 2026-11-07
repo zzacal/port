@@ -284,7 +284,7 @@ Batch C owns:
 
 - [ ] T021 [P] Check `IconRegistryGuardTests`: it passes unmodified, and the used-name set
   includes `eye` and `eye-off`. If it misses them (a new call shape), escalate; don't edit it.
-- [ ] T022 [P] VII.2 design-record update, scripted in
+- [X] T022 [P] VII.2 design-record update, scripted in
   `specs/016-galleries-list-icons/evidence/design-record-edit.py` (counts asserted), in
   `specs/001-architecture-stack-design/draft/02d-decisions-delivery.md`:
   - D-20: the admin grids get medium 2 columns (library/builder 4/2/1, list 3/2/1), plus the panel
