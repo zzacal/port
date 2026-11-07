@@ -231,6 +231,23 @@ OWNER-ONLY (after merge and deploy, not gates):
 - [x] O-01 Look over `/c`, one camera page and stepping through its photos on the live site, at
   desktop and phone widths.
 
+### 014 Galleries combobox in the photo panel
+
+**Status: in progress on branch `014-gallery-combobox`.** Decisions, defaults and stated test
+changes in `specs/014-gallery-combobox/decisions.md`. Evidence: `specs/014-gallery-combobox/evidence/`
+(gate output, p95.sh with its self-test, non-vacuity.sh, design record validate 0 failures).
+
+In the library's Edit panel, the read-only "In galleries" list becomes a field: type part of a
+gallery title, pick it (or "+ the typed text" to create a new private gallery), remove a gallery
+with its ×, and Save applies it all at once. Picking a public gallery warns that visitors will see
+the photo after saving. The field is a reusable `TokenCombobox` molecule with its own `/ui` page.
+Amends D-21 (molecule list and extraction rule) and the Library line of the admin design.
+
+OWNER-ONLY (after merge and deploy, not gates):
+
+- [ ] O-01 On port.zacal.me, open a photo's Edit panel, add it to an existing gallery and to a new
+  one, then remove one token. Look over `/ui/molecules/token-combobox`.
+
 ## Not a feature
 
 - **Cost cap (D-18, E-19)**: no budget alert (constitution 6.0.0 withdrew the $7 alert). The
