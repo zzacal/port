@@ -233,7 +233,7 @@ OWNER-ONLY (after merge and deploy, not gates):
 
 ### 014 Galleries combobox in the photo panel
 
-**Status: built on branch `014-gallery-combobox`; full suite 122 + 1328 passed, 1 skipped.** Decisions, defaults and stated test
+**Status: live at https://port.zacal.me (merged 4f2d39e, 2026-11-06; deploy green); full suite 122 + 1328 passed, 1 skipped.** Decisions, defaults and stated test
 changes in `specs/014-gallery-combobox/decisions.md`. Evidence: `specs/014-gallery-combobox/evidence/`
 (p95.sh ALL PASS: memberships p95 8.83 ms, save POST p95 10.43 ms, n=100 each; non-vacuity.sh 8/8,
 one break per [SAFETY] guard and Match rule; design record validate 0 failures).

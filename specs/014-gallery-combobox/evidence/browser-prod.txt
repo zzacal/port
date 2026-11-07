@@ -1,0 +1,14 @@
+014 T026 production check, live https://port.zacal.me (2026-11-06)
+
+Merge 4f2d39e pushed to main. CI run 42329253286: build success, test success, deploy success.
+
+Unauthenticated probes after the deploy (curl):
+  /                              200
+  /g                             200
+  /admin/library                 302 -> /admin/signin   (owner-only, as before)
+  /ui/molecules/token-combobox   302 -> /admin/signin   (new page exists; owner-only like every /ui page)
+
+Owner-only part NOT run by the agent: the automation browser has no owner session, and signing in
+needs the owner's Google account. Pending, to be done with the owner signed in:
+  - /ui/molecules/token-combobox renders 10 specimens, no horizontal scroll at 390 and 1440;
+  - the library Edit panel shows the Galleries field, no horizontal scroll at 390 and 1440.
