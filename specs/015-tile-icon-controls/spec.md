@@ -189,8 +189,9 @@ assistive technology; drag, keyboard move, cover and remove still work as before
 - **FR-009**: Every icon button MUST have a visible hover text and an accessible name, a 44×44
   minimum hit area, and a visible keyboard focus indicator. Icons MUST NOT be the only carrier of
   meaning to assistive technology.
-- **FR-010**: Only one of the three icons MAY be a filled (primary) style at any time: the active
-  edit icon. At rest no icon is filled (009 UI-3: one filled action per state).
+- **FR-010**: No icon MAY be a filled (primary) style at any time; the active state is a ring, not
+  a fill, so the panel's Save stays the one filled action when the panel is open (009 UI-3: one
+  filled action per state; amended at plan, research R-05).
 
 **Edit toggle**
 
