@@ -351,13 +351,13 @@ public class LibraryComponentAdditionsTests
             Assert.DoesNotContain("pos-", tile);
             Assert.DoesNotContain("class=\"overlay\"", tile);
 
-            var handle = row.IndexOf("class=\"handle\"", StringComparison.Ordinal);
+            var handle = row.IndexOf("class=\"handle", StringComparison.Ordinal);
             var cover = row.IndexOf("class=\"cover-marker\"", StringComparison.Ordinal);
-            var remove = Regex.Match(row, "<button\\b[^>]*>Remove</button>");
-            var view = Regex.Match(row, "<a class=\"text-link\" href=\"([^\"]*)\"[^>]*>View ↗</a>");
+            var remove = Regex.Match(row, "<button\\b[^>]*>\\s*<svg\\b[^>]*data-icon=\"image-minus\"");
+            var view = Regex.Match(row, "<a class=\"icon-button\" href=\"([^\"]*)\"[^>]*target=\"_blank\"[^>]*>\\s*<svg\\b[^>]*data-icon=\"square-arrow-out-up-right\"");
             Assert.True(handle >= 0 && cover > handle && remove.Success && remove.Index > cover && view.Success && view.Index > remove.Index, row);
 
-            Assert.Contains("btn btn-quiet", remove.Value);
+            Assert.Contains("class=\"icon-button\"", remove.Value);
             Assert.Matches("\\stype=\"submit\"", remove.Value);
             Assert.Matches("\\sform=\"b-remove\"", remove.Value);
             Assert.Matches("\\sname=\"image\"", remove.Value);
@@ -365,9 +365,9 @@ public class LibraryComponentAdditionsTests
             Assert.Equal($"/g/gid/coast/{ids[i]}", view.Groups[1].Value);
         }
         // K4 through K6: the pinned tile unpins on b-unpin, the others pin their own id on b-cover.
-        Assert.Matches("<button\\b[^>]*form=\"b-unpin\"[^>]*>Unpin</button>", tiles[1]);
-        Assert.Matches("<button\\b[^>]*form=\"b-cover\"[^>]*name=\"image\"[^>]*value=\"id-a\"[^>]*>Make cover</button>", tiles[0]);
-        Assert.Matches("<button\\b[^>]*form=\"b-cover\"[^>]*name=\"image\"[^>]*value=\"id-c\"[^>]*>Make cover</button>", tiles[2]);
+        Assert.Matches("<button\\b[^>]*aria-label=\"Unpin cover\"[^>]*aria-pressed=\"true\"[^>]*form=\"b-unpin\"", tiles[1]);
+        Assert.Matches("<button\\b[^>]*aria-label=\"Make [^\"]* the cover\"[^>]*form=\"b-cover\"[^>]*name=\"image\"[^>]*value=\"id-a\"", tiles[0]);
+        Assert.Matches("<button\\b[^>]*aria-label=\"Make [^\"]* the cover\"[^>]*form=\"b-cover\"[^>]*name=\"image\"[^>]*value=\"id-c\"", tiles[2]);
         // The grid sits in <reorder-grid data-form="b-order">.
         var open = html.IndexOf("<reorder-grid data-form=\"b-order\">", StringComparison.Ordinal);
         Assert.True(open >= 0 && open < html.IndexOf("class=\"cs ", StringComparison.Ordinal) && html.IndexOf("</reorder-grid>", StringComparison.Ordinal) > open, html);

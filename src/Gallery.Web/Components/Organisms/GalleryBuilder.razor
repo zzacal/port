@@ -6,7 +6,9 @@
    in <reorder-grid data-form> for reorder.js; the inputs get the K2 required/pattern and the
    LibraryOptions limits; the toggle gets K3. Every addition is an expression, never an @if.
    With a FormId the Public switch is a field of that Save form (owner feedback): Save posts the
-   title, description and visibility together; the publish warning has no buttons. *@
+   title, description and visibility together; the publish warning has no buttons.
+   015 K6: the tiles carry the title on the photo, and the b-ctl row is icons (move, cover, remove,
+   view) with every class, form, name, value and aria-label kept (reorder.js keys on them). *@
 @using Gallery.Core.Images
 <div class="builder">
     <section class="b-grid" aria-label="Photos">@StatusLine@ReorderOpen
@@ -37,11 +39,11 @@
                     {
                         <div class="drop-slot" aria-hidden="true"></div>
                     }
-                    <Tile Image="item" Href="@((string?)null)" Sizes="@Sizes.ForGrid(4, 3, 1)" CssClass="@cssClass">
+                    <Tile Image="item" Href="@((string?)null)" Sizes="@Sizes.ForGrid(4, 3, 1)" CssClass="@cssClass" TitleOnPhoto="true">
                         <Caption>
                             <div class="b-ctl">
-                                <DragHandle Label="@($"Move {tileTitle}")" State="@handleState" Position="@(index + 1)" Total="@Items.Count" />
-                                <CoverMarker State="@coverState" ImageTitle="@tileTitle" FormId="@CoverFormId" ImageId="@(CoverFormId is null ? null : itemId)" UnpinFormId="@UnpinFormId" />@RemoveFor(itemId, tileTitle)@ViewFor(itemId)
+                                <DragHandle Label="@($"Move {tileTitle}")" State="@handleState" Position="@(index + 1)" Total="@Items.Count" Icon="true" />
+                                <CoverMarker State="@coverState" ImageTitle="@tileTitle" FormId="@CoverFormId" ImageId="@(CoverFormId is null ? null : itemId)" UnpinFormId="@UnpinFormId" Icon="true" />@RemoveFor(itemId, tileTitle)@ViewFor(itemId, tileTitle)
                             </div>
                         </Caption>
                     </Tile>
@@ -153,8 +155,8 @@
     private MarkupString ReorderClose => OrderFormId is null ? default : new MarkupString("</reorder-grid>");
 
     private RenderFragment? RemoveFor(string id, string title) => RemoveFormId is null ? null
-        : @<Button Variant="ButtonVariant.Quiet" FormId="@RemoveFormId" Name="image" Value="@id" AriaLabel="@($"Remove {title} from this gallery")">Remove</Button>;
+        : @<IconButton Icon="image-minus" Label="@($"Remove {title} from this gallery")" FormId="@RemoveFormId" Name="image" Value="@id" />;
 
-    private RenderFragment? ViewFor(string id) => PhotoHrefBase is null ? null
-        : @<TextLink Href="@($"{PhotoHrefBase}/{id}")" Target="_blank">View &#x2197;</TextLink>;
+    private RenderFragment? ViewFor(string id, string title) => PhotoHrefBase is null ? null
+        : @<IconButton Icon="square-arrow-out-up-right" Label="@($"View {title} (opens in a new tab)")" Href="@($"{PhotoHrefBase}/{id}")" Target="_blank" />;
 }

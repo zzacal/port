@@ -1,6 +1,9 @@
-@* Admin drag-handle molecule (feature 005): button to lift and keyboard-move a photo in a grid. *@
+@* Admin drag-handle molecule (feature 005): button to lift and keyboard-move a photo in a grid.
+   015 K6: Icon (default false) swaps the glyph for the grip-vertical icon in a 44x44 box; the
+   button, its classes and its aria attributes are unchanged. An expression, so the default render
+   is byte-identical. *@
 <button type="button" class="@CssClass" aria-label="@Label" aria-pressed="@(State == HandleState.Lifted ? "true" : "false")" aria-describedby="@(State == HandleState.Lifted ? LiftHelpId : null)">
-    <span aria-hidden="true">&#x2807;</span>
+    @(Icon ? GripIcon : Glyph)
 </button>
 @if (State == HandleState.Lifted)
 {
@@ -12,6 +15,13 @@
     [Parameter] public HandleState State { get; set; }
     [Parameter] public int Position { get; set; }
     [Parameter] public int Total { get; set; }
+
+    /// <summary>015 K6: the grip-vertical icon instead of the glyph (the gallery builder).</summary>
+    [Parameter] public bool Icon { get; set; }
+
+    private RenderFragment Glyph => @<span aria-hidden="true">&#x2807;</span>;
+
+    private RenderFragment GripIcon => @<Gallery.Web.Components.Atoms.Icon Name="grip-vertical" />;
 
     private string CssClass => State switch
     {

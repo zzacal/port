@@ -1,0 +1,9 @@
+/* PhotoActions (015 K4): one row that never wraps; 3 x 44 + 2 x 4 = 140 px fits the smallest
+   phone tile. */
+.photo-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 4px;
+    height: var(--tap);
+}

@@ -5,18 +5,9 @@
 .lib-empty { font-size: var(--type-body); color: var(--color-muted); }
 .lib-pages { margin: var(--space-s) 0 0; font-size: var(--type-caption); color: var(--color-muted); text-align: center; }
 
-/* UI-2: only the select mark sits over the photo; status, Edit and View sit under the title. */
+/* UI-2: only the select mark is a control over the photo; the icon row (PhotoActions) sits under
+   the cell. */
 .pos-tl { position: absolute; top: 8px; left: 8px; }
-.lib-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: center;
-    gap: 4px 12px;
-    margin-top: 4px;
-    font-size: var(--type-caption);
-}
-.lib-status { color: var(--color-muted); }
 
 /* Picker dialog */
 .lib-picker {

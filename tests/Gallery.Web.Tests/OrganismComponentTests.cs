@@ -261,7 +261,7 @@ public class OrganismComponentTests
             State = BuilderState.Rest,
             PinnedIndex = (int?)2
         });
-        var pinnedMatches = Regex.Matches(html, @"class=""cover-tag""[^>]*>Cover<");
+        var pinnedMatches = Regex.Matches(html, @"aria-label=""Unpin cover""");
         Assert.Single(pinnedMatches);
     }
 

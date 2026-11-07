@@ -165,21 +165,22 @@ public class LibraryPageTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         await h.SettleAsync();
 
         var html = await GetOkAsync(h, "/admin/library");
-        // 010 T035 (stated change, decisions row 30): the status holds a link now, so read the
-        // span's text content with tags stripped; the copy is the first gallery by title, +N.
-        string StatusOf(string iid) => Regex.Replace(
-            Regex.Match(LibraryHtml.TileOf(html, iid), "<span class=\"lib-status\"[^>]*>(.*?)</span>").Groups[1].Value, "<[^>]*>", "");
+        // 015 A1 (stated change, owner clarify: count only): the gallery icon's label is the count,
+        // its glyph the membership state; no gallery title and no public count.
+        string LabelOf(string iid) => Regex.Match(LibraryHtml.Blocks(LibraryHtml.TileOf(html, iid), "a", "pa-group").Single(), "aria-label=\"([^\"]*)\"").Groups[1].Value;
+        string GlyphOf(string iid) => Regex.Match(LibraryHtml.Blocks(LibraryHtml.TileOf(html, iid), "a", "pa-group").Single(), "data-icon=\"([^\"]*)\"").Groups[1].Value;
 
-        Assert.Equal("Not in a gallery", StatusOf(none.Id));
-        Assert.Equal("Alpha +1", StatusOf(twoPrivate.Id));
-        Assert.Equal("Alpha +1 · public in 1", StatusOf(twoOnePublic.Id));
+        Assert.Equal(("Not in a gallery", "folder-plus"), (LabelOf(none.Id), GlyphOf(none.Id)));
+        Assert.Equal(("In 2 galleries", "folders"), (LabelOf(twoPrivate.Id), GlyphOf(twoPrivate.Id)));
+        Assert.Equal(("In 2 galleries", "folders"), (LabelOf(twoOnePublic.Id), GlyphOf(twoOnePublic.Id)));
 
-        // UI-1: View ↗ to the photo page of the FIRST gallery in home order holding it.
-        Assert.Contains($"<a class=\"text-link\" href=\"/g/{a}/alpha/{twoPrivate.Id}\"", LibraryHtml.TileOf(html, twoPrivate.Id));
-        Assert.Contains($"<a class=\"text-link\" href=\"/g/{a}/alpha/{twoOnePublic.Id}\"", LibraryHtml.TileOf(html, twoOnePublic.Id));
-        Assert.Contains("View ↗", LibraryHtml.TileOf(html, twoOnePublic.Id));
-        // No gallery → no View link (and no /g/ link at all).
-        Assert.DoesNotContain("View ↗", LibraryHtml.TileOf(html, none.Id));
+        // UI-1: the view icon links the photo page of the FIRST gallery in home order holding it, in a new tab.
+        Assert.Matches($"<a class=\"icon-button pa-view\" href=\"/g/{a}/alpha/{twoPrivate.Id}\"[^>]*target=\"_blank\"", LibraryHtml.TileOf(html, twoPrivate.Id));
+        Assert.Matches($"<a class=\"icon-button pa-view\" href=\"/g/{a}/alpha/{twoOnePublic.Id}\"[^>]*target=\"_blank\"", LibraryHtml.TileOf(html, twoOnePublic.Id));
+        // No gallery → the view icon is unavailable (a span, no link), and no /g/ link at all.
+        Assert.Single(LibraryHtml.Blocks(LibraryHtml.TileOf(html, none.Id), "span", "pa-view"));
+        Assert.Contains("is-unavailable", LibraryHtml.Blocks(LibraryHtml.TileOf(html, none.Id), "span", "pa-view").Single());
+        Assert.Empty(LibraryHtml.Blocks(LibraryHtml.TileOf(html, none.Id), "a", "pa-view"));
         Assert.DoesNotContain("/g/", LibraryHtml.TileOf(html, none.Id));
         _ = (b, c);
     }
@@ -201,7 +202,7 @@ public class LibraryPageTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         Assert.Equal(["overlay", "pos-tl"], overlayChildren);
         Assert.Single(Regex.Matches(overlay, "class=\"select-mark\""));
         Assert.Matches("name=\"ids\"[^>]*value=\"" + img.Id + "\"[^>]*form=\"lib-select\"", overlay);
-        Assert.DoesNotContain("lib-row", overlay);
+        Assert.DoesNotContain("photo-actions", overlay);
         Assert.DoesNotContain("text-link", overlay);
 
         var cell = LibraryHtml.Blocks(tile, "div", "cell").Single();
@@ -209,13 +210,18 @@ public class LibraryPageTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         Assert.DoesNotContain("<a ", outsideOverlay);
         Assert.DoesNotContain("<input", outsideOverlay);
 
-        // Status, Edit and View are inside .lib-row, after the title, outside the cell.
-        var row = LibraryHtml.Blocks(tile, "div", "lib-row").Single();
-        Assert.Contains("class=\"lib-status\"", row);
-        Assert.Matches($"href=\"\\?page=1&open={img.Id}\"[^>]*>Edit</a>", row);
-        Assert.Contains("View ↗", row);
-        Assert.True(tile.IndexOf("class=\"title\"", StringComparison.Ordinal) < tile.IndexOf("lib-row", StringComparison.Ordinal));
-        Assert.True(tile.IndexOf(cell, StringComparison.Ordinal) + cell.Length <= tile.IndexOf("lib-row", StringComparison.Ordinal));
+        // 015 A2 (stated change): the title is INSIDE the cell, in .on-photo (not in the overlay), and
+        // there is no title under the cell; gallery, view and edit are in .photo-actions, in that order,
+        // after the cell, and edit opens this photo landing back on its tile.
+        var onPhoto = LibraryHtml.Blocks(cell, "div", "on-photo").Single();
+        Assert.Contains("class=\"title\"", onPhoto);
+        Assert.DoesNotContain("on-photo", overlay);
+        Assert.Single(Regex.Matches(tile, "class=\"title\""));
+        var row = LibraryHtml.Blocks(tile, "div", "photo-actions").Single();
+        var parts = Regex.Matches(row, "class=\"icon-button[^\"]*\\b(pa-[a-z]+)\\b").Select(m => m.Groups[1].Value).ToList();
+        Assert.Equal(["pa-group", "pa-view", "pa-edit"], parts);
+        Assert.Matches($"<a class=\"icon-button pa-edit\" href=\"\\?page=1&open={img.Id}#t-{img.Id}\"", row);
+        Assert.True(tile.IndexOf(cell, StringComparison.Ordinal) + cell.Length <= tile.IndexOf(row, StringComparison.Ordinal));
     }
 
     private static List<string> PrimaryButtons(string html) =>

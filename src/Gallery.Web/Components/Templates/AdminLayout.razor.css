@@ -47,3 +47,13 @@ body.admin {
 .admin-aside {
     min-width: 0;
 }
+
+/* 015 K7 (R-03): beside the grid, the panel stays in view wherever the tile that opened it is. */
+@media (min-width: 1200px) {
+    .admin-aside {
+        position: sticky;
+        top: 0;
+        max-height: 100vh;
+        overflow: auto;
+    }
+}

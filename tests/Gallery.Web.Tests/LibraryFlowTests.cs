@@ -94,14 +94,13 @@ public class LibraryFlowTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         Assert.Contains(moved.Derivatives[0].Avif, home);
         Assert.DoesNotContain(images[0].Derivatives[0].Avif, home);
 
-        // Library tiles say "Coast · public in 1" (010 T035, stated change, decisions row 30: the
-        // status text content, tags stripped, now names the gallery as a link).
+        // Library tiles' gallery icon says "In 1 gallery" (015 A4, stated change, owner clarify: count only).
         var lib = await LibraryHtml.BodyAsync(await h.GetAsync("/admin/library"));
         foreach (var id in forty)
-            Assert.Contains("<span class=\"lib-status\"", LibraryHtml.TileOf(lib, id));
-        static string StatusText(string tile) => Regex.Replace(
-            Regex.Match(tile, "<span class=\"lib-status\"[^>]*>(.*?)</span>").Groups[1].Value, "<[^>]*>", "");
-        Assert.Equal(40, LibraryHtml.Blocks(lib, "div", "lib-tile").Count(t => StatusText(t) == "Coast · public in 1"));
+            Assert.Single(LibraryHtml.Blocks(LibraryHtml.TileOf(lib, id), "a", "pa-group"));
+        static string GroupLabel(string tile) => Regex.Match(
+            LibraryHtml.Blocks(tile, "a", "pa-group").Single(), "aria-label=\"([^\"]*)\"").Groups[1].Value;
+        Assert.Equal(40, LibraryHtml.Blocks(lib, "div", "lib-tile").Count(t => GroupLabel(t) == "In 1 gallery"));
 
         // L3 of the same 40 plus 5 new → "5 added · 40 were already in Coast".
         var again = await h.PostFormAsync("/admin/library/add",

@@ -1,0 +1,22 @@
+@inject SampleCatalog Samples
+<UiLayout Title="PhotoActions">
+    <Specimen Label="Not in a gallery" Width="w-320"><Tile Image="Samples.Landscape[0]" Sizes="320px" TitleOnPhoto="true" Caption="@Row(Samples.Landscape[0], 0, null, false)" /></Specimen>
+    <Specimen Label="In 1 gallery" Width="w-320"><Tile Image="Samples.Landscape[1]" Sizes="320px" TitleOnPhoto="true" Caption="@Row(Samples.Landscape[1], 1, ViewOf(Samples.Landscape[1]), false)" /></Specimen>
+    <Specimen Label="In 3 galleries" Width="w-320"><Tile Image="Samples.Portrait[0]" Sizes="320px" TitleOnPhoto="true" Caption="@Row(Samples.Portrait[0], 3, ViewOf(Samples.Portrait[0]), false)" /></Specimen>
+    <Specimen Label="No public page" Width="w-320"><Tile Image="Samples.Landscape[2]" Sizes="320px" TitleOnPhoto="true" Caption="@Row(Samples.Landscape[2], 1, null, false)" /></Specimen>
+    <Specimen Label="Edit active" Width="w-320"><Tile Image="Samples.Portrait[1]" Sizes="320px" TitleOnPhoto="true" Caption="@Row(Samples.Portrait[1], 2, ViewOf(Samples.Portrait[1]), true)" /></Specimen>
+    <Specimen Label="Long title" Width="w-320"><Tile Image="LongTitled" Sizes="320px" TitleOnPhoto="true" Caption="@Row(LongTitled, 1, ViewOf(LongTitled), false)" /></Specimen>
+</UiLayout>
+
+@code {
+    // 60 characters: the band truncates it with an ellipsis and keeps the full text in title.
+    private ImageView LongTitled => Samples.Landscape[3] with
+    {
+        Title = "A slow walk along the northern ridge above the lake at dusk."
+    };
+
+    private static string ViewOf(ImageView image) => $"#view-{image.Id}";
+
+    private static RenderFragment Row(ImageView image, int count, string? view, bool active) =>
+        @<PhotoActions Count="count" ItemLabel="@image.Title" ViewHref="@view" Active="active" GroupHref="#" EditHref="#" />;
+}

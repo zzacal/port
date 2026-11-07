@@ -27,7 +27,7 @@ public class NavCataloguePageTests
     {
         { typeof(PhotoCountPage), ["Middle photo", "One-photo gallery"] },
         { typeof(GalleryNeighboursPage), ["First gallery", "Middle gallery", "Last gallery", "Long titles"] },
-        { typeof(MembershipStatusPage), ["In no gallery", "In one gallery", "In three galleries", "In two, public in one"] },
+        { typeof(PhotoActionsPage), ["Not in a gallery", "In 1 gallery", "In 3 galleries", "No public page", "Edit active", "Long title"] },
         { typeof(BreadcrumbPage), ["Gallery page", "Photo page", "Admin gallery", "Long titles (narrow)"] },
         { typeof(PageHeadingPage), ["Title only", "With an action"] },
     };
@@ -64,7 +64,7 @@ public class NavCataloguePageTests
             [
                 ("PhotoCount", "molecules/photo-count", typeof(PhotoCountPage)),
                 ("GalleryNeighbours", "molecules/gallery-neighbours", typeof(GalleryNeighboursPage)),
-                ("MembershipStatus", "molecules/membership-status", typeof(MembershipStatusPage)),
+                ("PhotoActions", "molecules/photo-actions", typeof(PhotoActionsPage)),
                 ("Breadcrumb", "molecules/breadcrumb", typeof(BreadcrumbPage)),
                 ("PageHeading", "molecules/page-heading", typeof(PageHeadingPage)),
             ],
@@ -110,12 +110,12 @@ public class NavCataloguePageTests
     }
 
     [Fact]
-    public async Task MembershipStatus_page_shows_the_fixed_copy()
+    public async Task PhotoActions_page_shows_the_fixed_copy()
     {
-        var html = WebUtility.HtmlDecode(await Page(typeof(MembershipStatusPage)));
-        Assert.Contains("Not in a gallery", html);
-        Assert.Contains(">alpine</a> +2", html);
-        Assert.Contains(">Birds</a> +1 · public in 1", html);
+        var html = WebUtility.HtmlDecode(await Page(typeof(PhotoActionsPage)));
+        Assert.Contains("aria-label=\"Not in a gallery\"", html);
+        Assert.Contains("aria-label=\"In 1 gallery\"", html);
+        Assert.Contains("aria-label=\"In 3 galleries\"", html);
     }
 
     [Fact]

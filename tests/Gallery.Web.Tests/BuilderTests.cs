@@ -21,13 +21,14 @@ public class BuilderTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixture
     private static string Pp(string gid, string slug, string iid) => GalleryHtml.Pp(gid, slug, iid);
     private static readonly string Home = GalleryHtml.Home;
 
-    /// <summary>The builder tile whose Remove button carries <paramref name="iid"/>.</summary>
+    /// <summary>The builder tile whose remove icon button carries <paramref name="iid"/> (015 A6: keyed on its label, name and value).</summary>
     private static string TileOf(string html, string iid) =>
         LibraryHtml.Blocks(html, "div", "tile")
-            .Single(t => Regex.IsMatch(t, $"<button\\b[^>]*name=\"image\"[^>]*value=\"{iid}\"[^>]*>Remove</button>"));
+            .Single(t => Regex.IsMatch(t, $"<button\\b[^>]*aria-label=\"Remove [^\"]* from this gallery\"[^>]*name=\"image\"[^>]*value=\"{iid}\""));
 
-    private static string CoverText(string tile) =>
-        Regex.Match(tile, "<span class=\"cover-tag[^\"]*\"[^>]*>([^<]*)</span>").Groups[1].Value;
+    /// <summary>The cover icon button's label: "Unpin cover", "Cover: first photo" or "Make {title} the cover" (015 A6).</summary>
+    private static string CoverState(string tile) =>
+        Regex.Match(LibraryHtml.Blocks(tile, "div", "cover-marker").Single(), "aria-label=\"([^\"]*)\"").Groups[1].Value;
 
     private static async Task<string?> HomeCoverAsync(LibraryHost h, string gid) =>
         (await h.SiteAsync()).HomeCards.SingleOrDefault(c => c.GalleryId == gid)?.Cover?.ImageId;
@@ -60,10 +61,10 @@ public class BuilderTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixture
             var cell = LibraryHtml.Blocks(tile, "div", "cell").Single();
             Assert.True(tile.IndexOf(cell, StringComparison.Ordinal) + cell.Length <= tile.IndexOf(row, StringComparison.Ordinal));
             Assert.DoesNotContain("class=\"overlay\"", tile);
-            Assert.Matches($"<a class=\"text-link\" href=\"/g/{gid}/coast/{iid}\"[^>]*>View ↗</a>", row);
-            // UI-4: Remove is Quiet, posts b-remove directly, with no confirmation step.
-            var remove = Regex.Match(row, "<button\\b[^>]*>Remove</button>").Value;
-            Assert.Matches("class=\"btn btn-quiet\"", remove);
+            Assert.Matches($"<a class=\"icon-button\" href=\"/g/{gid}/coast/{iid}\"[^>]*target=\"_blank\"", row);
+            // UI-4: Remove is an icon button (015 A7), posts b-remove directly, with no confirmation step.
+            var remove = Regex.Match(row, "<button\\b[^>]*aria-label=\"Remove [^\"]* from this gallery\"[^>]*>").Value;
+            Assert.Matches("class=\"icon-button\"", remove);
             Assert.Matches("type=\"submit\"[^>]*form=\"b-remove\"", remove);
             Assert.DoesNotContain("danger-confirm", row);
         }
@@ -273,7 +274,7 @@ public class BuilderTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixture
         Assert.Equal(c, await HomeCoverAsync(h, gid));
         var html = await GalleryHtml.GetOkAsync(h, $"/admin/galleries/{gid}?ordered=1");
         Assert.Equal("Order saved", LibraryHtml.Status(html));
-        Assert.Equal("Cover · first photo", CoverText(TileOf(html, c)));
+        Assert.Equal("Cover: first photo", CoverState(TileOf(html, c)));
 
         // Stale order → 409 with the reason, nothing stored.
         var stale = await h.PostFormAsync($"/admin/galleries/{gid}/order", [F("order", a), F("order", b)]);
@@ -291,10 +292,10 @@ public class BuilderTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixture
         Assert.Equal(b, await HomeCoverAsync(h, gid));
         html = await GalleryHtml.GetOkAsync(h, $"/admin/galleries/{gid}");
         var pinned = TileOf(html, b);
-        Assert.Equal("Cover", CoverText(pinned));
-        Assert.Matches("<button\\b[^>]*type=\"submit\"[^>]*form=\"b-unpin\"[^>]*>Unpin</button>", pinned);
-        Assert.Matches($"<button\\b[^>]*form=\"b-cover\"[^>]*name=\"image\"[^>]*value=\"{c}\"[^>]*>Make cover</button>", TileOf(html, c));
-        Assert.Equal("", CoverText(TileOf(html, c)));
+        Assert.Equal("Unpin cover", CoverState(pinned));
+        Assert.Matches("<button\\b[^>]*type=\"submit\"[^>]*aria-label=\"Unpin cover\"[^>]*aria-pressed=\"true\"[^>]*form=\"b-unpin\"", pinned);
+        Assert.Matches($"<button\\b[^>]*aria-label=\"Make [^\"]* the cover\"[^>]*aria-pressed=\"false\"[^>]*form=\"b-cover\"[^>]*name=\"image\"[^>]*value=\"{c}\"", TileOf(html, c));
+        Assert.Matches("^Make .+ the cover$", CoverState(TileOf(html, c)));
 
         // Unpin (the b-unpin form carries no image) returns to "Cover · first photo".
         var unpin = await h.PostFormAsync($"/admin/galleries/{gid}/cover", []);
@@ -303,8 +304,8 @@ public class BuilderTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixture
         Assert.Null((await GalleryHtml.LoadAsync(h, gid)).PinnedCover);
         Assert.Equal(c, await HomeCoverAsync(h, gid));
         html = await GalleryHtml.GetOkAsync(h, $"/admin/galleries/{gid}");
-        Assert.Equal("Cover · first photo", CoverText(TileOf(html, c)));
-        Assert.DoesNotContain(">Unpin<", html);
+        Assert.Equal("Cover: first photo", CoverState(TileOf(html, c)));
+        Assert.DoesNotContain("aria-label=\"Unpin cover\"", html);
 
         // Pinning a non-member is 422 with the reason.
         var other = await h.InsertUploadedImageAsync(files: false);

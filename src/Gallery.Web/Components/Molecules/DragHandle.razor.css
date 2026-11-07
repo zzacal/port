@@ -29,6 +29,18 @@
     color: var(--color-bg);
 }
 
+/* 015 K6: the icon mode is a 44x44 box with no plate. */
+.handle:has(> .icon) {
+    width: var(--tap);
+    height: var(--tap);
+    background: transparent;
+}
+
+/* Keeps the lifted cue in the icon mode (the rule above outranks .is-lifted). */
+.is-lifted:has(> .icon) {
+    background: var(--color-text);
+}
+
 .lift-help {
     font-size: var(--type-caption);
     background: rgba(255, 255, 255, .92);
