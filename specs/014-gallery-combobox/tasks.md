@@ -74,14 +74,14 @@ the same batch as the code.
 
 ## Phase 1: Setup (parent)
 
-- [ ] T001 Record the baseline in `specs/014-gallery-combobox/evidence/baseline.txt`:
+- [X] T001 Record the baseline in `specs/014-gallery-combobox/evidence/baseline.txt`:
   `git rev-parse HEAD`, the full-suite pass/fail/skip counts from
   `dotnet test Gallery.slnx --artifacts-path artifacts --blame-hang-timeout 120s`, and
   `ls tests/Gallery.Web.Tests/*.cs | wc -l`.
-- [ ] T002 Copy `specs/013-by-camera/evidence/gate.sh` to
+- [X] T002 Copy `specs/013-by-camera/evidence/gate.sh` to
   `specs/014-gallery-combobox/evidence/gate.sh`. Change the output path to
   `/tmp/014-gate-$L.txt` and add `specs/013-by-camera/evidence` to the restored dirs.
-- [ ] T003 Re-verify contracts/test-impact.md against the tree at T001 (parent, by hand). Grep
+- [X] T003 Re-verify contracts/test-impact.md against the tree at T001 (parent, by hand). Grep
   `tests/` for `lib-galleries`, `lib-in`, `In galleries`, `Not in a gallery`, `UiCatalog.Entries`,
   `hrefs.Count` and `TakeLast(`, and confirm every A/C row line for line. Edit test-impact.md
   before Batch A if anything differs.
@@ -331,14 +331,14 @@ and T014.
   - write the host log to `specs/014-gallery-combobox/evidence/membership-timings.log`.
 
   Executor; owns that new file only.
-- [ ] T020 [P] Write `specs/014-gallery-combobox/evidence/p95.sh` (adapted from 013's):
+- [X] T020 [P] Write `specs/014-gallery-combobox/evidence/p95.sh` (adapted from 013's):
   - rows: `library.image.memberships` p95 < 1000 ms, and
     `http.request POST /admin/library/images/{iid}` p95 < 1000 ms, with n ≥ 100 each (SC-002);
   - a missing or empty log FAILs;
   - tee the output to `p95-output.txt`.
 
   Self-test on an empty log (must fail) and an over-limit value.
-- [ ] T021 [P] VII.2 design-record update, scripted in
+- [X] T021 [P] VII.2 design-record update, scripted in
   `specs/014-gallery-combobox/evidence/design-record-edit.py`, which asserts each old string's
   count before writing (decisions 12, 16). In
   `specs/001-architecture-stack-design/draft/02d-decisions-delivery.md`:
