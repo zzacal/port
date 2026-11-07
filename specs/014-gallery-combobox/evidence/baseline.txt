@@ -1,0 +1,6 @@
+HEAD c58d539f981252d8157baab99a43914dc73b1304
+web test files: 119
+build exit 0
+Passed!  - Failed:     0, Passed:   122, Skipped:     0, Total:   122, Duration: 124 ms - Gallery.Core.Tests.dll (net10.0)
+Passed!  - Failed:     0, Passed:  1253, Skipped:     1, Total:  1254, Duration: 4 m 1 s - Gallery.Web.Tests.dll (net10.0)
+test exit 0
