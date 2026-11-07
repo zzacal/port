@@ -69,12 +69,12 @@ files it names, in the same batch as the code.
 
 ## Phase 1: Setup (parent)
 
-- [ ] T001 Record the baseline in `specs/015-tile-icon-controls/evidence/baseline.txt`:
+- [X] T001 Record the baseline in `specs/015-tile-icon-controls/evidence/baseline.txt`:
   `git rev-parse HEAD`, the full-suite counts, and `ls tests/Gallery.Web.Tests/*.cs | wc -l`.
-- [ ] T002 Copy `specs/014-gallery-combobox/evidence/gate.sh` to
+- [X] T002 Copy `specs/014-gallery-combobox/evidence/gate.sh` to
   `specs/015-tile-icon-controls/evidence/gate.sh`. Use output `/tmp/015-gate-$L.txt`, and add
   `specs/014-gallery-combobox/evidence` to the restored dirs.
-- [ ] T003 Freeze the pre-change snapshots: copy `specs/006-public-site-local/evidence/ui-baseline/`
+- [X] T003 Freeze the pre-change snapshots: copy `specs/006-public-site-local/evidence/ui-baseline/`
   to `specs/015-tile-icon-controls/evidence/pre-015-ui-baseline/`. Then write
   `specs/015-tile-icon-controls/evidence/baseline-diff.py`:
   - for each regenerated file, strip exactly the intended change (test-impact B1–B5) and compare
@@ -85,7 +85,7 @@ files it names, in the same batch as the code.
     then add one stray edit to a page that must not change (must say RESIDUE);
   - tolerate `b-xxxxxxxxxx` scope attributes.
   Run `--selftest` and save the output to `evidence/baseline-diff-selftest.txt`.
-- [ ] T004 Write `tests/Gallery.Web.Tests/TileTimingEvidenceTests.cs`
+- [X] T004 Write `tests/Gallery.Web.Tests/TileTimingEvidenceTests.cs`
   (Category=Evidence, modelled on `MembershipTimingEvidenceTests`):
   - 100 photos, one gallery "Coast" holding 40 of them;
   - 100 GETs of `/admin/library`, 100 GETs of `/admin/galleries/{gid}`;
@@ -96,14 +96,14 @@ files it names, in the same batch as the code.
   Run it NOW on the unchanged tree with
   `TILE_TIMING_LOG=specs/015-tile-icon-controls/evidence/pre-timings.log` (SC-005 pre-change
   capture), and commit both files.
-- [ ] T005 Write `specs/015-tile-icon-controls/evidence/p95.sh`:
+- [X] T005 Write `specs/015-tile-icon-controls/evidence/p95.sh`:
   - rows: library and builder GET p95 ≤ pre p95 × 1.10 + 1 ms; every post line's `db_reads`
     EQUALS the pre value (equality);
   - n ≥ 100 per route in both logs; a missing or empty log FAILs;
   - tee the output to `p95-output.txt`.
   Write `p95-selftest.sh` (pass; slow; extra read; n = 99; empty) and run it into
   `p95-selftest.txt`. Run `p95.sh pre-timings.log pre-timings.log` once and expect ALL PASS.
-- [ ] T006 Write `specs/015-tile-icon-controls/evidence/test-impact-edit.py` from 014's: rows
+- [X] T006 Write `specs/015-tile-icon-controls/evidence/test-impact-edit.py` from 014's: rows
   A1–A14 as count-asserting (file, old, new, count) replacements, `DRYRUN=1` mode, and a row
   filter by id. Dry-run it now (every row must match its count), and fix test-impact.md first if
   anything differs. A3 and A12 rewrite whole facts: give them their full new bodies in the script.
