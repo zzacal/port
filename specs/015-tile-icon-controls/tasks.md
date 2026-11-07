@@ -198,23 +198,23 @@ Batch B owns:
 
 It runs in parallel with Batch C (disjoint files).
 
-- [ ] T013 [P] [US1] Write `src/Gallery.Web/Components/Molecules/PhotoActions.cs`,
+- [X] T013 [P] [US1] Write `src/Gallery.Web/Components/Molecules/PhotoActions.cs`,
   `PhotoActions.razor` and `PhotoActions.razor.css` exactly per K4: the order, the labels, the
   unavailable view, one row that never wraps.
-- [ ] T014 [US1] In `src/Gallery.Web/Ui/UiCatalog.cs`, replace the `MembershipStatus` line in
+- [X] T014 [US1] In `src/Gallery.Web/Ui/UiCatalog.cs`, replace the `MembershipStatus` line in
   place with the `PhotoActions` entry (K8). Write `src/Gallery.Web/Ui/Pages/PhotoActionsPage.razor`
   with the six K8 specimens. Delete `MembershipStatus.razor` and `MembershipStatusPage.razor`.
   Grep `src/` for `MembershipStatus`: there must be 0 hits.
-- [ ] T015 [US1] [US2] In `src/Gallery.Web/Admin/Pages/LibraryPage.razor` and `.razor.css`, apply
+- [X] T015 [US1] [US2] In `src/Gallery.Web/Admin/Pages/LibraryPage.razor` and `.razor.css`, apply
   K5:
   - add `TitleOnPhoto` and `Id="t-{id}"` on each tile;
   - `RowFor` becomes `PhotoActions` with the open and close hrefs and `Active`;
   - remove `.lib-row`, `.lib-status` and the `MembershipStatus` use;
   - keep the panel's own `ViewFor`.
-- [ ] T016 [US2] In `src/Gallery.Web/Components/Templates/AdminLayout.razor.css`, add K7 (sticky
+- [X] T016 [US2] In `src/Gallery.Web/Components/Templates/AdminLayout.razor.css`, add K7 (sticky
   aside at ≥ 1200 px only). In `src/Gallery.Web/wwwroot/admin-assets/library.js`, add J1 (≤ 8
   lines, its own section, header comment updated, no sink).
-- [ ] T017 [US1] Write `tests/Gallery.Web.Tests/PhotoActionsTests.cs`:
+- [X] T017 [US1] Write `tests/Gallery.Web.Tests/PhotoActionsTests.cs`:
   - `MembershipOf`, `IconOf` and `CountLabel` for 0, 1, 2 and 37;
   - the markup order `pa-group`, `pa-view`, `pa-edit`, with exactly 3 children;
   - labels verbatim, including "View {title} (opens in a new tab)", "Edit {title}" and
@@ -228,7 +228,7 @@ It runs in parallel with Batch C (disjoint files).
     - each tile's `.pa-group` `data-icon` and `aria-label` (SC-002);
     - with `?open={b}`, exactly one tile has `aria-current`, and its edit href is
       `?page=1#t-{b}`; every other edit href is `?page=1&open={x}#t-{x}`.
-- [ ] T018 [US1] [US2] Write `tests/Gallery.Web.Tests/TileIconBrowserTests.cs`
+- [X] T018 [US1] [US2] Write `tests/Gallery.Web.Tests/TileIconBrowserTests.cs`
   (`[Collection("library-browser")]`, `[Trait("Category","Browser")]`, `LibraryBrowserFixture`;
   park the mouse at (0,0) before each navigation). At 1440, 800 and 390 px:
   - the title band's rect is inside the photo's `.pic .main img` rect, along its bottom edge
@@ -280,13 +280,13 @@ Batch C owns:
 
 It depends on Batch A (Icon, IconButton, Tile.TitleOnPhoto) and runs in parallel with Batch B.
 
-- [ ] T019 [P] [US4] In `src/Gallery.Web/Components/Molecules/DragHandle.razor` and `.razor.css`,
+- [X] T019 [P] [US4] In `src/Gallery.Web/Components/Molecules/DragHandle.razor` and `.razor.css`,
   add the `Icon` mode per K6. The default output is byte-identical (the galleries list and the
   `drag-handle` baseline).
-- [ ] T020 [P] [US4] In `src/Gallery.Web/Components/Molecules/CoverMarker.razor` and `.razor.css`,
+- [X] T020 [P] [US4] In `src/Gallery.Web/Components/Molecules/CoverMarker.razor` and `.razor.css`,
   add the `Icon` mode per K6 (three states, the same form/name/value and the same `Type` rule).
   The default output is byte-identical (the K4 default tests stay green).
-- [ ] T021 [US4] In `src/Gallery.Web/Components/Organisms/GalleryBuilder.razor` and `.razor.css`,
+- [X] T021 [US4] In `src/Gallery.Web/Components/Organisms/GalleryBuilder.razor` and `.razor.css`,
   apply K6:
   - `TitleOnPhoto` on the tiles;
   - `Icon="true"` on DragHandle and CoverMarker;
@@ -295,7 +295,7 @@ It depends on Batch A (Icon, IconButton, Tile.TitleOnPhoto) and runs in parallel
   - the order move, cover, remove, view.
   In `DragHandlePage.razor` append "Icon"; in `CoverMarkerPage.razor` append "Icon, unpinned",
   "Icon, automatic" and "Icon, pinned".
-- [ ] T022 [US4] Write `tests/Gallery.Web.Tests/BuilderIconTests.cs`:
+- [X] T022 [US4] Write `tests/Gallery.Web.Tests/BuilderIconTests.cs`:
   - DragHandle Icon mode: same `button`, the `handle` class, `aria-label`, `aria-pressed` for
     Rest/Lifted, `data-icon="grip-vertical"`, no `&#x2807;`;
   - CoverMarker Icon mode for the three states: element, label, `aria-pressed`, Filled,
@@ -307,7 +307,7 @@ It depends on Batch A (Icon, IconButton, Tile.TitleOnPhoto) and runs in parallel
     - the remove button's `type`/`form`/`name`/`value`/`aria-label`;
     - the view href and `target`;
     - the title in `.on-photo`.
-- [ ] T023 [US4] Write `tests/Gallery.Web.Tests/BuilderIconBrowserTests.cs`
+- [X] T023 [US4] Write `tests/Gallery.Web.Tests/BuilderIconBrowserTests.cs`
   (`library-browser` collection), at 1440 and 390 px:
   - the `b-ctl` height == 44 and the 4 icons are on one row;
   - the title band is inside the photo;
@@ -328,7 +328,7 @@ It depends on Batch A (Icon, IconButton, Tile.TitleOnPhoto) and runs in parallel
 
 ## Phase 5: Polish and cross-cutting (parent unless marked)
 
-- [ ] T024 [P] Write `tests/Gallery.Web.Tests/IconRegistryGuardTests.cs` (executor; owns only that
+- [X] T024 [P] Write `tests/Gallery.Web.Tests/IconRegistryGuardTests.cs` (executor; owns only that
   file). It scans `src/**/*.razor` and `*.cs` (excluding bin/obj) for `Icon="…"` and
   `Name="…"` on `<Icon`, plus `IconOf` results, and asserts the set of used names EQUALS the key
   set of `Icons.Paths` (FR-018: nothing unused and nothing unknown). It runs after B and C land.
@@ -345,7 +345,7 @@ It depends on Batch A (Icon, IconButton, Tile.TitleOnPhoto) and runs in parallel
   - the D-23 Gallery builder line gains "per-tile controls as icons (feature 015)".
   Then run `assemble.sh` and `validate.sh`, tee to `evidence/design-validate.txt` (0 failures),
   and check that `git show --stat` lists `docs/design.md`.
-- [ ] T026 Fold every executor `decisions_made` into `decisions.md`, plus one STATED-CHANGE row
+- [X] T026 Fold every executor `decisions_made` into `decisions.md`, plus one STATED-CHANGE row
   per A1–A14 and B1–B7 (A3 and A12 as requirement changes from clarify; B5 as a stated
   builder-markup change).
 - [ ] T027 Write the 015 entry in `docs/roadmap.md`: status, evidence paths, the OWNER-ONLY review.
