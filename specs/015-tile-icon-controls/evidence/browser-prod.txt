@@ -1,0 +1,16 @@
+015 T031 production check, live https://port.zacal.me (2026-11-06)
+
+Merge 12a812c pushed to main (owner instruction: merge with the SC-005 miss recorded, optimise after).
+CI run 42349790392: build success, test success, deploy success.
+
+Unauthenticated probes after the deploy (curl):
+  /                                200
+  /g                               200   (public; no on-photo / photo-actions / data-icon markup: public tiles unchanged)
+  /admin/library                   302 -> /admin/signin   (owner-only, as before)
+  /ui/atoms/icon                   302 -> /admin/signin   (new page exists; owner-only like every /ui page)
+  /ui/atoms/icon-button            302 -> /admin/signin
+  /ui/molecules/photo-actions      302 -> /admin/signin
+  /ui/molecules/membership-status  404                    (removed with MembershipStatus)
+
+Owner-only part NOT run by the agent: the automation browser has no owner session; signing in needs
+the owner's Google account. Folded into O-01 (owner tries it on the live site).

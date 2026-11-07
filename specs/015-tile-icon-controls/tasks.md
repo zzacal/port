@@ -372,7 +372,7 @@ It depends on Batch A (Icon, IconButton, Tile.TitleOnPhoto) and runs in parallel
   2. `p95.sh` ALL PASS; `baseline-diff.py` EQUAL.
   3. `git checkout --` the earlier features' regenerated logs.
   4. Commit.
-- [ ] T031 Merge to main (`--no-ff`, body per 014's) and push. Watch the deploy job go green.
+- [X] T031 Merge to main (`--no-ff`, body per 014's) and push. Watch the deploy job go green.
   Then the production check, saved to `evidence/browser-prod.txt`:
   - unauthenticated probes: `/admin/library` and `/ui/atoms/icon` answer 302 to sign-in, and
     public `/g` is unchanged (200);

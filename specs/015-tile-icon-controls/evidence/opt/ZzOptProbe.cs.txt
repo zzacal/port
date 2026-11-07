@@ -1,0 +1,63 @@
+using System.Diagnostics;
+using System.Globalization;
+using Gallery.Web.Library;
+using Gallery.Web.Tests.Fixtures;
+
+namespace Gallery.Web.Tests;
+
+/// <summary>
+/// 015 optimisation research probe (copied into a variant worktree by evidence/opt/variants.sh, never
+/// committed under tests/). Same fixture as TileTimingEvidenceTests: 100 photos, "Coast" holds 40.
+/// 20 warm-up GETs per page, then 300 GETs each of /admin/library and the builder. The server time
+/// is the http.request duration_ms the app logs; the page size is the response body (raw + gzip).
+/// Writes one summary line per page to $OPT_OUT.
+/// </summary>
+[Collection("s3")]
+public class ZzOptProbe(S3ProxyFixture s3, MongoFixture mongo) : IClassFixture<MongoFixture>
+{
+    [Fact]
+    public async Task Probe()
+    {
+        await using var h = await LibraryHost.CreateAsync(mongo, s3);
+        var t0 = new DateTime(2026, 3, 1, 0, 0, 0, DateTimeKind.Utc);
+        var photos = new List<string>();
+        for (var i = 0; i < 100; i++)
+            photos.Add((await h.InsertUploadedImageAsync(t0.AddMinutes(i), title: $"Photo {i:000}", files: false)).Id);
+        var coast = await h.RunAsync<GalleryService, OperationResult>(s => s.CreateAsync("Coast"));
+        Assert.True((await h.RunAsync<GalleryService, OperationResult>(s => s.AddAsync(coast.GalleryId!, photos.Take(40).ToList()))).IsOk);
+        await h.SettleAsync();
+
+        var pages = new[] { ("library", "/admin/library", "GET /admin/library 200 "), ("builder", $"/admin/galleries/{coast.GalleryId}", "GET /admin/galleries/{gid} 200 ") };
+        var sizes = new Dictionary<string, (int Raw, long Gz)>();
+        foreach (var (_, path, _) in pages)
+            for (var i = 0; i < 20; i++) _ = await (await h.GetAsync(path)).Content.ReadAsByteArrayAsync();
+        lock (h.LogLines) h.LogLines.Clear();
+
+        foreach (var (name, path, _) in pages)
+        {
+            var body = await (await h.GetAsync(path)).Content.ReadAsByteArrayAsync();
+            using var ms = new MemoryStream();
+            using (var gz = new System.IO.Compression.GZipStream(ms, System.IO.Compression.CompressionLevel.Optimal, leaveOpen: true)) gz.Write(body);
+            sizes[name] = (body.Length, ms.Length);
+        }
+        lock (h.LogLines) h.LogLines.Clear();
+
+        for (var i = 0; i < 300; i++)
+            foreach (var (_, path, _) in pages)
+                _ = await (await h.GetAsync(path)).Content.ReadAsByteArrayAsync();
+
+        string[] lines;
+        lock (h.LogLines) lines = h.LogLines.SelectMany(l => l.Split('\n')).ToArray();
+        var outLines = new List<string>();
+        foreach (var (name, _, marker) in pages)
+        {
+            var ms = lines.Where(l => l.StartsWith("http.request " + marker, StringComparison.Ordinal))
+                .Select(l => double.Parse(l.Split(' ')[4], CultureInfo.InvariantCulture)).Order().ToArray();
+            Assert.True(ms.Length >= 300, $"{name}: only {ms.Length} lines");
+            double P(double q) { var k = (int)Math.Ceiling(q * ms.Length); return ms[Math.Max(0, k - 1)]; }
+            outLines.Add(string.Create(CultureInfo.InvariantCulture,
+                $"{name} n={ms.Length} p50={P(0.50):F2} p95={P(0.95):F2} mean={ms.Average():F2} raw={sizes[name].Raw} gzip={sizes[name].Gz}"));
+        }
+        await File.WriteAllLinesAsync(Environment.GetEnvironmentVariable("OPT_OUT")!, outLines);
+    }
+}

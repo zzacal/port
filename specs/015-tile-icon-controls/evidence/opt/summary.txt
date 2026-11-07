@@ -1,0 +1,42 @@
+
+Debug library   (median of rounds; delta vs pre)
+  variant          p50     p95    mean    d-mean   d-p95       raw   gzip  rounds
+  pre            10.81   15.04   11.03     +0.00   +0.00    217037  19139  3
+  post           13.41   22.05   13.90     +2.87   +7.01    371097  23844  3
+  none           11.79   16.68   12.03     +1.00   +1.64    255117  22284  3
+  cached         12.19   20.06   12.84     +1.81   +5.02    367197  23979  3
+  flat           11.83   17.58   12.26     +1.23   +2.54    367197  23911  3
+  sprite         12.36   18.42   12.73     +1.70   +3.38    336257  24100  3
+  flat-sprite    11.09   17.00   11.59     +0.56   +1.96    336257  24208  3
+
+Debug builder   (median of rounds; delta vs pre)
+  variant          p50     p95    mean    d-mean   d-p95       raw   gzip  rounds
+  pre             5.22    7.94    5.53     +0.00   +0.00    100925  10609  3
+  post            6.15    9.09    6.46     +0.93   +1.15    180502  12938  3
+  none            5.37    8.29    5.68     +0.15   +0.35    106774  11365  3
+  cached          5.71    8.57    5.97     +0.44   +0.63    178422  13080  3
+  flat            5.59    8.51    5.99     +0.46   +0.57    178942  13138  3
+  sprite          5.52    8.83    5.95     +0.42   +0.89    150982  12604  3
+  flat-sprite     5.03    8.39    5.43     -0.10   +0.45    150982  12630  3
+
+Release library   (median of rounds; delta vs pre)
+  variant          p50     p95    mean    d-mean   d-p95       raw   gzip  rounds
+  pre             9.77   14.71   10.10     +0.00   +0.00    217037  19139  3
+  post           12.83   21.62   13.42     +3.32   +6.91    371097  23844  3
+  none           11.01   16.42   11.51     +1.41   +1.71    255117  22284  3
+  cached         11.98   18.09   12.33     +2.23   +3.38    367197  23979  3
+  flat           10.93   16.99   11.47     +1.37   +2.28    367197  23911  2
+  sprite         11.68   17.81   12.12     +2.02   +3.10    336257  24100  3
+  flat-sprite    11.20   17.17   11.94     +1.84   +2.46    336257  24208  3
+
+Release builder   (median of rounds; delta vs pre)
+  variant          p50     p95    mean    d-mean   d-p95       raw   gzip  rounds
+  pre             4.59    6.99    4.85     +0.00   +0.00    100925  10609  3
+  post            6.02    9.05    6.27     +1.42   +2.06    180502  12938  3
+  none            5.02    7.47    5.40     +0.55   +0.48    106774  11365  3
+  cached          5.34    9.14    5.76     +0.91   +2.15    178422  13080  3
+  flat            5.18    7.72    5.50     +0.66   +0.73    178942  13138  2
+  sprite          5.28    8.93    5.78     +0.93   +1.94    150982  12604  3
+  flat-sprite     5.26    8.55    5.76     +0.91   +1.56    150982  12630  3
+
+probes with no data (not counted): PROBE FAIL flat Release 3
