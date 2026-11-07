@@ -1,0 +1,5 @@
+OK 02d-decisions-delivery.md: 1x 'admin-only `Button`, `Input`, `Switch`, `SelectMark` (amended by featu'
+OK 02d-decisions-delivery.md: 1x " and `MembershipStatus` (the library tile's linked first-gallery statu"
+OK 02d-decisions-delivery.md: 1x 'remove; applied on Save).'
+OK 02d-decisions-delivery.md: 1x "(drag handle, the cover control, Remove) in a row under each tile's ti"
+wrote 1 drafts

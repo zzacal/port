@@ -332,7 +332,7 @@ It depends on Batch A (Icon, IconButton, Tile.TitleOnPhoto) and runs in parallel
   file). It scans `src/**/*.razor` and `*.cs` (excluding bin/obj) for `Icon="…"` and
   `Name="…"` on `<Icon`, plus `IconOf` results, and asserts the set of used names EQUALS the key
   set of `Icons.Paths` (FR-018: nothing unused and nothing unknown). It runs after B and C land.
-- [ ] T025 [P] VII.2 design-record update, scripted in
+- [X] T025 [P] VII.2 design-record update, scripted in
   `specs/015-tile-icon-controls/evidence/design-record-edit.py` (counts asserted). In
   `specs/001-architecture-stack-design/draft/02d-decisions-delivery.md`:
   - the D-21 atoms list gains `Icon`, `IconButton` (feature 015: Lucide 1.70.0 icons, ISC,
