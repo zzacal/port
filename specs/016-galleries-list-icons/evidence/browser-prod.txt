@@ -1,0 +1,7 @@
+(first probe at 20:53Z, during the post-deploy restart: /admin/galleries 502, /ui/molecules/gallery-actions 404, /admin/library 502; 20 s later all 302 -> sign-in)
+== 2026-11-07T20:54:53Z deploy run 42412530059 (build, test, deploy: success) at main 031a350
+/admin/galleries 302 -> https://port.zacal.me/admin/signin
+/ui/molecules/gallery-actions 302 -> https://port.zacal.me/admin/signin
+/g 200
+/g contains admin markers (gallery-actions, ga-vis, gal-band, eye-off): 0
+/g grid class: class="cs cs-l3 cs-m3 cs-s1"

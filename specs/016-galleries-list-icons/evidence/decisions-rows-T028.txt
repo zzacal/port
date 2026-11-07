@@ -1,0 +1,2 @@
+PARENT | T028 merged to main 031a350 (--no-ff), pushed; CI 42412530059 build, test, deploy success. Production probes (evidence/browser-prod.txt): /admin/galleries and /ui/molecules/gallery-actions 302 to sign-in; /g 200, unchanged 3/3/1, no admin markup. The first probe hit the post-deploy restart (502/404), and 20 s later everything was correct | Read-only; no production data changed | none
+PARENT | T029 owner check O-01 filed as issue #5 | As with 015 (#4) | none

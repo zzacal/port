@@ -274,7 +274,7 @@ OWNER-ONLY (after merge and deploy, not gates):
 
 ### 016 Icon controls on the galleries list
 
-**Status: built on branch `016-galleries-list-icons`; merge pending (T027 final gate, T028).**
+**Status: live at https://port.zacal.me (merged 031a350, 2026-11-07; deploy green); full suite 122 + 1502 passed, 1 skipped. SC-005 met (p95 7.74 ms <= 11.15).**
 Decisions, defaults and stated test changes in `specs/016-galleries-list-icons/decisions.md`.
 Evidence: `specs/016-galleries-list-icons/evidence/` (gate, baseline-diff ALL EQUAL, non-vacuity,
 p95, design record validate 0 failures).
@@ -289,7 +289,7 @@ for 4. This fixes 015's sub-44 px builder icons at tablet and panel widths. Two 
 
 OWNER-ONLY (after merge and deploy, not gates):
 
-- [ ] O-01 On port.zacal.me, check that `/admin/galleries` cards show the icon row with edit last.
+- [ ] O-01 ([#5](https://github.com/zzacal/port/issues/5)) On port.zacal.me, check that `/admin/galleries` cards show the icon row with edit last.
   Toggle one gallery's eye twice. Resize to tablet width. Open a library photo's panel at about
   1300 px and check that every photo shows its full icon row.
 
