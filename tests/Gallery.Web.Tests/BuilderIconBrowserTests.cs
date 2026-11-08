@@ -53,7 +53,7 @@ public sealed class BuilderIconBrowserTests(LibraryBrowserFixture fx)
         {
             page.FrameNavigated -= OnNavigated;
         }
-        await page.WaitForLoadStateAsync(LoadState.Load, new() { Timeout = WaitMs });
+        await BrowserWait.LoadedAsync(page, WaitMs);
         await page.Mouse.MoveAsync(0, 0);
     }
 

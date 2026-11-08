@@ -114,7 +114,7 @@ public sealed class GalleryFieldBrowserTests(LibraryBrowserFixture fx)
         {
             page.FrameNavigated -= OnNavigated;
         }
-        await page.WaitForLoadStateAsync(LoadState.Load, new() { Timeout = WaitMs });
+        await BrowserWait.LoadedAsync(page, WaitMs);
     }
 
     private static async Task<List<string>> PostsDuring(IPage page, Func<Task> action, int settleMs = 600)

@@ -166,7 +166,7 @@ public sealed class HomeBrowserTests(NavBrowserFixture site)
             var deadline = DateTime.UtcNow.AddSeconds(15);
             while (new Uri(page.Url).AbsolutePath != "/g" && DateTime.UtcNow < deadline)
                 await Task.Delay(50);
-            await page.WaitForLoadStateAsync(LoadState.Load);
+            await BrowserWait.LoadedAsync(page);
             var path = new Uri(page.Url).AbsolutePath;
             if (path != "/g")
                 failures.Add($"{at}: after clicking Galleries the path is {path}, expected /g");

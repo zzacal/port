@@ -55,7 +55,7 @@ public sealed class NavBrowserTests(NavBrowserFixture site)
     private static async Task<string> PathAfterNothing(IPage page, int ms = 700)
     {
         await page.WaitForTimeoutAsync(ms);
-        await page.WaitForLoadStateAsync(LoadState.Load);
+        await BrowserWait.LoadedAsync(page);
         return Path(page);
     }
 
