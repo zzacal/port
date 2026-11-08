@@ -1,0 +1,12 @@
+016 load-race probe (throwaway ZzLoadProbe, nav-browser fixture, JS off, 320x900): click home 'Galleries' then page.WaitForLoadStateAsync(Load, 4 s), up to 400 iterations
+== iter 9 STALL url=http://127.0.0.1:63937/g readyState=complete
+  47ms req GET http://127.0.0.1:63937/g nav=True
+  61ms navigated http://127.0.0.1:63937/g
+  64ms req GET http://127.0.0.1:63936/1c58491358c6716d.avif nav=False
+  65ms fin http://127.0.0.1:63936/1c58491358c6716d.avif
+  65ms fin http://127.0.0.1:63937/g
+  65ms domcontentloaded
+  65ms click returned
+  65ms load
+stalls: 1
+after the helper: same loop with BrowserWait.LoadedAsync(page, 4 s), 400 iterations: stalls 0
