@@ -5,3 +5,8 @@
 /g 200
 /g contains admin markers (gallery-actions, ga-vis, gal-band, eye-off): 0
 /g grid class: class="cs cs-l3 cs-m3 cs-s1"
+
+== 2026-11-08T00:48:30Z drag-fix deploy: CI 42430604074 (build, test, deploy: success) at main 71b915a
+/admin-assets/reorder.js: contains drag-preview x2; cache-control: no-cache
+/admin/galleries 302 (owner-only)
+/g 200
