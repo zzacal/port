@@ -7,15 +7,15 @@ E=specs/017-photo-edit-screen/evidence
 D=$E/p95-selftest
 mkdir -p "$D"
 
-ID=01hzabcdefghjkmnpqrstvwxyz   # 26 chars, the OpaqueId shape
-# gen FILE ROUTE N MS READS   (ROUTE: lib = /admin/library, photo = /admin/library/images/$ID)
+# gen FILE ROUTE N MS READS   (ROUTE: lib = /admin/library, photo = /admin/library/images/{iid},
+# the route template RequestTimingMiddleware logs)
 gen() {
   local f=$1 route=$2 n=$3 ms=$4 reads=$5 i p
-  if [ "$route" = lib ]; then p=/admin/library; else p=/admin/library/images/$ID; fi
+  if [ "$route" = lib ]; then p=/admin/library; else p='/admin/library/images/{iid}'; fi
   : > "$f"
   for i in $(seq 1 "$n"); do echo "http.request GET $p 200 $ms.$((i % 10)) $reads" >> "$f"; done
   echo "http.request GET $p 404 9000 0" >> "$f"                       # non-200 ignored
-  echo "http.request GET /admin/library/images/short 200 9000 9" >> "$f" # not an id: ignored
+  echo "http.request GET /admin/library/images/{iid}/x 200 9000 9" >> "$f" # other route: ignored
   echo "op.timing db.library.page 1.2 ok" >> "$f"
 }
 gen "$D/pre.log"        lib   100 10 4

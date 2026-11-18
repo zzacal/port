@@ -220,7 +220,7 @@ public class LibraryPageTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         var row = LibraryHtml.Blocks(tile, "div", "photo-actions").Single();
         var parts = Regex.Matches(row, "class=\"icon-button[^\"]*\\b(pa-[a-z]+)\\b").Select(m => m.Groups[1].Value).ToList();
         Assert.Equal(["pa-group", "pa-view", "pa-edit"], parts);
-        Assert.Matches($"<a class=\"icon-button pa-edit\" href=\"\\?page=1&open={img.Id}#t-{img.Id}\"", row);
+        Assert.Matches($"<a class=\"icon-button pa-edit\" href=\"/admin/library/images/{img.Id}\\?page=1\"", row); // 017 A11
         Assert.True(tile.IndexOf(cell, StringComparison.Ordinal) + cell.Length <= tile.IndexOf(row, StringComparison.Ordinal));
     }
 
@@ -240,10 +240,13 @@ public class LibraryPageTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         Assert.Matches("<button class=\"btn btn-danger\"[^>]*>\\s*Delete…\\s*</button>", rest);
         Assert.DoesNotMatch("btn-primary[^>]*>\\s*Delete", rest);
 
-        // With ?open: the panel's Save is the one primary and Add renders Secondary.
-        var open = await GetOkAsync(h, $"/admin/library?open={img.Id}");
+        // 017 A13 (stated change): an old ?open address is the plain library, so Add stays the one primary.
+        var old = await GetOkAsync(h, $"/admin/library?open={img.Id}");
+        Assert.Equal(["Add to gallery…"], PrimaryButtons(old));
+
+        // On the photo edit screen the panel's Save is the one primary.
+        var open = await GetOkAsync(h, $"/admin/library/images/{img.Id}");
         Assert.Equal(["Save"], PrimaryButtons(open));
-        Assert.Matches("<button class=\"btn btn-secondary\"[^>]*>\\s*Add to gallery…\\s*</button>", open);
         // UI-4: Delete photo (trigger and the confirm dialog's action) is outlined Danger, never Primary.
         Assert.Matches("<button [^>]*class=\"btn btn-danger danger-trigger\" type=\"button\"[^>]*>(Delete photo…|Delete photo&#x2026;)</button>", open);
         Assert.Matches("<button class=\"btn btn-danger\"[^>]*form=\"lib-del-one\"[^>]*>\\s*Delete photo\\s*</button>", open);
@@ -264,7 +267,7 @@ public class LibraryPageTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         });
         var img = await h.InsertUploadedImageAsync(files: false);
 
-        var html = await GetOkAsync(h, $"/admin/library?open={img.Id}");
+        var html = await GetOkAsync(h, $"/admin/library/images/{img.Id}");
         var aside = Regex.Match(html, "<aside class=\"side-panel\".*?</aside>", RegexOptions.Singleline).Value;
         var title = Regex.Match(aside, "<input[^>]*name=\"title\"[^>]*>").Value;
         Assert.Contains("maxlength=\"50\"", title);
@@ -275,11 +278,13 @@ public class LibraryPageTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         Assert.Contains("maxlength=\"2000\"", caption);
         Assert.DoesNotMatch("\\srequired", caption);
 
-        var bar = Regex.Match(html, "<div class=\"selection-bar\"[^>]*>").Value;
+        // 017 A8 (stated change): the selection bar and the picker are on the library, not the edit screen.
+        var library = await GetOkAsync(h, "/admin/library");
+        var bar = Regex.Match(library, "<div class=\"selection-bar\"[^>]*>").Value;
         Assert.Contains("data-limit=\"20\"", bar);
         Assert.Matches("\\shidden(\\s|=\"\"|>)", bar);
 
-        var picker = Regex.Match(html, "<input[^>]*name=\"newTitle\"[^>]*>").Value;
+        var picker = Regex.Match(library, "<input[^>]*name=\"newTitle\"[^>]*>").Value;
         Assert.Contains("maxlength=\"50\"", picker);
     }
 
@@ -289,7 +294,7 @@ public class LibraryPageTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         await using var h = await LibraryHost.CreateAsync(mongo, s3);
         var img = await h.InsertUploadedImageAsync(files: false, title: "IMG_0001");
 
-        foreach (var path in new[] { "/admin/library", $"/admin/library?open={img.Id}" })
+        foreach (var path in new[] { "/admin/library", $"/admin/library/images/{img.Id}" })
         {
             var text = LibraryHtml.Text(await GetOkAsync(h, path));
             foreach (var nag in new[] { "required", "missing", "No caption", "needs", "warning" })

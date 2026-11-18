@@ -123,7 +123,7 @@ public class LibraryMembershipTests(S3ProxyFixture s3, MongoFixture mongo) : ICl
             var tile = LibraryHtml.TileOf(s.Html, iid);
             var group = GroupOf(s.Html, iid);
             var edit = Assert.Single(LibraryHtml.Blocks(tile, "a", "pa-edit"));
-            Assert.Equal($"?page=1&open={iid}#t-{iid}", Attr(group, "href"));
+            Assert.Equal($"/admin/library/images/{iid}?page=1", Attr(group, "href")); // 017 A12
             Assert.Equal(Attr(edit, "href"), Attr(group, "href"));
         }
     }

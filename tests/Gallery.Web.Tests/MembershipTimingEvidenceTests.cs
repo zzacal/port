@@ -53,7 +53,7 @@ public class MembershipTimingEvidenceTests(S3ProxyFixture s3, MongoFixture mongo
             var resp = await h.PostFormAsync($"/admin/library/images/{iid}",
                 [F("add", gid), F("create", $"Created {i:000}"), F("page", "1")]);
             Assert.Equal(HttpStatusCode.SeeOther, resp.StatusCode);
-            Assert.Equal($"/admin/library?page=1&open={iid}&saved=1", resp.Headers.Location?.ToString());
+            Assert.Equal($"/admin/library/images/{iid}?page=1&saved=1", resp.Headers.Location?.ToString());
         }
 
         // Every add landed and every create made one gallery.

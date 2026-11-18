@@ -239,29 +239,27 @@ public partial class PhotoActionsTests(S3ProxyFixture s3, MongoFixture mongo) : 
     }
 
     [Fact]
-    public async Task Open_photo_is_the_one_active_tile_and_its_icons_close_the_editor()
+    public async Task Old_open_param_marks_no_tile_and_every_icon_opens_the_edit_screen()
     {
         await using var h = await LibraryHost.CreateAsync(mongo, s3);
         var a = await ArrangeAsync(h);
+        // 017 A15 (stated change): ?open is no longer read. No tile is current, and every tile's gallery
+        // and edit icons open that photo's edit screen.
         var html = await GetOkAsync(h, $"/admin/library?open={a.One}");
         var ids = LibraryHtml.TileIds(html);
         Assert.Equal(3, ids.Count);
 
-        var active = new List<string>();
         foreach (var iid in ids)
         {
             var row = Assert.Single(LibraryHtml.Blocks(LibraryHtml.TileOf(html, iid), "div", "photo-actions"));
             var group = ControlOf(row, "pa-group");
             var edit = ControlOf(row, "pa-edit");
-            var expected = iid == a.One ? $"?page=1#t-{iid}" : $"?page=1&open={iid}#t-{iid}";
-            Assert.Equal(expected, Attr(edit, "href"));
-            Assert.Equal(expected, Attr(group, "href"));
-            Assert.Equal(Attr(group, "aria-current"), Attr(edit, "aria-current"));
-            if (Attr(edit, "aria-current") == "true") active.Add(iid);
+            Assert.Equal($"/admin/library/images/{iid}?page=1", Attr(edit, "href"));
+            Assert.Equal($"/admin/library/images/{iid}?page=1", Attr(group, "href"));
+            Assert.Null(Attr(edit, "aria-current"));
+            Assert.Null(Attr(group, "aria-current"));
         }
-        Assert.Equal([a.One], active);
-        // On the whole page: exactly the open tile's group and edit icons are current.
-        Assert.Equal([$"pa-group t-{a.One}", $"pa-edit t-{a.One}"], CurrentPhotoControls(html));
+        Assert.Empty(CurrentPhotoControls(html));
     }
 
     /// <summary>"{pa-class} {tile id}" for every photo-actions control carrying aria-current, in page order.</summary>

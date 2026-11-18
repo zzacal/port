@@ -111,7 +111,7 @@ public class EdgeModeTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixtur
         var gid2 = loc["/admin/galleries/".Length..loc.IndexOf('?')];
 
         // L2
-        Assert.Equal($"/admin/library?page=1&open={a.Id}&saved=1",
+        Assert.Equal($"/admin/library/images/{a.Id}?page=1&saved=1",
             await Post303Async(h, "L2", $"/admin/library/images/{a.Id}", [F("title", "Pier at dusk"), F("caption", "Low tide"), F("page", "1")]));
 
         // B2, B3, B4 pin and unpin

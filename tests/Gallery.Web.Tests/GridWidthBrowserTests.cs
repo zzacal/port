@@ -19,13 +19,13 @@ public sealed class GridWidthBrowserTests(LibraryBrowserFixture fx)
 {
     private static readonly int[] Widths = [390, 600, 700, 760, 900, 1199, 1200, 1300, 1440, 1920];
 
-    private enum Grid { Library, LibraryOpen, Builder, List }
+    private enum Grid { Library, Builder, List } // LibraryOpen removed (017 D1)
 
     private sealed record Spec(string Container, string Tiles, string Row);
 
     private static Spec SpecOf(Grid g) => g switch
     {
-        Grid.Library or Grid.LibraryOpen => new("section.lib .lib-grid", "section.lib .cs > .tile", ".photo-actions"),
+        Grid.Library => new("section.lib .lib-grid", "section.lib .cs > .tile", ".photo-actions"),
         Grid.Builder => new(".builder .b-sheet", ".builder .cs > .tile", ".b-ctl"),
         _ => new("section.gal", "section.gal .cs > *", ".gallery-actions"),
     };
@@ -37,7 +37,7 @@ public sealed class GridWidthBrowserTests(LibraryBrowserFixture fx)
         if (window < 1200) return 2;
         return g switch
         {
-            Grid.Library or Grid.LibraryOpen => containerWidth < 800 ? 2 : 4,
+            Grid.Library => containerWidth < 800 ? 2 : 4,
             Grid.Builder => containerWidth < 992 ? 2 : 4,
             _ => 3,
         };
@@ -50,8 +50,6 @@ public sealed class GridWidthBrowserTests(LibraryBrowserFixture fx)
         (_, < 1200) => 2,
         (Grid.Library, _) => 4,
         (Grid.List, _) => 3,
-        (Grid.LibraryOpen, 1200) => 2,                // grid 752 px < 800
-        (Grid.LibraryOpen, 1300 or 1440 or 1920) => 4, // grid 852 px and more; 153 px tiles fit a 140 px row
         (Grid.Builder, 1200 or 1300) => 2,
         (Grid.Builder, 1920) => 4,
         _ => null, // builder at 1440: the grid is ~992 px, right on the threshold
@@ -130,16 +128,6 @@ public sealed class GridWidthBrowserTests(LibraryBrowserFixture fx)
         var ids = await site.ImagesAsync(5);
         await site.GalleryAsync("Coast", [ids[0], ids[1]], publish: true);
         var errors = await CheckAsync(site, Grid.Library, "/admin/library", 5);
-        Assert.True(errors.Count == 0, string.Join("\n", errors));
-    }
-
-    [Fact]
-    public async Task SC007_library_with_the_panel_open_drops_to_2_columns_when_its_grid_is_under_800px()
-    {
-        await using var site = await fx.NewSiteAsync();
-        var ids = await site.ImagesAsync(5);
-        await site.GalleryAsync("Coast", [ids[0], ids[1]], publish: true);
-        var errors = await CheckAsync(site, Grid.LibraryOpen, $"/admin/library?open={ids[0]}", 5);
         Assert.True(errors.Count == 0, string.Join("\n", errors));
     }
 

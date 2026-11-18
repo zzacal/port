@@ -7,7 +7,8 @@ anything is written; any mismatch aborts with nothing changed. Run from the repo
     uv run --no-project python specs/017-photo-edit-screen/evidence/test-impact-edit.py A9 B2      # apply rows
 Row A2 covers A2 and A3 (the same redirect string twice in LibraryMembershipEditTests). The old
 blocks of A13, A15, A16, A17, D1 and D2 were sliced from the live files at T005, so they match by
-construction. D2 also deletes OpenParam, whose last callers are the deleted and rewritten facts.
+construction. The second B1 row (scanned count 14 -> 15) was found at implement by the Batch B
+executor. D2 also deletes OpenParam, whose last callers are the deleted and rewritten facts.
 """
 import os
 import pathlib
@@ -95,6 +96,9 @@ ROWS = [
     ('B1', 'B', T / 'EdgeSecretTests.cs',
      '                     ("GET /admin/library?open= (L1)", $"/admin/library?page=1&open={a.Id}"),\n',
      '                     ("GET /admin/library?open= (L1)", $"/admin/library?page=1&open={a.Id}"),\n                     ("GET /admin/library/images/{iid} (L6)", $"/admin/library/images/{a.Id}?page=1"), // 017 B1\n', 1),
+    ('B1', 'B', T / 'EdgeSecretTests.cs',
+     '        Assert.Equal(14, scanned.Count);',
+     '        Assert.Equal(15, scanned.Count); // + L6 (017 B1, found at implement)', 1),
     ('B2', 'B', T / 'LayoutConsistencyBrowserTests.cs',
      '("builder", $"/admin/galleries/{gid}") };',
      '("builder", $"/admin/galleries/{gid}"), ("photo", $"/admin/library/images/{ids[0]}") }; // + photo (017 B2)', 1),

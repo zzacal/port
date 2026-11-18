@@ -56,6 +56,7 @@ unchanged because P1 keeps `side-panel`, `lib-edit`, `lib-gf`, `lib-del-one` and
 | # | File:line | Add |
 |---|---|---|
 | B1 | EdgeSecretTests.cs:84 | `("GET /admin/library/images/{iid} (L6)", $"/admin/library/images/{a.Id}?page=1")` after the `?open=` row (kept: still a page) |
+| B1 (found at implement) | EdgeSecretTests.cs:128 | `Assert.Equal(14, scanned.Count)` → 15 (the scan list gained the L6 row) |
 | B2 | LayoutConsistencyBrowserTests.cs:89 | `("photo", $"/admin/library/images/{ids[0]}")` (IX.4) |
 
 ## C — unchanged (pass as is)

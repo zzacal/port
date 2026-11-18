@@ -5,13 +5,14 @@ using Gallery.Web.Tests.Fixtures;
 namespace Gallery.Web.Tests;
 
 /// <summary>
-/// 017 T003 timing evidence (SC-005, R-09), pre-change capture. One <see cref="LibraryHost"/> holds
-/// 100 uploaded images and 3 galleries holding the first 10. It runs 100 GETs of
-/// <c>/admin/library?page=1&amp;open={id}</c> (the library with the photo panel open, the screen the
-/// edit page replaces), asserts at least 100 <c>http.request GET /admin/library 200</c> lines, and
-/// writes the host's log messages, one per line in log order, to the path in env
-/// <c>PHOTO_TIMING_LOG</c> (default specs/017-photo-edit-screen/evidence/pre-timings.log), which
-/// evidence/p95.sh compares against the post-change capture (photo-timings.log).
+/// 017 T017 timing evidence (SC-005, R-09), post-change capture. One <see cref="LibraryHost"/> holds
+/// 100 uploaded images and 3 galleries holding the first 10 (the same data as T003's pre-change
+/// capture of <c>/admin/library?page=1&amp;open={id}</c>, kept in evidence/pre-timings.log). It runs
+/// 100 GETs of <c>/admin/library/images/{id}?page=1</c>, asserts at least 100
+/// <c>http.request GET /admin/library/images/</c> lines, and writes the host's log messages, one per
+/// line in log order, to the path in env <c>PHOTO_TIMING_LOG</c> (default
+/// specs/017-photo-edit-screen/evidence/photo-timings.log), which evidence/p95.sh compares against
+/// pre-timings.log.
 /// </summary>
 [Collection("s3")]
 [Trait("Category", "Evidence")]
@@ -19,7 +20,7 @@ public class PhotoEditTimingEvidenceTests(S3ProxyFixture s3, MongoFixture mongo)
 {
     private const int Images = 100;
     private const int Gets = 100;
-    private const string LibraryLine = "http.request GET /admin/library 200 ";
+    private const string PhotoLine = "http.request GET /admin/library/images/";
 
     private static string[] Messages(LibraryHost h)
     {
@@ -34,7 +35,7 @@ public class PhotoEditTimingEvidenceTests(S3ProxyFixture s3, MongoFixture mongo)
     }
 
     [Fact]
-    public async Task Pre_library_with_panel()
+    public async Task Post_photo_edit_screen()
     {
         await using var h = await LibraryHost.CreateAsync(mongo, s3);
         var t0 = new DateTime(2026, 3, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -53,21 +54,21 @@ public class PhotoEditTimingEvidenceTests(S3ProxyFixture s3, MongoFixture mongo)
         var id = photos[0];
         for (var i = 0; i < Gets; i++)
         {
-            var resp = await h.GetAsync($"/admin/library?page=1&open={id}");
+            var resp = await h.GetAsync($"/admin/library/images/{id}?page=1");
             Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
             var html = await resp.Content.ReadAsStringAsync();
             Assert.Contains("id=\"lib-edit\"", html);
         }
 
         var lines = Messages(h);
-        var n = lines.Count(l => l.StartsWith(LibraryLine, StringComparison.Ordinal));
+        var n = lines.Count(l => l.StartsWith(PhotoLine, StringComparison.Ordinal));
         Assert.True(n >= Gets,
-            $"Only {n} '{LibraryLine.Trim()}' lines (need {Gets}). GET lines seen: "
+            $"Only {n} '{PhotoLine.Trim()}' lines (need {Gets}). GET lines seen: "
             + string.Join(" | ", lines.Where(l => l.StartsWith("http.request GET ", StringComparison.Ordinal)).Distinct().Take(5)));
 
         var path = Environment.GetEnvironmentVariable("PHOTO_TIMING_LOG") is { Length: > 0 } env
             ? (Path.IsPathRooted(env) ? env : Path.Combine(Render.RepoRoot, env))
-            : Path.Combine(Render.RepoRoot, "specs", "017-photo-edit-screen", "evidence", "pre-timings.log");
+            : Path.Combine(Render.RepoRoot, "specs", "017-photo-edit-screen", "evidence", "photo-timings.log");
         await File.WriteAllLinesAsync(path, lines);
     }
 }

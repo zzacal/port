@@ -93,7 +93,7 @@ public class LibraryTimingEvidenceTests(S3ProxyFixture s3, MongoFixture mongo) :
             var iid = main[i];
             await SeeOtherAsync(h.PostFormAsync($"/admin/library/images/{iid}",
                 [F("title", $"Saved {i:000}"), F("caption", $"Caption {i}"), F("page", "1")]),
-                $"/admin/library?page=1&open={iid}&saved=1");
+                $"/admin/library/images/{iid}?page=1&saved=1");
         }
 
         // ── L3: 5 bulk adds of 100 into new galleries ────────────────────────

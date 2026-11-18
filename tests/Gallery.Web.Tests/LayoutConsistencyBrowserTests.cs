@@ -86,7 +86,7 @@ public sealed class AdminLayoutConsistencyBrowserTests(LibraryBrowserFixture fx)
         await using var site = await fx.NewSiteAsync();
         var ids = await site.ImagesAsync(2);
         var gid = await site.GalleryAsync("Coast", ids);
-        var pages = new[] { ("upload", "/admin/upload"), ("library", "/admin/library"), ("galleries", "/admin/galleries"), ("builder", $"/admin/galleries/{gid}") };
+        var pages = new[] { ("upload", "/admin/upload"), ("library", "/admin/library"), ("galleries", "/admin/galleries"), ("builder", $"/admin/galleries/{gid}"), ("photo", $"/admin/library/images/{ids[0]}") }; // + photo (017 B2)
         var failures = new List<string>();
         foreach (var width in new[] { 390, 1440 })
         {

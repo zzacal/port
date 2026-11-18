@@ -24,10 +24,8 @@ public sealed record LibraryTile(
     GalleryRef? FirstByTitle);
 
 /// <summary>One page of the library (data-model "LibraryPage").</summary>
-/// <param name="Open">The image of <c>?open={iid}</c> (on this page or not), or null when unknown or tombstoned.</param>
 public sealed record LibraryPageData(
-    int Page, int TotalPages, long Total, IReadOnlyList<LibraryTile> Tiles, IReadOnlyList<GalleryRef> Galleries,
-    LibraryTile? Open = null);
+    int Page, int TotalPages, long Total, IReadOnlyList<LibraryTile> Tiles, IReadOnlyList<GalleryRef> Galleries);
 
 /// <summary>
 /// The library read (research R-04, tasks.md T028): four timed reads, <c>db.library.count</c>,
@@ -62,10 +60,8 @@ public sealed class LibraryReader(IMongoDatabase db, OpTimer timer, LibraryOptio
 
     /// <summary>
     /// Page <paramref name="page"/> (1-based; below 1 reads page 1, past the end reads the last page).
-    /// <paramref name="open"/> names the side panel's image; when it is not on this page it costs one
-    /// more <c>db.library.page</c> read. An unknown or tombstoned id leaves the panel closed.
     /// </summary>
-    public async Task<LibraryPageData> PageAsync(int page, string? open = null)
+    public async Task<LibraryPageData> PageAsync(int page)
     {
         var total = await timer.Time("db.library.count", () => _images.CountDocumentsAsync(Live), isDbRead: true);
         var size = options.PageSize;
@@ -86,16 +82,7 @@ public sealed class LibraryReader(IMongoDatabase db, OpTimer timer, LibraryOptio
         var url = PublicEndpoints.MakeUrl(storage);
         var tiles = docs.Select(d => Tile(d, byId, rank, url)).ToList();
 
-        LibraryTile? openTile = null;
-        if (!string.IsNullOrEmpty(open))
-        {
-            var openDoc = docs.FirstOrDefault(d => d.Id == open)
-                ?? await timer.Time("db.library.page", () => _images
-                    .Find(Live & Builders<ImageDoc>.Filter.Eq(i => i.Id, open)).FirstOrDefaultAsync(), isDbRead: true);
-            if (openDoc is not null) openTile = Tile(openDoc, byId, rank, url);
-        }
-
-        return new LibraryPageData(page, totalPages, total, tiles, galleries, openTile);
+        return new LibraryPageData(page, totalPages, total, tiles, galleries);
     }
 
     /// <summary>

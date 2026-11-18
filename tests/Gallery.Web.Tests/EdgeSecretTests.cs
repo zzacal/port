@@ -82,6 +82,7 @@ public class EdgeSecretTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixt
                  {
                      ("GET /admin/library (L1)", "/admin/library"),
                      ("GET /admin/library?open= (L1)", $"/admin/library?page=1&open={a.Id}"),
+                     ("GET /admin/library/images/{iid} (L6)", $"/admin/library/images/{a.Id}?page=1"), // 017 B1
                      ("GET /admin/galleries (G1)", "/admin/galleries"),
                      ("GET /admin/galleries/{gid} (B1)", $"/admin/galleries/{gid}"),
                  })
@@ -125,7 +126,7 @@ public class EdgeSecretTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixt
         Assert.Equal(0, await h.Galleries.CountDocumentsAsync(FilterDefinition<Data.GalleryDoc>.Empty));
 
         // ── no response carries the token ────────────────────────────────────
-        Assert.Equal(14, scanned.Count);
+        Assert.Equal(15, scanned.Count); // + L6 (017 B1, found at implement)
         foreach (var (label, resp, body) in scanned)
         {
             Assert.False(body.Contains(Token, StringComparison.Ordinal), $"{label}: the response body contains Edge:ApiToken");

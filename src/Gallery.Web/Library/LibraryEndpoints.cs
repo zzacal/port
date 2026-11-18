@@ -18,15 +18,33 @@ namespace Gallery.Web.Library;
 /// What the library page (contracts/components.md C1) renders, built by <see cref="LibraryEndpoints"/>.
 /// </summary>
 /// <param name="Status">The <c>role="status"</c> line: the PRG result or a refusal reason.</param>
-/// <param name="EditTitle">The side panel's title value (the submitted one after a refused save, else stored).</param>
-/// <param name="EditAdd">014: the pending <c>add</c> ids after a 422-refused save (null otherwise), so the panel keeps them.</param>
-/// <param name="EditCreate">014: the pending <c>create</c> titles after a 422-refused save (null otherwise).</param>
-/// <param name="EditLeave">014: the pending <c>leave</c> ids after a 422-refused save (null otherwise).</param>
 public sealed record LibraryPageModel(
     LibraryPageData Data,
     LibraryOptions Options,
     FormToken Csrf,
     string ScriptUrl,
+    string? Status = null);
+
+/// <summary>
+/// What the photo edit screen (017 contracts/components.md P1, contracts/http.md L6) renders, built
+/// by <see cref="LibraryEndpoints"/>.
+/// </summary>
+/// <param name="Photo">The photo being edited, built by the same tile rule as the library grid.</param>
+/// <param name="Galleries">Every gallery in home order: the combobox options and the pending-add lookup.</param>
+/// <param name="ReturnPage">The library page to go back to (≥ 1).</param>
+/// <param name="Status">The <c>role="status"</c> line: "Saved" or a refusal reason.</param>
+/// <param name="Saved">The panel's Saved state.</param>
+/// <param name="EditTitle">The title value (the submitted one after a refused save, else stored).</param>
+/// <param name="EditAdd">014: the pending <c>add</c> ids after a 422-refused save (null otherwise), so the panel keeps them.</param>
+/// <param name="EditCreate">014: the pending <c>create</c> titles after a 422-refused save (null otherwise).</param>
+/// <param name="EditLeave">014: the pending <c>leave</c> ids after a 422-refused save (null otherwise).</param>
+public sealed record PhotoEditPageModel(
+    LibraryTile Photo,
+    IReadOnlyList<GalleryRef> Galleries,
+    LibraryOptions Options,
+    FormToken Csrf,
+    string LibraryScriptUrl,
+    int ReturnPage,
     string? Status = null,
     bool Saved = false,
     string? EditTitle = null,
@@ -71,7 +89,7 @@ public sealed record GalleryPageModel(
 }
 
 /// <summary>
-/// The 009 owner routes of contracts/http.md: L1–L5, G1–G4 and B1–B6 (tasks.md T029, T038, T039). Mapped by
+/// The 009 owner routes of contracts/http.md: L1–L5 (and 017's L6), G1–G4 and B1–B6 (tasks.md T029, T038, T039). Mapped by
 /// <see cref="LibrarySetup.MapLibrary"/> on the protected <c>/admin</c> group, so every route
 /// inherits the owner policy and <c>AdminAntiforgeryFilter</c>. Handlers only call the services
 /// (<see cref="GalleryService"/>, <see cref="ImageService"/>, <see cref="ImageDeleteService"/>,
@@ -93,6 +111,7 @@ public static class LibraryEndpoints
     public static RouteGroupBuilder MapLibraryEndpoints(this RouteGroupBuilder admin)
     {
         admin.MapMethods("/library", ["GET", "HEAD"], (Delegate)Library);                   // L1
+        admin.MapMethods("/library/images/{iid}", ["GET", "HEAD"], PhotoEditScreen); // L6
         admin.MapPost("/library/images/{iid}", SaveImage);                                    // L2
         admin.MapPost("/library/add", (Delegate)BulkAdd);                                     // L3
         admin.MapPost("/library/delete", (Delegate)BulkDelete);                               // L4
@@ -119,10 +138,22 @@ public static class LibraryEndpoints
     {
         var q = ctx.Request.Query;
         var page = PageOf(q["page"].ToString());
-        var open = q["open"].ToString();
         return RenderLibraryAsync(ctx, reader, options, antiforgery, assets, page,
-            OpaqueId.IsValid(open) ? open : null, statusCode: 200, status: null, saved: q["saved"] == "1",
-            statusFromQuery: true);
+            statusCode: 200, status: null, statusFromQuery: true);
+    }
+
+    // ── L6 GET /admin/library/images/{iid} (017) ─────────────────────────────
+
+    private static Task<IResult> PhotoEditScreen(string iid, HttpContext ctx, LibraryReader reader, LibraryOptions options,
+        IAntiforgery antiforgery, AdminAssets assets)
+    {
+        if (!OpaqueId.IsValid(iid)) return Task.FromResult(Results.NotFound());
+        var q = ctx.Request.Query;
+        var page = PageOf(q["page"].ToString());
+        // Only saved=1 applies here (contracts/http.md L6); StatusFromQuery's other keys never reach L6.
+        var status = q["saved"] == "1" ? StatusFromQuery(q, []) : null;
+        return RenderPhotoEditAsync(ctx, reader, options, antiforgery, assets, iid, page, 200, status,
+            saved: status is not null);
     }
 
     // ── L2 POST /admin/library/images/{iid} ──────────────────────────────────
@@ -144,12 +175,12 @@ public static class LibraryEndpoints
         var keep = r.StatusCode == 422;
         return r.Status switch
         {
-            OperationStatus.Ok => SeeOther($"{LibraryPath}?page={page}&open={iid}&saved=1"),
+            OperationStatus.Ok => SeeOther($"{LibraryPath}/images/{iid}?page={page}&saved=1"),
             OperationStatus.NotFound => await RenderLibraryAsync(ctx, reader, options, antiforgery, assets, page,
-                null, 404, "That photo no longer exists."),
-            _ => await RenderLibraryAsync(ctx, reader, options, antiforgery, assets, page,
-                iid, r.StatusCode, r.Reason, editTitle: title, editCaption: caption,
-                editAdd: keep ? edit.Add : null, editCreate: keep ? edit.Create : null, editLeave: keep ? edit.Leave : null),
+                404, "That photo no longer exists."),
+            _ => await RenderPhotoEditAsync(ctx, reader, options, antiforgery, assets, iid, page,
+                r.StatusCode, r.Reason, saved: false, title, caption,
+                keep ? edit.Add : null, keep ? edit.Create : null, keep ? edit.Leave : null),
         };
     }
 
@@ -170,10 +201,10 @@ public static class LibraryEndpoints
             : await images.BulkAddAsync(ids, gallery, null);
 
         if (r.Status == OperationStatus.NotFound)
-            return await RenderLibraryAsync(ctx, reader, options, antiforgery, assets, page, null, 404,
+            return await RenderLibraryAsync(ctx, reader, options, antiforgery, assets, page, 404,
                 "That gallery no longer exists.");
         if (!r.IsOk)
-            return await RenderLibraryAsync(ctx, reader, options, antiforgery, assets, page, null, r.StatusCode, r.Reason);
+            return await RenderLibraryAsync(ctx, reader, options, antiforgery, assets, page, r.StatusCode, r.Reason);
 
         return gallery == "new"
             ? SeeOther($"{GalleriesPath}/{r.GalleryId}?added={r.Added}")
@@ -189,7 +220,7 @@ public static class LibraryEndpoints
         var page = PageOf(form["page"].ToString());
         var r = await deleter.DeleteManyAsync(Ids(form, "ids"));
         if (!r.IsOk)
-            return await RenderLibraryAsync(ctx, reader, options, antiforgery, assets, page, null, r.StatusCode, r.Reason);
+            return await RenderLibraryAsync(ctx, reader, options, antiforgery, assets, page, r.StatusCode, r.Reason);
         return SeeOther($"{LibraryPath}?page={page}&deleted={r.Deleted}&leftovers={r.Leftovers}&failed={r.Failed}");
     }
 
@@ -378,24 +409,47 @@ public static class LibraryEndpoints
 
     private static async Task<IResult> RenderLibraryAsync(
         HttpContext ctx, LibraryReader reader, LibraryOptions options, IAntiforgery antiforgery, AdminAssets assets,
-        int page, string? open, int statusCode, string? status, bool saved = false, bool statusFromQuery = false,
-        string? editTitle = null, string? editCaption = null,
-        IReadOnlyList<string>? editAdd = null, IReadOnlyList<string>? editCreate = null, IReadOnlyList<string>? editLeave = null)
+        int page, int statusCode, string? status, bool statusFromQuery = false)
     {
-        var data = await reader.PageAsync(page, open);
+        var data = await reader.PageAsync(page);
         if (statusFromQuery) status = StatusFromQuery(ctx.Request.Query, data.Galleries);
 
         var model = new LibraryPageModel(
             data, options, Token(ctx, antiforgery),
             assets.UrlFor(AdminAssets.LibraryScriptPath),
-            status, saved && data.Open is not null,
-            editTitle ?? data.Open?.Image.Title,
-            editCaption ?? data.Open?.Caption,
-            editAdd, editCreate, editLeave);
+            status);
 
         return new RazorComponentResult<LibraryPage>(new Dictionary<string, object?>
         {
             [nameof(LibraryPage.Model)] = model,
+        })
+        { StatusCode = statusCode };
+    }
+
+    /// <summary>
+    /// The photo edit screen (017 P1): <see cref="LibraryReader.PhotoAsync"/> (three reads); an unknown
+    /// or tombstoned photo is 404. Title and caption default to the stored values.
+    /// </summary>
+    private static async Task<IResult> RenderPhotoEditAsync(
+        HttpContext ctx, LibraryReader reader, LibraryOptions options, IAntiforgery antiforgery, AdminAssets assets,
+        string iid, int page, int statusCode, string? status, bool saved,
+        string? editTitle = null, string? editCaption = null,
+        IReadOnlyList<string>? editAdd = null, IReadOnlyList<string>? editCreate = null, IReadOnlyList<string>? editLeave = null)
+    {
+        var (photo, galleries) = await reader.PhotoAsync(iid);
+        if (photo is null) return Results.NotFound();
+
+        var model = new PhotoEditPageModel(
+            photo, galleries, options, Token(ctx, antiforgery),
+            assets.UrlFor(AdminAssets.LibraryScriptPath),
+            page, status, saved,
+            editTitle ?? photo.Image.Title,
+            editCaption ?? photo.Caption,
+            editAdd, editCreate, editLeave);
+
+        return new RazorComponentResult<PhotoEditPage>(new Dictionary<string, object?>
+        {
+            [nameof(PhotoEditPage.Model)] = model,
         })
         { StatusCode = statusCode };
     }

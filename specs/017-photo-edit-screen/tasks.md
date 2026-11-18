@@ -88,7 +88,8 @@ it names, in the same batch as the code.
 - [X] T004 Copy 016's `p95.sh` and `p95-selftest.sh` to `specs/017-photo-edit-screen/evidence/`
   and adapt the rows:
   - pre route = lines matching `^http.request GET /admin/library 200 `;
-  - post route = lines matching `^http.request GET /admin/library/images/[0-9a-z]{26} 200 `;
+  - post route = lines matching `^http.request GET /admin/library/images/{iid} 200 ` (AMENDED at
+    implement: the request log carries the route template, not the concrete id);
   - p95 post ≤ pre × 1.10 + 1 ms; every post `db_reads` ≤ the single pre value; n ≥ 100 each.
   Run the selftest into `p95-selftest.txt`.
 - [X] T005 Write `specs/017-photo-edit-screen/evidence/test-impact-edit.py` from 016's:
@@ -140,7 +141,7 @@ removal only), the new `src/Gallery.Web/Admin/Pages/PhotoEditPage.razor` and `.r
 `src/Gallery.Web/wwwroot/admin-assets/library.js`, the new
 `tests/Gallery.Web.Tests/PhotoEditPageTests.cs` and `PhotoEditBrowserTests.cs`.
 
-- [ ] T009 [US1] [SAFETY] In `src/Gallery.Web/Library/LibraryEndpoints.cs` (contracts/http.md L6):
+- [X] T009 [US1] [SAFETY] In `src/Gallery.Web/Library/LibraryEndpoints.cs` (contracts/http.md L6):
   - add `PhotoEditPageModel` (data-model.md) beside `LibraryPageModel`;
   - map `admin.MapMethods("/library/images/{iid}", ["GET", "HEAD"], PhotoEditScreen); // L6` on
     the same `admin` group as L1–L5, directly after the L1 line;
@@ -151,11 +152,11 @@ removal only), the new `src/Gallery.Web/Admin/Pages/PhotoEditPage.razor` and `.r
     `Results.NotFound()`; else render `PhotoEditPage` with `Token(ctx, antiforgery)`,
     `assets.UrlFor(AdminAssets.LibraryScriptPath)`, `ReturnPage = page`, edit values defaulting to
     the stored title and caption.
-- [ ] T010 [US1] [US2] L2 `SaveImage` (contracts/http.md L2): success →
+- [X] T010 [US1] [US2] L2 `SaveImage` (contracts/http.md L2): success →
   `SeeOther($"{LibraryPath}/images/{iid}?page={page}&saved=1")`; NotFound unchanged; every other
   outcome → `RenderPhotoEditAsync(..., iid, page, r.StatusCode, r.Reason, saved: false, title,
   caption, keep ? edit.Add : null, keep ? edit.Create : null, keep ? edit.Leave : null)`.
-- [ ] T011 [US1] [US2] Write `src/Gallery.Web/Admin/Pages/PhotoEditPage.razor` and
+- [X] T011 [US1] [US2] Write `src/Gallery.Web/Admin/Pages/PhotoEditPage.razor` and
   `PhotoEditPage.razor.css` exactly per contracts/components.md P1: move the panel body,
   `TokensFor`, `GalleryOptions`, `DangerFor`, `DeleteConsequence`, `ViewFor` from
   `LibraryPage.razor:121-183` verbatim (renaming `Data.Galleries` → `Model.Galleries`,
@@ -163,17 +164,17 @@ removal only), the new `src/Gallery.Web/Admin/Pages/PhotoEditPage.razor` and `.r
   `[new("Library", $"/admin/library?page={Model.ReturnPage}#t-{id}"), new(title)]`; `Picture`
   with `Sizes.ForAside()`, `PictureFit.Contain`, `PicturePriority.High`, `ShowThumbLayer="true"`.
   Header comment cites 017 P1.
-- [ ] T012 [US1] Library page (P3, R-06): in `LibraryPage.razor` remove everything P3 lists and
+- [X] T012 [US1] Library page (P3, R-06): in `LibraryPage.razor` remove everything P3 lists and
   set the tile href; in `LibraryEndpoints.cs` trim `LibraryPageModel` (data-model.md) and
   `RenderLibraryAsync`'s `open`/`saved`/`edit*` parameters and every caller's arguments for them
   (L1 no longer reads `open`; L3/L4/L2-NotFound pass none); in `LibraryReader.cs` remove
   `PageAsync`'s `open` parameter, the off-page read and `LibraryPageData.Open` with its doc
   comment.
-- [ ] T013 [P] [US1] In `src/Gallery.Web/Admin/Pages/LibraryPage.razor.css`, remove the 016 G5 block (P4). Keep the `.lib-grid`
+- [X] T013 [P] [US1] In `src/Gallery.Web/Admin/Pages/LibraryPage.razor.css`, remove the 016 G5 block (P4). Keep the `.lib-grid`
   wrapper in the markup.
-- [ ] T014 [P] [US1] In `src/Gallery.Web/wwwroot/admin-assets/library.js`, apply J1 (remove the final "panel into view" section and the
+- [X] T014 [P] [US1] In `src/Gallery.Web/wwwroot/admin-assets/library.js`, apply J1 (remove the final "panel into view" section and the
   "Photo panel (feature 015 J1)" header paragraph; reword the combobox header line). Nothing else.
-- [ ] T015 [US1] [US2] [SAFETY] Write `tests/Gallery.Web.Tests/PhotoEditPageTests.cs` (HTTP,
+- [X] T015 [US1] [US2] [SAFETY] Write `tests/Gallery.Web.Tests/PhotoEditPageTests.cs` (HTTP,
   `LibraryHost`):
   - L6 200 for a photo in 2 galleries: exactly one `<picture` in `main` and no `class="tile`,
     `class="cs"` or `name="ids"` in the document; `sizes` EQUALS `Sizes.ForAside()`;
@@ -194,7 +195,7 @@ removal only), the new `src/Gallery.Web/Admin/Pages/PhotoEditPage.razor` and `.r
   - a 422 refusal (blank title) re-renders the edit screen: status 422, reason as the status
     line, the typed caption kept, and the photo still shown;
   - `Guards.AssertNoInlineStyle`; exactly one `<script` on the page.
-- [ ] T016 [US1] [US2] Write `tests/Gallery.Web.Tests/PhotoEditBrowserTests.cs`
+- [X] T016 [US1] [US2] Write `tests/Gallery.Web.Tests/PhotoEditBrowserTests.cs`
   (`[Collection("library-browser")]`, `LibraryBrowserFixture`). Fixture images are
   `SeedShapes.UploadedImage` (stored 1280 × 960, 4:3). For the other shapes, insert a
   `SeedShapes.UploadedImage(...)` with `Width`/`Height` overridden (portrait 960 × 1280, small
@@ -224,7 +225,7 @@ removal only), the new `src/Gallery.Web/Admin/Pages/PhotoEditPage.razor` and `.r
 
 ## Phase 4: Polish and cross-cutting (parent unless marked)
 
-- [ ] T017 Replace `PhotoEditTimingEvidenceTests.Pre_library_with_panel` with
+- [X] T017 Replace `PhotoEditTimingEvidenceTests.Pre_library_with_panel` with
   `Post_photo_edit_screen`: same data, 100 GETs of `/admin/library/images/{id}?page=1`, assert ≥
   100 `http.request GET /admin/library/images/` lines, default log
   `specs/017-photo-edit-screen/evidence/photo-timings.log`. Run it, then
@@ -238,12 +239,12 @@ removal only), the new `src/Gallery.Web/Admin/Pages/PhotoEditPage.razor` and `.r
   `assemble.sh` and `validate.sh`, tee to `evidence/design-validate.txt`; then
   `grep -c 'toggle the side panel' docs/design.md` = 0 and `git show --stat` includes
   `docs/design.md`.
-- [ ] T019 [P] Write `specs/017-photo-edit-screen/decisions.md` with 016's `add-decisions.py`:
+- [X] T019 [P] Write `specs/017-photo-edit-screen/decisions.md` with 016's `add-decisions.py`:
   every executor `decisions_made`, one STATED-CHANGE row per A/B/D row, the plan's spec
   corrections (SC-002, FR-007), and the three spec defaults (gallery icon opens the screen, stay
   after save, panel removed).
 - [ ] T020 Write the 017 entry in `docs/roadmap.md`: status, evidence paths, the OWNER-ONLY item.
-- [ ] T021 Re-run the test-impact grep against the finished tree: no `?open=` producer left in
+- [X] T021 Re-run the test-impact grep against the finished tree: no `?open=` producer left in
   `src/` (`grep -rnE '[?&]open=' src --include=*.cs --include=*.razor --include=*.js` → no hits;
   DangerConfirm's `open="@Open"` attribute is not a match), and no reference to
   `LibraryPageData.Open` or `PageAsync(…, open)`.

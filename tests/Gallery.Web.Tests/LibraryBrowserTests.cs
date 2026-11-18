@@ -514,12 +514,10 @@ public sealed class LibraryBrowserTests(LibraryBrowserFixture fx)
         await AssertDangerOutlinedAsync(library, "library, selection");
         Assert.Equal(["Add to gallery…"], (await FilledAsync(library)).Outside);
 
-        // Library, side panel open with a selection: the panel's Save is the one primary.
-        var panel = await site.OpenAsync($"/admin/library?open={ids[0]}");
-        await Marks(panel).Nth(1).ClickAsync();
-        Assert.True(await Bar(panel).IsVisibleAsync());
+        // 017 A10 (stated change): the photo edit screen (no grid, so no selection): its Save is the one primary.
+        var panel = await site.OpenAsync($"/admin/library/images/{ids[0]}");
         Assert.Equal(["Save"], (await FilledAsync(panel)).Outside);
-        await AssertDangerOutlinedAsync(panel, "library, side panel");
+        await AssertDangerOutlinedAsync(panel, "photo edit screen");
 
         // Gallery list at rest: New gallery. Builder at rest: Save.
         var list = await site.OpenAsync("/admin/galleries");
@@ -659,7 +657,7 @@ public sealed class LibraryBrowserTests(LibraryBrowserFixture fx)
     {
         await using var site = await fx.NewSiteAsync();
         var ids = await site.ImagesAsync(2);
-        var page = await site.OpenAsync($"/admin/library?open={ids[0]}");
+        var page = await site.OpenAsync($"/admin/library/images/{ids[0]}");
         var trigger = page.Locator(".side-panel .danger-confirm .danger-trigger");
         Assert.Equal("Delete photo…", (await trigger.InnerTextAsync()).Trim());
 

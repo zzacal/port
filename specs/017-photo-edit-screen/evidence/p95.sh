@@ -4,10 +4,10 @@
 #   bash specs/017-photo-edit-screen/evidence/p95.sh <pre.log> <post.log> | tee specs/017-photo-edit-screen/evidence/p95-output.txt
 #   (defaults: evidence/pre-timings.log evidence/photo-timings.log)
 # Each log is the plain test log (one formatted message per line, e.g.
-#   http.request GET /admin/library/images/01hzzzzzzzzzzzzzzzzzzzzzzz 200 12.30 3
+#   http.request GET /admin/library/images/{iid} 200 12.30 3   (the middleware logs the route TEMPLATE)
 # ) or the app's JSON console log (lines starting with '{' are converted with jq -r '.Message').
 # Rows, for route photo: pre = GET /admin/library 200 lines (library with the panel open),
-# post = GET /admin/library/images/{26-char id} 200 lines (the edit screen):
+# post = GET /admin/library/images/{iid} 200 lines (the edit screen; route template as logged):
 #   n        pre needs n >= MIN_N (default 100) library lines, post n >= MIN_N edit-screen lines
 #   p95      post p95 <= pre p95 * 1.10 + 1 ms   (p95 = nearest-rank, ceil(0.95 n))
 #   reads    every post line's db_reads <= the pre value (the pre log must have one value)
@@ -40,7 +40,7 @@ if [ "$fails" -gt 0 ]; then echo; echo "$fails FAILED"; exit "$fails"; fi
     return a[k]
   }
   $2 == "http.request" && $3 == "GET" && $5 == "200" &&
-  (($1 == "PRE" && $4 == "/admin/library") || ($1 == "POST" && $4 ~ /^\/admin\/library\/images\/[0-9a-z]+$/ && length($4) == 22 + 26)) {
+  (($1 == "PRE" && $4 == "/admin/library") || ($1 == "POST" && $4 == "/admin/library/images/{iid}")) {
     r = "photo"
     key = $1 SUBSEP r
     c[key]++; d[key, c[key]] = $6

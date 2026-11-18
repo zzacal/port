@@ -16,17 +16,13 @@
 //   - The builder's switch belongs to its Save form and submits nothing on change (owner
 //     feedback: typed edits are never lost).
 //   - The page heading's "New gallery" opens <dialog id="gal-new">; Cancel closes it.
-//   Combobox (TokenCombobox molecule, feature 014 K1; the photo panel's Galleries field):
+//   Combobox (TokenCombobox molecule, feature 014 K1; the photo edit screen's Galleries field):
 //   - Typing filters the options by the rules of TokenCombobox.Match (mirrored here), with the
 //     first row highlighted and a "+ text" create row; Down/Up move, Enter or a mousedown picks,
 //     Esc closes an open list (and stops there), Backspace in an empty input removes the last token.
 //   - A pick clones the component's <template> into a pending token with its hidden add/create
 //     input; × removes a token (a saved one leaves a hidden remove input) and focus moves to the
 //     next ×. cb-empty / cb-warn are kept current and .cb-status announces each change.
-//   Photo panel (feature 015 J1):
-//   - Below 1200 px the panel is stacked after the grid: when one is open on load (after the
-//     #t-{id} fragment scroll) and its Galleries field (.combobox, else the panel) starts below
-//     the viewport, that field is scrolled into view.
 //
 // Elements are resolved when an event happens (event delegation on the document), never cached at
 // load, so markup declared after the script, or replaced later, is always found. Text is set with
@@ -613,14 +609,3 @@ for (const root of document.querySelectorAll('section.lib')) {
   if (b) b.dataset.script = 'ready';
   refresh(root);
 }
-
-// ── panel into view (015 R-03) ────────────────────────────────────────────────
-
-// On `load`, not DOMContentLoaded: the #t-{id} fragment scroll lands until load and would undo it.
-addEventListener('load', () => {
-  const panel = document.getElementById('lib-edit');
-  if (!panel || !matchMedia('(max-width: 1199.98px)').matches) return;
-  const field = panel.querySelector('.combobox') ?? panel;
-  if (field.getBoundingClientRect().top < innerHeight) return;
-  field.scrollIntoView({ block: 'start' });
-});

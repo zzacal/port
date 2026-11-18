@@ -92,7 +92,7 @@ public class LibraryMembershipEditTests(S3ProxyFixture s3, MongoFixture mongo) :
 
         var resp = await SaveAsync(h, img.Id, ("add", gid));
         Assert.Equal(HttpStatusCode.SeeOther, resp.StatusCode);
-        Assert.Equal($"/admin/library?page=1&open={img.Id}&saved=1", resp.Headers.Location?.ToString());
+        Assert.Equal($"/admin/library/images/{img.Id}?page=1&saved=1", resp.Headers.Location?.ToString());
         Assert.Equal([cover.Id, img.Id], (await LoadAsync(h, gid)).Items);
         Assert.Equal([gid], (await ImageAsync(h, img.Id)).GalleryIds);
         var panel = await h.SettleAsync();
@@ -336,7 +336,7 @@ public class LibraryMembershipEditTests(S3ProxyFixture s3, MongoFixture mongo) :
 
         var resp = await SaveAsync(h, img.Id, ("leave", gid));
         Assert.Equal(HttpStatusCode.SeeOther, resp.StatusCode);
-        Assert.Equal($"/admin/library?page=1&open={img.Id}&saved=1", resp.Headers.Location?.ToString());
+        Assert.Equal($"/admin/library/images/{img.Id}?page=1&saved=1", resp.Headers.Location?.ToString());
         var g = await LoadAsync(h, gid);
         Assert.Equal([other.Id], g.Items);
         Assert.Null(g.PinnedCover);
