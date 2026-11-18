@@ -36,7 +36,7 @@ unchanged because P1 keeps `side-panel`, `lib-edit`, `lib-gf`, `lib-del-one` and
 | A7 | LibraryEditTests.cs:183, 190, 192 |
 | A8 | LibraryPageTests.cs:267 (Limits: drop the `selection-bar` and `newTitle` assertions' source — they read `html`; change them to read `GetOkAsync(h, "/admin/library")` so the library limits stay covered) |
 | A9 | GalleryFieldBrowserTests.cs:183, 225, 254, 292, 313, 350, 387, 419, 437, 465, 478, 497, 537, 565, 591, 623 |
-| A10 | LibraryBrowserTests.cs:518, 662 |
+| A10 | LibraryBrowserTests.cs:662 (retarget only) and :517-521 (rewrite: the "side panel open with a selection" step becomes "edit screen": open `/admin/library/images/{ids[0]}`, drop the `Marks(panel).Nth(1)` click and the `Bar(panel)` visibility line (the screen has no grid), keep `["Save"]` as the one filled button and `AssertDangerOutlinedAsync(panel, "photo edit screen")`) |
 
 ## A — rewritten for the new behaviour
 
