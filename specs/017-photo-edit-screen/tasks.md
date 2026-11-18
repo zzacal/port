@@ -243,12 +243,12 @@ removal only), the new `src/Gallery.Web/Admin/Pages/PhotoEditPage.razor` and `.r
   every executor `decisions_made`, one STATED-CHANGE row per A/B/D row, the plan's spec
   corrections (SC-002, FR-007), and the three spec defaults (gallery icon opens the screen, stay
   after save, panel removed).
-- [ ] T020 Write the 017 entry in `docs/roadmap.md`: status, evidence paths, the OWNER-ONLY item.
+- [X] T020 Write the 017 entry in `docs/roadmap.md`: status, evidence paths, the OWNER-ONLY item.
 - [X] T021 Re-run the test-impact grep against the finished tree: no `?open=` producer left in
   `src/` (`grep -rnE '[?&]open=' src --include=*.cs --include=*.razor --include=*.js` → no hits;
   DangerConfirm's `open="@Open"` attribute is not a match), and no reference to
   `LibraryPageData.Open` or `PageAsync(…, open)`.
-- [ ] T022 Write `specs/017-photo-edit-screen/evidence/non-vacuity.sh` from 016's, one break per
+- [X] T022 Write `specs/017-photo-edit-screen/evidence/non-vacuity.sh` from 016's, one break per
   guard, each failing on its own assertion:
   - [SAFETY] L6 mapped on `app` instead of the `admin` group → PhotoEditPageTests signed-out
     fact and LibraryAccessTests L6 red;

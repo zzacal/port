@@ -291,7 +291,27 @@ OWNER-ONLY (after merge and deploy, not gates):
 
 - [ ] O-01 ([#5](https://github.com/zzacal/port/issues/5)) On port.zacal.me, check that `/admin/galleries` cards show the icon row with edit last.
   Toggle one gallery's eye twice. Resize to tablet width. Open a library photo's panel at about
-  1300 px and check that every photo shows its full icon row.
+  1300 px and check that every photo shows its full icon row. (The panel part is superseded by 017:
+  the library has no side panel; check the grid at about 1300 px instead.)
+
+### 017 Focused photo edit screen
+
+**Status: implemented on branch `017-photo-edit-screen`; not yet merged. SC-005 met (p95 4.65 ms <= 29.75; 3 reads, was 4).**
+Decisions, defaults and stated test changes in `specs/017-photo-edit-screen/decisions.md`.
+Evidence: `specs/017-photo-edit-screen/evidence/` (gates, p95, non-vacuity, design record validate
+0 failures, test-impact edit output).
+
+A library photo's pencil or folder icon opens the photo's own screen,
+`/admin/library/images/{id}?page=N`: the whole photo, large, with the Photo panel (title, caption,
+galleries, View, delete) beside it at desktop widths and under it on phones. Save keeps the owner
+there with "Saved"; the breadcrumb "Library" goes back to library page N at that photo's tile;
+delete returns to page N. The library page no longer has a side panel, and an old `?open=` address
+shows the plain library. Amends D-20 and D-23.
+
+OWNER-ONLY (after merge and deploy, not gates):
+
+- [ ] O-01 On port.zacal.me, edit a photo from library page 2: the screen shows only that photo,
+  Save keeps you there, "Library" takes you back to page 2.
 
 ## Not a feature
 

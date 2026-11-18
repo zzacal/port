@@ -67,7 +67,7 @@ brk token $PE 's/(\n\s+)\@Token(<input type="hidden" name="page" value="\@Model.
   'FullyQualifiedName~PhotoEditPageTests.Edit_and_delete_forms_post_to_the_photo_with_the_return_page_and_the_antiforgery_token' \
   'lib-edit has no antiforgery field'
 # FR-003 sizes: the grid's sizes on the edit screen.
-brk sizes $PE 's/Sizes\.ForAside\(\)/Sizes.ForGrid(4, 2, 1)/' \
+brk sizes $PE 's/StageSizes = Gallery\.Core\.Images\.Sizes\.ForAside\(\);/StageSizes = Gallery.Core.Images.Sizes.ForGrid(4, 2, 1);/' \
   'FullyQualifiedName~PhotoEditPageTests.L6_shows_one_photo|FullyQualifiedName~PhotoEditBrowserTests.At_1440_the_browser_picks_a_derivative_at_least_960_wide' \
   'the edit screen declares the grid sizes'
 # SC-002 the stage cap goes: a portrait photo runs past the viewport.
@@ -86,8 +86,10 @@ brk crumb $PE 's/\/admin\/library\?page=\{Model\.ReturnPage\}#t-/\/admin\/librar
 brk live $RD 's/\.Find\(Live & Builders<ImageDoc>\.Filter\.Eq\(i => i\.Id, iid\)\)/.Find(Builders<ImageDoc>.Filter.Eq(i => i.Id, iid))/' \
   'FullyQualifiedName~PhotoEditPageTests.Malformed_unknown_and_tombstoned_ids_are_404|FullyQualifiedName~PhotoReaderTests.Tombstoned_id' \
   'PhotoAsync reads tombstoned images'
-# IX.4 the edit screen draws its own gap under the chrome.
-brk gap $PECSS 's/\z/\n.pe { margin-top: 40px; }\n/' \
+# IX.4 the edit screen draws its own gap under the chrome. (A margin-top is zeroed by AdminLayout's
+# `.admin-main > ::deep :first-child` rule, so it never reaches the measured test; a relative
+# shift does, and the chrome probe measures main's first box.)
+brk gap $PECSS 's/\z/\n.pe { position: relative; top: 40px; }\n/' \
   'FullyQualifiedName~AdminLayoutConsistencyBrowserTests' \
   'the edit screen adds a top margin'
 
