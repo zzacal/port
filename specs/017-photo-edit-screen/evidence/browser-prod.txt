@@ -1,0 +1,9 @@
+(first run at 08:37:50Z answered 502 on every admin path during the post-deploy restart; / was 200 and /admin/library returned to 302 by 08:38:18Z)
+== deploy run 44263980226 (test, build, deploy: success) at main cc57b64
+== 2026-11-18T08:40:59Z signed out, main cc57b64
+/admin/library/images/00000000000000000000000000?page=1 302 -> https://port.zacal.me/admin/signin
+/admin/library/images/00000000000000000000000000 302 -> https://port.zacal.me/admin/signin
+/admin/library 302 -> https://port.zacal.me/admin/signin
+HEAD /admin/library/images/00000000000000000000000000 302
+live library.js has the removed panel-into-view block: 0
+live /admin-assets/library.js: HTTP 200, carries the 017 header line ("the photo edit screen's Galleries field") -> the deployed build is cc57b64's.

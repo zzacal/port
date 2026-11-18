@@ -266,7 +266,7 @@ removal only), the new `src/Gallery.Web/Admin/Pages/PhotoEditPage.razor` and `.r
 - [X] T023 Final gate (`evidence/gate-final.txt`): `dotnet clean`, `-warnaserror` build, full suite
   including Evidence and Browser; `p95.sh` recorded; restore earlier features' regenerated logs;
   commit.
-- [ ] T024 Merge to main (`--no-ff`, body as in 016's) and push. Watch the deploy job go green.
+- [X] T024 Merge to main (`--no-ff`, body as in 016's) and push. Watch the deploy job go green.
   Signed out, `curl -sI https://port.zacal.me/admin/library/images/{any-id}` answers 302 to
   sign-in; save to `evidence/browser-prod.txt`. Do not change production data.
 - [ ] T025 OWNER step, then parent: the owner signs in to the automation browser on
