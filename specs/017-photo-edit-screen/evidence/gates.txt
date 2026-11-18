@@ -1,0 +1,14 @@
+gate A (commit e1e22f7, Batch A T006-T008; bash evidence/gate.sh A):
+build exit 0
+Passed!  - Failed:     0, Passed:   123, Skipped:     0, Total:   123, Duration: 107 ms - Gallery.Core.Tests.dll (net10.0)
+Passed!  - Failed:     0, Passed:  1509, Skipped:     1, Total:  1510, Duration: 4 m 58 s - Gallery.Web.Tests.dll (net10.0)
+test exit 0
+
+gate B (Batch B T009-T016 + test-impact A1-A18, B1-B2, D1-D2; bash evidence/gate.sh B):
+build exit 0
+Passed!  - Failed:     0, Passed:   123, Skipped:     0, Total:   123, Duration: 110 ms - Gallery.Core.Tests.dll (net10.0)
+  Failed Gallery.Web.Tests.PhotoEditTimingEvidenceTests.Pre_library_with_panel [594 ms]
+Failed!  - Failed:     1, Passed:  1529, Skipped:     1, Total:  1531, Duration: 5 m 23 s - Gallery.Web.Tests.dll (net10.0)
+test exit 1
+  the one failure is T003's pre-change fact, which asserts the removed panel; T017 replaces it (expected).
+

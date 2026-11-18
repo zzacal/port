@@ -2,7 +2,8 @@
    components; library.js (Batch F) drives the selection bar, the picker and the bulk confirm.
    Owner UI rules: every tile links to its public photo page when one exists (UI-1); the select
    mark is the only control over the photo; the title sits on the photo's bottom edge and the
-   gallery/view/edit icon row (PhotoActions, 015 K5) sits under the cell (UI-2);
+   gallery/view/edit icon row (PhotoActions, 015 K5) sits under the cell (UI-2); edit and gallery
+   open the photo's edit screen (017);
    one filled action per state (UI-3); deletes are outlined Danger (UI-4); limits come from
    LibraryOptions (UI-7); no validation nags (UI-8). *@
 @using Gallery.Web.Components
@@ -12,13 +13,9 @@
 @using Gallery.Web.Components.Templates
 @using Gallery.Web.Library
 
-<AdminLayout Title="Library" Current="AdminPage.Library" SignOut="@Model.Csrf" Aside="@PanelFragment">
+<AdminLayout Title="Library" Current="AdminPage.Library" SignOut="@Model.Csrf">
     <section class="lib">
         <form id="lib-delete" method="post" action="/admin/library/delete" hidden>@Token<input type="hidden" name="page" value="@Data.Page"></form>
-        @if (Open is not null)
-        {
-            <form id="lib-del-one" method="post" action="@($"/admin/library/images/{Open.Image.Id}/delete")" hidden>@Token<input type="hidden" name="page" value="@Data.Page"></form>
-        }
         @if (Model.Status is not null)
         {
             <p class="lib-result" role="status">@Model.Status</p>
@@ -41,7 +38,7 @@
             </ContactSheet>
             </div>
             <SelectionBar Render="true" Count="0" Total="@Data.Tiles.Count" SelectAllLabel="Select all on this page" Limit="@Model.Options.PageSize">
-                <Button Variant="@AddVariant" Type="button" Name="action" Value="add">Add to gallery&#x2026;</Button>
+                <Button Variant="ButtonVariant.Primary" Type="button" Name="action" Value="add">Add to gallery&#x2026;</Button>
                 <Button Variant="ButtonVariant.Danger" Type="button" Name="action" Value="delete">Delete&#x2026;</Button>
             </SelectionBar>
             <DangerConfirm Trigger="false" Id="lib-bulk-confirm" Action="Delete" Target="0 photos" Title="Delete 0 photos?"
@@ -88,10 +85,6 @@
     private static readonly string GridSizes = Gallery.Core.Images.Sizes.ForGrid(4, 2, 1);
 
     private LibraryPageData Data => Model.Data;
-    private LibraryTile? Open => Data.Open;
-
-    /// <summary>With the side panel open its Save is the one primary, so the bar's Add is demoted (decisions row 46).</summary>
-    private ButtonVariant AddVariant => Open is null ? ButtonVariant.Primary : ButtonVariant.Secondary;
 
     private string? PrevHref => Data.Page > 1 ? $"?page={Data.Page - 1}" : null;
     private string? NextHref => Data.Page < Data.TotalPages ? $"?page={Data.Page + 1}" : null;
@@ -107,77 +100,11 @@
 
     /// <summary>
     /// 015 K5: the tile's gallery/view/edit icons. The gallery and edit icons share one href
-    /// (FR-007): it opens this photo's panel, or closes it when this photo is the open one, and
-    /// lands back on the tile (#t-{id}). Only the open photo is Active (FR-012).
+    /// (FR-007): this photo's edit screen (017), which goes back to this page. No tile is Active.
     /// </summary>
     private RenderFragment RowFor(LibraryTile tile)
     {
-        var id = tile.Image.Id;
-        var open = Data.Open?.Image.Id == id;
-        var href = open ? $"?page={Data.Page}#t-{id}" : $"?page={Data.Page}&open={id}#t-{id}";
-        return @<PhotoActions Count="@tile.GalleryCount" ItemLabel="@tile.Image.Title" ViewHref="@tile.ViewHref" Active="@open" GroupHref="@href" EditHref="@href" />;
+        var href = $"/admin/library/images/{tile.Image.Id}?page={Data.Page}";
+        return @<PhotoActions Count="@tile.GalleryCount" ItemLabel="@tile.Image.Title" ViewHref="@tile.ViewHref" GroupHref="@href" EditHref="@href" />;
     }
-
-    private static RenderFragment? ViewFor(string? href) => href is null
-        ? null
-        : @<TextLink Href="@href" Target="_blank">View &#x2197;</TextLink>;
-
-    private RenderFragment? PanelFragment => Open is null ? null : Panel(Open);
-
-    private RenderFragment Panel(LibraryTile open) =>
-        @<form id="lib-edit" class="lib-edit" method="post" action="@($"/admin/library/images/{open.Image.Id}")">
-            @Token<input type="hidden" name="page" value="@Data.Page">
-            <SidePanel Heading="Photo" FormId="lib-edit" State="@(Model.Saved ? SaveState.Saved : SaveState.Idle)" Danger="@DangerFor(open)">
-                <Input Label="Title" Name="title" Value="@Model.EditTitle" MaxLength="@Model.Options.TitleMax" Required="true" Pattern="@TitlePattern" />
-                <Input Label="Caption" Name="caption" Multiline="true" Value="@Model.EditCaption" MaxLength="@Model.Options.CaptionMax" />
-                <TokenCombobox Id="lib-gf" Label="Galleries" Tokens="@TokensFor(open)" Options="@GalleryOptions"
-                               AddName="add" CreateName="create" RemoveName="leave" Removed="@(Model.EditLeave ?? [])"
-                               AllowCreate="true" CreateMax="@Model.Options.TitleMax" MaxShown="10"
-                               EmptyText="Not in a gallery" RemoveLabel="Remove from {0}"
-                               WarningFormat="{0}: visitors will see this photo after you save." />
-                @ViewFor(open.ViewHref)
-            </SidePanel>
-        </form>;
-
-    /// <summary>
-    /// 014 K3: the photo's holders by title (ignore-case, then id) as saved tokens, minus any id the
-    /// refused save was leaving; then the refused save's pending adds (skipped when the gallery is
-    /// gone) and pending creates, so a 422 re-render keeps what the owner picked.
-    /// </summary>
-    private IReadOnlyList<ComboToken> TokensFor(LibraryTile open)
-    {
-        var leave = Model.EditLeave ?? [];
-        var tokens = open.Galleries
-            .Where(g => !leave.Contains(g.Id, StringComparer.Ordinal))
-            .OrderBy(g => g.Title, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(g => g.Id, StringComparer.Ordinal)
-            .Select(g => new ComboToken(g.Id, g.Title, $"/admin/galleries/{g.Id}"))
-            .ToList();
-        foreach (var id in Model.EditAdd ?? [])
-        {
-            var g = Data.Galleries.FirstOrDefault(x => x.Id == id);
-            if (g is not null) tokens.Add(new ComboToken(g.Id, g.Title, Pending: ComboPending.Add));
-        }
-        foreach (var title in Model.EditCreate ?? [])
-            tokens.Add(new ComboToken(title, title, Pending: ComboPending.Create));
-        return tokens;
-    }
-
-    /// <summary>014 K3: every gallery as a combobox option; a public one carries the visitor warning.</summary>
-    private IReadOnlyList<ComboOption> GalleryOptions => Data.Galleries
-        .Select(g => new ComboOption(g.Id, g.Title, g.IsPublic ? "Public" : "Private", g.IsPublic ? $"{g.Title} is public" : null))
-        .ToList();
-
-    private static RenderFragment DangerFor(LibraryTile open) =>
-        @<DangerConfirm Action="Delete photo" Target="@open.Image.Title" Title="@($"Delete \u201C{open.Image.Title}\u201D?")" Consequence="@DeleteConsequence(open.GalleryCount)"
-                        ConfirmLabel="Delete photo" FormId="lib-del-one" />;
-
-    /// <summary>contracts/components.md "delete confirm (one)".</summary>
-    public static string DeleteConsequence(int galleries) =>
-        (galleries switch
-        {
-            0 => "It is in no gallery.",
-            1 => "It is in 1 gallery.",
-            _ => $"It is in {galleries} galleries.",
-        }) + " This removes it from every gallery and deletes the original file. It can't be undone.";
 }

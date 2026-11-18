@@ -24,10 +24,8 @@ public sealed record LibraryTile(
     GalleryRef? FirstByTitle);
 
 /// <summary>One page of the library (data-model "LibraryPage").</summary>
-/// <param name="Open">The image of <c>?open={iid}</c> (on this page or not), or null when unknown or tombstoned.</param>
 public sealed record LibraryPageData(
-    int Page, int TotalPages, long Total, IReadOnlyList<LibraryTile> Tiles, IReadOnlyList<GalleryRef> Galleries,
-    LibraryTile? Open = null);
+    int Page, int TotalPages, long Total, IReadOnlyList<LibraryTile> Tiles, IReadOnlyList<GalleryRef> Galleries);
 
 /// <summary>
 /// The library read (research R-04, tasks.md T028): four timed reads, <c>db.library.count</c>,
@@ -44,6 +42,12 @@ public sealed class LibraryReader(IMongoDatabase db, OpTimer timer, LibraryOptio
 
     private static readonly FilterDefinition<ImageDoc> Live = Builders<ImageDoc>.Filter.Exists(i => i.DeletingAt, false);
 
+    /// <summary>The image fields a <see cref="LibraryTile"/> needs (the page read and the photo read).</summary>
+    private static readonly ProjectionDefinition<ImageDoc> TileFields = Builders<ImageDoc>.Projection
+        .Include(i => i.Id).Include(i => i.Title).Include(i => i.Caption)
+        .Include(i => i.Width).Include(i => i.Height).Include(i => i.Placeholder)
+        .Include(i => i.Derivatives).Include(i => i.GalleryIds).Include(i => i.CreatedAt);
+
     /// <summary>The FR-007 status line.</summary>
     public static string StatusLine(int galleries, int publicGalleries) => galleries switch
     {
@@ -56,10 +60,8 @@ public sealed class LibraryReader(IMongoDatabase db, OpTimer timer, LibraryOptio
 
     /// <summary>
     /// Page <paramref name="page"/> (1-based; below 1 reads page 1, past the end reads the last page).
-    /// <paramref name="open"/> names the side panel's image; when it is not on this page it costs one
-    /// more <c>db.library.page</c> read. An unknown or tombstoned id leaves the panel closed.
     /// </summary>
-    public async Task<LibraryPageData> PageAsync(int page, string? open = null)
+    public async Task<LibraryPageData> PageAsync(int page)
     {
         var total = await timer.Time("db.library.count", () => _images.CountDocumentsAsync(Live), isDbRead: true);
         var size = options.PageSize;
@@ -70,10 +72,7 @@ public sealed class LibraryReader(IMongoDatabase db, OpTimer timer, LibraryOptio
             .Sort(Builders<ImageDoc>.Sort.Descending(i => i.CreatedAt).Descending(i => i.Id))
             .Skip((page - 1) * size)
             .Limit(size)
-            .Project<ImageDoc>(Builders<ImageDoc>.Projection
-                .Include(i => i.Id).Include(i => i.Title).Include(i => i.Caption)
-                .Include(i => i.Width).Include(i => i.Height).Include(i => i.Placeholder)
-                .Include(i => i.Derivatives).Include(i => i.GalleryIds).Include(i => i.CreatedAt))
+            .Project<ImageDoc>(TileFields)
             .ToListAsync(), isDbRead: true);
 
         var galleries = await GalleriesAsync();
@@ -81,42 +80,55 @@ public sealed class LibraryReader(IMongoDatabase db, OpTimer timer, LibraryOptio
         var rank = galleries.Select((g, i) => (g.Id, i)).ToDictionary(x => x.Id, x => x.i, StringComparer.Ordinal);
 
         var url = PublicEndpoints.MakeUrl(storage);
-        LibraryTile ToTile(ImageDoc d)
-        {
-            var holders = d.GalleryIds
-                .Distinct(StringComparer.Ordinal)
-                .Where(byId.ContainsKey)
-                .OrderBy(id => rank[id])
-                .Select(id => byId[id])
-                .ToList();
-            var publicCount = holders.Count(g => g.IsPublic);
-            var first = holders.FirstOrDefault();
-            var firstByTitle = holders
-                .OrderBy(g => g.Title, StringComparer.OrdinalIgnoreCase)
-                .ThenBy(g => g.Id, StringComparer.Ordinal)
-                .FirstOrDefault();
-            return new LibraryTile(
-                ViewMapper.ToView(d, url),
-                d.Caption,
-                StatusLine(holders.Count, publicCount),
-                first is null ? null : $"/g/{first.Id}/{first.Slug}/{d.Id}",
-                holders.Count,
-                publicCount,
-                holders,
-                firstByTitle);
-        }
-        var tiles = docs.Select(ToTile).ToList();
+        var tiles = docs.Select(d => Tile(d, byId, rank, url)).ToList();
 
-        LibraryTile? openTile = null;
-        if (!string.IsNullOrEmpty(open))
-        {
-            var openDoc = docs.FirstOrDefault(d => d.Id == open)
-                ?? await timer.Time("db.library.page", () => _images
-                    .Find(Live & Builders<ImageDoc>.Filter.Eq(i => i.Id, open)).FirstOrDefaultAsync(), isDbRead: true);
-            if (openDoc is not null) openTile = ToTile(openDoc);
-        }
+        return new LibraryPageData(page, totalPages, total, tiles, galleries);
+    }
 
-        return new LibraryPageData(page, totalPages, total, tiles, galleries, openTile);
+    /// <summary>
+    /// The edit screen's photo (017 R-04): one <c>db.library.page</c> find of a live image, then
+    /// <see cref="GalleriesAsync"/>. An unknown or tombstoned id answers <c>(null, [])</c> with no
+    /// further read.
+    /// </summary>
+    public async Task<(LibraryTile? Photo, IReadOnlyList<GalleryRef> Galleries)> PhotoAsync(string iid)
+    {
+        var doc = await timer.Time("db.library.page", () => _images
+            .Find(Live & Builders<ImageDoc>.Filter.Eq(i => i.Id, iid))
+            .Project<ImageDoc>(TileFields)
+            .FirstOrDefaultAsync(), isDbRead: true);
+        if (doc is null) return (null, []);
+
+        var galleries = await GalleriesAsync();
+        var byId = galleries.ToDictionary(g => g.Id, StringComparer.Ordinal);
+        var rank = galleries.Select((g, i) => (g.Id, i)).ToDictionary(x => x.Id, x => x.i, StringComparer.Ordinal);
+        return (Tile(doc, byId, rank, PublicEndpoints.MakeUrl(storage)), galleries);
+    }
+
+    /// <summary>One tile: holders in home order, status line, View link and first holder by title.</summary>
+    private static LibraryTile Tile(
+        ImageDoc d, IReadOnlyDictionary<string, GalleryRef> byId, IReadOnlyDictionary<string, int> rank, Func<string, string> url)
+    {
+        var holders = d.GalleryIds
+            .Distinct(StringComparer.Ordinal)
+            .Where(byId.ContainsKey)
+            .OrderBy(id => rank[id])
+            .Select(id => byId[id])
+            .ToList();
+        var publicCount = holders.Count(g => g.IsPublic);
+        var first = holders.FirstOrDefault();
+        var firstByTitle = holders
+            .OrderBy(g => g.Title, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(g => g.Id, StringComparer.Ordinal)
+            .FirstOrDefault();
+        return new LibraryTile(
+            ViewMapper.ToView(d, url),
+            d.Caption,
+            StatusLine(holders.Count, publicCount),
+            first is null ? null : $"/g/{first.Id}/{first.Slug}/{d.Id}",
+            holders.Count,
+            publicCount,
+            holders,
+            firstByTitle);
     }
 
     /// <summary>

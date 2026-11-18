@@ -1,0 +1,4 @@
+== T021: ?open= producers in src (expect none)
+none
+== LibraryPageData.Open / PageAsync(.., open) (expect none)
+tests/Gallery.Web.Tests/UploadPageTests.cs:302:        var html = await PageAsync(host, $"/admin/upload?confirmed={openId}");

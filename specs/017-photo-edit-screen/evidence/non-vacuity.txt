@@ -1,0 +1,23 @@
+PASS (l6anon) L6 answers without a session -> red:   Failed Gallery.Web.Tests.PhotoEditPageTests.Signed_out_L6_answers_the_same_challenge_as_the_library |  Assert.Equal() Failure: Values differ Expected: Found 
+PASS (token) lib-edit has no antiforgery field -> red:   Failed Gallery.Web.Tests.PhotoEditPageTests.Edit_and_delete_forms_post_to_the_photo_with_the_return_page_and_the_antiforgery_token |  the edit form carries no antiforgery token 
+FAIL (sizes) the edit screen declares the grid sizes -> guard stayed GREEN
+PASS (cap) no 80vh cap on the stage -> red:   Failed Gallery.Web.Tests.PhotoEditBrowserTests.SC002_at_1440_the_photo_is_wholly_visible_at_its_stored_aspect_and_at_least_3x_the_tile(w: 960, h: 1280) |  frame y 141..1041 is not inside 0..900 
+PASS (landing) save lands on the library -> red:   Failed Gallery.Web.Tests.LibraryEditTests.Save_answers_303_and_the_panel_shows_the_stored_values_and_Saved |  Assert.Equal() Failure: Strings differ  ↓ (pos 14) 
+PASS (crumb) the breadcrumb goes to library page 1 -> red:   Failed Gallery.Web.Tests.PhotoEditBrowserTests.SC004_save_then_breadcrumb_returns_to_library_page_2_with_the_tile_in_view |  Assert.Equal() Failure: Strings differ  ↓ (pos 0) 
+PASS (live) PhotoAsync reads tombstoned images -> red:   Failed Gallery.Web.Tests.PhotoReaderTests.Tombstoned_id_is_null_after_one_image_read_and_no_gallery_read |  Assert.Null() Failure: Value is not null Expected: null 
+FAIL (gap) the edit screen adds a top margin -> guard stayed GREEN
+restored: build clean
+
+2 FAILED
+
+== Rerun of the two rows that stayed green, after fixing the BREAKS (not the guards):
+   sizes: perl replaced only the first match, the header comment; the break is now anchored to
+          the StageSizes line.
+   gap:   margin-top is zeroed by AdminLayout's `.admin-main > ::deep :first-child` rule, so it
+          never reached the page; the break is now `position: relative; top: 40px`.
+   (NV_ONLY='sizes gap' bash evidence/non-vacuity.sh)
+PASS (sizes) the edit screen declares the grid sizes -> red:   Failed Gallery.Web.Tests.PhotoEditPageTests.L6_shows_one_photo_and_no_grid_with_the_aside_sizes_and_high_priority |  Assert.Equal() Failure: Collections differ  ↓ (pos 0) 
+PASS (gap) the edit screen adds a top margin -> red:   Failed Gallery.Web.Tests.AdminLayoutConsistencyBrowserTests.Every_admin_page_type_draws_the_same_chrome |  390px gap to content: photo 56 vs upload 16 1440px gap to content: photo 88 vs upload 48 
+restored: build clean
+
+ALL PASS

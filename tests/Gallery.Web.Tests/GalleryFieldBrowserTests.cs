@@ -180,7 +180,7 @@ public sealed class GalleryFieldBrowserTests(LibraryBrowserFixture fx)
         await using var site = await fx.NewSiteAsync();
         var s = await SeedAsync(site);
         var p = s.Ids[0];
-        var page = await OpenAsync(site, $"/admin/library?open={p}");
+        var page = await OpenAsync(site, $"/admin/library/images/{p}");
 
         // Tab into the field: from the caption, past the saved token's link and ×, to the input.
         await page.Locator(".side-panel textarea[name='caption']").FocusAsync();
@@ -222,7 +222,7 @@ public sealed class GalleryFieldBrowserTests(LibraryBrowserFixture fx)
     {
         await using var site = await fx.NewSiteAsync();
         var s = await SeedAsync(site);
-        var page = await OpenAsync(site, $"/admin/library?open={s.Ids[0]}");
+        var page = await OpenAsync(site, $"/admin/library/images/{s.Ids[0]}");
 
         await Input(page).FillAsync("coa");
         Assert.Equal(["Coastline · Private", "+ coa"], await VisibleRowsAsync(page));
@@ -251,7 +251,7 @@ public sealed class GalleryFieldBrowserTests(LibraryBrowserFixture fx)
     {
         await using var site = await fx.NewSiteAsync();
         var s = await SeedAsync(site);
-        var page = await OpenAsync(site, $"/admin/library?open={s.Ids[1]}");
+        var page = await OpenAsync(site, $"/admin/library/images/{s.Ids[1]}");
         var warn = page.Locator($"{Field} .cb-warn");
         Assert.False(await warn.IsVisibleAsync());
 
@@ -289,7 +289,7 @@ public sealed class GalleryFieldBrowserTests(LibraryBrowserFixture fx)
         longTitle = longTitle.TrimEnd() + "x";
         Assert.Equal(60, longTitle.Length);
         await site.GalleryAsync(longTitle, [ids[0]]);
-        var page = await OpenAsync(site, $"/admin/library?open={ids[0]}");
+        var page = await OpenAsync(site, $"/admin/library/images/{ids[0]}");
 
         var token = page.Locator($"{Field} .cb-tokens > .cb-token").First;
         var box = await token.Locator(".cb-x").EvaluateAsync<JsonElement>("b => { const r = b.getBoundingClientRect(); return { w: r.width, h: r.height }; }");
@@ -310,7 +310,7 @@ public sealed class GalleryFieldBrowserTests(LibraryBrowserFixture fx)
     {
         await using var site = await fx.NewSiteAsync();
         var s = await SeedAsync(site);
-        var page = await OpenAsync(site, $"/admin/library?open={s.Ids[0]}");
+        var page = await OpenAsync(site, $"/admin/library/images/{s.Ids[0]}");
         var url = page.Url;
 
         var escapes = 0;
@@ -347,7 +347,7 @@ public sealed class GalleryFieldBrowserTests(LibraryBrowserFixture fx)
     {
         await using var site = await fx.NewSiteAsync();
         var s = await SeedAsync(site, "Alpine beach", "Beach", "Beaches");
-        var page = await OpenAsync(site, $"/admin/library?open={s.Ids[0]}");
+        var page = await OpenAsync(site, $"/admin/library/images/{s.Ids[0]}");
 
         // The page's own options and tokens, read back from the store (as K3 builds them).
         var docs = await site.Galleries.Find(FilterDefinition<Gallery.Web.Data.GalleryDoc>.Empty).ToListAsync();
@@ -384,7 +384,7 @@ public sealed class GalleryFieldBrowserTests(LibraryBrowserFixture fx)
         var ids = await site.ImagesAsync(1);
         for (var i = 0; i < 200; i++)
             await site.GalleryAsync($"Gallery {i + 1:000}", []);
-        var page = await OpenAsync(site, $"/admin/library?open={ids[0]}");
+        var page = await OpenAsync(site, $"/admin/library/images/{ids[0]}");
         Assert.Equal(200, await page.Locator($"{Field} .cb-list > .cb-opt:not(.cb-new)").CountAsync());
 
         await page.EvaluateAsync("""
@@ -416,7 +416,7 @@ public sealed class GalleryFieldBrowserTests(LibraryBrowserFixture fx)
     {
         await using var site = await fx.NewSiteAsync();
         var s = await SeedAsync(site);
-        var page = await OpenAsync(site, $"/admin/library?open={s.Ids[0]}");
+        var page = await OpenAsync(site, $"/admin/library/images/{s.Ids[0]}");
         Assert.Equal(["Save"], await FilledOutsideAsync(page));
         await Input(page).FillAsync("a");
         Assert.Equal(["Save"], await FilledOutsideAsync(page));
@@ -434,7 +434,7 @@ public sealed class GalleryFieldBrowserTests(LibraryBrowserFixture fx)
         var s = await SeedAsync(site, "Walks at noon");
         var p = s.Ids[1];
         var before = await site.Galleries.CountDocumentsAsync(FilterDefinition<Gallery.Web.Data.GalleryDoc>.Empty);
-        var page = await OpenAsync(site, $"/admin/library?open={p}");
+        var page = await OpenAsync(site, $"/admin/library/images/{p}");
 
         await Input(page).FillAsync("Night walks");
         var rows = await VisibleRowsAsync(page);
@@ -462,7 +462,7 @@ public sealed class GalleryFieldBrowserTests(LibraryBrowserFixture fx)
     {
         await using var site = await fx.NewSiteAsync();
         var s = await SeedAsync(site);
-        var page = await OpenAsync(site, $"/admin/library?open={s.Ids[1]}");
+        var page = await OpenAsync(site, $"/admin/library/images/{s.Ids[1]}");
 
         await Input(page).FillAsync(" coast ");
         Assert.False(await NewRow(page).IsVisibleAsync(), "a + row is offered for an existing title");
@@ -475,7 +475,7 @@ public sealed class GalleryFieldBrowserTests(LibraryBrowserFixture fx)
     {
         await using var site = await fx.NewSiteAsync();
         var s = await SeedAsync(site);
-        var page = await OpenAsync(site, $"/admin/library?open={s.Ids[1]}");
+        var page = await OpenAsync(site, $"/admin/library/images/{s.Ids[1]}");
 
         await Input(page).FillAsync(new string('a', 201));
         var msg = page.Locator($"{Field} .cb-msg");
@@ -494,7 +494,7 @@ public sealed class GalleryFieldBrowserTests(LibraryBrowserFixture fx)
     {
         await using var site = await fx.NewSiteAsync();
         var s = await SeedAsync(site);
-        var page = await OpenAsync(site, $"/admin/library?open={s.Ids[1]}");
+        var page = await OpenAsync(site, $"/admin/library/images/{s.Ids[1]}");
 
         await Input(page).FillAsync("X");
         Assert.Equal(["+ X"], await VisibleRowsAsync(page));
@@ -534,7 +534,7 @@ public sealed class GalleryFieldBrowserTests(LibraryBrowserFixture fx)
         await using var site = await fx.NewSiteAsync();
         var s = await SeedAsync(site);
         var p = s.Ids[0];
-        var page = await OpenAsync(site, $"/admin/library?open={p}");
+        var page = await OpenAsync(site, $"/admin/library/images/{p}");
         var coast = s.G["Coast"];
         Assert.Equal([coast], await TokenIdsAsync(page));
 
@@ -562,7 +562,7 @@ public sealed class GalleryFieldBrowserTests(LibraryBrowserFixture fx)
         var p = s.Ids[0];
         // A second holder of P, after Coast in title order (tokens render in title order).
         var pierWalks = await site.GalleryAsync("Pier walks", [p]);
-        var page = await OpenAsync(site, $"/admin/library?open={p}");
+        var page = await OpenAsync(site, $"/admin/library/images/{p}");
         Assert.Equal([s.G["Coast"], pierWalks], await TokenIdsAsync(page));
 
         await Input(page).FocusAsync();
@@ -588,7 +588,7 @@ public sealed class GalleryFieldBrowserTests(LibraryBrowserFixture fx)
         var p = s.Ids[0];
         var coast = s.G["Coast"];
         var itemsBefore = (await site.GalleryDocAsync(coast)).Items.ToList();
-        var page = await OpenAsync(site, $"/admin/library?open={p}");
+        var page = await OpenAsync(site, $"/admin/library/images/{p}");
 
         await page.Locator($"{Field} .cb-token[data-id='{coast}'] .cb-x").ClickAsync();
         await page.Mouse.MoveAsync(0, 0);
@@ -620,7 +620,7 @@ public sealed class GalleryFieldBrowserTests(LibraryBrowserFixture fx)
         var s = await SeedAsync(site);
         var p = s.Ids[0];
         var coast = s.G["Coast"];
-        var page = await OpenAsync(site, $"/admin/library?open={p}");
+        var page = await OpenAsync(site, $"/admin/library/images/{p}");
 
         await page.Locator(".side-panel textarea[name='caption']").FocusAsync();
         var onX = false;

@@ -52,7 +52,7 @@ public class LibraryEditTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
 
         var resp = await SaveAsync(h, img.Id, ("title", "  Harbour at dusk "), ("caption", "Low tide & gulls."));
         Assert.Equal(HttpStatusCode.SeeOther, resp.StatusCode);
-        Assert.Equal($"/admin/library?page=1&open={img.Id}&saved=1", resp.Headers.Location?.ToString());
+        Assert.Equal($"/admin/library/images/{img.Id}?page=1&saved=1", resp.Headers.Location?.ToString());
 
         var stored = await ImageAsync(h, img.Id);
         Assert.Equal(("Harbour at dusk", "Low tide & gulls."), (stored.Title, stored.Caption));
@@ -180,16 +180,16 @@ public class LibraryEditTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         var b = await GalleryAsync(h, "Bravo", [img.Id]);
         await h.SettleAsync();
 
-        var aside = Aside(await LibraryHtml.BodyAsync(await h.GetAsync($"/admin/library?open={img.Id}")));
+        var aside = Aside(await LibraryHtml.BodyAsync(await h.GetAsync($"/admin/library/images/{img.Id}")));
         var list = Regex.Match(aside, "<ul class=\"cb-tokens\".*?</ul>", RegexOptions.Singleline).Value;
         Assert.Equal([$"/admin/galleries/{a}", $"/admin/galleries/{b}"],
             Regex.Matches(list, "href=\"([^\"]+)\"").Select(m => m.Groups[1].Value).ToList());
         Assert.Contains(
             "It is in 2 galleries. This removes it from every gallery and deletes the original file. It can't be undone.",
             aside);
-        Assert.Matches($"<form id=\"lib-del-one\"[^>]*action=\"/admin/library/images/{img.Id}/delete\"", await LibraryHtml.BodyAsync(await h.GetAsync($"/admin/library?open={img.Id}")));
+        Assert.Matches($"<form id=\"lib-del-one\"[^>]*action=\"/admin/library/images/{img.Id}/delete\"", await LibraryHtml.BodyAsync(await h.GetAsync($"/admin/library/images/{img.Id}")));
 
-        var looseAside = Aside(await LibraryHtml.BodyAsync(await h.GetAsync($"/admin/library?open={loose.Id}")));
+        var looseAside = Aside(await LibraryHtml.BodyAsync(await h.GetAsync($"/admin/library/images/{loose.Id}")));
         Assert.Contains("It is in no gallery. This removes it from every gallery and deletes the original file. It can't be undone.", looseAside);
         Assert.Contains("Not in a gallery", looseAside);
         Assert.DoesNotContain("View ↗", looseAside);

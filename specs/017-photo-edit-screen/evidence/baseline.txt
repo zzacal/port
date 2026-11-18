@@ -1,0 +1,12 @@
+HEAD e3c7829e (git rev-parse below)
+web test files: 135 at HEAD (before T003's PhotoEditTimingEvidenceTests.cs; 136 after)
+gate (bash specs/017-photo-edit-screen/evidence/gate.sh baseline, at e3c7829 plus T003's test file only):
+build exit 0
+Passed!  - Failed:     0, Passed:   122, Skipped:     0, Total:   122, Duration: 108 ms - Gallery.Core.Tests.dll (net10.0)
+Passed!  - Failed:     0, Passed:  1505, Skipped:     1, Total:  1506, Duration: 5 m 6 s - Gallery.Web.Tests.dll (net10.0)
+test exit 0
+(the 1 skip is the existing NavBrowserTests prerender fact, Chrome refuses prerender under automation)
+T003 pre-change capture: PhotoEditTimingEvidenceTests.Pre_library_with_panel run ALONE on the unchanged tree
+  (artifacts/parent-pre) -> evidence/pre-timings.log: 100 lines "http.request GET /admin/library 200", db_reads 4 on every line.
+  During gates the test writes to /tmp (gate.sh sets PHOTO_TIMING_LOG), so the committed capture is never a loaded-suite run.
+e3c7829e954d8014d0cab1663093bb846b4becb0

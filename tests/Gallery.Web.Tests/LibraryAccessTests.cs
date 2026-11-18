@@ -29,6 +29,7 @@ public class LibraryAccessTests(S3ProxyFixture s3, MongoFixture mongo) : IClassF
         ["L3"] = ("POST", "/admin/library/add"),
         ["L4"] = ("POST", "/admin/library/delete"),
         ["L5"] = ("POST", "/admin/library/images/{iid}/delete"),
+        ["L6"] = ("GET", "/admin/library/images/{iid}"), // 017 A18
         ["G1"] = ("GET", "/admin/galleries"),
         ["G2"] = ("POST", "/admin/galleries"),
         ["G3"] = ("POST", "/admin/galleries/order"),
@@ -42,10 +43,10 @@ public class LibraryAccessTests(S3ProxyFixture s3, MongoFixture mongo) : IClassF
     };
 
     [Fact]
-    public void The_route_table_is_the_15_routes_of_the_contract()
+    public void The_route_table_is_the_16_routes_of_the_contract()
     {
-        Assert.Equal(15, Routes.Count);
-        Assert.Equal(["L1", "L2", "L3", "L4", "L5", "G1", "G2", "G3", "G4", "B1", "B2", "B3", "B4", "B5", "B6"], Routes.Keys.ToList());
+        Assert.Equal(16, Routes.Count);
+        Assert.Equal(["L1", "L2", "L3", "L4", "L5", "L6", "G1", "G2", "G3", "G4", "B1", "B2", "B3", "B4", "B5", "B6"], Routes.Keys.ToList());
     }
 
     public static TheoryData<string> Enabled() => new(Routes.Keys);

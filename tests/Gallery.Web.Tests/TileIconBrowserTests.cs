@@ -89,12 +89,6 @@ public sealed class TileIconBrowserTests(LibraryBrowserFixture fx)
         await page.Mouse.MoveAsync(0, 0);
     }
 
-    private static string? OpenParam(IPage page)
-    {
-        var q = System.Web.HttpUtility.ParseQueryString(new Uri(page.Url).Query);
-        return q["open"];
-    }
-
     /// <summary>The tile ids whose edit icon is current, in page order.</summary>
     private static Task<string[]> ActiveEditsAsync(IPage page) =>
         page.EvaluateAsync<string[]>("() => [...document.querySelectorAll('[aria-current=\"true\"].pa-edit')].map(a => a.closest('.lib-tile').id)");
@@ -312,17 +306,17 @@ public sealed class TileIconBrowserTests(LibraryBrowserFixture fx)
     [Theory]
     [InlineData(1440, 900)]
     [InlineData(390, 844)]
-    public async Task SC003_with_js_edit_and_gallery_toggle_one_panel_at_a_time(int width, int height)
+    public async Task SC003_with_js_edit_and_gallery_open_the_photo_edit_screen(int width, int height)
     {
         await using var site = await fx.NewSiteAsync();
         var ids = await site.ImagesAsync(2, "Toggle");
         var (a, b) = (ids[0], ids[1]);
         var page = await OpenAsync(site, "/admin/library", width, height);
-        await ToggleStepsAsync(page, a, b, checkViewport: true);
+        await OpenStepsAsync(page, site, a, b, checkViewport: true);
     }
 
     [Fact]
-    public async Task SC003_without_js_the_same_three_steps_work()
+    public async Task SC003_without_js_the_same_steps_work()
     {
         await using var site = await fx.NewSiteAsync();
         var ids = await site.ImagesAsync(2, "Toggle");
@@ -331,7 +325,7 @@ public sealed class TileIconBrowserTests(LibraryBrowserFixture fx)
         {
             await GotoAsync(page, site, "/admin/library");
             Assert.False(await page.EvaluateAsync<bool>("() => document.querySelector('.selection-bar')?.dataset.script === 'ready'"));
-            await ToggleStepsAsync(page, ids[0], ids[1], checkViewport: false);
+            await OpenStepsAsync(page, site, ids[0], ids[1], checkViewport: false);
         }
         finally
         {
@@ -339,64 +333,27 @@ public sealed class TileIconBrowserTests(LibraryBrowserFixture fx)
         }
     }
 
-    private static async Task ToggleStepsAsync(IPage page, string a, string b, bool checkViewport)
+    /// <summary>017 A16 (stated change): the icons open the photo's own edit screen; nothing toggles.</summary>
+    private static async Task OpenStepsAsync(IPage page, LibrarySite site, string a, string b, bool checkViewport)
     {
-        // 1. A's pencil opens A.
+        // 1. A's pencil opens A's edit screen: the panel and one photo, no grid.
         await ClickNavigatesAsync(page, $"#t-{a} .pa-edit");
-        Assert.Equal(a, OpenParam(page));
+        Assert.Equal(($"/admin/library/images/{a}", "?page=1"), (new Uri(page.Url).AbsolutePath, new Uri(page.Url).Query));
         Assert.True(await page.Locator("#lib-edit").IsVisibleAsync());
-        Assert.Equal([$"t-{a}"], await ActiveEditsAsync(page));
-        Assert.Equal([$"t-{a}"], await ActiveGroupsAsync(page));
+        Assert.Equal(1, await page.Locator("main picture").CountAsync());
+        Assert.Equal(0, await page.Locator(".lib-tile").CountAsync());
 
-        // 2. B's folder opens B, with its Galleries field in view.
+        // 2. Back on the library no tile is current.
+        await GotoAsync(page, site, "/admin/library");
+        Assert.Empty(await ActiveEditsAsync(page));
+        Assert.Empty(await ActiveGroupsAsync(page));
+
+        // 3. B's folder opens B's edit screen, with its Galleries field in view.
         await ClickNavigatesAsync(page, $"#t-{b} .pa-group");
-        Assert.Equal(b, OpenParam(page));
-        Assert.True(await page.Locator("#lib-edit").IsVisibleAsync());
+        Assert.Equal(($"/admin/library/images/{b}", "?page=1"), (new Uri(page.Url).AbsolutePath, new Uri(page.Url).Query));
         Assert.EndsWith($"/admin/library/images/{b}", await page.Locator("#lib-edit").GetAttributeAsync("action"));
         if (checkViewport)
             Assert.True(await InViewportAsync(page, "#lib-edit .combobox"), "B's Galleries field is not in the viewport");
-        Assert.Equal([$"t-{b}"], await ActiveEditsAsync(page));
-        Assert.Equal([$"t-{b}"], await ActiveGroupsAsync(page));
-
-        // 3. B's pencil closes the editor.
-        await ClickNavigatesAsync(page, $"#t-{b} .pa-edit");
-        Assert.Null(OpenParam(page));
-        Assert.Equal(0, await page.Locator("#lib-edit").CountAsync());
-        Assert.Empty(await ActiveEditsAsync(page));
-        Assert.Empty(await ActiveGroupsAsync(page));
-    }
-
-    // ── panel in view: sticky aside (K7) and J1 ──────────────────────────────────────────────
-
-    [Fact]
-    public async Task At_1440_the_sticky_panel_is_in_view_beside_the_40th_tile()
-    {
-        await using var site = await fx.NewSiteAsync();
-        await site.ImagesAsync(45, "Many");
-        var page = await OpenAsync(site, "/admin/library");
-        var tile = page.Locator("section.lib .lib-tile").Nth(39);
-        await tile.ScrollIntoViewIfNeededAsync();
-        var id = await tile.GetAttributeAsync("id");
-        await ClickNavigatesAsync(page, $"#{id} .pa-edit");
-
-        Assert.True(await page.EvaluateAsync<double>("() => scrollY") > 1000, "the page did not land at the 40th tile");
-        Assert.True(await InViewportAsync(page, $"#{id}"), "the 40th tile is not in view");
-        Assert.True(await InViewportAsync(page, "#lib-edit"), "the panel's top is not in the viewport");
-    }
-
-    [Fact]
-    public async Task At_390_with_js_the_stacked_panels_galleries_field_is_brought_into_view()
-    {
-        await using var site = await fx.NewSiteAsync();
-        await site.ImagesAsync(45, "Many");
-        var page = await OpenAsync(site, "/admin/library", 390, 844);
-        var tile = page.Locator("section.lib .lib-tile").Nth(39);
-        await tile.ScrollIntoViewIfNeededAsync();
-        var id = await tile.GetAttributeAsync("id");
-        await ClickNavigatesAsync(page, $"#{id} .pa-edit");
-
-        Assert.Equal(id![2..], OpenParam(page));
-        Assert.True(await InViewportAsync(page, "#lib-edit .combobox"), "the Galleries field is not in the viewport");
     }
 
     // ── FR-010 one filled action ─────────────────────────────────────────────────────────────
@@ -424,7 +381,7 @@ public sealed class TileIconBrowserTests(LibraryBrowserFixture fx)
             .EnumerateArray().Select(e => e.GetString()!).ToArray();
 
     [Fact]
-    public async Task FR010_no_icon_is_filled_at_rest_and_only_Save_with_a_panel_open_and_A_active()
+    public async Task FR010_no_icon_is_filled_at_rest_and_only_Save_on_the_edit_screen()
     {
         await using var site = await fx.NewSiteAsync();
         var ids = await site.ImagesAsync(3);
@@ -432,9 +389,10 @@ public sealed class TileIconBrowserTests(LibraryBrowserFixture fx)
 
         var rest = await OpenAsync(site, "/admin/library");
         Assert.Empty(await FilledOutsideAsync(rest));
+        // 017 A17 (stated change): no tile is ever current; the edit screen's Save is its one filled button.
+        Assert.Empty(await ActiveEditsAsync(rest));
 
-        var open = await OpenAsync(site, $"/admin/library?open={ids[0]}");
-        Assert.Equal([$"t-{ids[0]}"], await ActiveEditsAsync(open));
+        var open = await OpenAsync(site, $"/admin/library/images/{ids[0]}");
         Assert.Equal(["Save"], await FilledOutsideAsync(open));
     }
 

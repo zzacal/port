@@ -1,0 +1,8 @@
+/* 017 photo edit screen (contracts/components.md P1). The stage rules are SoloViewer.razor.css's
+   (scoped CSS doesn't cross components): the photo's own letterboxed rectangle, at most 80vh tall
+   and the column wide, centred. The status rule is LibraryPage.razor.css's. The section's first
+   child carries no top margin (IX.2; AdminLayout's :first-child rule zeroes it). */
+.pe-stage ::deep .fit-contain { height: auto; container-type: inline-size; }
+.pe-stage ::deep .fit-contain .frame { position: relative; inset: auto; margin: 0 auto; }
+.pe-stage ::deep .fit-contain .sizer { max-height: 80vh; }
+.lib-result { margin: 0 0 var(--space-s); font-size: var(--type-body); }

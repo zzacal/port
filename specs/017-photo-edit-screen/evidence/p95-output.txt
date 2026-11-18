@@ -1,0 +1,7 @@
+== pre:  specs/017-photo-edit-screen/evidence/pre-timings.log
+== post: specs/017-photo-edit-screen/evidence/photo-timings.log
+PASS SC-005 photo n pre=100 post=100
+PASS SC-005 photo p95 post=4.65 ms <= pre 26.14 * 1.10 + 1 = 29.75
+PASS SC-005 photo db_reads every post line {3} <= pre 4
+
+ALL PASS
