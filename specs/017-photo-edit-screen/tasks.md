@@ -71,13 +71,13 @@ it names, in the same batch as the code.
 
 ## Phase 1: Setup (parent)
 
-- [ ] T001 Record the baseline in `specs/017-photo-edit-screen/evidence/baseline.txt`:
+- [X] T001 Record the baseline in `specs/017-photo-edit-screen/evidence/baseline.txt`:
   `git rev-parse HEAD`, the full-suite counts (from the finished run's own output, never a
   partial file), and `ls tests/Gallery.Web.Tests/*.cs | wc -l`.
-- [ ] T002 Copy `specs/016-galleries-list-icons/evidence/gate.sh` to
+- [X] T002 Copy `specs/016-galleries-list-icons/evidence/gate.sh` to
   `specs/017-photo-edit-screen/evidence/gate.sh`. Output `/tmp/017-gate-$L.txt`; add
   `specs/016-galleries-list-icons/evidence` to the dirs restored in its `trap … EXIT`.
-- [ ] T003 Write `tests/Gallery.Web.Tests/PhotoEditTimingEvidenceTests.cs` (Category=Evidence,
+- [X] T003 Write `tests/Gallery.Web.Tests/PhotoEditTimingEvidenceTests.cs` (Category=Evidence,
   modelled on 016's `GalleryListTimingEvidenceTests`) with one fact `Pre_library_with_panel`:
   - 100 images (`InsertUploadedImageAsync`), 3 galleries holding the first 10;
   - 100 GETs of `/admin/library?page=1&open={id}` for an id on page 1, each 200;
@@ -85,13 +85,13 @@ it names, in the same batch as the code.
   - write the host log to env `PHOTO_TIMING_LOG`, default
     `specs/017-photo-edit-screen/evidence/pre-timings.log`.
   Run it NOW on the unchanged tree. Commit the test file and the log.
-- [ ] T004 Copy 016's `p95.sh` and `p95-selftest.sh` to `specs/017-photo-edit-screen/evidence/`
+- [X] T004 Copy 016's `p95.sh` and `p95-selftest.sh` to `specs/017-photo-edit-screen/evidence/`
   and adapt the rows:
   - pre route = lines matching `^http.request GET /admin/library 200 `;
   - post route = lines matching `^http.request GET /admin/library/images/[0-9a-z]{26} 200 `;
   - p95 post ≤ pre × 1.10 + 1 ms; every post `db_reads` ≤ the single pre value; n ≥ 100 each.
   Run the selftest into `p95-selftest.txt`.
-- [ ] T005 Write `specs/017-photo-edit-screen/evidence/test-impact-edit.py` from 016's:
+- [X] T005 Write `specs/017-photo-edit-screen/evidence/test-impact-edit.py` from 016's:
   - rows A1–A18, B1–B2 and D1–D2 as count-asserting (file, old, new, count) replacements; A13,
     A15, A16, A17 and A10's rewrite carry their full new fact bodies, written from
     test-impact.md and contracts/http.md;
@@ -230,7 +230,7 @@ removal only), the new `src/Gallery.Web/Admin/Pages/PhotoEditPage.razor` and `.r
   `specs/017-photo-edit-screen/evidence/photo-timings.log`. Run it, then
   `p95.sh pre-timings.log photo-timings.log | tee evidence/p95-output.txt`. A miss is recorded,
   not tuned.
-- [ ] T018 [P] VII.2: write `specs/017-photo-edit-screen/evidence/design-record-edit.py` (each
+- [X] T018 [P] VII.2: write `specs/017-photo-edit-screen/evidence/design-record-edit.py` (each
   old string's count asserted before writing) for
   `specs/001-architecture-stack-design/draft/02d-decisions-delivery.md` per research R-10: D-20
   drops the "library below 800 px" clause (the builder clause stays); the D-23 Library line
