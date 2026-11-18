@@ -102,7 +102,8 @@ breadcrumb: page 3 opens scrolled to that photo's tile.
 - **FR-006**: A refused save MUST re-render the edit screen with the reason and the owner's
   entries kept and store nothing, as the panel does today.
 - **FR-007**: Delete photo MUST behave as today and then return the owner to the library page
-  they came from (the first page when unknown or when that page no longer exists).
+  they came from (the first page when unknown; a page past the end shows the last page, as the
+  library already does).
 - **FR-008**: The edit screen MUST show the admin breadcrumb "Library › {photo title}", with
   "Library" linking back to the library page the owner came from, at that photo's tile.
 - **FR-009**: The library's side panel MUST be removed: the library page shows only its grid,
@@ -132,9 +133,12 @@ breadcrumb: page 3 opens scrolled to that photo's tile.
 
 - **SC-001**: From any library page, opening a photo for editing takes one click and shows that
   photo and no other.
-- **SC-002**: On the edit screen at 1440 px and 390 px widths, the photo's rendered size is at
-  least 3 times the area of its library tile at the same width, and the whole photo is inside
-  the visible area at 1440 px with no scrolling.
+- **SC-002**: On the edit screen at 1440 × 900 px, the photo's rendered area is at least 3 times
+  its library tile's area at the same width, and the whole photo is inside the visible area with
+  no scrolling. At 390 × 844 px (where the library is already one column) the photo spans the
+  full content width (or is height-bound and centred) and is wholly visible on load.
+  (Corrected at plan: a 3× bound cannot hold at 390 px, where a one-column tile is already
+  content-wide.)
 - **SC-003**: Every behaviour the side panel's existing tests prove (save, refusal, galleries,
   delete, timing) passes on the edit screen, with only the address and landing place changed.
 - **SC-004**: After saving, one click on the breadcrumb returns the owner to the library page
