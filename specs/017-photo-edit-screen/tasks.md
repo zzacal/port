@@ -169,9 +169,9 @@ removal only), the new `src/Gallery.Web/Admin/Pages/PhotoEditPage.razor` and `.r
   (L1 no longer reads `open`; L3/L4/L2-NotFound pass none); in `LibraryReader.cs` remove
   `PageAsync`'s `open` parameter, the off-page read and `LibraryPageData.Open` with its doc
   comment.
-- [ ] T013 [P] [US1] `LibraryPage.razor.css`: remove the 016 G5 block (P4). Keep the `.lib-grid`
+- [ ] T013 [P] [US1] In `src/Gallery.Web/Admin/Pages/LibraryPage.razor.css`, remove the 016 G5 block (P4). Keep the `.lib-grid`
   wrapper in the markup.
-- [ ] T014 [P] [US1] `library.js`: apply J1 (remove the final "panel into view" section and the
+- [ ] T014 [P] [US1] In `src/Gallery.Web/wwwroot/admin-assets/library.js`, apply J1 (remove the final "panel into view" section and the
   "Photo panel (feature 015 J1)" header paragraph; reword the combobox header line). Nothing else.
 - [ ] T015 [US1] [US2] [SAFETY] Write `tests/Gallery.Web.Tests/PhotoEditPageTests.cs` (HTTP,
   `LibraryHost`):
