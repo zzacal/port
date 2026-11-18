@@ -263,7 +263,7 @@ removal only), the new `src/Gallery.Web/Admin/Pages/PhotoEditPage.razor` and `.r
   - the photo page dropped from the layout list → no break needed; instead break
     `PhotoEditPage.razor.css` with `.pe { margin-top: 40px }` → AdminLayoutConsistencyBrowserTests red.
   Run `NV_DRYRUN=1`, then the real run; tee to `non-vacuity.txt`.
-- [ ] T023 Final gate (`evidence/gate-final.txt`): `dotnet clean`, `-warnaserror` build, full suite
+- [X] T023 Final gate (`evidence/gate-final.txt`): `dotnet clean`, `-warnaserror` build, full suite
   including Evidence and Browser; `p95.sh` recorded; restore earlier features' regenerated logs;
   commit.
 - [ ] T024 Merge to main (`--no-ff`, body as in 016's) and push. Watch the deploy job go green.

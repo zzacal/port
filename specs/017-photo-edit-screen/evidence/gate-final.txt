@@ -1,0 +1,8 @@
+T023 final gate at d3bf248: dotnet clean, then bash evidence/gate.sh final
+    0 Warning(s)
+    0 Error(s)
+build exit 0
+Passed!  - Failed:     0, Passed:   123, Skipped:     0, Total:   123, Duration: 103 ms - Gallery.Core.Tests.dll (net10.0)
+Passed!  - Failed:     0, Passed:  1530, Skipped:     1, Total:  1531, Duration: 5 m 3 s - Gallery.Web.Tests.dll (net10.0)
+test exit 0
+p95 (evidence/p95-output.txt): ALL PASS, p95 4.65 ms <= 29.75, db_reads 3 <= 4
