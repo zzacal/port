@@ -43,4 +43,12 @@ public class SizesTests
             "(min-width: 1200px) calc((100vw - 96px) / 1), (min-width: 600px) calc((100vw - 64px) / 1), calc((100vw - 32px) / 1)",
             result);
     }
+
+    [Fact]
+    public void ForAside_ReturnsExpectedString()
+    {
+        Assert.Equal(
+            "(min-width: 1200px) calc(100vw - 448px), (min-width: 600px) calc(100vw - 64px), calc(100vw - 32px)",
+            Sizes.ForAside());
+    }
 }

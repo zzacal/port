@@ -21,4 +21,11 @@ public static class Sizes
                $"(min-width: {Tokens.BreakMedium}px) calc((100vw - {mediumGap}px) / {medium}), " +
                $"calc((100vw - {smallGap}px) / {small})";
     }
+
+    /// The one image in admin main beside AdminLayout's 320 px aside (≥ BreakLarge), else full content width.
+    public static string ForAside() =>
+        $"(min-width: {Tokens.BreakLarge}px) calc(100vw - {2 * Tokens.SpaceL + Tokens.SpaceM + AsideWidth}px), " +
+        $"(min-width: {Tokens.BreakMedium}px) calc(100vw - {2 * Tokens.SpaceM}px), " +
+        $"calc(100vw - {2 * Tokens.SpaceS}px)";
+    public const int AsideWidth = 320; // AdminLayout.razor.css .with-aside column
 }

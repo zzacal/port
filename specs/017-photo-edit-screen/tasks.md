@@ -106,11 +106,11 @@ Batch A owns: `src/Gallery.Core/Images/Sizes.cs`, `src/Gallery.Web/Library/Libra
 `tests/Gallery.Core.Tests/SizesTests.cs` (append only), the new
 `tests/Gallery.Web.Tests/PhotoReaderTests.cs`.
 
-- [ ] T006 [P] Add `ForAside()` and `AsideWidth` to `src/Gallery.Core/Images/Sizes.cs` exactly as
+- [X] T006 [P] Add `ForAside()` and `AsideWidth` to `src/Gallery.Core/Images/Sizes.cs` exactly as
   contracts/components.md P2. Append one fact to `tests/Gallery.Core.Tests/SizesTests.cs`
   asserting the exact string
   `(min-width: 1200px) calc(100vw - 448px), (min-width: 600px) calc(100vw - 64px), calc(100vw - 32px)`.
-- [ ] T007 In `src/Gallery.Web/Library/LibraryReader.cs` (R-04):
+- [X] T007 In `src/Gallery.Web/Library/LibraryReader.cs` (R-04):
   - move the `ToTile` lambda into a private static method
     `Tile(ImageDoc d, IReadOnlyDictionary<string, GalleryRef> byId, IReadOnlyDictionary<string, int> rank, Func<…> url)`
     (match the existing url delegate's type) and call it from `PageAsync`, output unchanged;
@@ -118,7 +118,7 @@ Batch A owns: `src/Gallery.Core/Images/Sizes.cs`, `src/Gallery.Web/Library/Libra
     filter and `Id == iid`, same projection as the page read; null → return `(null, [])` with no
     further read; else `GalleriesAsync()` and build the tile with `Tile(...)`;
   - leave `PageAsync(int page, string? open = null)` as it is (Batch B removes `open`).
-- [ ] T008 Write `tests/Gallery.Web.Tests/PhotoReaderTests.cs` (`LibraryHost`, run the reader via
+- [X] T008 Write `tests/Gallery.Web.Tests/PhotoReaderTests.cs` (`LibraryHost`, run the reader via
   `h.RunAsync<LibraryReader, …>`):
   - known photo in 2 galleries: tile Galleries EQUAL the holders in home order, ViewHref equals
     `PageAsync`'s tile for the same photo (record equality of the two `LibraryTile`s);
