@@ -1,0 +1,15 @@
+020 T061: public pages, anonymous browser (Chrome over CDP), local built app on https://localhost:5092
+against the dev data (gallery_dev), at 390x844 and 1440x900. Each page scrolled to the bottom and back
+before counting. admin = resource requests to /admin-assets/; ws = elements with a ws-* class;
+broken = completed <img> with naturalWidth 0 (data: placeholders excluded).
+
+390 / {"admin": 0, "ws": 0, "imgs": 0, "broken": 0, "sideways": false}
+390 /g {"admin": 0, "ws": 0, "imgs": 22, "broken": 0, "sideways": false}
+390 /g/kd5ldmdkuhewvzus2vej6mzuam/september-6 {"admin": 0, "ws": 0, "imgs": 46, "broken": 0, "sideways": false}
+390 /g/kd5ldmdkuhewvzus2vej6mzuam/september-6/pr32nrf3qzj53432p336xgn73u {"admin": 0, "ws": 0, "imgs": 3, "broken": 0, "sideways": false}
+1440 / {"admin": 0, "ws": 0, "imgs": 0, "broken": 0, "sideways": false}
+1440 /g {"admin": 0, "ws": 0, "imgs": 22, "broken": 0, "sideways": false}
+1440 /g/kd5ldmdkuhewvzus2vej6mzuam/september-6 {"admin": 0, "ws": 0, "imgs": 46, "broken": 0, "sideways": false}
+1440 /g/kd5ldmdkuhewvzus2vej6mzuam/september-6/pr32nrf3qzj53432p336xgn73u {"admin": 0, "ws": 0, "imgs": 3, "broken": 0, "sideways": false}
+
+Byte comparison (compare-public.sh, public-compare.txt): EQUAL 11 files against the pre-change capture.

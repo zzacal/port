@@ -1,0 +1,4 @@
+Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 714 ms - Gallery.Web.Tests.dll (net10.0)
+== pre:  /Users/zzacal/repos/gallery/specs/020-admin-workspace/evidence/pre-public
+== post: /tmp/020-post-public
+EQUAL 11 files

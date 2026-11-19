@@ -1,0 +1,32 @@
+== pre:  specs/020-admin-workspace/evidence/pre-timings/{tile,library,membership}.log
+== post: specs/020-admin-workspace/evidence/workspace-timings.log
+PASS SC-005 W1-full(reads 4) n pre=100 post=102
+PASS SC-005 W1-full(reads 4) p95 post=10.54 ms <= pre 30.79 * 1.10 + 1 = 34.87
+PASS SC-005 W3-full(reads 4) n pre=100 post=100
+PASS SC-005 W3-full(reads 4) p95 post=14.09 ms <= pre 30.79 * 1.10 + 1 = 34.87
+PASS SC-005 W1-main(reads 2) n pre=100 post=100
+PASS SC-005 W1-main(reads 2) p95 post=10.94 ms <= pre 30.79 * 1.10 + 1 = 34.87
+PASS SC-005 W3-main(reads 1) n pre=100 post=100
+PASS SC-005 W3-main(reads 1) p95 post=10.28 ms <= pre 30.79 * 1.10 + 1 = 34.87
+INFO SC-005 W3-full-vs-builder n pre=100 post=100 p95 post=14.09 ms vs pre 23.07 * 1.10 + 1 = 26.38
+PASS R-02 W1 db_reads every line (n=202) in {4 2 1}: seen {4 2}
+INFO R-02 W2 db_reads no GET 200 lines
+PASS R-02 W3 db_reads every line (n=200) in {4 1}: seen {4 1}
+PASS R-02 W4 db_reads every line (n=100) in {1}: seen {1}
+PASS SC-006 A1 n pre=30 post=30
+PASS SC-006 A1 p95 post=5.13 ms <= pre 3.91 * 1.10 + 1 = 5.30
+PASS SC-006 A5 n pre=30 post=30
+PASS SC-006 A5 p95 post=6.60 ms <= pre 6.17 * 1.10 + 1 = 7.79
+PASS SC-006 A7 n pre=100 post=30
+PASS SC-006 A7 p95 post=6.72 ms <= pre 16.44 * 1.10 + 1 = 19.08
+PASS SC-006 A8 n pre=30 post=30
+PASS SC-006 A8 p95 post=7.35 ms <= pre 12.04 * 1.10 + 1 = 14.24
+PASS SC-006 A9 n pre=30 post=30
+PASS SC-006 A9 p95 post=5.49 ms <= pre 13.17 * 1.10 + 1 = 15.49
+PASS SC-006 A10 n pre=30 post=30
+PASS SC-006 A10 p95 post=5.39 ms <= pre 9.19 * 1.10 + 1 = 11.11
+PASS SC-013 joined 9 upload.joined lines
+PASS SC-013 forced item yhetvjun7ls6yyd33ylhgxgkoy has no upload.joined line
+PASS SC-013 join-ms every upload.join ok (n=9) <= 2000 ms (max 106.09)
+
+ALL PASS

@@ -630,7 +630,16 @@ function showPanel() {
 
 function setField(root, name, value) {
   const el = root.querySelector(`[name="${name}"]`);
-  if (el) el.value = value ?? '';
+  if (el) { el.value = value ?? ''; recount(el); }
+}
+
+/** The Input atom's "n / max" count under a field, kept in step with its value (filled or typed). */
+function recount(el) {
+  const count = el.closest('.field')?.querySelector('.count');
+  const max = el.getAttribute('maxlength');
+  if (!count || !max) return;
+  count.textContent = `${el.value.length} / ${max}`;
+  count.classList.toggle('count-over', el.value.length > Number(max));
 }
 
 /** A copy of a cell's <picture> for the panel's preview frame. */
@@ -1497,6 +1506,7 @@ class AdminWorkspace extends HTMLElement {
     this.addEventListener('change', (e) => dispatch(changes, e));
     this.addEventListener('input', (e) => {
       if (e.target instanceof Element && e.target.matches('.ws-panel [data-gq]')) narrow(e.target);
+      else if (e.target instanceof Element && e.target.matches('.ws-panel .field input, .ws-panel .field textarea')) recount(e.target);
     });
     this.addEventListener('keydown', onKeyIn);
     this.addEventListener('focusout', onFocusOut);

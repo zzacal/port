@@ -1,0 +1,9 @@
+sign-in: 302 (expect 302)
+PASS U3 register 100 files               96911 bytes -> 200 (expect not 413)
+PASS A9 order of 300 photos               8712 bytes -> 404 (expect not 413)
+PASS A2 delete 100 ids                    2910 bytes -> 200 (expect not 413)
+PASS A7 add 100 ids                       2910 bytes -> 404 (expect not 413)
+PASS A8 remove 100 ids                    2910 bytes -> 404 (expect not 413)
+PASS A9 at 64 KiB + overhead             65550 bytes -> 413 (expect 413)
+
+ALL PASS

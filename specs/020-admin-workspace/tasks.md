@@ -822,18 +822,18 @@ Batch G owns: `AdminLayout.razor.css` (below-1200 px rules only, C-21), `Workspa
 
 ## Phase 9: Polish, evidence, records, release
 
-- [ ] T059 [P] Write `tests/Gallery.Web.Tests/WorkspaceTimingEvidenceTests.cs`
+- [X] T059 [P] Write `tests/Gallery.Web.Tests/WorkspaceTimingEvidenceTests.cs`
   (`Category=Evidence`, `LibraryHost`, 100 photos, 3 galleries, one holding 30): 100 GETs each of
   W1 full, W1 `main`, W3 full, W3 `main`, W4; 30 POSTs each of A1, A5, A7 (one id), A8 (one id,
   re-added between), A9, A10; then an `UploadHost` part: ten registered photos staged with
   `UploadFixtures`, one forced to fail validation, nine U7 + U12; print the failed item id as a
   line `evidence.forced-failure {item}`; write the log to `WORKSPACE_TIMING_LOG` (default
   `specs/020-admin-workspace/evidence/workspace-timings.log`). Accept: the line counts p95.sh needs.
-- [ ] T060 PARENT SC-005, SC-006, SC-013 "same as before": run T059 alone, then
+- [X] T060 PARENT SC-005, SC-006, SC-013 "same as before": run T059 alone, then
   `bash evidence/p95.sh evidence/pre-timings evidence/workspace-timings.log | tee evidence/p95-output.txt`.
   A miss is recorded, never tuned: decisions row with measured values, cause from the op.timing
   breakdown, and for W3 the R-02 fallback as the recommended fix. Depends: T059.
-- [ ] T061 PARENT SC-011 "same as before": `bash evidence/compare-public.sh | tee evidence/public-compare.txt`
+- [X] T061 PARENT SC-011 "same as before": `bash evidence/compare-public.sh | tee evidence/public-compare.txt`
   → `EQUAL`; plus a browser check (anonymous, 390 and 1440) of `/`, `/g`, one gallery, one photo
   page: no request to `/admin-assets/`, no element with a `ws-` class, 0 broken images
   (`evidence/browser-public.txt`). Depends: CP-G.
@@ -873,7 +873,7 @@ Batch G owns: `AdminLayout.razor.css` (below-1200 px rules only, C-21), `Workspa
   hits only `WorkspaceRemovalGuardTests`, `AdminAccessTests` I1/I5 rows and TI-34's 404 fact;
   `grep -rnE 'library\.js|reorder\.js|ShellPage|UploadPageModel' src tests --include=*.cs --include=*.razor --include=*.js`
   hits only the removal guard. Save to `evidence/t066-grep.txt`.
-- [ ] T067 PARENT Live-server check (quickstart Live walk step 9; invisible to in-process tests):
+- [X] T067 PARENT Live-server check (quickstart Live walk step 9; invisible to in-process tests):
   run the app locally with the development sign-in, then with the browser over CDP: register 100
   photos in one U3 (body near `RegisterBodyLimit`), A9 reorder of a 300-photo gallery (~9 KB, under
   64 KiB), A2/A7/A8 with 100 ids (under 16 KiB); no 413; plus one deliberate 64 KiB + 1 A9 → 413.

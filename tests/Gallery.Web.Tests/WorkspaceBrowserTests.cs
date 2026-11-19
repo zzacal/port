@@ -409,6 +409,25 @@ public sealed class WorkspaceBrowserTests(LibraryBrowserFixture fx)
     }
 
     [Fact]
+    public async Task Field_counts_follow_the_filled_and_the_typed_value()
+    {
+        // Found at the parent's browser look (2026-11-19): the panel template is rendered empty, so the
+        // Input atom's "n / max" count said 0 next to a filled title.
+        await using var site = await fx.NewSiteAsync();
+        await site.ImagesAsync(1);
+        var page = await OpenAsync(site, "/admin");
+        await Cells(page).Nth(0).ClickAsync();
+        var title = page.Locator(".ws-panel input[name='title']");
+        var count = page.Locator(".ws-panel input[name='title']").Locator("xpath=ancestor::div[contains(concat(' ', normalize-space(@class), ' '), ' field ')]").Locator(".count");
+        var max = await title.GetAttributeAsync("maxlength");
+        Assert.Equal($"{(await title.InputValueAsync()).Length} / {max}", await count.TextContentAsync());
+        Assert.NotEqual(0, (await title.InputValueAsync()).Length);
+
+        await title.FillAsync("Harbour");
+        Assert.Equal($"7 / {max}", await count.TextContentAsync());
+    }
+
+    [Fact]
     public async Task A_blank_title_is_refused_keeping_the_typed_text_and_the_cell_title()
     {
         await using var site = await fx.NewSiteAsync();
