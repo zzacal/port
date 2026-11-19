@@ -837,7 +837,7 @@ Batch G owns: `AdminLayout.razor.css` (below-1200 px rules only, C-21), `Workspa
   → `EQUAL`; plus a browser check (anonymous, 390 and 1440) of `/`, `/g`, one gallery, one photo
   page: no request to `/admin-assets/`, no element with a `ws-` class, 0 broken images
   (`evidence/browser-public.txt`). Depends: CP-G.
-- [ ] T062 PARENT SC-012 "same as before": `git diff --exit-code <T001 commit> -- tests/Gallery.Web.Tests/UploadFlowTests.cs
+- [X] T062 PARENT SC-012 "same as before": `git diff --exit-code <T001 commit> -- tests/Gallery.Web.Tests/UploadFlowTests.cs
   tests/Gallery.Web.Tests/UploadIntakeTests.cs tests/Gallery.Web.Tests/UploadValidatorTests.cs
   tests/Gallery.Web.Tests/UploadStorageTests.cs tests/Gallery.Web.Tests/UploadSeedCoexistenceTests.cs`
   and the GPS/width/missing-size facts green in the final gate; FR-001 "sign-in unchanged":
@@ -869,7 +869,7 @@ Batch G owns: `AdminLayout.razor.css` (below-1200 px rules only, C-21), `Workspa
   DEFAULT/PLAN/IMPLEMENT/STATED-CHANGE; one STATED-CHANGE row per TI row with its checkpoint), and
   write the 020 entry in `docs/roadmap.md` (status, evidence paths, owner-only items, which
   severable phases shipped).
-- [ ] T066 PARENT Re-run the test-impact grep on the finished tree: `bash evidence/test-impact-hits.sh`
+- [X] T066 PARENT Re-run the test-impact grep on the finished tree: `bash evidence/test-impact-hits.sh`
   hits only `WorkspaceRemovalGuardTests`, `AdminAccessTests` I1/I5 rows and TI-34's 404 fact;
   `grep -rnE 'library\.js|reorder\.js|ShellPage|UploadPageModel' src tests --include=*.cs --include=*.razor --include=*.js`
   hits only the removal guard. Save to `evidence/t066-grep.txt`.

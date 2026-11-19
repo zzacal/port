@@ -1,0 +1,4 @@
+== T062 SC-012: git diff --exit-code a5806fb -- the five single-photo upload test files
+exit 0: byte-identical
+== FR-001 sign-in unchanged: WorkspaceComponentTests.AdminLayout_Bare_equals_the_pre_change_sign_in_layout (result in the final gate)
+801:    public async Task AdminLayout_Bare_equals_the_pre_change_sign_in_layout()
