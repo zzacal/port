@@ -83,39 +83,39 @@ breadcrumb: page 3 opens scrolled to that photo's tile.
 
 ### Functional Requirements
 
-- **FR-001**: Each library photo MUST have its own owner edit screen at a stable address that
+- **FR-001**: **SUPERSEDED by 020 (2026-11-19): There is no photo edit screen; a photo viewed large has its own address in the workspace (020 FR-003, FR-036).** Each library photo MUST have its own owner edit screen at a stable address that
   can be bookmarked and reloaded.
-- **FR-002**: On every library tile, the edit icon MUST lead to that photo's edit screen. The
+- **FR-002**: **SUPERSEDED by 020 (2026-11-19): Library tiles and their icons are removed (020 FR-010, FR-039).** On every library tile, the edit icon MUST lead to that photo's edit screen. The
   gallery icon, which today opens the same panel, MUST lead to the same screen (its galleries
   field lives there).
-- **FR-003**: The edit screen MUST show exactly one photo: the one being edited, rendered large
+- **FR-003**: **SUPERSEDED by 020 (2026-11-19): The large view shows the whole photo as large as the photos region allows (020 FR-036).** The edit screen MUST show exactly one photo: the one being edited, rendered large
   from the largest stored display size suitable for the screen, never the grid thumbnail
   size. The whole photo MUST be visible, uncropped and not upscaled beyond its stored
   dimensions, within the visible area at desktop and phone widths.
-- **FR-004**: The edit screen MUST present the same edit form the library side panel presents
+- **FR-004**: **SUPERSEDED by 020 (2026-11-19): The edit form is the details panel for one photo; fields save when left and gallery ticks apply at once (020 FR-009, FR-013, FR-014).** The edit screen MUST present the same edit form the library side panel presents
   today, with the same fields, limits, validation, warnings and save, saved and refused states:
   title, caption, galleries (add existing, create private, remove; applied on Save), the View
   link to the public photo page when one exists, and the Delete photo confirmation.
-- **FR-005**: Saving MUST go through the same rules and produce the same stored result, purges
+- **FR-005**: **SUPERSEDED by 020 (2026-11-19): There is no Save; each field saves when the owner leaves it (020 FR-013).** Saving MUST go through the same rules and produce the same stored result, purges
   and timing events as today's panel save. Only where the owner lands afterwards changes: back
   on the photo's edit screen with the saved state shown.
-- **FR-006**: A refused save MUST re-render the edit screen with the reason and the owner's
+- **FR-006**: **SUPERSEDED by 020 (2026-11-19): A refused save shows the reason beside the field and keeps what was typed (020 FR-013).** A refused save MUST re-render the edit screen with the reason and the owner's
   entries kept and store nothing, as the panel does today.
-- **FR-007**: Delete photo MUST behave as today and then return the owner to the library page
+- **FR-007**: **SUPERSEDED by 020 (2026-11-19): Deleting a photo keeps the owner in the workspace (020 FR-012, FR-039).** Delete photo MUST behave as today and then return the owner to the library page
   they came from (the first page when unknown; a page past the end shows the last page, as the
   library already does).
-- **FR-008**: The edit screen MUST show the admin breadcrumb "Library › {photo title}", with
+- **FR-008**: **SUPERSEDED by 020 (2026-11-19): There is no admin breadcrumb (020 FR-001; constitution 6.3.1 IX.1).** The edit screen MUST show the admin breadcrumb "Library › {photo title}", with
   "Library" linking back to the library page the owner came from, at that photo's tile.
-- **FR-009**: The library's side panel MUST be removed: the library page shows only its grid,
+- **FR-009**: **SUPERSEDED by 020 (2026-11-19): The library page is removed; the workspace always has its details panel (020 FR-001, FR-039).** The library's side panel MUST be removed: the library page shows only its grid,
   selection bar, pager and dialogs. An old address that asked for the panel MUST render the
   plain library page.
-- **FR-010**: Bulk actions on the library (select, Add to gallery, Delete) MUST be unchanged.
+- **FR-010**: **SUPERSEDED by 020 (2026-11-19): Bulk actions are in the details panel for a selection (020 FR-009, FR-014).** Bulk actions on the library (select, Add to gallery, Delete) MUST be unchanged.
 - **FR-011**: The edit screen MUST be owner-only, under the same sign-in and form-protection
   rules as every other owner page.
-- **FR-012**: The edit screen MUST share the admin chrome: owner bar, breadcrumb row and the
+- **FR-012**: **SUPERSEDED by 020 (2026-11-19): There is no owner bar or breadcrumb row; the workspace layout owns the frame (020 FR-038).** The edit screen MUST share the admin chrome: owner bar, breadcrumb row and the
   gap under it at the same position and height as every other admin page, and MUST join the
   measured chrome-consistency browser test.
-- **FR-013**: The edit screen's request MUST be timed with the same request-timing and
+- **FR-013**: **SUPERSEDED by 020 (2026-11-19): The edit screen is removed; every workspace read and write is timed instead (020 FR-044).** The edit screen's request MUST be timed with the same request-timing and
   named-operation events as the other owner pages, and MUST read no more from the datastore
   than the library page reads today to show the open panel.
 - **FR-014**: The design record's library description (which says edit and gallery toggle the

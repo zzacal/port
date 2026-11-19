@@ -23,7 +23,7 @@ L-06, E-03 to E-11, R-07, the D-23 "Upload batch" page, and III.9 presigned uplo
 The owner is away for this run. Every question below was answered with the recommended option and
 is logged in `decisions.md` (rows 1 to 5, source DEFAULT) for the owner to review.
 
-- Q: After the owner confirms a batch, where do they land? → A: They stay on the upload page, which
+- **SUPERSEDED by 020 (2026-11-19): There is no confirm and no upload page; the owner stays in the workspace (020 Clarification 2, FR-028).** Q: After the owner confirms a batch, where do they land? → A: They stay on the upload page, which
   shows the confirmed result ("N photos added to your library") with a link to the library page
   and an empty drop target for the next batch. The library page belongs to feature 009, so the
   link answers not found until 009 ships. (default taken; owner absent)
@@ -299,7 +299,7 @@ one open batch exists.
   that name again; a picked file with a different name joins as a new photo (E-04, L-03).
 - **FR-012**: Delete MUST be available on a photo in any state, MUST remove it from the batch and
   MUST delete all of its staged files (L-04).
-- **FR-013**: Discard MUST be available on an open batch behind a confirmation that says every
+- **FR-013**: **SUPERSEDED by 020 (2026-11-19): There is no batch discard. Done drops only failed and interrupted photos; joined photos stay (020 FR-033).** Discard MUST be available on an open batch behind a confirmation that says every
   uploaded file will be deleted and nothing added. Discarding MUST delete every staged file of the
   batch, close the batch as discarded and leave the library unchanged (L-06).
 
@@ -362,23 +362,23 @@ one open batch exists.
 
 **Confirm into the library**
 
-- **FR-030**: Confirm MUST be available only when the batch has at least one photo and every photo
+- **FR-030**: **SUPERSEDED by 020 (2026-11-19): There is no confirm. Each photo joins the library as soon as it passes every check (020 FR-030).** Confirm MUST be available only when the batch has at least one photo and every photo
   is ready. The server MUST refuse a confirm request otherwise, and the page MUST say how many
   photos still need Restart or Delete (E-07).
-- **FR-031**: On confirm, for each photo the system MUST: copy each size into the public image store
+- **FR-031**: **SUPERSEDED by 020 (2026-11-19): These copies and the image record now happen per photo, at join; a photo added while a gallery is open also joins it (020 FR-030, FR-031).** On confirm, for each photo the system MUST: copy each size into the public image store
   under a name derived from its content, marked for one-year immutable caching; copy the original
   into the permanent private master store; create one library image whose identity is the photo's
   batch item identity, titled with the file name without its extension, carrying the validated
   dimensions, placeholder, camera details and sizes, a creation time and no galleries; then delete
   the photo's staged files. The batch is then marked confirmed (L-05; Constitution III.1, IV.21).
-- **FR-032**: Confirm MUST be safe to repeat: a confirm interrupted partway and requested again MUST
+- **FR-032**: **SUPERSEDED by 020 (2026-11-19): The join, not a confirm, must be safe to repeat (020 FR-034).** Confirm MUST be safe to repeat: a confirm interrupted partway and requested again MUST
   finish with exactly one library image per photo and no duplicated or missing files (D-11).
-- **FR-033**: Confirmed images MUST join no gallery and MUST NOT change any gallery's visibility or
+- **FR-033**: **SUPERSEDED by 020 (2026-11-19): Photos uploaded while a gallery is open join it; in a public gallery visitors see them at once, as the upload area says first (020 FR-031; constitution II.5a to 5d).** Confirmed images MUST join no gallery and MUST NOT change any gallery's visibility or
   any public page, so confirm triggers no edge purge or warm (Constitution II.5; L-05).
   **AMENDED by 020-admin-workspace (constitution 6.3.0)**: this is still what the built upload
   does. II.5 now permits an upload the owner aims at a gallery (rule 5a to 5d); feature 020
   replaces this requirement with its FR-030 and FR-031 when it ships.
-- **FR-034**: After confirm the owner MUST stay on the upload page, which shows how many photos were
+- **FR-034**: **SUPERSEDED by 020 (2026-11-19): There is no upload page. Upload is a tray in the workspace that the owner closes with Done (020 FR-028, FR-033).** After confirm the owner MUST stay on the upload page, which shows how many photos were
   added, a link to the library page, and an empty drop target for a new batch (Clarification 1).
 - **FR-035**: Library images created by upload MUST be distinguishable from seeded development
   content, so the seed's reconciliation never changes or deletes them.

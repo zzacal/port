@@ -763,7 +763,7 @@ TI-38, TI-42, TI-50 (48 → 35), TI-51, TI-53…TI-56, TI-59…TI-63, TI-70) wit
 `organisms/contact-sheet.html`; trim `specs/005-admin-ui-components/evidence/baseline/ContactSheetPage.html`
 (TI-57); diff each against `evidence/pre-ui-baseline/` / `evidence/pre-005-ContactSheetPage.html`
 — only the stated removals/additions. Gate `E`; run `NV_DRYRUN=1 non-vacuity.sh`; commit.
-- [ ] T054 [US4] PARENT Constitution PATCH 6.3.1: IX.1's example "owner bar" → "collections list"
+- [X] T054 [US4] PARENT Constitution PATCH 6.3.1: IX.1's example "owner bar" → "collections list"
   (constitution.md:296), Sync Impact Report rewritten, the 6.3.0 deferred TODO (line 23) removed,
   version and date bumped. Accept: `grep -c 'owner bar' .specify/memory/constitution.md` = 0.
 
@@ -843,7 +843,7 @@ Batch G owns: `AdminLayout.razor.css` (below-1200 px rules only, C-21), `Workspa
   and the GPS/width/missing-size facts green in the final gate; FR-001 "sign-in unchanged":
   `WorkspaceComponentTests.AdminLayout_Bare_equals_the_pre_change_sign_in_layout` green. Save both
   outputs to `evidence/unchanged-checks.txt`.
-- [ ] T063 [P] PARENT VII.2 (research R-14): write `specs/020-admin-workspace/evidence/design-record-edit.py`
+- [X] T063 [P] PARENT VII.2 (research R-14): write `specs/020-admin-workspace/evidence/design-record-edit.py`
   (each old string's count asserted before any write; abort on mismatch) editing
   `specs/001-architecture-stack-design/draft/02d-decisions-delivery.md` (D-23 "superseded by D-27";
   new D-27 "Admin workspace" with every field the validator wants, alternatives = D-23's direction
@@ -857,7 +857,7 @@ Batch G owns: `AdminLayout.razor.css` (below-1200 px rules only, C-21), `Workspa
   and review each hit; check `docs/architecture.html` for admin page names (none today) and edit
   if any. Accept: D-27 present; D-23 reads "superseded by D-27"; `git show --stat` of the commit
   includes `docs/design.md`.
-- [ ] T064 [P] PARENT FR-047: annotate superseded requirements in place ("SUPERSEDED by 020
+- [X] T064 [P] PARENT FR-047: annotate superseded requirements in place ("SUPERSEDED by 020
   (2026-11-…): …", original text kept) in `specs/008-upload-pipeline/spec.md` (FR-013, FR-030,
   FR-031, FR-032, FR-033, FR-034, Clarification 1), and the page-level requirements of
   `specs/009-library-galleries/spec.md`, `specs/010-navigation-improvements/spec.md` (admin bar,

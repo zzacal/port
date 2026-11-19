@@ -15,13 +15,13 @@
 - Plan research (2026-11-07): FR-006 names extended to the two empty cases; FR-014 moved from the
   contact-sheet specimen (pinned byte-identical by the public-output guard) to the controls' own
   catalogue page.
-- Q2 (plan, R-07): what happens where a photo is narrower than its icon row? → Owner: "in
+- **SUPERSEDED by 020 (2026-11-19): The library, builder and galleries-list grids are removed; the workspace grid has no icon rows (020 FR-005, FR-039).** Q2 (plan, R-07): what happens where a photo is narrower than its icon row? → Owner: "in
   narrower view widths, make the grid 2 column". Owner rule: the icons are arranged across the
   photo's whole width, so a photo must be at least as wide as its row. The library, builder and
   galleries-list grids show 2 columns wherever 3 or 4 columns would make a photo narrower than its
   row (FR-015). This also corrects feature 015's builder, whose icons shrink below 44 px at those
   widths.
-- Q1: What replaces the list's Public switch? → A: an eye icon for public and a crossed-out eye
+- **SUPERSEDED by 020 (2026-11-19): The galleries list is removed; the Public switch is in the gallery's details panel (020 FR-020).** Q1: What replaces the list's Public switch? → A: an eye icon for public and a crossed-out eye
   for private. Hover text and accessible name: "Public. Make private" / "Private. Make public"
   (FR-006). The empty-private case keeps today's reason as its name.
 
@@ -121,18 +121,18 @@ follow. Lift a card with the keyboard, move it and drop it; the position is anno
 
 ### Functional Requirements
 
-- **FR-001**: Each galleries-list card MUST show the gallery's title on its cover photo's bottom
+- **FR-001**: **SUPERSEDED by 020 (2026-11-19): The galleries-list cards are removed; galleries are rows in the collections list (020 FR-002).** Each galleries-list card MUST show the gallery's title on its cover photo's bottom
   edge, in the same band and with the same contrast as the library and builder tiles (feature 015).
   A card with no cover shows the title in the same place on its blank cell.
-- **FR-002**: Under each card, one row MUST hold the card's controls as icons, in this order: move,
+- **FR-002**: **SUPERSEDED by 020 (2026-11-19): There is no icon row; gallery actions are worded controls (020 FR-010).** Under each card, one row MUST hold the card's controls as icons, in this order: move,
   visibility, view, edit. Edit MUST be the right-most control on every card.
-- **FR-003**: Every control in the row MUST use the shared icon-control style from feature 015
+- **FR-003**: **SUPERSEDED by 020 (2026-11-19): The icon-control style is removed with the icons (020 FR-010).** Every control in the row MUST use the shared icon-control style from feature 015
   (size, tap area, colour, hover, focus ring, active ring, unavailable state). The page MUST NOT
   restyle it.
-- **FR-004**: The edit icon MUST link to the gallery's builder, as the "Edit" link does today.
-- **FR-005**: The view icon MUST open the gallery's public page in a new tab when the gallery has
+- **FR-004**: **SUPERSEDED by 020 (2026-11-19): There is no edit icon; a gallery row opens the gallery in the workspace (020 FR-002, FR-009).** The edit icon MUST link to the gallery's builder, as the "Edit" link does today.
+- **FR-005**: **SUPERSEDED by 020 (2026-11-19): There is no view icon; a public gallery with photos shows View on site in its heading (020 contracts/components.md K12).** The view icon MUST open the gallery's public page in a new tab when the gallery has
   photos. Otherwise it MUST show as unavailable in the same position.
-- **FR-006**: The visibility control MUST keep today's behaviour exactly: one activation publishes
+- **FR-006**: **SUPERSEDED by 020 (2026-11-19): The visibility icon is removed; the Public switch in the gallery's details panel applies at once, with the same empty-gallery refusal (020 FR-020, FR-021).** The visibility control MUST keep today's behaviour exactly: one activation publishes
   or unpublishes at once, with no confirmation, through the same form and server rule. An empty
   private gallery's control MUST be unavailable, and its name MUST give today's reason. The control
   MUST show an open eye for a public gallery and a crossed-out eye for a private one. Its name,
@@ -141,26 +141,26 @@ follow. Lift a card with the keyboard, move it and drop it; the position is anno
   no photos is named "Public, hidden until it has a photo. Make private". An empty private
   gallery's control is unavailable and named "Private. Add a photo before making this gallery
   public" (today's reason, after the state).
-- **FR-007**: The move control MUST keep today's drag and keyboard reorder behaviour, its hooks and
+- **FR-007**: **SUPERSEDED by 020 (2026-11-19): Galleries are reordered by dragging their rows, or with Move up and Move down (020 FR-023, FR-025).** The move control MUST keep today's drag and keyboard reorder behaviour, its hooks and
   its announcements.
-- **FR-008**: The status words ("Public", "Private", "Public · hidden until it has a photo") MUST
+- **FR-008**: **SUPERSEDED by 020 (2026-11-19): Private is shown as a worded mark on the gallery's row (020 FR-002).** The status words ("Public", "Private", "Public · hidden until it has a photo") MUST
   NOT take a slot in the icon row. The state MUST still be readable from the visibility icon and
   its name, and the private card stays dimmed.
-- **FR-009**: Each icon MUST name itself on hover and to assistive technology. The view icon's name
+- **FR-009**: **SUPERSEDED by 020 (2026-11-19): Icons are removed; every control has a visible word (020 FR-010).** Each icon MUST name itself on hover and to assistive technology. The view icon's name
   MUST say it opens in a new tab, and the "↗ means a new tab" rule MUST keep holding.
-- **FR-010**: The row MUST be one row at every width and the same height on every card, whatever its
+- **FR-010**: **SUPERSEDED by 020 (2026-11-19): There is no icon row (020 FR-010).** The row MUST be one row at every width and the same height on every card, whatever its
   parts (constitution IX.3).
-- **FR-011**: Only icons the page actually uses MAY be added to the icon set, and they MUST come from
+- **FR-011**: **SUPERSEDED by 020 (2026-11-19): No icon set is used in the admin any more (020 FR-010).** Only icons the page actually uses MAY be added to the icon set, and they MUST come from
   the same free icon set at the same version as feature 015.
-- **FR-012**: The galleries list MUST keep loading with the same number of data reads as today, and
+- **FR-012**: **SUPERSEDED by 020 (2026-11-19): The galleries list page is removed; every workspace read and write is timed instead (020 FR-044).** The galleries list MUST keep loading with the same number of data reads as today, and
   MUST meet the same timing budget rule as feature 015 (p95 within 10% + 1 ms of a pre-change
   capture), measured from logs.
 - **FR-013**: Public pages MUST stay byte-identical.
-- **FR-014**: The new card controls MUST have their own page in the component library, showing a
+- **FR-014**: **SUPERSEDED by 020 (2026-11-19): The card-controls catalogue page is removed (020 FR-043).** The new card controls MUST have their own page in the component library, showing a
   public, a private, an empty-public and an empty-private card, so the owner can review them. The
   existing gallery-list specimen on the contact-sheet page stays as it is (it is pinned as a
   pre-admin reference).
-- **FR-015**: On the library, the gallery builder and the galleries list, every photo MUST be at
+- **FR-015**: **SUPERSEDED by 020 (2026-11-19): These grids are removed; the workspace grid fills the width with columns of at least 168 px, two below 600 px (020 contracts/components.md K3).** On the library, the gallery builder and the galleries list, every photo MUST be at
   least as wide as its icon row, at every window width and whether or not the side panel is open.
   Where 3 or 4 columns would make a photo narrower than that, the grid MUST show 2 columns instead.
   The icon rows never wrap and never shrink their 44 px targets. The phone layout (one column)

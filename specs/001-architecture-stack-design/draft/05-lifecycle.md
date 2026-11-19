@@ -3,38 +3,38 @@
 ### L-01: Image succeeded in batch
 **Records**: The BatchItem state changes from `processing` or `uploading` to `succeeded`; the `validated` field is set with width, height, placeholder, camera metadata, and derivative keys (data-model BatchItem; D-11).
 **Storage**: Staged derivatives and the staged master are already in `private/staging/` from the prior upload step; no new storage operations occur at this point (data-model Storage layout; D-07).
-**Pages and caches**: No public page or edge cache is affected. The library and all public pages are unchanged until L-05 (FR-017; D-11).
+**Pages and caches**: No public page or edge cache is affected. The library and all public pages are unchanged until this photo joins (L-05), which since feature 020 follows at once, with no confirm (FR-017; D-11).
 **Visitor sees**: Nothing changes. The image is not yet in the library, and no public page or listing references it (FR-011; FR-017).
 
 ### L-02: Image failed or interrupted in batch
 **Records**: The BatchItem state changes to `failed` (with a reason string) or `interrupted`; `heartbeatAt` stops advancing for interrupted items, which are detected as interrupted when the batch is next read (data-model BatchItem; D-11; decisions #17).
-**Storage**: Staged objects already written remain in `private/staging/` until the owner chooses Restart or Delete, or until the 7-day lifecycle sweep removes them (data-model; D-11; decisions #16).
-**Pages and caches**: No public page or edge cache is affected. The library and all public pages are unchanged until L-05 (FR-017).
+**Storage**: Staged objects already written remain in `private/staging/` until the owner chooses Restart or Delete, closes the upload (L-06, feature 020), or until the 7-day lifecycle sweep removes them (data-model; D-11; decisions #16).
+**Pages and caches**: No public page or edge cache is affected. Since feature 020 no other photo waits for this one: each photo that succeeds joins on its own (L-05; FR-017).
 **Visitor sees**: Nothing changes. The image is not in the library (FR-017; FR-011).
 
 ### L-03: Image restarted
-**Records**: The BatchItem state returns to `queued`; a new `attemptId` is generated; staged objects from the previous attempt are deleted if the master already reached the server (`masterStored` is checked) and the owner is not re-using it; if the master was not stored, `masterStored` remains false and the owner is asked to pick the same named file again (data-model BatchItem; FR-027; D-11).
+**Records**: The BatchItem state returns to `queued`; a new `attemptId` is generated; staged objects from the previous attempt are deleted if the master already reached the server (`masterStored` is checked) and the owner is not re-using it; if the master was not stored, `masterStored` remains false and the owner is asked to pick the same named file again (data-model BatchItem; FR-027; D-11). A `joining` item cannot be restarted (feature 020).
 **Storage**: Previous-attempt staged derivatives are deleted from `private/staging/`. If `masterStored` is true, the staged master is reused; otherwise nothing is in storage until the next upload (FR-027; D-11; decisions #16).
 **Pages and caches**: No public page or edge cache is affected (FR-017).
-**Visitor sees**: Nothing changes. The batch remains open and unconfirmed (FR-017; FR-011).
+**Visitor sees**: Nothing changes. The photo is not in the library until it succeeds and joins (L-05; FR-017; FR-011).
 
 ### L-04: Image deleted from batch
-**Records**: The BatchItem is removed from the batch's `items` array; the batch's `updatedAt` is refreshed (data-model BatchItem; FR-027).
+**Records**: The BatchItem is removed from the batch's `items` array; the batch's `updatedAt` is refreshed (data-model BatchItem; FR-027). A `joining` item cannot be deleted; a photo that has joined is removed only by the ordinary image delete, L-09 (feature 020).
 **Storage**: All staged objects for that item — master and all derivatives — are deleted from `private/staging/` immediately; the 7-day lifecycle sweep acts as a backstop if the explicit delete fails (data-model; FR-030; D-11; decisions #16).
 **Pages and caches**: No public page or edge cache is affected (FR-017).
 **Visitor sees**: Nothing changes. The item was never in the library (FR-017; FR-011).
 
 ### L-05: Batch confirmed
-**Records**: Each BatchItem's `itemId` becomes the `_id` of a new Image document; the Image documents are written to the `images` collection with all validated fields; the batch `state` changes to `confirmed`; every Gallery whose `items` array contains an id from this batch has its `card` recomputed; `site.homeCards` is refreshed for any affected gallery in `homeOrder` (data-model; D-11; D-13; FR-017).
-**Storage**: For each item: (1) staged derivatives are copied from `private/staging/` to `public/` with `Cache-Control: public, max-age=31536000, immutable`; (2) the staged master is copied to `private/masters/{imageId}.jpg`; (3) all staged objects are deleted. These are server-side copies inside R2 and the confirm step is idempotent per item (data-model Storage layout; D-07; decisions #1, #2, #8, #9).
-**Pages and caches**: If any affected gallery is public, the galleries listing and that gallery's page are purged by URL at the edge (up to 100 URLs per call, 800/s) and then warmed. The purge is best-effort; a failed purge self-heals within the 1-day HTML edge TTL (D-16; decisions #15; R-01).
-**Visitor sees**: Images from the confirmed batch appear in any public gallery they belong to immediately after purge and warm; visitors hitting a cached page see the new images within at most 1 day if purge fails (D-16; FR-017).
+**Records**: Feature 020 replaced the batch confirm with a join per photo; the heading is kept for the section's numbering. When an item reaches `succeeded` the page calls join. The item is claimed (`joining`); its `itemId` becomes the `_id` of a new Image document written with all validated fields (an upsert, so a repeated join writes nothing new); the item is pulled from the batch and its id added to `added`. When the batch has a destination gallery, the image is appended to that gallery's `items`, its `card` is recomputed, and `site.homeCards` is refreshed when the gallery is listed. The gallery's visibility is never changed (Constitution II.5c). With no destination no gallery is touched (II.5b). The batch stays `open` (data-model; D-11; D-13; 020 research R-06).
+**Storage**: For the one photo: (1) staged derivatives are copied from `private/staging/` to `public/` with `Cache-Control: public, max-age=31536000, immutable`; (2) the staged master is copied to `private/masters/{imageId}.jpg`; (3) its staged objects are deleted. These are server-side copies inside R2, made only if the files still match the validated ETags. The join is idempotent: a missing source counts as copied only when its destination exists (data-model Storage layout; D-07; D-11; decisions #1, #2, #8, #9).
+**Pages and caches**: Only when the destination gallery is public: the galleries listing and that gallery's page are purged by URL at the edge (up to 100 URLs per call, 800/s) and then warmed, one queued purge per photo (020 decisions #15). The purge is best-effort; a failed purge self-heals within the 1-day HTML edge TTL (D-16; decisions #15; R-01). A photo with no destination or a private one changes no public page.
+**Visitor sees**: A photo aimed at a public gallery appears there as soon as it joins, after purge and warm; the upload area said so before any file was picked (Constitution II.5a). Visitors hitting a cached page see it within at most 1 day if the purge fails. A photo with no destination or a private one is seen by no visitor (D-16; II.5b).
 
 ### L-06: Batch discarded
-**Records**: The batch `state` changes to `discarded` (data-model; FR-029).
-**Storage**: All staged objects for every item in the batch — masters and derivatives — are deleted from `private/staging/` immediately; the 7-day lifecycle policy is the backstop for any that were not cleaned up (data-model; FR-029; FR-030; D-11; decisions #16).
-**Pages and caches**: No public page or edge cache is affected. No Image documents were ever created for this batch (FR-017).
-**Visitor sees**: Nothing changes. The library is unaffected (FR-017; FR-011).
+**Records**: Feature 020 removed the batch discard; the heading is kept for the section's numbering. Closing the upload is refused while any photo is still working. Otherwise the failed and interrupted items are removed and the batch's `added` list and destination are cleared; the batch stays `open`. Photos that already joined stay in the library; only the ordinary delete (L-09) removes them (data-model; 020 spec FR-033).
+**Storage**: All staged objects of every dropped item — masters and derivatives — are deleted from `private/staging/` immediately; the 7-day lifecycle policy is the backstop for any that were not cleaned up (data-model; FR-030; D-11; decisions #16).
+**Pages and caches**: No public page or edge cache is affected. No Image document is created for a dropped item (FR-017).
+**Visitor sees**: Nothing changes. Photos that already joined stay where they joined (FR-017; FR-011).
 
 ### L-07: Image added to gallery
 **Records**: The image's `_id` is appended to the Gallery `items` array at the owner's chosen position; the gallery's `card` is recomputed if the image becomes the new cover (first item or pinned cover); `galleryIds` on the Image document gains this gallery's id; `site.homeCards` is updated if the gallery is in `homeOrder` and is public (data-model Gallery, Image; D-13; FR-009).

@@ -35,7 +35,7 @@ scope below.
 - Q: On a private gallery, should the end of the page show anything in place of the previous/next
   gallery links? → A: Nothing. A private gallery ends after its last photo, with no gallery links
   and no "All galleries" link. It is never anyone's previous or next gallery either.
-- Q: When a library photo is in several galleries, which gallery should its "Coast +2" status link
+- **SUPERSEDED by 020 (2026-11-19): The library tile and its status link are removed (020 FR-039).** Q: When a library photo is in several galleries, which gallery should its "Coast +2" status link
   to? → A: The first by title, alphabetically (case-insensitive), whatever its visibility.
 - Q: Should the photo page's arrow keys and Esc be shown to visitors anywhere, or work silently?
   → A: Silently. Nothing on the page mentions them: no hint line and no tooltip.
@@ -221,7 +221,7 @@ Header
 
 Admin library
 
-- **FR-011**: A library photo's gallery status MUST link to the gallery editing page when the photo
+- **FR-011**: **SUPERSEDED by 020 (2026-11-19): The library tile and its gallery status link are removed; membership is shown in the details panel's galleries control (020 FR-014, FR-039).** A library photo's gallery status MUST link to the gallery editing page when the photo
   is in at least one gallery: to the only gallery, or to the first by title (alphabetical,
   case-insensitive, regardless of visibility) with a "+N" count of the others. A photo in no gallery keeps the plain status.
 
@@ -276,12 +276,12 @@ Quality floors carried from the constitution
 - **SC-007**: Layout shift is 0 on home, gallery and photo pages at small, medium and large widths,
   measured in a real browser.
 - **SC-008**: 0 public pages have two header links to the same destination.
-- **SC-009**: Every library photo that is in at least one gallery links to a gallery editing page
+- **SC-009**: **SUPERSEDED by 020 (2026-11-19): The library page is removed (020 FR-039); this criterion no longer applies.** Every library photo that is in at least one gallery links to a gallery editing page
   from its status, checked over a library holding photos in 0, 1 and 3 galleries.
 
 ## Amendment: owner review 1 (2026-11-01)
 
-The owner replaced the photo page's back link with a breadcrumb at the top of every page that has
+**SUPERSEDED by 020 (2026-11-19): admin part only: the admin has no nav bar and no breadcrumb; the workspace's collections list is the shared admin chrome (020 FR-001, FR-002; constitution 6.3.1 IX.1). The public breadcrumb is unchanged.** The owner replaced the photo page's back link with a breadcrumb at the top of every page that has
 a parent, public and admin, centred under the nav bar; kept the "x / y" count; asked for one
 admin nav bar on every page with page actions out of it; and for Previous/Next as whole words.
 FR-001's "nothing above the photo" and FR-002's "the gallery link" now read "the breadcrumb's

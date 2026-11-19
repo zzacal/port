@@ -32,7 +32,7 @@ is logged in `decisions.md` (rows 1 to 5, source DEFAULT) for the owner to revie
   image and seeded gallery and the public files only they use, and reports what it removed. The
   shared validation and camera readers that upload uses are kept. Uploaded images and galleries
   the owner made are never touched. (default taken; owner absent)
-- Q: How does the library show a large number of photos? → A: Newest first, 100 photos per page,
+- **SUPERSEDED by 020 (2026-11-19): The workspace loads more photos as the owner scrolls, with no pages; the selection cap applies when selecting (020 FR-006, FR-008).** Q: How does the library show a large number of photos? → A: Newest first, 100 photos per page,
   with Previous and Next. Selection and bulk actions work on the page being shown, so one bulk
   action covers at most 100 photos and the limit is visible before anything is pressed.
   (default taken; owner absent)
@@ -41,7 +41,7 @@ is logged in `decisions.md` (rows 1 to 5, source DEFAULT) for the owner to revie
   deleted only when no remaining image references it; a shared file stays. The original (master)
   of the deleted image is always deleted. The edge purge covers only the files actually deleted.
   (default taken; owner absent)
-- Q: Does making a gallery public ask for confirmation, and does making it private? → A: Making a
+- **SUPERSEDED by 020 (2026-11-19): The Public switch applies at once in both directions; the empty-gallery refusal stays (020 FR-020, FR-021; 020 decisions #7).** Q: Does making a gallery public ask for confirmation, and does making it private? → A: Making a
   gallery public asks once, naming the gallery and its photo count ("Make “Coast” public? It will
   be listed on the home page with its 24 photos, and anyone can see them."). Making it private
   happens at once with no question, because it only hides. An empty gallery's Public control is
@@ -299,32 +299,32 @@ command again reports nothing to remove.
 - **FR-001**: The library, gallery list and gallery builder MUST be available only to the signed-in
   owner, behind the existing owner check, and every state-changing request MUST pass the existing
   forgery protection (I.3, I.6). Unknown admin addresses MUST still answer not found.
-- **FR-002**: Each page MUST render as the visitor would see the corresponding public grid with the
+- **FR-002**: **SUPERSEDED by 020 (2026-11-19): The admin is one workspace at /admin with no owner bar; the library, gallery list and builder pages are removed (020 FR-001, FR-039).** Each page MUST render as the visitor would see the corresponding public grid with the
   owner layer on top (D-23): the library and builder use the gallery grid (4 / 3 / 1 columns), the
   gallery list uses the home grid (3 / 3 / 1). The owner bar's Library and Galleries links MUST
   reach these pages and mark the current one.
 - **FR-003**: Owner controls on public pages are forbidden: no public page gains owner markup or
   scripts, and public pages keep working with scripting disabled (IV.22, V.3, D-23).
-- **FR-004**: Per-item controls MUST sit inside that item's tile, in a row under its title, never
+- **FR-004**: **SUPERSEDED by 020 (2026-11-19): The only control on a photo is its select mark; actions are worded buttons in the details panel (020 FR-005, FR-010).** Per-item controls MUST sit inside that item's tile, in a row under its title, never
   in a separate list and never as corner overlays on the photo cell. The only mark drawn over a
   photo is the library's selection mark. Status text MUST sit under the cell so grid rows stay the
   same height in every state.
-- **FR-005**: Every library tile, gallery card and builder tile whose public page exists MUST link
+- **FR-005**: **SUPERSEDED by 020 (2026-11-19): View on site is one worded control in the details panel for a photo, and in the heading of a public gallery (020 FR-011, FR-017).** Every library tile, gallery card and builder tile whose public page exists MUST link
   to it (a View link). A page exists for a gallery that holds at least one photo, public or
   private; a library image's View link opens its photo page in the first gallery, in home order,
   that holds it and has a page. Items with no public page MUST show no View link.
 
 **Library**
 
-- **FR-006**: The library MUST list every image, newest first, 100 per page, with Previous and Next
+- **FR-006**: **SUPERSEDED by 020 (2026-11-19): All photos loads more as the owner scrolls, newest first, with no pages; the empty sentence points to Add photos (020 FR-005, FR-006).** The library MUST list every image, newest first, 100 per page, with Previous and Next
   (Clarification 2). An empty library says "No photos yet" with a link to Upload.
-- **FR-007**: Each library tile MUST show the photo, its title and one plain status line: "Not in a
+- **FR-007**: **SUPERSEDED by 020 (2026-11-19): Photos show the photo and its title, with worded Cover and New marks; membership is shown in the panel's galleries control (020 FR-005, FR-014).** Each library tile MUST show the photo, its title and one plain status line: "Not in a
   gallery", "In N gallery/galleries", or "In N galleries · public in M". The page MUST NOT show
   warnings, required-field errors or prompts about missing titles, captions or other metadata.
-- **FR-008**: Each tile MUST carry a selection mark; selecting any tile shows a selection bar with
+- **FR-008**: **SUPERSEDED by 020 (2026-11-19): There is no selection bar; click, modifier-click and shift-click select, and the details panel holds the selection's actions (020 FR-007 to FR-009).** Each tile MUST carry a selection mark; selecting any tile shows a selection bar with
   the count, Clear, "Select all on this page", "Add to gallery…" (primary) and "Delete…" (danger).
   Selection is limited to the page shown, so one bulk action covers at most 100 photos.
-- **FR-009**: Opening a tile MUST show the side panel with the title (required, 1 to 200
+- **FR-009**: **SUPERSEDED by 020 (2026-11-19): The details panel shows a photo when one is selected; its fields save when left (020 FR-009, FR-013).** Opening a tile MUST show the side panel with the title (required, 1 to 200
   characters), the caption (optional, 0 to 2000 characters, plain text), the galleries holding the
   image (each linking to its builder), the View link when one exists, and a separate delete area.
 - **FR-010**: The title and caption fields MUST show the stored values, and their limits MUST come
@@ -332,7 +332,7 @@ command again reports nothing to remove.
   the limit shown before submitting). The server MUST refuse an invalid save with the reason and
   keep the stored value; a title of only spaces counts as empty. A save request with no form
   fields MUST keep the stored values.
-- **FR-011**: "Add to gallery…" MUST offer every gallery in home order, each labelled Public or
+- **FR-011**: **SUPERSEDED by 020 (2026-11-19): The galleries checklist replaces the Add to gallery picker and applies at once; the result says when visitors can see the photos (020 FR-014, FR-015, FR-018).** "Add to gallery…" MUST offer every gallery in home order, each labelled Public or
   Private with its photo count, plus "New gallery" with a title field. When the chosen gallery is
   public, the picker MUST say the photos will be visible to visitors before the owner confirms
   (II.5).
@@ -360,44 +360,44 @@ command again reports nothing to remove.
 
 **Gallery list**
 
-- **FR-018**: The gallery list MUST show every gallery, public and private, in home order, private
+- **FR-018**: **SUPERSEDED by 020 (2026-11-19): The gallery list page is removed; galleries are rows in the collections list, with Private in words and their counts (020 FR-002).** The gallery list MUST show every gallery, public and private, in home order, private
   ones dimmed. Each card shows its cover (or an empty tile with the title), and under the title a
   status ("Public", "Private", "Public · hidden until it has a photo", "Private · no photos"), a
   drag handle, the Public switch, the View link when the gallery has a page, and an Edit link to
   its builder.
-- **FR-019**: The owner MUST be able to reorder galleries by dragging (a ghost slot shows where the
+- **FR-019**: **SUPERSEDED by 020 (2026-11-19): Galleries are reordered by dragging their rows, or with Move up and Move down; there is no drag handle (020 FR-023, FR-025).** The owner MUST be able to reorder galleries by dragging (a ghost slot shows where the
   card will land) and by keyboard from the drag handle (lift, arrow keys, drop, Escape cancels,
   with the position announced). The new order MUST be stored for public and private galleries
   alike (L-14).
-- **FR-020**: "New gallery" (the page's one primary action) MUST ask for a title (1 to 200
+- **FR-020**: **SUPERSEDED by 020 (2026-11-19): New gallery is a name field in the collections list; the new gallery opens in the workspace (020 FR-019).** "New gallery" (the page's one primary action) MUST ask for a title (1 to 200
   characters), create a private empty gallery at the end of the home order, and open its builder
   (L-10). Creating a gallery changes no public page.
 
 **Gallery builder**
 
-- **FR-021**: The builder MUST show the gallery's photos in their order in the gallery grid. Under
+- **FR-021**: **SUPERSEDED by 020 (2026-11-19): The builder is removed; a gallery opens in the workspace grid and its photo controls are in the details panel (020 FR-022, FR-024).** The builder MUST show the gallery's photos in their order in the gallery grid. Under
   each photo's title is a row with the drag handle, the cover control and Remove (FR-004).
-- **FR-022**: The owner MUST be able to reorder photos by dragging (with a ghost slot) and by
+- **FR-022**: **SUPERSEDED by 020 (2026-11-19): Photos are reordered by dragging, or with Move earlier and Move later (020 FR-022, FR-023).** The owner MUST be able to reorder photos by dragging (with a ghost slot) and by
   keyboard, as in FR-019 (L-15). With no pinned cover, the first photo is the cover (E-15).
-- **FR-023**: The cover control MUST show "Cover" with Unpin on the pinned photo, "Cover · first
+- **FR-023**: **SUPERSEDED by 020 (2026-11-19): With one photo selected in a gallery the panel offers Use as gallery cover; the cover carries a Cover mark (020 FR-024).** The cover control MUST show "Cover" with Unpin on the pinned photo, "Cover · first
   photo" on the first photo when nothing is pinned, and "Make cover" elsewhere. Make cover pins the
   photo; Unpin returns to the first photo (L-16, cover rule).
-- **FR-024**: Remove MUST take the photo out of this gallery only, without confirmation, keep it in
+- **FR-024**: **SUPERSEDED by 020 (2026-11-19): Unticking the gallery in the galleries control removes the photo from it (020 FR-014).** Remove MUST take the photo out of this gallery only, without confirmation, keep it in
   the library, clear the pin if it was the cover, and recompute the card (L-08, E-14).
-- **FR-025**: The side panel MUST hold the title (1 to 200 characters), the description (0 to 5000
+- **FR-025**: **SUPERSEDED by 020 (2026-11-19): Gallery settings are in the details panel when nothing is selected; fields save when left and Public applies at once (020 FR-020).** The side panel MUST hold the title (1 to 200 characters), the description (0 to 5000
   characters, plain text), the Public switch and View gallery (when the page exists), with limits
   applied as in FR-010, and a separate danger area "Delete gallery…" that names the gallery and
   says "Its N photos stay in your library. This can't be undone."
 - **FR-026**: Renaming MUST give the gallery a new readable address part while its identity stays,
   and the old address MUST redirect permanently to the new one (II.4, L-13).
-- **FR-027**: An empty builder MUST say "No photos in this gallery yet." with a link to the library.
+- **FR-027**: **SUPERSEDED by 020 (2026-11-19): An empty gallery shows the workspace's empty sentence, which points to Add photos and to dragging from All photos (020 contracts/components.md K12).** An empty builder MUST say "No photos in this gallery yet." with a link to the library.
 - **FR-028**: Deleting a gallery MUST remove it from the home order and home listing, remove it
   from every member image's gallery list, keep every image in the library and in its other
   galleries, and make its page answer not found (L-17).
 
 **Visibility**
 
-- **FR-029**: Making a gallery public MUST ask once, naming the gallery and its photo count;
+- **FR-029**: **SUPERSEDED by 020 (2026-11-19): The Public switch applies at once in both directions, with no question (020 FR-020; 020 decisions #7).** Making a gallery public MUST ask once, naming the gallery and its photo count;
   making it private MUST happen at once (Clarification 4). Both are available from the gallery
   list and the builder.
 - **FR-030**: Making an empty gallery public MUST be refused by the server with "Add a photo before
