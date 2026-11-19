@@ -1,0 +1,5 @@
+018 baseline (T001)
+HEAD: f73aeccb7bc7fb19d44c136aeb2c0684ea771177
+Run: bash specs/018-local-dev-signin/evidence/gate.sh baseline (build -warnaserror: 0 warnings, 0 errors)
+Passed!  - Failed:     0, Passed:   123, Skipped:     0, Total:   123 - Gallery.Core.Tests.dll
+Passed!  - Failed:     0, Passed:  1530, Skipped:     1, Total:  1531 - Gallery.Web.Tests.dll

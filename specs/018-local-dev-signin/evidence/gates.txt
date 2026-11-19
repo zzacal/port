@@ -1,0 +1,3 @@
+gate baseline (f73aecc): Core 123/123; Web 1530 passed, 1 skipped (1531)
+gate A (480e6db): Core 123/123; Web 1570 passed, 1 skipped (1571) = baseline + 40 LocalSignInRuleTests
+gate B (8b6cbc1): Core 123/123; Web 1588 passed, 1 skipped (1589) = gate A + 18 (LocalSignInTests, LocalSignInGuardTests, LocalSignInBrowserTests)

@@ -43,6 +43,10 @@ public sealed class LibraryBrowserFixture : IAsyncLifetime
     public const string SessionCookie = "__Host-gallery";
     public const string ImageBaseUrl = "https://img.test";
 
+    /// <summary>018 T003: buckets a development-host site uses (DevTargetGuard's gallery-dev- prefix).</summary>
+    public const string DevPublicBucket = "gallery-dev-pub";
+    public const string DevPrivateBucket = "gallery-dev-priv";
+
     private const string S3Image =
         "andrewgaul/s3proxy@sha256:87662b2a5afcdfa5f478a1c61650bae4c87bbd15f6ff2823236bcfd66ef7fe04";
 
@@ -83,6 +87,9 @@ public sealed class LibraryBrowserFixture : IAsyncLifetime
         {
             await client.PutBucketAsync("pub");
             await client.PutBucketAsync("priv");
+            // 018 T003: buckets for development-host sites (NewSiteAsync devHost: true).
+            await client.PutBucketAsync(DevPublicBucket);
+            await client.PutBucketAsync(DevPrivateBucket);
         }
 
         _playwright = await Playwright.CreateAsync();
@@ -106,10 +113,17 @@ public sealed class LibraryBrowserFixture : IAsyncLifetime
     /// <summary>
     /// Starts the real app on a fresh database, claims the site for <see cref="Owner"/> through the
     /// app's own <c>OwnerStore</c>, and mints that owner's session cookie.
+    /// 018 T003: <paramref name="devHost"/> makes it a development host (a <c>_dev</c> database and
+    /// <c>gallery-dev-</c> buckets; the environment is already Development). With
+    /// <paramref name="ownerSession"/> false the site is left unclaimed and no session is minted, so
+    /// <see cref="LibrarySite.NewContextAsync"/> injects no cookie.
     /// </summary>
-    public async Task<LibrarySite> NewSiteAsync(Dictionary<string, string?>? extraOverrides = null)
+    public async Task<LibrarySite> NewSiteAsync(
+        Dictionary<string, string?>? extraOverrides = null, bool devHost = false, bool ownerSession = true)
     {
         var db = _mongo.NewDatabase();
+        if (devHost)
+            db = db.Client.GetDatabase(db.DatabaseNamespace.DatabaseName + Gallery.Web.Maintenance.DevTargetGuard.DevDatabaseSuffix);
         var overrides = new Dictionary<string, string?>
         {
             ["Mongo:ConnectionString"] = _mongo.ConnectionString,
@@ -118,8 +132,8 @@ public sealed class LibraryBrowserFixture : IAsyncLifetime
             ["Storage:ServiceUrl"] = Storage.ServiceUrl,
             ["Storage:AccessKeyId"] = Storage.AccessKeyId,
             ["Storage:SecretAccessKey"] = Storage.SecretAccessKey,
-            ["Storage:PublicBucket"] = Storage.PublicBucket,
-            ["Storage:PrivateBucket"] = Storage.PrivateBucket,
+            ["Storage:PublicBucket"] = devHost ? DevPublicBucket : Storage.PublicBucket,
+            ["Storage:PrivateBucket"] = devHost ? DevPrivateBucket : Storage.PrivateBucket,
             ["Site:OutputCache"] = "false",
             ["Edge:SiteBaseUrl"] = "https://site.test",
             ["Edge:PurgePages"] = "true",
@@ -153,6 +167,8 @@ public sealed class LibraryBrowserFixture : IAsyncLifetime
 
         try
         {
+            if (!ownerSession)
+                return new LibrarySite(this, app, $"http://localhost:{port}", db, logLines, recorder, null);
             using (var scope = app.Services.CreateScope())
             {
                 var claim = await scope.ServiceProvider.GetRequiredService<OwnerStore>()
@@ -184,7 +200,7 @@ public sealed class LibraryBrowserFixture : IAsyncLifetime
 /// <summary>One app instance + database for one test, with the owner session ready to inject.</summary>
 public sealed class LibrarySite(
     LibraryBrowserFixture fixture, WebApplication app, string baseUrl, IMongoDatabase db,
-    List<string> logLines, RecordingEdgeProvider recorder, string session) : IAsyncDisposable
+    List<string> logLines, RecordingEdgeProvider recorder, string? session) : IAsyncDisposable
 {
     private readonly List<IBrowserContext> _contexts = [];
 
@@ -264,7 +280,7 @@ public sealed class LibrarySite(
         });
         _contexts.Add(ctx);
         await ctx.RouteAsync(LibraryBrowserFixture.ImageBaseUrl + "/**", r => r.FulfillAsync(new() { Status = 404 }));
-        if (owner)
+        if (owner && session is not null)
             await ctx.AddCookiesAsync(
             [
                 new Microsoft.Playwright.Cookie

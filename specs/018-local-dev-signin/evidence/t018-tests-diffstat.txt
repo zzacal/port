@@ -1,0 +1,7 @@
+ tests/Gallery.Web.Tests/Fixtures/AdminHost.cs      |  22 +-
+ .../Fixtures/LibraryBrowserFixture.cs              |  26 +-
+ tests/Gallery.Web.Tests/LocalSignInBrowserTests.cs |  59 ++++
+ tests/Gallery.Web.Tests/LocalSignInGuardTests.cs   | 153 ++++++++++
+ tests/Gallery.Web.Tests/LocalSignInRuleTests.cs    | 193 ++++++++++++
+ tests/Gallery.Web.Tests/LocalSignInTests.cs        | 326 +++++++++++++++++++++
+ 6 files changed, 769 insertions(+), 10 deletions(-)

@@ -7,7 +7,7 @@
     }
     else
     {
-        <input id="@Id" name="@Name" value="@Value" maxlength="@MaxLength" aria-invalid="@AriaInvalid" aria-describedby="@Id-foot" required="@Required" pattern="@Pattern" />
+        <input id="@Id" name="@Name" type="@Type" value="@Value" maxlength="@MaxLength" aria-invalid="@AriaInvalid" aria-describedby="@Id-foot" required="@Required" pattern="@Pattern" />
     }
     <div class="field-foot" id="@Id-foot">
         <span class="@MsgClass">@MsgText</span>
@@ -33,6 +33,9 @@
 
     /// <summary>009 K2: <c>pattern</c> on the single-line input (e.g. <c>.*\S.*</c>); null renders none.</summary>
     [Parameter] public string? Pattern { get; set; }
+
+    /// <summary>018 K1: <c>type</c> on the single-line input (e.g. <c>password</c>); null renders none.</summary>
+    [Parameter] public string? Type { get; set; }
 
     private string Id => "f-" + Name;
 

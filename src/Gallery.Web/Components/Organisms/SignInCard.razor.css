@@ -64,3 +64,5 @@
     color: var(--color-danger);
     margin: 0;
 }
+
+.si-local { display: flex; flex-direction: column; gap: var(--space-s); margin-top: var(--space-m); }

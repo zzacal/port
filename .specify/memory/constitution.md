@@ -1,14 +1,28 @@
 <!--
 Sync Impact Report
-- Version change: 6.0.0 → 6.1.0 (MINOR)
-- Rationale: owner directive (2026-11-02, feature 012 analyze, on a proposed datastore keep-alive
-  job): "do not overengineer marginal benefits ... high effort should yield high benefits." Adds
-  V.4, proportional effort. A new principle rule with no guarantee removed: MINOR.
-- Modified principles: V (rule 4 added). Added/removed sections: none.
+- Version change: 6.2.1 → 6.2.2 (PATCH; 6.2.0 MINOR and 6.2.1 PATCH were the same day)
+- 6.2.2 (2026-11-18, feature 018 analyze, owner directive "anywhere a configuration could
+  come from"): I.7a said the password is "supplied through the environment at startup"; it is
+  now any configuration source (environment variable, user-secrets, settings file, any other
+  provider). I.7c "password variable" becomes "password setting". No control depended on the
+  source: the development-host gate and the production refusal (which reads the final
+  configuration, so it catches the setting from any source) are unchanged. PATCH.
+- 6.2.1 (2026-11-18, feature 018 plan, research R-02): I.7a said the disabled local sign-in's
+  address "answers not found"; the plan does not map the route at all on a non-qualifying host,
+  so it answers as any unknown admin address does. Wording only, no guarantee changed: PATCH.
+- Rationale: owner directive (2026-11-18, feature 018 clarify): "a way for local stack to be logged
+  in without a real auth", gated by a password the person starting the app sets, and able to claim
+  an empty dev database so a self-contained CI browser suite can sign in. I.1 said ownership "MUST
+  be established by the first successful Google OIDC sign-in"; it now also allows, on development
+  hosts only, the password local sign-in of the new rule I.7. Production identity stays Google
+  only. A guarantee narrowed by a stated exemption whose controls are written into the principle:
+  MINOR.
+- Modified principles: I (rule 1 points at the exemption; rule 7 added). Platform Constraints:
+  Identity bullet notes the development-only exemption. Added/removed sections: none.
 - Templates requiring updates: none (templates read the constitution at runtime).
-- Prior specs swept: none needed; V.4 binds plans and tasks from 012 on. 012 already dropped the
-  keep-alive under it (decisions row 24).
-- Deferred TODOs: none.
+- Prior specs swept: 007 FR-003 ("Google as the only identity provider. No passwords") annotated
+  in place: still true for every non-development host.
+- Deferred TODOs: none. Design record D-04 is amended by feature 018 (its FR-013).
 - History: 1.0.0 initial ratification. 1.1.0 perceived performance, private = unlisted. 2.0.0
   client-generated derivatives with server validation. 3.0.0 Azure Blob replaced R2, masters kept,
   $10 metered cap (2026-10-27). 4.0.0 images on Cloudflare R2, managed-identity guarantee
@@ -16,7 +30,7 @@ Sync Impact Report
   no empty galleries shown (2026-10-31). 4.3.0 canonical remote (2026-11-01). 4.4.0 IX visual
   consistency through shared containers (2026-11-01). 4.5.0 home page at `/`, listing at `/g`
   (2026-11-02). 5.0.0 fixed hosting ceiling B1 -> B2 (2026-11-02). 6.0.0 US$7 budget alert
-  withdrawn (2026-11-02).
+  withdrawn (2026-11-02). 6.1.0 V.4 proportional effort (2026-11-02).
 -->
 
 # Gallery Constitution
@@ -28,8 +42,9 @@ Sync Impact Report
 The site has exactly one administrator: the owner.
 
 1. Ownership MUST be established by the first successful Google OIDC sign-in initiated from
-   `/admin` on an unclaimed site. Claiming MUST be atomic — when two sign-ins race, exactly one
-   becomes owner and the other is refused.
+   `/admin` on an unclaimed site (or, on a development host only, by the local sign-in of rule 7).
+   Claiming MUST be atomic — when two sign-ins race, exactly one becomes owner and the other is
+   refused.
 2. Ownership MUST be bound to the Google account's immutable subject identifier, never to an
    email address.
 3. After the claim, every other identity MUST be refused admin access and MUST NOT receive an
@@ -38,10 +53,32 @@ The site has exactly one administrator: the owner.
    out-of-band operator action (server-side command or direct datastore change) only.
 5. The claim event MUST be logged with identity, client IP, and timestamp.
 6. All admin state-changing requests MUST be protected against cross-site request forgery.
+7. Development-only local sign-in. On a development host — environment `Development`, datastore
+   name ending `_dev` and storage buckets starting `gallery-dev-` (the markers of III.10's
+   development target), all three — the owner MAY be signed in without Google by a local sign-in,
+   and an unclaimed site MAY be claimed by it for the fixed identity `local-owner`. These rules are
+   the entire protection for that path:
+   a. It exists only when a local sign-in password of at least 16 characters is configured at
+      startup, from any configuration source. Otherwise no local sign-in is offered and its address is not
+      mapped, so it answers as any unknown admin address does, creating no session.
+   b. Each local sign-in is a deliberate form submission carrying that password and the rule-6
+      forgery token. The password is compared in constant time and never appears in any page,
+      response or log line; a wrong password creates no session.
+   c. No setting can enable it on a host that is not a development host, and a production start
+      MUST refuse to run while the password setting is present (naming the setting, never its
+      value). An automated check MUST prove a production-shaped host offers no local sign-in.
+   d. A local claim goes through the same atomic claim-once path as rule 1 and is logged per rule 5,
+      marked local. After any claim, rules 3 and 4 hold unchanged: the claiming identity, Google or
+      `local-owner`, is the only owner, and a local sign-in on a Google-claimed site signs in as
+      that owner.
+   e. Every local sign-in and every refused attempt is logged with outcome and client address.
 
 Rationale: a personal gallery needs no user management; a claim-once model removes the entire
 account-administration surface. The unclaimed window between deploy and first login is an
-accepted, documented risk that design MAY close with an optional claim token.
+accepted, documented risk that design MAY close with an optional claim token. Rule 7 lets the
+development stack (the owner's machine, a CI runner) sign in without an identity provider; it
+holds only development data, and whoever set the password started the process. Production stays
+Google only by rule 7c, not by the password.
 
 ### II. Anonymous Public Viewing, Owner-Controlled Visibility
 
@@ -267,7 +304,7 @@ These are binding inputs to every plan:
   traffic only from Cloudflare.
 - Edge: Cloudflare DNS, proxy, cache, and TLS in "Full (strict)" mode. Never "Flexible".
 - Identity: Google OIDC, with a cookie session that has a 7-day sliding expiry (renewed while it
-  is in use).
+  is in use). Development hosts additionally allow the password local sign-in of I.7.
 - Data: MongoDB (Atlas free tier, same region as the app).
 - Image storage: Cloudflare R2, in the same Cloudflare account as the zone, behind a storage
   abstraction. It has two buckets. The public bucket holds derivatives and is reachable only through
@@ -310,4 +347,4 @@ These are binding inputs to every plan:
   place, not silently edited.
 - Every plan and analyze pass verifies compliance and cites principles by number.
 
-**Version**: 6.1.0 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-11-02
+**Version**: 6.2.2 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-11-18

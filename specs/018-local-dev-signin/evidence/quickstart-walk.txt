@@ -1,0 +1,29 @@
+018 quickstart walk (checkpoint B), throwaway dev host: built dll at 8b6cbc1, ASPNETCORE_ENVIRONMENT=Development,
+Mongo:Database=gallery_qs018_dev (scratch), LocalSignIn__Password=<24 chars>, https://localhost:5191, real Chrome over CDP.
+Steps: /admin/library signed out -> sign-in page with 'Sign in with Google and claim' (primary) + 'Claim locally' (secondary);
+wrong password -> 401 'That password wasn't accepted.'; right password -> /admin; /admin/library 200 'Library'; sign out -> /admin/signin
+now showing 'Sign in with Google' + 'Sign in locally' (site claimed by local-owner).
+
+Server log events:
+auth.local.state enabled
+http.request GET /admin/library 302 17.99 0
+http.request GET /admin/signin 200 172.37 1
+http.request GET /admin/library 302 1.96 0
+http.request GET /admin/signin 200 5.77 1
+auth.local.refused ::1 bad_password
+http.request POST /admin/signin/local 401 10.27 1
+http.request GET /admin/library 302 0.8 0
+http.request GET /admin/signin 200 3.17 1
+http.request GET /admin/signin 200 2.44 1
+auth.claim local-owner ::1 2026-11-19T04:24:53.5162160Z
+auth.local.signin local-owner ::1 true
+http.request POST /admin/signin/local 302 50.7 0
+http.request GET /admin/ 200 6.26 0
+http.request GET /admin/library 200 22.88 4
+http.request GET /admin-assets/library.js 200 4.3 0
+http.request GET /admin/ 200 3.64 0
+auth.signout local-owner ::1
+http.request POST /admin/signout 302 1.92 0
+http.request GET /admin/signin 200 6.44 1
+
+password in server log: 0 occurrences

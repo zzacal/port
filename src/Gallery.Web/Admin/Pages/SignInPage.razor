@@ -4,7 +4,7 @@
 @using Gallery.Web.Components.Templates
 
 <AdminLayout Title="Sign in · Gallery" ShowOwnerBar="false">
-    <SignInCard State="@State" Cover="@Cover" Notice="@Notice" Antiforgery="@Antiforgery" />
+    <SignInCard State="@State" Cover="@Cover" Notice="@Notice" Antiforgery="@Antiforgery" Local="@Local" />
 </AdminLayout>
 
 @code {
@@ -12,4 +12,5 @@
     [Parameter] public Gallery.Core.Images.ImageView? Cover { get; set; }
     [Parameter] public string? Notice { get; set; }
     [Parameter] public FormToken? Antiforgery { get; set; }
+    [Parameter] public bool Local { get; set; }
 }

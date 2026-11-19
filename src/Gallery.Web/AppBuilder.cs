@@ -55,6 +55,10 @@ public static class AppBuilder
                            ?? new MongoOptions();
         builder.Services.AddSingleton(mongoOptions);
 
+        // 018 T009 [SAFETY]: the local sign-in rule, decided once from the final configuration.
+        builder.Services.AddSingleton(new LocalSignIn(
+            builder.Configuration, builder.Environment.EnvironmentName, storageOptions, mongoOptions));
+
         builder.Services.AddSingleton<IMongoClient>(_ =>
         {
             var settings = MongoClientSettings.FromConnectionString(
