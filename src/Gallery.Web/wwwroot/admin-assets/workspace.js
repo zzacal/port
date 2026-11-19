@@ -9,7 +9,11 @@
 //   to data-cap, Escape, a click on empty space), roving tabindex with the arrow keys and Space,
 //   the details panel cloned from the context's <template data-panel> and filled from the cell's
 //   data-* with no request (R-04), and save on leave (A1, A5).
-//   Part 3 (T038) adds its rows to the `clicks` / `changes` tables near the end.
+//   Part 3 (T038): the In galleries checklist (tick A7, untick A8, partly ticked, narrowing by the
+//   mirror of GalleryChecklist.Match, Enter or the offer → A3 with the ids or A7), drag (cells onto
+//   a gallery name A7, cells within a gallery A9, gallery names A4), Move earlier/later (A9) and
+//   Move up/down (A4), cover (A10), the Public switch (A6), DangerConfirm then A2/A11, and naming a
+//   new gallery in the list (A3, then open it). Its rows are in the `clicks` / `changes` tables.
 //
 // Markup rules (008 R-11, 020 C12): the only string-to-markup step is the function `swap`, which
 // parses a fragment the server answered. Everything else is cloned from a server-rendered
@@ -525,6 +529,448 @@ async function saveGalleryField(field) {
   }
 }
 
+// ── part 3 (T038): membership, order, cover, visibility, delete, new gallery ────────────────
+
+const galleryRows = () => [...(list()?.querySelectorAll('a.ws-coll-row[data-gid]') ?? [])];
+const galleryOrder = () => galleryRows().map((a) => a.dataset.gid);
+const selectedIds = () => selected().map((c) => c.dataset.id);
+const api = (path) => `/admin/api/${path}`;
+const gApi = (gid, tail = '') => api(`galleries/${encodeURIComponent(gid)}${tail}`);
+
+/** Shows the server's message; a refusal also when `ok` is false. */
+const say = (r) => toast(r.message, !r.ok);
+
+/**
+ * Re-reads one live cell (W4, no X-Workspace header) for each id and copies the attributes that
+ * depend on its galleries (data-galleries, data-consequence) onto the cell on the page, so the
+ * delete confirm keeps the server's sentence. The cell node itself stays (focus, selection).
+ */
+async function refreshTiles(ids) {
+  await Promise.all(ids.filter((id) => cellById(id)).map(async (id) => {
+    let res;
+    try {
+      res = await fetch(`/admin/tiles/${encodeURIComponent(id)}`, { credentials: 'same-origin' });
+    } catch {
+      return;
+    }
+    if (!res.ok || res.redirected) return;
+    const box = document.createElement('div');
+    swap(box, await res.text());
+    const fresh = box.querySelector('.ws-cell');
+    const cell = cellById(id);
+    if (!fresh || !cell) return;
+    for (const name of ['data-galleries', 'data-consequence']) cell.setAttribute(name, fresh.getAttribute(name) ?? '');
+    if (panelKind === 'photo' && panelFor === id) {
+      const consequence = panel()?.querySelector(':scope > .side-panel .danger-consequence');
+      if (consequence) consequence.textContent = cell.dataset.consequence ?? '';
+    }
+  }));
+}
+
+/** The page's cells now hold (`on`) or no longer hold gallery `gid`; the server's tiles follow. */
+function setMembership(ids, gid, on) {
+  for (const id of ids) {
+    const cell = cellById(id);
+    if (!cell) continue;
+    const now = galleriesOf(cell).filter((g) => g !== gid);
+    if (on) now.push(gid);
+    cell.setAttribute('data-galleries', now.join(' '));
+  }
+  refreshTiles(ids);
+}
+
+/** Re-reads the open collection's main region (counts, switch, marks) without a history entry. */
+const reloadMain = () => navigate(location.pathname, false);
+
+// ── the checklist (FR-014, FR-015; K6) ──────────────────────────────────────────────────────
+
+/**
+ * THE JS mirror of GalleryChecklist.Match (contracts K6; the parity fact pins the two): trim; blank
+ * narrows nothing and offers nothing; else the titles containing the text ignoring case, ordered
+ * exact, prefix, contains, then by title ignoring case (ordinal), then the given order. A title equal
+ * to the text ignoring case is "existing" and hides the offer; text over `max` offers nothing (the
+ * server's refusal is shown when it is sent).
+ */
+function matchGalleries(query, titles, max) {
+  const q = (query ?? '').trim();
+  if (q.length === 0) return { shown: titles.map((_, i) => i), existing: false, offer: null };
+  const up = (s) => s.toUpperCase();
+  const Q = up(q);
+  const rank = (t) => (up(t) === Q ? 0 : up(t).startsWith(Q) ? 1 : 2);
+  const ordinal = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+  const shown = titles
+    .map((t, i) => ({ t, i }))
+    .filter((r) => up(r.t).includes(Q))
+    .sort((a, b) => rank(a.t) - rank(b.t) || ordinal(up(a.t), up(b.t)) || a.i - b.i)
+    .map((r) => r.i);
+  const existing = titles.some((t) => up(t) === Q);
+  const offer = !existing && q.length <= max ? q : null;
+  return { shown, existing, offer };
+}
+
+/** The checklist's rows in the given (home) order, numbered once with data-i before any narrowing. */
+function checkRows(checks) {
+  const rows = [...checks.querySelectorAll('label.ws-checks-row')];
+  if (rows.some((r) => !r.hasAttribute('data-i'))) rows.forEach((r, i) => r.setAttribute('data-i', String(i)));
+  return rows.sort((a, b) => Number(a.dataset.i) - Number(b.dataset.i));
+}
+
+const rowTitle = (row) => row.querySelector('.ws-checks-name')?.textContent ?? '';
+
+/** Narrows and orders the rows as the mirror says; shows the offer when it has one. */
+function narrow(field) {
+  const checks = field.closest('.ws-checks');
+  if (!checks) return;
+  const rows = checkRows(checks);
+  const m = matchGalleries(field.value, rows.map(rowTitle), Number(checks.dataset.max) || Infinity);
+  const box = checks.querySelector('.ws-checks-box');
+  const offer = checks.querySelector('[data-mk]');
+  const shown = new Set(m.shown);
+  // Shown rows first in Match order, the hidden rest after them in the given order (as the server renders).
+  for (const i of m.shown) box?.insertBefore(rows[i], offer);
+  rows.forEach((r, i) => {
+    r.hidden = !shown.has(i);
+    if (r.hidden) box?.insertBefore(r, offer);
+  });
+  if (offer) {
+    offer.hidden = m.offer === null;
+    offer.textContent = m.offer === null ? '' : `New gallery \u201C${m.offer}\u201D`;
+  }
+  const msg = checks.querySelector('.ws-checks-msg');
+  if (msg) msg.textContent = '';
+}
+
+/** Tick → A7, untick → A8, for the photos in the panel's context. */
+async function tick(box) {
+  const gid = box.getAttribute('data-member');
+  const ids = selectedIds();
+  if (!gid || ids.length === 0) return;
+  const on = box.checked;
+  box.removeAttribute('aria-checked');
+  box.disabled = true;
+  const r = await write(gApi(gid, on ? '/photos' : '/photos/remove'), { ids });
+  box.disabled = false;
+  say(r);
+  if (!r.ok) {
+    box.checked = !on;
+    return;
+  }
+  if (!on && galleryOf() === gid) {
+    // US3-9: the photos leave the open gallery, so their cells leave the grid.
+    await reloadMain();
+  } else {
+    setMembership(ids, gid, on);
+  }
+  refreshChrome();
+}
+
+/** Enter in the find field or the offer: A7 when the text is a gallery's title, else A3 with the ids. */
+async function addByName(checks) {
+  const field = checks.querySelector('[data-gq]');
+  const ids = selectedIds();
+  const text = (field?.value ?? '').trim();
+  if (!field || text.length === 0 || ids.length === 0) return;
+  const kind = panelKind;
+  const rows = checkRows(checks);
+  const hit = rows.find((r) => rowTitle(r).toUpperCase() === text.toUpperCase());
+  const gid = hit?.querySelector('input[data-member]')?.getAttribute('data-member') ?? null;
+  const r = gid
+    ? await write(gApi(gid, '/photos'), { ids })
+    : await write(api('galleries'), { title: text, ids });
+  say(r);
+  if (!r.ok) {
+    const msg = checks.querySelector('.ws-checks-msg');
+    if (msg) msg.textContent = r.message;
+    field.focus();
+    return;
+  }
+  setMembership(ids, gid ?? r.data.id, true);
+  await refreshChrome();
+  // The chrome refresh re-filled the panel from the cells: focus goes back to its (empty) field.
+  if (panelKind === kind) panel()?.querySelector(':scope > .side-panel [data-gq]')?.focus();
+}
+
+// ── order: drag, Move earlier/later (A9), Move up/down (A4) (R-07) ─────────────────────────
+
+/** A9 with the full order of the open gallery; on success the cells move into that order. */
+async function saveCellOrder(order) {
+  const gid = galleryOf();
+  const now = cells().map((c) => c.dataset.id);
+  if (!gid || order.join(' ') === now.join(' ')) return;
+  const r = await write(gApi(gid, '/order'), { order });
+  say(r);
+  if (!r.ok || galleryOf() !== gid) return;
+  const sheet = grid();
+  for (const id of order) {
+    const cell = cellById(id);
+    if (cell) sheet?.append(cell);
+  }
+}
+
+/** A4 with the full home order; on success the list is re-read. */
+async function saveGalleryOrder(order) {
+  if (order.join(' ') === galleryOrder().join(' ')) return;
+  const r = await write(api('galleries/order'), { order });
+  say(r);
+  if (r.ok) refreshChrome();
+}
+
+/** `ids` moved (in page order) to just before `before` (null: the end) within `all`. */
+function moved(all, ids, before) {
+  const moving = all.filter((id) => ids.includes(id));
+  const rest = all.filter((id) => !ids.includes(id));
+  let at = rest.length;
+  if (before !== null) {
+    const from = all.indexOf(before);
+    const next = all.slice(from).find((id) => !ids.includes(id));
+    if (next !== undefined) at = rest.indexOf(next);
+  }
+  return [...rest.slice(0, at), ...moving, ...rest.slice(at)];
+}
+
+function swapWith(all, id, step) {
+  const i = all.indexOf(id);
+  const j = i + step;
+  if (i < 0 || j < 0 || j >= all.length) return all;
+  const out = [...all];
+  [out[i], out[j]] = [out[j], out[i]];
+  return out;
+}
+
+let drag = null;
+
+function clearDragMarks() {
+  for (const el of host()?.querySelectorAll('.ws-over, .ws-before, .ws-drop') ?? []) {
+    el.classList.remove('ws-over', 'ws-before', 'ws-drop');
+  }
+}
+
+function onDragStart(e) {
+  const t = e.target instanceof Element ? e.target : null;
+  const row = t?.closest('.ws-list a.ws-coll-row[data-gid]');
+  const cell = t?.closest('.ws-main .ws-cell');
+  if (row) {
+    drag = { kind: 'gallery', ids: [row.dataset.gid], target: null };
+  } else if (cell) {
+    const sel = selected();
+    drag = { kind: 'cells', ids: sel.includes(cell) ? sel.map((c) => c.dataset.id) : [cell.dataset.id], target: null };
+  } else {
+    return;
+  }
+  e.dataTransfer.effectAllowed = drag.kind === 'cells' ? 'copyMove' : 'move';
+  e.dataTransfer.setData('text/plain', drag.ids.join(' '));
+}
+
+/** Where a drop at this event would go: { kind: 'add', gid } | { kind: 'cells'|'gallery', before }. */
+function dropAt(e) {
+  const t = e.target instanceof Element ? e.target : null;
+  if (!drag || !t) return null;
+  const row = t.closest('.ws-list a.ws-coll-row[data-gid]');
+  if (drag.kind === 'gallery') {
+    if (!row) return null;
+    const box = row.getBoundingClientRect();
+    const rows = galleryRows();
+    const at = e.clientY > box.top + box.height / 2 ? rows[rows.indexOf(row) + 1] ?? null : row;
+    return { kind: 'gallery', before: at, mark: at, cls: 'ws-before' };
+  }
+  if (row) return { kind: 'add', gid: row.dataset.gid, mark: row, cls: 'ws-over' };
+  if (galleryOf() === null || !t.closest('.ws-main .cs')) return null;
+  const cell = t.closest('.ws-cell');
+  if (!cell) return drag.target?.kind === 'cells' ? drag.target : null;
+  const box = cell.getBoundingClientRect();
+  const all = cells();
+  const at = e.clientX > box.left + box.width / 2 ? all[all.indexOf(cell) + 1] ?? null : cell;
+  return { kind: 'cells', before: at, mark: at, cls: 'ws-drop' };
+}
+
+function onDragOver(e) {
+  const at = dropAt(e);
+  if (!at) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = at.kind === 'add' ? 'copy' : 'move';
+  drag.target = at;
+  if (at.mark?.classList.contains(at.cls)) return;
+  clearDragMarks();
+  at.mark?.classList.add(at.cls);
+}
+
+function onDrop(e) {
+  const at = dropAt(e) ?? null;
+  const d = drag;
+  clearDragMarks();
+  drag = null;
+  if (!at || !d) return;
+  e.preventDefault();
+  if (at.kind === 'add') {
+    addTo(at.gid, d.ids);
+  } else if (at.kind === 'cells') {
+    saveCellOrder(moved(cells().map((c) => c.dataset.id), d.ids, at.before?.dataset.id ?? null));
+  } else {
+    saveGalleryOrder(moved(galleryOrder(), d.ids, at.before?.dataset.gid ?? null));
+  }
+}
+
+function onDragEnd() {
+  clearDragMarks();
+  drag = null;
+}
+
+/** Cells dropped on a gallery's name: A7. */
+async function addTo(gid, ids) {
+  const r = await write(gApi(gid, '/photos'), { ids });
+  say(r);
+  if (!r.ok) return;
+  setMembership(ids, gid, true);
+  if (panelKind === 'photo' || panelKind === 'selection') showPanel();
+  refreshChrome();
+}
+
+// ── cover (A10), Public (A6) ────────────────────────────────────────────────────────────────
+
+/** The Cover mark moves to the photo the server now names as the cover. */
+function moveCoverMark(id) {
+  const tpl = list()?.querySelector('template.ws-tpl-marks')?.content.querySelector('.ws-mark');
+  if (!tpl) return;
+  const word = tpl.textContent;
+  for (const m of main()?.querySelectorAll('.ws-cell .ws-cell-marks .ws-mark') ?? []) {
+    if (m.textContent !== word) continue;
+    const holder = m.parentElement;
+    m.remove();
+    if (holder && holder.children.length === 0) holder.remove();
+  }
+  const cell = cellById(id);
+  const sel = cell?.querySelector('.ws-cell-sel');
+  if (!sel) return;
+  let holder = cell.querySelector('.ws-cell-marks');
+  if (!holder) {
+    holder = document.createElement('span');
+    holder.setAttribute('class', 'ws-cell-marks');
+    // The PhotoCell scope (b-*) so the component's own rule places it.
+    for (const a of sel.attributes) if (a.name.startsWith('b-')) holder.setAttribute(a.name, a.value);
+    sel.after(holder);
+  }
+  holder.prepend(tpl.cloneNode(true));
+}
+
+async function setCover() {
+  const gid = galleryOf();
+  const id = panelFor;
+  if (!gid || !id) return;
+  const r = await write(gApi(gid, '/cover'), { image: id });
+  say(r);
+  if (r.ok && galleryOf() === gid) moveCoverMark(r.data.cover);
+}
+
+/** A6: the switch applies at once; a refusal puts it back and shows the reason beside it. */
+async function setPublic(sw) {
+  const gid = galleryOf();
+  if (!gid) return;
+  const want = sw.checked;
+  sw.disabled = true;
+  const r = await write(gApi(gid, '/visibility'), { public: want });
+  sw.disabled = false;
+  say(r);
+  if (!r.ok) {
+    sw.checked = !want;
+    const hint = sw.closest('label.switch')?.nextElementSibling;
+    if (hint?.matches('p.hint')) hint.textContent = r.message;
+    return;
+  }
+  // The heading's Public/Private, View on site and the switch's hint are the server's: re-read them.
+  await reloadMain();
+  refreshChrome();
+}
+
+// ── delete (DangerConfirm, then A2 / A11) ───────────────────────────────────────────────────
+
+const invokers = typeof HTMLButtonElement !== 'undefined' && 'command' in HTMLButtonElement.prototype;
+
+async function deletePhotos() {
+  const ids = selectedIds();
+  if (ids.length === 0) return;
+  const r = await write(api('photos/delete'), { ids });
+  say(r);
+  if (!r.ok) return;
+  await reloadMain();
+  refreshChrome();
+}
+
+async function deleteGallery() {
+  const gid = galleryOf();
+  if (!gid) return;
+  const r = await write(gApi(gid, '/delete'), {});
+  say(r);
+  if (!r.ok) return;
+  await navigate('/admin', true);
+  refreshChrome();
+}
+
+function onConfirm(btn) {
+  const dialog = btn.closest('dialog');
+  if (!dialog) return false;
+  dialog.close();
+  if (dialog.id === 'ws-del-gallery') deleteGallery();
+  else deletePhotos();
+  return true;
+}
+
+// ── New gallery: naming in the list (A3 with no ids, then open it) ─────────────────────────
+
+let naming = null;
+
+function startNaming(button) {
+  const tpl = list()?.querySelector('template.ws-tpl-naming');
+  const label = tpl?.content.querySelector('.ws-naming')?.cloneNode(true);
+  if (!label) return;
+  naming = { button, label, busy: false };
+  button.replaceWith(label);
+  label.querySelector('input')?.focus();
+}
+
+function stopNaming() {
+  const n = naming;
+  naming = null;
+  if (n?.label.isConnected) n.label.replaceWith(n.button);
+}
+
+async function createNamed(input) {
+  const n = naming;
+  if (!n || n.busy) return;
+  n.busy = true;
+  const r = await write(api('galleries'), { title: input.value });
+  say(r);
+  if (!r.ok) {
+    n.busy = false;
+    input.focus();
+    return;
+  }
+  naming = null;
+  await navigate(`/admin/g/${encodeURIComponent(r.data.id)}`, true);
+  await refreshChrome();
+}
+
+function onKeyIn(e) {
+  const t = e.target instanceof Element ? e.target : null;
+  if (!t) return;
+  if (t.matches('.ws-list .ws-naming-input')) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      createNamed(t);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      stopNaming();
+    }
+  } else if (t.matches('.ws-panel [data-gq]') && e.key === 'Enter') {
+    e.preventDefault();
+    const checks = t.closest('.ws-checks');
+    if (checks) addByName(checks);
+  }
+}
+
+function onFocusOut(e) {
+  if (naming && !naming.busy && e.target instanceof Element && e.target.matches('.ws-list .ws-naming-input')) stopNaming();
+}
+
 // ── event tables (part 3, T038, appends its own rows) ───────────────────────────────────────
 
 /** [selector, handler(el, event) → handled]: the first row whose selector matches and handles wins. */
@@ -547,6 +993,44 @@ const clicks = [
     onCellClick(cell, e);
     return true;
   }],
+  // Part 3 (T038).
+  ['.ws-list button[name="collection"][value="new"]', (button) => {
+    startNaming(button);
+    return true;
+  }],
+  ['.ws-panel .side-panel [data-mk]', (button) => {
+    const checks = button.closest('.ws-checks');
+    if (checks) addByName(checks);
+    return true;
+  }],
+  ['.ws-panel .side-panel .ws-cover', () => {
+    setCover();
+    return true;
+  }],
+  ['.ws-panel .side-panel .ws-earlier, .ws-panel .side-panel .ws-later', (button) => {
+    if (!panelFor) return false;
+    saveCellOrder(swapWith(cells().map((c) => c.dataset.id), panelFor, button.classList.contains('ws-earlier') ? -1 : 1));
+    return true;
+  }],
+  ['.ws-panel .side-panel .ws-move-up, .ws-panel .side-panel .ws-move-down', (button) => {
+    const gid = galleryOf();
+    if (!gid) return false;
+    saveGalleryOrder(swapWith(galleryOrder(), gid, button.classList.contains('ws-move-up') ? -1 : 1));
+    return true;
+  }],
+  // DangerConfirm opens and closes by invoker commands; this is the fallback where they are missing.
+  ['.ws-panel .danger-trigger', (button) => {
+    if (invokers) return false;
+    const dialog = document.getElementById(button.getAttribute('commandfor') ?? '');
+    if (dialog instanceof HTMLDialogElement && !dialog.open) dialog.showModal();
+    return true;
+  }],
+  ['.ws-panel .danger-dialog .danger-cancel', (button) => {
+    if (invokers) return false;
+    button.closest('dialog')?.close();
+    return true;
+  }],
+  ['.ws-panel .danger-dialog .danger-actions button:not(.danger-cancel)', (button) => onConfirm(button)],
 ];
 
 /** [selector, handler(el, event) → handled] for `change` (fired when the owner leaves a field). */
@@ -559,6 +1043,16 @@ const changes = [
   ['.ws-panel .side-panel input[name="title"], .ws-panel .side-panel textarea[name="description"]', (field) => {
     if (panelKind !== 'default' || galleryOf() === null) return false;
     saveGalleryField(field);
+    return true;
+  }],
+  // Part 3 (T038).
+  ['.ws-panel .side-panel input[data-member]', (box) => {
+    tick(box);
+    return true;
+  }],
+  ['.ws-panel .side-panel input[role="switch"][name="public"]', (sw) => {
+    if (panelKind !== 'default' || galleryOf() === null) return false;
+    setPublic(sw);
     return true;
   }],
 ];
@@ -588,6 +1082,15 @@ class AdminWorkspace extends HTMLElement {
       if (!dispatch(clicks, e)) onEmptyClick(e);
     });
     this.addEventListener('change', (e) => dispatch(changes, e));
+    this.addEventListener('input', (e) => {
+      if (e.target instanceof Element && e.target.matches('.ws-panel [data-gq]')) narrow(e.target);
+    });
+    this.addEventListener('keydown', onKeyIn);
+    this.addEventListener('focusout', onFocusOut);
+    this.addEventListener('dragstart', onDragStart);
+    this.addEventListener('dragover', onDragOver);
+    this.addEventListener('drop', onDrop);
+    this.addEventListener('dragend', onDragEnd);
     document.addEventListener('keydown', onKey);
     window.addEventListener('popstate', () => navigate(location.href, false));
     afterSelect();

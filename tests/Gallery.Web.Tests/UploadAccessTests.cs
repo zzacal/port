@@ -41,7 +41,6 @@ public class UploadAccessTests : IClassFixture<MongoFixture>, IAsyncLifetime
 
     private static readonly Dictionary<string, Route> Routes = new()
     {
-        ["U1"] = new("GET", "/admin/upload", _ => null, HttpStatusCode.OK, null),
         ["U2"] = new("GET", "/admin/upload/state", _ => null, HttpStatusCode.OK, null),
         ["U3"] = new("POST", "/admin/upload/items",
             _ => new { files = new[] { new { name = "second.jpg", size = 1000, type = "image/jpeg" } } }, HttpStatusCode.OK, null),
@@ -64,10 +63,11 @@ public class UploadAccessTests : IClassFixture<MongoFixture>, IAsyncLifetime
             r => new { attemptId = r.AttemptId }, HttpStatusCode.Conflict, "not-active"),
         ["U9"] = new("POST", "/admin/upload/items/{item}/delete",
             r => new { attemptId = r.AttemptId }, HttpStatusCode.NoContent, null),
-        ["U10"] = new("POST", "/admin/upload/confirm",
-            r => new { batchId = r.BatchId }, HttpStatusCode.Conflict, "not-ready"),
-        ["U11"] = new("POST", "/admin/upload/discard",
-            r => new { batchId = r.BatchId }, HttpStatusCode.OK, null),
+        // 020 TI-30: a registered item is queued, so join answers 409 not-active and clear 409 still-working.
+        ["U12"] = new("POST", "/admin/upload/items/{item}/join",
+            r => new { attemptId = r.AttemptId }, HttpStatusCode.Conflict, "not-active"),
+        ["U13"] = new("POST", "/admin/upload/clear",
+            r => new { batchId = r.BatchId }, HttpStatusCode.Conflict, "still-working"),
     };
 
     public static TheoryData<string> AllRoutes()

@@ -56,7 +56,7 @@
     // ── chrome: the list and the collection-independent templates ───────────────────────────
 
     private RenderFragment Chrome => @<text><CollectionList Current="@Model.Current" Total="@((int)(Model.Counts?.Total ?? 0))" Unplaced="@((int)(Model.Counts?.Unplaced ?? 0))"
-                    Galleries="@ListRows" Csrf="@SignOutToken" /><template data-panel="photo">@PhotoPanel</template><template data-panel="selection">@SelectionPanel</template><template class="ws-tpl-marks"><Mark Text="Cover" /><Mark Text="New" /></template><template class="ws-tpl-cap"><p class="ws-cap">@Messages.SelectionCap(Model.Options.PageSize)</p></template></text>;
+                    Galleries="@ListRows" Csrf="@SignOutToken" NamingTemplate="true" /><template data-panel="photo">@PhotoPanel</template><template data-panel="selection">@SelectionPanel</template><template class="ws-tpl-marks"><Mark Text="Cover" /><Mark Text="New" /></template><template class="ws-tpl-cap"><p class="ws-cap">@Messages.SelectionCap(Model.Options.PageSize)</p></template></text>;
 
     /// <summary>The sign-out form's token (set on Full and Chrome).</summary>
     private FormToken SignOutToken => Model.Csrf ?? throw new InvalidOperationException("The chrome needs the antiforgery token.");

@@ -99,42 +99,6 @@ public class BatchStoreTests(MongoFixture mongo)
     }
 
     [Fact]
-    public async Task Append_after_TryStartConfirm_refuses_every_item()
-    {
-        var db = mongo.NewDatabase();
-        var store = NewStore(db);
-        var batch = await store.GetOrCreateOpenAsync();
-        var item = NewItem();
-        await store.AppendAsync(batch.Id, [item]);
-        Assert.True(await store.UpdateItemAsync(batch.Id, item.ItemId, item.AttemptId,
-            Builders<BatchDoc>.Update.Set("items.$.state", ItemStates.Succeeded)));
-        Assert.True(await store.TryStartConfirmAsync(batch.Id));
-
-        var result = await store.AppendAsync(batch.Id, [NewItem(), NewItem()]);
-
-        Assert.Empty(result.Accepted);
-        Assert.Equal(2, result.Refused.Count);
-        var stored = await store.GetByIdAsync(batch.Id);
-        Assert.Single(stored!.Items);
-        Assert.NotNull(stored.ConfirmStartedAt);
-    }
-
-    [Fact]
-    public async Task TryStartConfirm_refuses_an_empty_batch_and_one_with_an_unready_item()
-    {
-        var db = mongo.NewDatabase();
-        var store = NewStore(db);
-        var batch = await store.GetOrCreateOpenAsync();
-        Assert.False(await store.TryStartConfirmAsync(batch.Id));
-
-        await store.AppendAsync(batch.Id, [NewItem()]);
-        Assert.False(await store.TryStartConfirmAsync(batch.Id));
-
-        var stored = await store.GetByIdAsync(batch.Id);
-        Assert.Null(stored!.ConfirmStartedAt);
-    }
-
-    [Fact]
     public async Task A_second_open_insert_throws_DuplicateKey_once_the_index_exists()
     {
         var db = mongo.NewDatabase();

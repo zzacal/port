@@ -171,7 +171,7 @@ public class AdminAccessTests(MongoFixture mongo) : IAsyncLifetime
         await using var _ = host;
 
         var resp = await host.GetAsync("/admin/upload");
-        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
 
         var library = await host.GetAsync("/admin/library");
         Assert.Equal(HttpStatusCode.OK, library.StatusCode);

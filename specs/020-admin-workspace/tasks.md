@@ -532,14 +532,14 @@ Batch C2 owns: `src/Gallery.Web/wwwroot/admin-assets/workspace.js`, new
   cloning the context template (R-04), no request; save on `change` for title/caption (A1) and
   gallery title/description (A5) with saving/Saved/refusal under the field, the typed text kept
   and the cell's `data-title` unchanged on refusal. Depends: T036.
-- [ ] T038 [US1] [US3] `workspace.js` part 3: checklist (tick → A7, untick → A8, indeterminate
+- [X] T038 [US1] [US3] `workspace.js` part 3: checklist (tick → A7, untick → A8, indeterminate
   for partial, narrowing by the JS mirror of `GalleryChecklist.Match`, Enter/offer → A3 with ids or
   A7, focus back to the field); drag (cells → gallery row A7; cells within a gallery A9; gallery
   rows A4) with `ws-over`/`ws-before`/`ws-drop`; `Move earlier`/`Move later` (A9 bodies) and
   `Move up`/`Move down` (A4 bodies) (R-07); cover (A10); Public switch (A6, refusal puts it back);
   `DangerConfirm` then A2/A11 (A11 navigates to All photos); New gallery naming (A3 no ids, then
   navigate; Escape/blur cancels). Depends: T037.
-- [ ] T039 [US1] [US3] Write `tests/Gallery.Web.Tests/WorkspaceBrowserTests.cs`
+- [X] T039 [US1] [US3] Write `tests/Gallery.Web.Tests/WorkspaceBrowserTests.cs`
   (`[Collection("library-browser")]`, `LibraryBrowserFixture`, 1440 × 900, `page.Mouse.MoveAsync(0,0)`
   before each `GotoAsync`) with the TI-70 LibraryBrowserTests mapping facts and: US1 independent
   test (12 photos, 3 galleries: retitle 3, add 4 to an existing and a typed new gallery, drag 2,
@@ -577,11 +577,11 @@ Batch D1 owns: `src/Gallery.Web/Data/BatchDocuments.cs`, `src/Gallery.Web/Upload
 `src/Gallery.Web/Upload/UploadEndpoints.cs`, deletes `src/Gallery.Web/Upload/UploadPageModel.cs`
 and `src/Gallery.Web/Admin/Pages/UploadPage.razor`, new `tests/Gallery.Web.Tests/UploadJoinTests.cs`.
 
-- [ ] T040 [US2] data-model.md "Upload set": `BatchDoc` gains `[BsonElement("destination")]
+- [X] T040 [US2] data-model.md "Upload set": `BatchDoc` gains `[BsonElement("destination")]
   [BsonIgnoreIfNull] string? Destination` and `[BsonElement("added")] List<string> Added = []`;
   `ItemStates.Joining = "joining"`; `ConfirmStartedAt`/`ConfirmedAt`/`DiscardedAt`/`ConfirmedCount`
   stay as properties (old documents) but nothing writes them. Accept: compiles.
-- [ ] T041 [SAFETY] [US2] `BatchStore` (`src/Gallery.Web/Upload/BatchStore.cs`): add
+- [X] T041 [SAFETY] [US2] `BatchStore` (`src/Gallery.Web/Upload/BatchStore.cs`): add
   `TryClaimJoinAsync(batchId, itemId, attemptId)` — ONE atomic `UpdateOne` whose filter requires
   the open batch, the item id, the attempt and `state ∈ {succeeded, joining}` and sets `joining`
   [SAFETY claim, II.5d]; `CompleteJoinAsync(batchId, itemId, imageId)` (pull the item, `$push`
@@ -591,7 +591,7 @@ and `src/Gallery.Web/Admin/Pages/UploadPage.razor`, new `tests/Gallery.Web.Tests
   Remove `TryStartConfirmAsync`, `ClearConfirmStartedAsync`, `MarkConfirmedAsync`,
   `MarkDiscardedAsync` (TI-32). `AppendAsync` keeps its `ConfirmStartedAt` check unchanged. All
   timed `db.batch.update`. Depends: T040.
-- [ ] T042 [SAFETY] [US2] `ConfirmService.JoinAsync` (C-02, contracts/http.md U12 steps 3–5) in
+- [X] T042 [SAFETY] [US2] `ConfirmService.JoinAsync` (C-02, contracts/http.md U12 steps 3–5) in
   `src/Gallery.Web/Upload/ConfirmService.cs`: the per-item body of `ConfirmItemAsync` moved, not
   copied; copy-if-match on the validated ETags for the master and every size [SAFETY III.6]; a
   refused copy → item `failed` "changed after validation", the public names this run created and
@@ -605,7 +605,7 @@ and `src/Gallery.Web/Admin/Pages/UploadPage.razor`, new `tests/Gallery.Web.Tests
   existing `_afterItem` crash seam on the join path. Delete `ConfirmAsync`, `RunAsync`,
   `ConfirmResult`, `ConfirmStatus`. The file must not contain the words `Purge` or `Warm`
   (`UploadSourceGuardTests`). Depends: T041.
-- [ ] T043 [SAFETY] [US2] `UploadEndpoints` (`src/Gallery.Web/Upload/UploadEndpoints.cs`,
+- [X] T043 [SAFETY] [US2] `UploadEndpoints` (`src/Gallery.Web/Upload/UploadEndpoints.cs`,
   contracts/http.md Upload): U2 adds `destination` (`{ id, title, public }` or null), `added`,
   `joining` passes through as a state, `confirming` stays false (C-01), `{ batch: null }` also when
   the open batch has no items and no `added`; U3 reads optional `gallery`, `visibleToVisitors`:
@@ -622,7 +622,7 @@ and `src/Gallery.Web/Admin/Pages/UploadPage.razor`, new `tests/Gallery.Web.Tests
   and their mappings; delete `UploadPageModel.cs` and `Admin/Pages/UploadPage.razor`. Confirm
   `EffectiveState.Of` leaves `joining` as stored (it only ages queued/processing/uploading);
   if not, escalate. Depends: T042.
-- [ ] T044 [SAFETY] [US2] Write `tests/Gallery.Web.Tests/UploadJoinTests.cs` (`UploadHost`; the
+- [X] T044 [SAFETY] [US2] Write `tests/Gallery.Web.Tests/UploadJoinTests.cs` (`UploadHost`; the
   13-row mapping of contracts/test-impact.md "UploadConfirmTests → UploadJoinTests", same seams,
   same stored-field and object assertions per item) plus:
   `Register_into_a_public_gallery_without_the_flag_is_409_destination_public` [SAFETY II.5a]

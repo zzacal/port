@@ -549,4 +549,632 @@ public sealed class WorkspaceBrowserTests(LibraryBrowserFixture fx)
             lock (requested) Assert.DoesNotContain(requested, u => u.Contains("/admin-assets/", StringComparison.Ordinal));
         }
     }
+
+    // ── T038 (Batch C2b): part 3 helpers ───────────────────────────────────────────────────
+
+    private static ILocator Cell(IPage page, string id) => page.Locator($".ws-main .ws-cell[data-id='{id}']");
+
+    private static ILocator ListRow(IPage page, string gid) => page.Locator($".ws-list a[data-gid='{gid}']");
+
+    /// <summary>The checklist row (its label) for <paramref name="gid"/> in the open panel.</summary>
+    private static ILocator CheckRow(IPage page, string gid) =>
+        page.Locator($".ws-panel > .side-panel label.ws-checks-row:has(input[data-member='{gid}'])");
+
+    private static ILocator CheckBox(IPage page, string gid) =>
+        page.Locator($".ws-panel > .side-panel input[data-member='{gid}']");
+
+    private static ILocator FindField(IPage page) => page.Locator(".ws-panel > .side-panel [data-gq]");
+
+    private static Task WaitForToastTextAsync(IPage page, string text) =>
+        WaitForAsync(page, "t => document.querySelector('.ws-panel .ws-toast').textContent === t", text, $"the toast \"{text}\"");
+
+    private static Task ClearToastAsync(IPage page) =>
+        page.EvaluateAsync("() => { document.querySelector('.ws-panel .ws-toast').textContent = ''; }");
+
+    private static Task<string[]> ListOrderAsync(IPage page) =>
+        page.EvaluateAsync<string[]>("() => [...document.querySelectorAll('.ws-list a[data-gid]')].map(a => a.dataset.gid)");
+
+    private static Task<string> ListRowTextAsync(IPage page, string gid) =>
+        ListRow(page, gid).EvaluateAsync<string>("a => [...a.children].map(c => c.textContent.trim()).join(' ')");
+
+    private static async Task<List<string>> ItemsAsync(LibrarySite site, string gid) => (await site.GalleryDocAsync(gid)).Items;
+
+    private static List<string> Sorted(IEnumerable<string> ids) => ids.Order(StringComparer.Ordinal).ToList();
+
+    /// <summary>The galleries of a cell as the page holds them (data-galleries), sorted.</summary>
+    private static async Task<List<string>> CellGalleriesAsync(IPage page, string id) =>
+        Sorted((await Cell(page, id).GetAttributeAsync("data-galleries"))!.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+
+    /// <summary>An anonymous visitor's page at <paramref name="path"/> (no owner cookie).</summary>
+    private static async Task<(IPage Page, int Status)> VisitorAsync(LibrarySite site, string path)
+    {
+        var ctx = await site.NewContextAsync(owner: false);
+        var page = await ctx.NewPageAsync();
+        await page.Mouse.MoveAsync(0, 0);
+        var resp = await page.GotoAsync(site.BaseUrl + path);
+        await BrowserWait.LoadedAsync(page, WaitMs);
+        return (page, resp!.Status);
+    }
+
+    // ── US1 independent test (SC-001, SC-003) ──────────────────────────────────────────────
+
+    [Fact]
+    public async Task Us1_retitle_three_add_four_to_an_existing_and_a_typed_gallery_drag_two_in_one_document()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var ids = await site.ImagesAsync(12);
+        var coast = await site.GalleryAsync("Coast", [ids[0]]);
+        var birds = await site.GalleryAsync("Birds", [ids[1]]);
+        var desert = await site.GalleryAsync("Desert", [ids[2]]);
+        var page = await OpenAsync(site, "/admin");
+        await MarkDocumentAsync(page);
+        var order = await CellIdsAsync(page);
+        Assert.Equal(Enumerable.Reverse(ids).ToArray(), order);
+
+        // Retitle three photos (A1 on leaving the field).
+        string[] titles = ["Harbour at dawn", "Low tide", "Gulls"];
+        for (var i = 0; i < 3; i++)
+        {
+            await Cell(page, order[i]).ClickAsync();
+            await page.Locator(".ws-panel input[name='title']").FillAsync(titles[i]);
+            await page.Keyboard.PressAsync("Tab");
+            await WaitForAsync(page, "({ id, t }) => document.querySelector(`.ws-main .ws-cell[data-id=\"${id}\"]`).dataset.title === t",
+                new { id = order[i], t = titles[i] }, $"title {i} saved");
+        }
+
+        // Four onto an existing gallery by ticking it.
+        await Cell(page, order[3]).ClickAsync();
+        await Cell(page, order[6]).ClickAsync(new() { Modifiers = [KeyboardModifier.Shift] });
+        Assert.Equal(order[3..7], await SelectedAsync(page));
+        await CheckRow(page, birds).ClickAsync();
+        await WaitForToastTextAsync(page, Gallery.Web.Workspace.Messages.Added(4, 0, "Birds", false));
+
+        // Four into a new gallery typed in the find field.
+        await Cell(page, order[7]).ClickAsync();
+        await Cell(page, order[10]).ClickAsync(new() { Modifiers = [KeyboardModifier.Shift] });
+        Assert.Equal(order[7..11], await SelectedAsync(page));
+        await FindField(page).FillAsync("Harbour");
+        await page.Keyboard.PressAsync("Enter");
+        await WaitForToastTextAsync(page, Gallery.Web.Workspace.Messages.Created("Harbour", 4));
+
+        // Two dragged onto a gallery's name.
+        await Cell(page, order[0]).ClickAsync();
+        await Cell(page, order[1]).ClickAsync(new() { Modifiers = [KeyboardModifier.ControlOrMeta] });
+        await Cell(page, order[0]).DragToAsync(ListRow(page, desert));
+        await WaitForToastTextAsync(page, Gallery.Web.Workspace.Messages.Added(2, 0, "Desert", false));
+        await WaitForAsync(page, "gid => document.querySelector(`.ws-list a[data-gid=\"${gid}\"] .ws-coll-count`)?.textContent === '3'", desert, "Desert's count 3");
+
+        Assert.Equal(1, await DocumentLoadsAsync(page));
+
+        // Reload: every change was stored.
+        await page.ReloadAsync();
+        await BrowserWait.LoadedAsync(page, WaitMs);
+        await ReadyAsync(page);
+        Assert.Equal("All photos", await HeadingAsync(page));
+        for (var i = 0; i < 3; i++)
+        {
+            Assert.Equal(titles[i], await Cell(page, order[i]).GetAttributeAsync("data-title"));
+            Assert.Equal(titles[i], (await site.Images.Find(x => x.Id == order[i]).FirstAsync()).Title);
+        }
+        var harbour = (await site.Galleries.Find(g => g.Title == "Harbour").ToListAsync()).Single();
+        Assert.Equal("private", harbour.Visibility);
+        Assert.Equal(Sorted(order[7..11]), Sorted(harbour.Items));
+        Assert.Equal(Sorted([ids[1], .. order[3..7]]), Sorted(await ItemsAsync(site, birds)));
+        Assert.Equal(Sorted([ids[2], order[0], order[1]]), Sorted(await ItemsAsync(site, desert)));
+        Assert.Equal([ids[0]], await ItemsAsync(site, coast));
+        Assert.Equal(4, await site.Galleries.CountDocumentsAsync(FilterDefinition<Gallery.Web.Data.GalleryDoc>.Empty));
+        Assert.Equal([coast, birds, desert, harbour.Id], await ListOrderAsync(page));
+        Assert.Equal("Harbour Private 4", await ListRowTextAsync(page, harbour.Id));
+        Assert.Equal("Birds Private 5", await ListRowTextAsync(page, birds));
+        Assert.Equal(Sorted([desert]), await CellGalleriesAsync(page, order[0]));
+        Assert.Equal(Sorted([harbour.Id]), await CellGalleriesAsync(page, order[7]));
+    }
+
+    // ── the checklist (K6) ─────────────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task A_gallery_holding_some_of_the_selection_is_partly_ticked_and_ticking_adds_the_rest()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var ids = await site.ImagesAsync(3);
+        var coast = await site.GalleryAsync("Coast", [ids[0]]);
+        var birds = await site.GalleryAsync("Birds", []);
+        var page = await OpenAsync(site, "/admin");
+        const string State = "b => [b.getAttribute('aria-checked') ?? '-', String(b.indeterminate), String(b.checked)]";
+
+        await Cell(page, ids[0]).ClickAsync();
+        await Cell(page, ids[1]).ClickAsync(new() { Modifiers = [KeyboardModifier.ControlOrMeta] });
+        Assert.Equal("2 photos selected", await PanelHeadingAsync(page));
+        Assert.Equal(["mixed", "true", "false"], await CheckBox(page, coast).EvaluateAsync<string[]>(State));
+        Assert.Equal(["-", "false", "false"], await CheckBox(page, birds).EvaluateAsync<string[]>(State));
+
+        await CheckRow(page, coast).ClickAsync();
+        await WaitForToastTextAsync(page, Gallery.Web.Workspace.Messages.Added(1, 1, "Coast", false));
+        await WaitForAsync(page, "gid => document.querySelector(`.ws-panel > .side-panel input[data-member=\"${gid}\"]`)?.checked === true", coast, "Coast ticked");
+        Assert.Equal(["-", "false", "true"], await CheckBox(page, coast).EvaluateAsync<string[]>(State));
+        Assert.Equal(Sorted([ids[0], ids[1]]), Sorted(await ItemsAsync(site, coast)));
+        Assert.Equal([coast], await CellGalleriesAsync(page, ids[1]));
+        await WaitForAsync(page, "gid => document.querySelector(`.ws-list a[data-gid=\"${gid}\"] .ws-coll-count`)?.textContent === '2'", coast, "Coast's count 2");
+        Assert.Equal(["2 photos selected"], [await PanelHeadingAsync(page)]);
+    }
+
+    [Fact]
+    public async Task Typing_a_new_name_and_Enter_creates_a_private_gallery_with_the_selection_and_keeps_focus()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var ids = await site.ImagesAsync(3);
+        var coast = await site.GalleryAsync("Coast", []);
+        var page = await OpenAsync(site, "/admin");
+
+        await Cell(page, ids[0]).ClickAsync();
+        await Cell(page, ids[2]).ClickAsync(new() { Modifiers = [KeyboardModifier.ControlOrMeta] });
+        await FindField(page).FillAsync("Harbour");
+        var offer = page.Locator(".ws-panel > .side-panel [data-mk]");
+        Assert.False(await offer.EvaluateAsync<bool>("b => b.hidden"));
+        Assert.Equal("New gallery \u201CHarbour\u201D", await offer.TextContentAsync());
+        await page.Keyboard.PressAsync("Enter");
+
+        await WaitForToastTextAsync(page, Gallery.Web.Workspace.Messages.Created("Harbour", 2));
+        var harbour = (await site.Galleries.Find(g => g.Title == "Harbour").ToListAsync()).Single();
+        await WaitForAsync(page, "gid => document.querySelector(`.ws-panel > .side-panel input[data-member=\"${gid}\"]`)?.checked === true", harbour.Id, "Harbour ticked");
+        Assert.True(await page.EvaluateAsync<bool>("() => document.activeElement === document.querySelector('.ws-panel > .side-panel [data-gq]')"),
+            "focus is not back in the find field: " + await page.EvaluateAsync<string>("() => document.activeElement?.outerHTML.slice(0, 120) ?? 'none'"));
+        Assert.Equal("", await FindField(page).InputValueAsync());
+        Assert.Equal("private", harbour.Visibility);
+        Assert.Equal(Sorted([ids[0], ids[2]]), Sorted(harbour.Items));
+        Assert.Equal([coast, harbour.Id], await ListOrderAsync(page));
+        Assert.Equal("Harbour Private 2", await ListRowTextAsync(page, harbour.Id));
+        Assert.Equal([ids[2], ids[0]], await SelectedAsync(page));
+    }
+
+    [Fact]
+    public async Task Typing_an_existing_name_and_Enter_adds_without_a_duplicate()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var ids = await site.ImagesAsync(3);
+        var coast = await site.GalleryAsync("Coast", []);
+        var page = await OpenAsync(site, "/admin");
+
+        await Cell(page, ids[1]).ClickAsync();
+        await FindField(page).FillAsync("  coast ");
+        Assert.True(await page.Locator(".ws-panel > .side-panel [data-mk]").EvaluateAsync<bool>("b => b.hidden"));
+        await page.Keyboard.PressAsync("Enter");
+
+        await WaitForToastTextAsync(page, Gallery.Web.Workspace.Messages.Added(1, 0, "Coast", false));
+        await WaitForAsync(page, "gid => document.querySelector(`.ws-panel > .side-panel input[data-member=\"${gid}\"]`)?.checked === true", coast, "Coast ticked");
+        Assert.True(await page.EvaluateAsync<bool>("() => document.activeElement === document.querySelector('.ws-panel > .side-panel [data-gq]')"));
+        Assert.Equal(1, await site.Galleries.CountDocumentsAsync(FilterDefinition<Gallery.Web.Data.GalleryDoc>.Empty));
+        Assert.Equal([ids[1]], await ItemsAsync(site, coast));
+        Assert.Equal([coast], await ListOrderAsync(page));
+    }
+
+    [Fact]
+    public async Task Checklist_rows_equal_GalleryChecklist_Match_for_each_query()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var ids = await site.ImagesAsync(1);
+        string[] titles = ["Sea birds", "Birds", "birdsong", "Coast", "Big Sur", "\u00C9b\u00E8ne", "Desert", "Bird"];
+        foreach (var t in titles) await site.GalleryAsync(t, []);
+        var max = site.Services.GetRequiredService<LibraryOptions>().TitleMax;
+        var page = await OpenAsync(site, "/admin");
+        await Cell(page, ids[0]).ClickAsync();
+        Assert.Equal("Photo", await PanelHeadingAsync(page));
+
+        string[] queries = ["", "b", "BIRDS", " bird ", "bird", "sur", "x", "\u00E9B", "coast", "coas", "   ", new string('x', max), new string('x', max + 1), "s"];
+        foreach (var q in queries)
+        {
+            await FindField(page).FillAsync(q);
+            var m = Gallery.Web.Components.Molecules.GalleryChecklist.Match(q, titles, max);
+            var shown = m.Shown.Select(i => titles[i]).ToList();
+            var hidden = titles.Where((_, i) => !m.Shown.Contains(i)).ToList();
+            var actual = await page.EvaluateAsync<string[]>("""
+                () => [...document.querySelectorAll('.ws-panel > .side-panel label.ws-checks-row')]
+                  .map(r => (r.hidden ? '-' : '+') + r.querySelector('.ws-checks-name').textContent)
+                """);
+            Assert.Equal([.. shown.Select(t => "+" + t), .. hidden.Select(t => "-" + t)], actual);
+            var offer = await page.EvaluateAsync<string?>("() => { const b = document.querySelector('.ws-panel > .side-panel [data-mk]'); return b.hidden ? null : b.textContent; }");
+            Assert.Equal(m.Offer is null ? null : $"New gallery \u201C{m.Offer}\u201D", offer);
+        }
+    }
+
+    [Fact]
+    public async Task Ticking_a_public_gallery_says_visitors_can_see_them_now()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var ids = await site.ImagesAsync(3);
+        var coast = await site.GalleryAsync("Coast", [ids[0]], publish: true);
+        var page = await OpenAsync(site, "/admin");
+
+        await Cell(page, ids[1]).ClickAsync();
+        await Cell(page, ids[2]).ClickAsync(new() { Modifiers = [KeyboardModifier.ControlOrMeta] });
+        await CheckRow(page, coast).ClickAsync();
+        await WaitForToastTextAsync(page, Gallery.Web.Workspace.Messages.Added(2, 0, "Coast", true));
+        Assert.Equal(Sorted(ids), Sorted(await ItemsAsync(site, coast)));
+    }
+
+    [Fact]
+    public async Task Unticking_the_open_gallery_removes_the_cell()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var ids = await site.ImagesAsync(3);
+        var coast = await site.GalleryAsync("Coast", ids);
+        var page = await OpenAsync(site, $"/admin/g/{coast}");
+        Assert.Equal(ids.ToArray(), await CellIdsAsync(page));
+
+        await Cell(page, ids[1]).ClickAsync();
+        await CheckRow(page, coast).ClickAsync();
+        await WaitForToastTextAsync(page, Gallery.Web.Workspace.Messages.Removed(1, "Coast", false));
+        await WaitForCellsAsync(page, 2);
+        Assert.Equal([ids[0], ids[2]], await CellIdsAsync(page));
+        Assert.Equal([ids[0], ids[2]], await ItemsAsync(site, coast));
+        Assert.Equal($"/admin/g/{coast}", new Uri(page.Url).AbsolutePath);
+        await WaitForAsync(page, "gid => document.querySelector(`.ws-list a[data-gid=\"${gid}\"] .ws-coll-count`)?.textContent === '2'", coast, "Coast's count 2");
+    }
+
+    [Fact]
+    public async Task Removing_the_last_photo_of_a_public_gallery_says_visitors_can_no_longer_see_it_and_its_page_answers_404()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var ids = await site.ImagesAsync(2);
+        var coast = await site.GalleryAsync("Coast", [ids[0]], publish: true);
+        var slug = (await site.GalleryDocAsync(coast)).Slug;
+        Assert.Equal(200, (await VisitorAsync(site, $"/g/{coast}/{slug}")).Status);
+        var page = await OpenAsync(site, $"/admin/g/{coast}");
+
+        await Cell(page, ids[0]).ClickAsync();
+        await CheckRow(page, coast).ClickAsync();
+        await WaitForToastTextAsync(page, Gallery.Web.Workspace.Messages.Removed(1, "Coast", true));
+        await WaitForCellsAsync(page, 0);
+        Assert.Empty(await ItemsAsync(site, coast));
+        Assert.Equal(404, (await VisitorAsync(site, $"/g/{coast}/{slug}")).Status);
+    }
+
+    // ── drag and the Move buttons (R-07) ───────────────────────────────────────────────────
+
+    [Fact]
+    public async Task Drag_a_gallery_name_to_the_top_stores_the_home_order()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var ids = await site.ImagesAsync(3);
+        var a = await site.GalleryAsync("Coast", [ids[0]]);
+        var b = await site.GalleryAsync("Birds", [ids[1]]);
+        var c = await site.GalleryAsync("Desert", [ids[2]]);
+        var page = await OpenAsync(site, "/admin");
+        Assert.Equal([a, b, c], await ListOrderAsync(page));
+
+        await ListRow(page, c).DragToAsync(ListRow(page, a), new() { TargetPosition = new() { X = 20, Y = 2 } });
+        await WaitForToastTextAsync(page, Gallery.Web.Workspace.Messages.GalleryOrderSaved);
+        Assert.Equal([c, a, b], await site.HomeOrderAsync());
+        await WaitForAsync(page, "first => document.querySelector('.ws-list a[data-gid]').dataset.gid === first", c, "the list re-read");
+        Assert.Equal([c, a, b], await ListOrderAsync(page));
+        Assert.Equal(0, await page.Locator(".ws-list .ws-before, .ws-list .ws-over").CountAsync());
+    }
+
+    [Fact]
+    public async Task Move_earlier_and_later_buttons_store_the_order()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var ids = await site.ImagesAsync(3);
+        var coast = await site.GalleryAsync("Coast", ids);
+        var page = await OpenAsync(site, $"/admin/g/{coast}");
+
+        await Cell(page, ids[0]).ClickAsync();
+        await page.Locator(".ws-panel .ws-later").ClickAsync();
+        await WaitForToastTextAsync(page, Gallery.Web.Workspace.Messages.OrderSaved);
+        Assert.Equal([ids[1], ids[0], ids[2]], await ItemsAsync(site, coast));
+        Assert.Equal([ids[1], ids[0], ids[2]], await CellIdsAsync(page));
+        Assert.Equal([ids[0]], await SelectedAsync(page));
+
+        await ClearToastAsync(page);
+        await Cell(page, ids[2]).ClickAsync();
+        await page.Locator(".ws-panel .ws-earlier").ClickAsync();
+        await WaitForToastTextAsync(page, Gallery.Web.Workspace.Messages.OrderSaved);
+        Assert.Equal([ids[1], ids[2], ids[0]], await ItemsAsync(site, coast));
+        Assert.Equal([ids[1], ids[2], ids[0]], await CellIdsAsync(page));
+    }
+
+    // ── US3 independent test, with the visitor's view ──────────────────────────────────────
+
+    [Fact]
+    public async Task Us3_create_add_reorder_cover_publish_and_move_up_then_the_visitor_sees_that_order_cover_and_place()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var ids = await site.ImagesAsync(4);
+        var coast = await site.GalleryAsync("Coast", [ids[0]], publish: true);
+        var birds = await site.GalleryAsync("Birds", [ids[0]], publish: true);
+        var page = await OpenAsync(site, "/admin");
+        await MarkDocumentAsync(page);
+
+        // Create by name in the list.
+        await page.Locator(".ws-list button[name='collection'][value='new']").ClickAsync();
+        Assert.True(await page.EvaluateAsync<bool>("() => document.activeElement?.matches('.ws-list .ws-naming-input') === true"));
+        await page.Keyboard.TypeAsync("Harbour");
+        await page.Keyboard.PressAsync("Enter");
+        await WaitForAsync(page, "() => location.pathname.startsWith('/admin/g/') && document.querySelector('.ws-main .ws-head h1')?.textContent === 'Harbour'", what: "the new gallery opened");
+        Assert.Equal(Gallery.Web.Workspace.Messages.Created("Harbour", null), await ToastAsync(page));
+        var gid = new Uri(page.Url).AbsolutePath["/admin/g/".Length..];
+        await WaitForAsync(page, "gid => document.querySelector(`.ws-list a[data-gid=\"${gid}\"]`)?.getAttribute('aria-current') === 'page'", gid, "the new row current");
+        Assert.Equal([coast, birds, gid], await site.HomeOrderAsync());
+        Assert.Equal(0, await page.Locator(".ws-list .ws-naming-input").CountAsync());
+
+        // Add three photos (drag them onto its name from All photos).
+        await page.Locator(".ws-list a[href='/admin']").First.ClickAsync();
+        await WaitForAsync(page, "() => document.querySelector('.ws-main .ws-head h1')?.textContent === 'All photos'", what: "All photos");
+        await Cell(page, ids[3]).ClickAsync();
+        await Cell(page, ids[1]).ClickAsync(new() { Modifiers = [KeyboardModifier.Shift] });
+        await Cell(page, ids[2]).DragToAsync(ListRow(page, gid));
+        await WaitForToastTextAsync(page, Gallery.Web.Workspace.Messages.Added(3, 0, "Harbour", false));
+        var added = await ItemsAsync(site, gid);
+        Assert.Equal(Sorted([ids[1], ids[2], ids[3]]), Sorted(added));
+
+        // Reorder by drag: the last photo to the front.
+        await ListRow(page, gid).ClickAsync();
+        await WaitForAsync(page, "() => document.querySelector('.ws-main .ws-head h1')?.textContent === 'Harbour'", what: "Harbour");
+        Assert.Equal(added.ToArray(), await CellIdsAsync(page));
+        var (p, q, r) = (added[0], added[1], added[2]);
+        await Cell(page, r).DragToAsync(Cell(page, p), new() { TargetPosition = new() { X = 4, Y = 40 } });
+        await WaitForToastTextAsync(page, Gallery.Web.Workspace.Messages.OrderSaved);
+        Assert.Equal([r, p, q], await ItemsAsync(site, gid));
+        Assert.Equal([r, p, q], await CellIdsAsync(page));
+        Assert.Equal(0, await page.Locator(".ws-main .ws-drop").CountAsync());
+
+        // Move later: p goes after q.
+        await ClearToastAsync(page);
+        await Cell(page, p).ClickAsync();
+        await page.Locator(".ws-panel .ws-later").ClickAsync();
+        await WaitForToastTextAsync(page, Gallery.Web.Workspace.Messages.OrderSaved);
+        Assert.Equal([r, q, p], await ItemsAsync(site, gid));
+        Assert.Equal([r, q, p], await CellIdsAsync(page));
+
+        // Cover: q.
+        await Cell(page, q).ClickAsync();
+        await page.Locator(".ws-panel .ws-cover").ClickAsync();
+        var qTitle = (await site.Images.Find(x => x.Id == q).FirstAsync()).Title;
+        await WaitForToastTextAsync(page, Gallery.Web.Workspace.Messages.Cover(qTitle, "Harbour"));
+        Assert.Equal(q, (await site.GalleryDocAsync(gid)).PinnedCover);
+        Assert.Equal([q], await page.EvaluateAsync<string[]>("() => [...document.querySelectorAll('.ws-main .ws-cell')].filter(c => [...c.querySelectorAll('.ws-mark')].some(m => m.textContent === 'Cover')).map(c => c.dataset.id)"));
+        // The script-placed mark is styled by PhotoCell's own rule (absolute, top right).
+        Assert.Equal("absolute", await Cell(page, q).Locator(".ws-cell-marks").EvaluateAsync<string>("el => getComputedStyle(el).position"));
+
+        // Public on.
+        await page.Keyboard.PressAsync("Escape");
+        Assert.Equal("Gallery", await PanelHeadingAsync(page));
+        await page.Locator(".ws-panel label.switch").ClickAsync();
+        await WaitForToastTextAsync(page, Gallery.Web.Workspace.Messages.NowPublic("Harbour"));
+        Assert.Equal("public", (await site.GalleryDocAsync(gid)).Visibility);
+        await WaitForAsync(page, "() => document.querySelector('.ws-main .ws-meta')?.textContent.includes('· Public') && document.querySelector('.ws-panel input[role=\"switch\"]')?.checked === true", what: "the heading says Public");
+        await WaitForAsync(page, "gid => document.querySelector(`.ws-list a[data-gid=\"${gid}\"]`)?.dataset.public === 'true'", gid, "the list row public");
+
+        // Move up: Harbour before Birds.
+        await ClearToastAsync(page);
+        await page.Locator(".ws-panel .ws-move-up").ClickAsync();
+        await WaitForToastTextAsync(page, Gallery.Web.Workspace.Messages.GalleryOrderSaved);
+        Assert.Equal([coast, gid, birds], await site.HomeOrderAsync());
+        await WaitForAsync(page, "gid => document.querySelectorAll('.ws-list a[data-gid]')[1]?.dataset.gid === gid", gid, "Harbour second in the list");
+        Assert.Equal(1, await DocumentLoadsAsync(page));
+
+        // The visitor's view.
+        var slug = (await site.GalleryDocAsync(gid)).Slug;
+        var (listing, listingStatus) = await VisitorAsync(site, "/g");
+        Assert.Equal(200, listingStatus);
+        var cards = await listing.EvaluateAsync<string[][]>("""
+            () => {
+              const seen = new Map();
+              for (const a of document.querySelectorAll('a[href^="/g/"]')) {
+                const m = /^\/g\/([^/]+)\/[^/]+$/.exec(a.getAttribute('href'));
+                if (!m || seen.has(m[1])) continue;
+                const box = a.closest('.tile') ?? a;
+                seen.set(m[1], [...box.querySelectorAll('img, source')].map(e => (e.getAttribute('srcset') ?? '') + ' ' + (e.getAttribute('src') ?? '')).join(' '));
+              }
+              return [...seen].map(([gid, files]) => [gid, files]);
+            }
+            """);
+        Assert.Equal([coast, gid, birds], cards.Select(c => c[0]).ToList());
+        var harbourFiles = cards.Single(c => c[0] == gid)[1];
+        string[] Keys(string id) => [.. Gallery.Web.Tests.Fixtures.SeedShapes.Derivatives(id).SelectMany(d => new[] { d.Avif, d.Webp })];
+        Assert.Contains(Keys(q), k => harbourFiles.Contains(k, StringComparison.Ordinal));
+        Assert.DoesNotContain(Keys(r).Concat(Keys(p)), k => harbourFiles.Contains(k, StringComparison.Ordinal));
+
+        var (gallery, galleryStatus) = await VisitorAsync(site, $"/g/{gid}/{slug}");
+        Assert.Equal(200, galleryStatus);
+        var photos = await gallery.EvaluateAsync<string[]>("""
+            prefix => [...new Set([...document.querySelectorAll('a[href]')].map(a => a.getAttribute('href')).filter(h => h.startsWith(prefix)).map(h => h.slice(prefix.length)).filter(h => h.length > 0 && !h.includes('/')))]
+            """, $"/g/{gid}/{slug}/");
+        Assert.Equal([r, q, p], photos);
+    }
+
+    // ── Public switch refusal, delete, new gallery cancel ──────────────────────────────────
+
+    [Fact]
+    public async Task Public_switch_on_an_emptied_gallery_is_refused_and_put_back_with_the_reason_beside_it()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var ids = await site.ImagesAsync(1);
+        var coast = await site.GalleryAsync("Coast", ids);
+        var page = await OpenAsync(site, $"/admin/g/{coast}");
+        var sw = page.Locator(".ws-panel input[role='switch']");
+        Assert.False(await sw.IsDisabledAsync());
+        Assert.False(await sw.IsCheckedAsync());
+
+        // The gallery is emptied behind the page's back (another tab).
+        using (var scope = site.Services.CreateScope())
+            Assert.True((await scope.ServiceProvider.GetRequiredService<GalleryService>().RemoveManyAsync(coast, ids)).IsOk);
+
+        await page.Locator(".ws-panel label.switch").ClickAsync();
+        await WaitForToastTextAsync(page, GalleryService.EmptyPublishReason);
+        Assert.True(await page.Locator(".ws-panel .ws-toast").EvaluateAsync<bool>("el => el.classList.contains('ws-refusal')"));
+        Assert.False(await sw.IsCheckedAsync());
+        Assert.Equal(GalleryService.EmptyPublishReason, await sw.EvaluateAsync<string>("el => el.closest('label.switch').nextElementSibling.textContent"));
+        Assert.Equal("hint", await sw.EvaluateAsync<string>("el => el.closest('label.switch').nextElementSibling.className.split(' ')[0]"));
+        Assert.Equal("private", (await site.GalleryDocAsync(coast)).Visibility);
+    }
+
+    [Fact]
+    public async Task Deleting_a_gallery_lands_on_All_photos_with_its_photos_kept()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var ids = await site.ImagesAsync(2);
+        var coast = await site.GalleryAsync("Coast", ids, publish: true);
+        var page = await OpenAsync(site, $"/admin/g/{coast}");
+        await MarkDocumentAsync(page);
+
+        await page.Locator(".ws-panel .danger-trigger").ClickAsync();
+        var dialog = page.Locator(".ws-panel dialog#ws-del-gallery");
+        await dialog.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = WaitMs });
+        Assert.Equal("Delete gallery \u201CCoast\u201D?", (await dialog.Locator(".danger-title").TextContentAsync())!.Trim());
+        await dialog.Locator(".danger-actions button:not(.danger-cancel)").ClickAsync();
+
+        await WaitForAsync(page, "() => location.pathname === '/admin' && document.querySelector('.ws-main .ws-head h1')?.textContent === 'All photos'", what: "All photos");
+        Assert.Equal(Gallery.Web.Workspace.Messages.GalleryDeleted("Coast"), await ToastAsync(page));
+        await WaitForAsync(page, "gid => !document.querySelector(`.ws-list a[data-gid=\"${gid}\"]`)", coast, "the row gone");
+        Assert.Equal("/admin", await CurrentRowAsync(page));
+        Assert.Equal(Enumerable.Reverse(ids).ToArray(), await CellIdsAsync(page));
+        Assert.Equal(0, await site.Galleries.CountDocumentsAsync(g => g.Id == coast));
+        Assert.Equal(2, await site.Images.CountDocumentsAsync(i => ids.Contains(i.Id) && i.DeletingAt == null));
+        Assert.Equal(1, await DocumentLoadsAsync(page));
+    }
+
+    [Fact]
+    public async Task Delete_confirms_name_what_is_deleted_and_Cancel_deletes_nothing()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var ids = await site.ImagesAsync(3);
+        await site.GalleryAsync("Coast", [ids[0]]);
+        var page = await OpenAsync(site, "/admin");
+
+        // One photo: the confirm says the server's sentence for its gallery count; Cancel deletes nothing.
+        await Cell(page, ids[0]).ClickAsync();
+        await page.Locator(".ws-panel .danger-trigger").ClickAsync();
+        var one = page.Locator(".ws-panel dialog#ws-del-photo");
+        await one.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = WaitMs });
+        Assert.Equal(Gallery.Web.Workspace.Messages.DeleteConsequence(1), await one.Locator(".danger-consequence").TextContentAsync());
+        await one.Locator(".danger-cancel").ClickAsync();
+        await one.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = WaitMs });
+        Assert.Equal(3, await site.Images.CountDocumentsAsync(i => ids.Contains(i.Id) && i.DeletingAt == null));
+        Assert.Equal(3, await Cells(page).CountAsync());
+
+        // Two photos: the count and the bulk sentence; confirm deletes exactly them.
+        await Cell(page, ids[1]).ClickAsync();
+        await Cell(page, ids[2]).ClickAsync(new() { Modifiers = [KeyboardModifier.ControlOrMeta] });
+        Assert.Equal("Delete 2 photos\u2026", (await page.Locator(".ws-panel .danger-trigger").TextContentAsync())!.Trim());
+        await page.Locator(".ws-panel .danger-trigger").ClickAsync();
+        var many = page.Locator(".ws-panel dialog#ws-del-selection");
+        await many.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = WaitMs });
+        Assert.Equal("Delete 2 photos?", (await many.Locator(".danger-title").TextContentAsync())!.Trim());
+        Assert.Equal(Gallery.Web.Admin.Pages.WorkspacePage.BulkDeleteConsequence, await many.Locator(".danger-consequence").TextContentAsync());
+        var answer = page.WaitForResponseAsync(r => r.Url.EndsWith("/admin/api/photos/delete", StringComparison.Ordinal));
+        await many.Locator(".danger-actions button:not(.danger-cancel)").ClickAsync();
+        using var json = JsonDocument.Parse(await (await answer).TextAsync());
+        Assert.Equal(2, json.RootElement.GetProperty("deleted").GetInt32());
+        await WaitForCellsAsync(page, 1);
+        Assert.Equal(json.RootElement.GetProperty("message").GetString(), await ToastAsync(page));
+        Assert.StartsWith(Gallery.Web.Workspace.Messages.Deleted(2, 0, 0), await ToastAsync(page));
+        Assert.Equal([ids[0]], await CellIdsAsync(page));
+        Assert.Equal(1, await site.Images.CountDocumentsAsync(i => ids.Contains(i.Id) && i.DeletingAt == null));
+    }
+
+    [Fact]
+    public async Task New_gallery_naming_is_cancelled_by_Escape_and_by_leaving_the_field()
+    {
+        await using var site = await fx.NewSiteAsync();
+        await site.ImagesAsync(1);
+        var page = await OpenAsync(site, "/admin");
+        var button = page.Locator(".ws-list button[name='collection'][value='new']");
+        var input = page.Locator(".ws-list .ws-naming-input");
+
+        var requests = await AppRequestsDuring(site, page, async () =>
+        {
+            await button.ClickAsync();
+            Assert.Equal("New gallery name", (await page.Locator(".ws-list .ws-naming-label").TextContentAsync())!.Trim());
+            await page.Keyboard.TypeAsync("Harbour");
+            await page.Keyboard.PressAsync("Escape");
+            Assert.Equal(0, await input.CountAsync());
+            Assert.Equal(1, await button.CountAsync());
+
+            await button.ClickAsync();
+            await page.Keyboard.TypeAsync("Harbour");
+            await page.Locator(".ws-main .ws-head h1").ClickAsync();
+            Assert.Equal(0, await input.CountAsync());
+            Assert.Equal(1, await button.CountAsync());
+        });
+        Assert.Empty(requests);
+        Assert.Equal(0, await site.Galleries.CountDocumentsAsync(FilterDefinition<Gallery.Web.Data.GalleryDoc>.Empty));
+        // The cloned field carries CollectionList's scope, so its own rule styles it.
+        await button.ClickAsync();
+        Assert.Equal("flex", await page.Locator(".ws-list .ws-naming").EvaluateAsync<string>("el => getComputedStyle(el).display"));
+    }
+
+    // ── one filled button per context; deletes outlined and last ───────────────────────────
+
+    [Fact]
+    public async Task One_primary_button_per_context_and_every_delete_is_outlined_and_last()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var ids = await site.ImagesAsync(3);
+        var coast = await site.GalleryAsync("Coast", ids);
+        const string Primaries = """
+            () => [...document.querySelectorAll('admin-workspace .btn-primary')].filter(b => b.getClientRects().length > 0).map(b => b.textContent.trim())
+            """;
+        const string LastControl = """
+            () => {
+              const p = document.querySelector('.ws-panel > .side-panel');
+              const all = [...p.querySelectorAll('a, button, input, textarea, select')].filter(e => !e.closest('dialog') && e.getClientRects().length > 0);
+              const last = all[all.length - 1];
+              const s = getComputedStyle(last);
+              return [last.classList.contains('danger-trigger') ? 'danger-trigger' : last.outerHTML.slice(0, 80), s.backgroundColor, String(parseFloat(s.borderTopWidth) > 0), String(s.borderTopColor === s.color)];
+            }
+            """;
+        string[] Outlined = ["danger-trigger", "rgba(0, 0, 0, 0)", "true", "true"];
+
+        foreach (var (path, select, panel) in new[]
+                 {
+                     ("/admin", 0, "Library"), ($"/admin/g/{coast}", 0, "Gallery"),
+                     ($"/admin/g/{coast}", 1, "Photo"), ("/admin", 2, "2 photos selected"),
+                 })
+        {
+            var page = await OpenAsync(site, path);
+            if (select >= 1) await Cells(page).Nth(0).ClickAsync();
+            if (select >= 2) await Cells(page).Nth(1).ClickAsync(new() { Modifiers = [KeyboardModifier.ControlOrMeta] });
+            Assert.Equal(panel, await PanelHeadingAsync(page));
+            var primaries = await page.EvaluateAsync<string[]>(Primaries);
+            Assert.True(primaries.Length <= 1, $"{panel}: {primaries.Length} filled buttons: {string.Join(", ", primaries)}");
+            Assert.Equal(0, await page.Locator(".ws-panel .btn-primary").CountAsync());
+            if (panel != "Library") Assert.Equal(Outlined, await page.EvaluateAsync<string[]>(LastControl));
+            await page.Context.CloseAsync();
+        }
+    }
+
+    // ── the panel's photo copies ───────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task Panel_preview_is_inside_the_panel_and_visible()
+    {
+        await using var site = await fx.NewSiteAsync();
+        await site.ImagesAsync(4);
+        var page = await OpenAsync(site, "/admin");
+        const string Boxes = """
+            sel => {
+              const p = document.querySelector('.ws-panel > .side-panel');
+              const r = p.getBoundingClientRect();
+              const s = getComputedStyle(p);
+              const left = r.left + parseFloat(s.borderLeftWidth) + parseFloat(s.paddingLeft);
+              const right = r.right - parseFloat(s.borderRightWidth) - parseFloat(s.paddingRight);
+              return [...p.querySelectorAll(sel)].map(el => {
+                const b = el.getBoundingClientRect();
+                return [b.height > 0, b.width > 0, b.width <= right - left + 0.5, b.left >= left - 0.5, b.right <= right + 0.5];
+              });
+            }
+            """;
+
+        await Cells(page).Nth(0).ClickAsync();
+        var one = await page.EvaluateAsync<bool[][]>(Boxes, ".ws-preview picture");
+        Assert.Single(one);
+        Assert.Equal([true, true, true, true, true], one[0]);
+
+        await Cells(page).Nth(2).ClickAsync(new() { Modifiers = [KeyboardModifier.Shift] });
+        Assert.Equal("3 photos selected", await PanelHeadingAsync(page));
+        var three = await page.EvaluateAsync<bool[][]>(Boxes, ".ws-previews picture");
+        Assert.Equal(3, three.Length);
+        Assert.All(three, b => Assert.Equal([true, true, true, true, true], b));
+    }
 }
