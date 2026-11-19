@@ -6,9 +6,15 @@ Grep run 2026-11-18 over `tests/` (source only) for `signin/local`, `LocalSignIn
 
 ## A / B / D: none
 
-No existing test is retargeted, extended or deleted. Every existing test host runs in the
-Production environment (`AppBuilder.Build` gets no `--environment`), so `LocalSignIn.State` there
-is `Absent` or `NotDevelopmentHost`: H7 is unmapped and H1 renders exactly as today.
+No existing test is retargeted, extended or deleted. `AdminHost` and `LibraryHost` run in the
+Production environment. The four browser fixtures (`LibraryBrowserFixture`, `NavBrowserFixture`,
+`BrowserSiteFixture`, `UploadBrowserFixture`) run in Development with `--applicationName
+Gallery.Web`, so they also load the owner's user-secrets on the owner's machine. None of them names
+its database with `_dev`, so the state is always `Absent` or `NotDevelopmentHost`: H7 is unmapped
+and H1 renders exactly as today. The only machine-dependent effect is one
+`auth.local.state not_development_host` startup line when the owner has set the password in
+user-secrets; no existing test reads `auth.local.*`. (Corrected at tasks: plan said every host runs
+in Production.)
 
 ## C: unchanged, listed so nobody "fixes" them
 

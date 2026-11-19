@@ -129,8 +129,10 @@ a "Local sign-in" specimen on `/ui/organisms/sign-in-card`, which would move tha
 - names the database `{generated}_dev`;
 - sets `gallery-dev-pub` / `gallery-dev-priv` buckets.
 
-Each non-qualifying shape is a dev host with one override flipped. Every existing test host runs
-in the Production environment (no `--environment`), where the feature is absent by construction.
+Each non-qualifying shape is a dev host with one override flipped. `AdminHost` and `LibraryHost`
+run in the Production environment. The four browser fixtures already run in Development with
+`--applicationName Gallery.Web` (they load the owner's user-secrets), but none names its database
+with `_dev`, so the feature is absent there too (test-impact.md; corrected at tasks).
 `LibraryBrowserFixture.NewSiteAsync` gains the same `devHost` option plus `ownerSession` (default
 true) for the SC-006 browser test from an empty database.
 
