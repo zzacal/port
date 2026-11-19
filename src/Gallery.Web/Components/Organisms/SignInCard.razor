@@ -14,14 +14,14 @@
             <h1>Sign in</h1>@NoticeMarkup@Sep
             <p>Only the owner can manage this site.</p>
             <form method="post" action="/admin/signin">@TokenInput<Button Variant="ButtonVariant.Primary">Sign in with Google</Button>
-            </form>
+            </form>@LocalForm
         }
         else if (State == SignInState.Claim)
         {
             <h1>Claim this site</h1>@NoticeMarkup@Sep
             <p>This site has no owner yet. The first Google account to sign in becomes the owner. It can't be changed later from the web.</p>
             <form method="post" action="/admin/signin">@TokenInput<Button Variant="ButtonVariant.Primary">Sign in with Google and claim</Button>
-            </form>
+            </form>@LocalForm
         }
         else if (State == SignInState.Refused)
         {
@@ -40,6 +40,9 @@
     [Parameter] public FormToken? Antiforgery { get; set; }
     [Parameter] public string? Notice { get; set; }
 
+    /// <summary>018 K2: the local password form after the Google form (SignIn and Claim states only).</summary>
+    [Parameter] public bool Local { get; set; }
+
     // Preserves \n            whitespace that Razor would otherwise strip between @NoticeMarkup and <p>.
     private static readonly MarkupString Sep = new("\n            ");
 
@@ -48,4 +51,8 @@
 
     private RenderFragment? TokenInput => Antiforgery is null ? null
         : @<input type="hidden" name="@Antiforgery.FieldName" value="@Antiforgery.Value">;
+
+    // 018 K2: null unless Local, so Local = false renders byte-identically.
+    private RenderFragment? LocalForm => !Local ? null :
+        @<form class="si-local" method="post" action="/admin/signin/local">@TokenInput<Input Label="Local password" Name="password" Type="password" Required="true" /><Button Variant="ButtonVariant.Secondary">@(State == SignInState.Claim ? "Claim locally" : "Sign in locally")</Button></form>;
 }

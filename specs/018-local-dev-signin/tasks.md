@@ -147,13 +147,13 @@ Batch B owns: `src/Gallery.Web/Admin/AdminEndpoints.cs`,
 `tests/Gallery.Web.Tests/LocalSignInTests.cs`, `LocalSignInGuardTests.cs` and
 `LocalSignInBrowserTests.cs`.
 
-- [ ] T010 [P] [US1] K2: in `SignInCard.razor`, add `Local` and `LocalForm` exactly per
+- [X] T010 [P] [US1] K2: in `SignInCard.razor`, add `Local` and `LocalForm` exactly per
   contracts/components.md; `@LocalForm` goes directly after the Google form's `</form>` in the
   SignIn and Claim branches. Add the `.si-local` rule to `SignInCard.razor.css`. `Local = false`
   must be byte-identical (`UiPagesUnchangedTests`, `SignInComponentTests`,
   `OrganismComponentTests` green, unmodified).
-- [ ] T011 [P] [US1] K3: `SignInPage.razor` gains `Local` and passes it to `SignInCard`.
-- [ ] T012 [US1] [US2] [SAFETY] In `AdminEndpoints.MapAdmin` (contracts/http.md):
+- [X] T011 [P] [US1] K3: `SignInPage.razor` gains `Local` and passes it to `SignInCard`.
+- [X] T012 [US1] [US2] [SAFETY] In `AdminEndpoints.MapAdmin` (contracts/http.md):
   - resolve `LocalSignIn` from `app.Services`; when `LocalSignIn:Password` is present in
     configuration, log `auth.local.state {state}` once;
   - H1: pass `[nameof(SignInPage.Local)] = local.Enabled`; when enabled, do not set the "isn't set
@@ -167,7 +167,7 @@ Batch B owns: `src/Gallery.Web/Admin/AdminEndpoints.cs`,
     and the contract's notices. Put the page rendering in one private helper that the new code
     calls; do not paste a fourth copy of the cover lookup (H1 and H2 may keep theirs unchanged);
   - the password is never logged, rendered or put in an exception message.
-- [ ] T013 [US1] Write `tests/Gallery.Web.Tests/LocalSignInTests.cs` (`AdminHost(devHost: true)`
+- [X] T013 [US1] Write `tests/Gallery.Web.Tests/LocalSignInTests.cs` (`AdminHost(devHost: true)`
   with `LocalSignIn:Password` = a 20-character value; `FakeGoogle` configured):
   - claimed site (claim `owner-1` through `OwnerStore.TryClaimAsync`): the GET page has exactly one
     `form.si-local` with `action="/admin/signin/local"`, a `type="password"` field named
@@ -190,7 +190,7 @@ Batch B owns: `src/Gallery.Web/Admin/AdminEndpoints.cs`,
   - no response body or header and no captured log line contains the configured password or any
     submitted password (check every response and the whole `LogLines`) [SAFETY];
   - SC-001: the `http.request POST /admin/signin/local 302` line's duration < 2000 ms.
-- [ ] T014 [US2] [SAFETY] Write `tests/Gallery.Web.Tests/LocalSignInGuardTests.cs`. Each host
+- [X] T014 [US2] [SAFETY] Write `tests/Gallery.Web.Tests/LocalSignInGuardTests.cs`. Each host
   below has `LocalSignIn:Password` = the same 20-character value unless stated otherwise:
   - shapes: (a) Production environment (plain `AdminHost`, no devHost); (b) dev host with
     `Mongo:Database` without `_dev` (override); (c) dev host with `Storage:PublicBucket` without
@@ -206,7 +206,7 @@ Batch B owns: `src/Gallery.Web/Admin/AdminEndpoints.cs`,
     `LocalSignIn:Password` refuses to build: the exception message contains
     `LocalSignIn:Password must not be set` and not the value (follow ProductionGuardTests' existing
     "refuses to build" fact for how it builds the host).
-- [ ] T015 [US1] Write `tests/Gallery.Web.Tests/LocalSignInBrowserTests.cs`
+- [X] T015 [US1] Write `tests/Gallery.Web.Tests/LocalSignInBrowserTests.cs`
   (`[Collection("library-browser")]`, `NewSiteAsync(devHost: true, ownerSession: false,
   extraOverrides: {LocalSignIn:Password})`). SC-006: from an empty database in a fresh browser
   context, open `/admin/library` → lands on `/admin/signin`; fill "Local password", click "Claim

@@ -6,6 +6,7 @@ using Gallery.Web.Library;
 using Gallery.Web.Site;
 using Gallery.Web.Storage;
 using Gallery.Web.Upload;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -20,6 +21,12 @@ public static class AdminEndpoints
     public static void MapAdmin(this WebApplication app)
     {
         var getVerbs = new[] { "GET", "HEAD" };
+
+        // 018 [SAFETY]: the local sign-in rule, decided once at startup (research R-01).
+        var local = app.Services.GetRequiredService<LocalSignIn>();
+        if (app.Configuration[LocalSignIn.PasswordKey] is not null)
+            app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Gallery.Auth")
+                .LogInformation("auth.local.state {state}", StateName(local.State));
 
         // H1: GET/HEAD /admin/signin — sign-in page (no auth required)
         app.MapMethods("/admin/signin", getVerbs, async (
@@ -41,7 +48,7 @@ public static class AdminEndpoints
             string? notice = null;
             if (r == "failed")
                 notice = "Sign-in didn't complete. Nothing was saved.";
-            else if (!googleOptions.IsConfigured)
+            else if (!googleOptions.IsConfigured && !local.Enabled)
                 notice = "Sign-in isn't set up on this server.";
 
             // Determine state
@@ -80,6 +87,7 @@ public static class AdminEndpoints
                 [nameof(SignInPage.Cover)] = cover,
                 [nameof(SignInPage.Notice)] = notice,
                 [nameof(SignInPage.Antiforgery)] = af,
+                [nameof(SignInPage.Local)] = local.Enabled,
             });
         });
 
@@ -144,6 +152,68 @@ public static class AdminEndpoints
                 ["google"]);
         });
 
+        // H7: POST /admin/signin/local — local password sign-in (018). [SAFETY] Mapped ONLY on a
+        // development host with a configured password; elsewhere the address falls to H6.
+        if (local.Enabled)
+            app.MapPost("/admin/signin/local", async (
+                HttpContext ctx,
+                IAntiforgery antiforgery,
+                OwnerStore ownerStore,
+                OwnerSignIn ownerSignIn,
+                ContentReader contentReader,
+                StorageOptions storage,
+                ILoggerFactory loggerFactory) =>
+            {
+                var logger = loggerFactory.CreateLogger("Gallery.Auth");
+                var ip = ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+                // [SAFETY] Check antiforgery manually (this route is outside the filter group)
+                if (!await antiforgery.IsRequestValidAsync(ctx))
+                {
+                    logger.LogInformation("auth.local.refused {ip} {reason}", ip, "bad_form");
+                    return await LocalSignInPageAsync(ctx, ownerStore, contentReader, storage, antiforgery,
+                        "Your sign-in form expired. Try again.", StatusCodes.Status400BadRequest);
+                }
+
+                var form = await ctx.Request.ReadFormAsync();
+                if (!local.Matches(form["password"].ToString()))
+                {
+                    logger.LogInformation("auth.local.refused {ip} {reason}", ip, "bad_password");
+                    return await LocalSignInPageAsync(ctx, ownerStore, contentReader, storage, antiforgery,
+                        "That password wasn't accepted.", StatusCodes.Status401Unauthorized);
+                }
+
+                var sub = await ownerStore.ReadOwnerAsync();
+                var claimed = false;
+                if (sub is null)
+                {
+                    // Call, never copy: the one atomic claim path (logs auth.claim / auth.refused).
+                    var outcome = await ownerSignIn.ResolveAsync(LocalSignIn.LocalOwner, ip);
+                    if (outcome == SignInOutcome.Claimed)
+                    {
+                        sub = LocalSignIn.LocalOwner;
+                        claimed = true;
+                    }
+                    else if (outcome == SignInOutcome.SignedIn)
+                    {
+                        sub = LocalSignIn.LocalOwner;
+                    }
+                    else
+                    {
+                        // Lost the race: sign in as the winner (I.7d).
+                        sub = await ownerStore.ReadOwnerAsync()
+                            ?? throw new InvalidOperationException("The site has no owner after a lost claim.");
+                    }
+                }
+
+                // The same cookie the OIDC handler issues: owner scheme, a single sub claim, persistent.
+                var identity = new ClaimsIdentity([new Claim("sub", sub)], AuthSetup.OwnerScheme, "sub", null);
+                await ctx.SignInAsync(AuthSetup.OwnerScheme, new ClaimsPrincipal(identity),
+                    new AuthenticationProperties { IsPersistent = true });
+                logger.LogInformation("auth.local.signin {sub} {ip} {claimed}", sub, ip, claimed ? "true" : "false");
+                return Results.Redirect("/admin");
+            }); // H7
+
         // Protected group: requires owner session + anti-forgery filter
         var admin = app
             .MapGroup("/admin")
@@ -181,5 +251,55 @@ public static class AdminEndpoints
         // H6: Catch-all — any unmatched /admin/** returns 404 (after auth + CSRF)
         admin.MapMethods("{**rest}", ["GET", "HEAD", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
             () => Results.StatusCode(404));
+    }
+
+    /// <summary>018: the log name of a <see cref="LocalSignInState"/>.</summary>
+    private static string StateName(LocalSignInState state) => state switch
+    {
+        LocalSignInState.Enabled => "enabled",
+        LocalSignInState.Absent => "absent",
+        LocalSignInState.TooShort => "too_short",
+        _ => "not_development_host",
+    };
+
+    /// <summary>
+    /// 018 H7: re-renders the sign-in page (current state, cover, fresh tokens, the local form) with a
+    /// notice and status. Never given the password.
+    /// </summary>
+    private static async Task<IResult> LocalSignInPageAsync(
+        HttpContext ctx,
+        OwnerStore ownerStore,
+        ContentReader contentReader,
+        StorageOptions storage,
+        IAntiforgery antiforgery,
+        string notice,
+        int status)
+    {
+        var owner = await ownerStore.ReadOwnerAsync();
+        var state = owner is null ? SignInState.Claim : SignInState.SignIn;
+        Gallery.Core.Images.ImageView? cover = null;
+        try
+        {
+            var site = await contentReader.HomeAsync();
+            if (site is not null)
+            {
+                var url = PublicEndpoints.MakeUrl(storage);
+                var cardWithCover = site.HomeCards.FirstOrDefault(c => c.Cover is not null);
+                if (cardWithCover is not null)
+                    cover = ViewMapper.ToCard(cardWithCover, url).Image;
+            }
+        }
+        catch { /* cover is optional */ }
+        var tokens = antiforgery.GetAndStoreTokens(ctx);
+        var af = new FormToken(tokens.FormFieldName, tokens.RequestToken!);
+        ctx.Response.StatusCode = status;
+        return new RazorComponentResult<SignInPage>(new Dictionary<string, object?>
+        {
+            [nameof(SignInPage.State)] = state,
+            [nameof(SignInPage.Cover)] = cover,
+            [nameof(SignInPage.Notice)] = notice,
+            [nameof(SignInPage.Antiforgery)] = af,
+            [nameof(SignInPage.Local)] = true,
+        });
     }
 }
