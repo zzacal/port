@@ -567,7 +567,9 @@ gallery, upload a photo into a gallery, reorder a gallery and make it public.
   tests for removed pages are retired or rewritten as a stated requirement change. Tests of the
   rules underneath (gallery, photo and delete operations, the upload pipeline, public output,
   sign-in) are expected to pass unmodified.
-- The catalogue has 43 entries today. Components whose only users are removed pages, and so go:
+- The catalogue has 40 entries today (corrected at plan; the list that follows is corrected by
+  plan decision 18: 13 entries go, the side panel, drop zone and page heading stay, the admin
+  layout is rewritten in place). Components whose only users are removed pages, and so go:
   the owner bar, selection bar, photo icon row, gallery icon row, gallery builder, batch footer,
   batch item, upload drop zone, side panel, drag handle, cover marker, page heading, visibility
   toggle, token combobox, the icon and icon-button atoms, and the admin layout template (replaced).
