@@ -7,3 +7,8 @@
 HEAD /admin/library/images/00000000000000000000000000 302
 live library.js has the removed panel-into-view block: 0
 live /admin-assets/library.js: HTTP 200, carries the 017 header line ("the photo edit screen's Galleries field") -> the deployed build is cc57b64's.
+
+T025 / O-01 (2026-11-18): reported done by the owner ("it's done"). The automation browser had no
+owner session when the agent tried the signed-in pass (/admin/library -> /admin/signin), so the
+390/1440 measurements (horizontal scroll, broken images, photo wholly visible) were not captured
+by the agent; recorded on the owner's word.
