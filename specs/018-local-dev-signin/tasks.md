@@ -247,7 +247,7 @@ Then run the quickstart owner steps against a throwaway dev host, run gate B, an
   Run `NV_DRYRUN=1`, then the real run; tee to `non-vacuity.txt`.
 - [X] T020 Final gate (`evidence/gate-final.txt`): `dotnet clean`, `-warnaserror` build, full
   suite; restore earlier features' logs; commit.
-- [ ] T021 Merge to main (`--no-ff`, body as in 017's) and push; watch the deploy go green. Signed
+- [X] T021 Merge to main (`--no-ff`, body as in 017's) and push; watch the deploy go green. Signed
   out, on port.zacal.me:
   - `curl -s -o /dev/null -w '%{http_code}' -X POST https://port.zacal.me/admin/signin/local` → 401;
   - `/admin/signin` contains no `si-local`.

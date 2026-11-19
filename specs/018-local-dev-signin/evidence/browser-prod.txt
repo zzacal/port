@@ -1,0 +1,7 @@
+Run 1 at 04:49:17Z answered 502 on every path (app restarting after the deploy; / and /admin/signin answered 200 from 04:49:23Z on).
+Run 2 at 04:51:37Z failed on a bare 'si-local' grep that matched the inlined scoped CSS rule, not a form; the probe now checks the element. Run 3:
+018 production probe against https://port.zacal.me at 2026-11-19T04:51:52Z
+POST /admin/signin/local -> 401 (unmapped /admin/signin/nonexistent -> 401)
+GET /admin/signin/local -> 302 https://port.zacal.me/admin/signin
+/admin/signin: si-local form elements=0, local action lines=0, Google form lines=1 (inlined .si-local CSS rule lines=1)
+PASS
