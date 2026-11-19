@@ -3,3 +3,4 @@ B (41612ac): Core 123/124 (TokenMediaAgreementTests: 900 px media query, fixed b
 C (9d8748d): Core 124 passed; Web 1846 passed, 1 skipped, 1 failed (OwnerClaimTests.Workspace_page_passes_security_guards: parent's TI-41 regex left a stray quote after v=; fixed, class re-run 12/12).
 C2a (0287c37): Core 124 passed; Web 1863 passed, 1 skipped, 0 failed.
 D1 (0cc90c8, C2b + D1 + CP-D rows): Core 124 passed; Web 1856 passed, 1 skipped, 0 failed (retired upload files removed their facts).
+D (2fe6da8): Core 124 passed; Web 1874 passed, 1 skipped, 1 failed: BrowserTests.Walk_home_gallery_photo_next_back_with_javascript_off (Playwright 30 s timeout after a navigating click, JS off). Re-run alone on HEAD: 1 of 3 passed; on the pre-feature tree a5806fb in a worktree: 1 of 4 passed under the same load. Pre-existing flake, not caused by 020 (JS-off public walk); left untouched, decisions row.
