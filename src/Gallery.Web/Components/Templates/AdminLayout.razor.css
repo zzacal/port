@@ -32,7 +32,7 @@ body.admin {
 }
 
 /* 020 K1 workspace frame (IX.2: the layout owns all frame geometry; pages add none). Below 1200 px (Tokens.BreakLarge; 020 C-21)
-   one simple column for now (the phone strip and bottom sheet come with T057). */
+   one column: the collections list a strip at the top, main, and the panel a bottom sheet (T057, below). */
 .ws {
     display: block;
 }
@@ -63,5 +63,75 @@ body.admin {
     .ws-list,
     .ws-panel {
         background: var(--color-surface);
+    }
+}
+
+/* 020 T057 (K1, US6): below 1200 px. One column; the collections list is a horizontal strip at the top
+   that scrolls inside itself (never the page); the panel is a bottom sheet, shown only while
+   admin-workspace has ws-sheet (a selection, or Gallery settings), over the bottom of the page with the
+   top 4 x --space-l still showing. The Toast stays in the panel region and fixed, so it shows either way.
+   Every control is at least --tap in both directions. */
+@media not all and (min-width: 1200px) {
+    .ws-list {
+        background: var(--color-surface);
+    }
+
+    .ws-list > ::deep .ws-collections {
+        flex-direction: row;
+        align-items: center;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+    }
+
+    .ws-list > ::deep .ws-collections > * {
+        flex: none;
+    }
+
+    .ws-list > ::deep .ws-collections > .ws-brand,
+    .ws-list > ::deep .ws-collections > .ws-coll-head {
+        display: none;
+    }
+
+    .ws-list > ::deep .ws-collections > .ws-coll-foot {
+        flex-direction: row;
+        align-items: center;
+        margin: 0;
+        padding: 0 0 0 var(--space-s);
+        border-top: 0;
+        border-left: thin solid var(--color-rule);
+    }
+
+    .ws-panel {
+        padding: 0;
+    }
+
+    .ws:not(.ws-sheet) .ws-panel > ::deep .side-panel {
+        display: none;
+    }
+
+    .ws-sheet .ws-panel {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 10;
+        box-sizing: border-box;
+        max-height: calc(100dvh - 4 * var(--space-l));
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        background: var(--color-bg);
+        border-top: thin solid var(--color-rule);
+    }
+
+    .ws ::deep .btn,
+    .ws ::deep .select-mark,
+    .ws ::deep .switch,
+    .ws ::deep .field input {
+        min-width: var(--tap);
+        min-height: var(--tap);
+    }
+
+    .ws ::deep .select-mark {
+        justify-content: center;
     }
 }

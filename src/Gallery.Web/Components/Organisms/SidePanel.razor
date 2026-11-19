@@ -1,6 +1,6 @@
 @* Admin side panel organism (feature 005): heading, fields slot, save state, optional danger slot. *@
 <aside class="side-panel" aria-label="@Heading">
-    <h2>@Heading</h2>
+    <h2>@Heading</h2>@HeadAction
     <div class="sp-fields">@ChildContent</div>
     @(Save ? SaveRow : null)
     @if (Danger is not null)
@@ -22,6 +22,14 @@
     [Parameter] public ButtonVariant SaveVariant { get; set; } = ButtonVariant.Primary;
     [Parameter] public RenderFragment? Danger { get; set; }
     [Parameter] public string? FormId { get; set; }
+
+    /// <summary>
+    /// Feature 020 T057: a control in the heading row, after the heading (the workspace's Done). Optional; the
+    /// default render is byte-identical. Rendered in <c>.sp-head-action</c>, laid out beside the h2.
+    /// </summary>
+    [Parameter] public RenderFragment? HeadingAction { get; set; }
+
+    private RenderFragment? HeadAction => HeadingAction is null ? null : @<div class="sp-head-action">@HeadingAction</div>;
 
     /// <summary>Feature 020 K2: false renders no save row (the workspace saves on leave). Default render byte-identical.</summary>
     [Parameter] public bool Save { get; set; } = true;

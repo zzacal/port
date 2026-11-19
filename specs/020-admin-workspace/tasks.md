@@ -777,13 +777,13 @@ Severable: cut → photos are judged from grid thumbnails and the panel preview;
 Batch F owns: `workspace.js` (large view only), `WorkspacePage.razor` (the hidden stage),
 `WorkspaceBrowserTests.cs` (append), `WorkspaceLayoutBrowserTests.cs` (append one context).
 
-- [ ] T055 [US5] `WorkspacePage` renders a hidden `PhotoStage` in main and `Open large` in the
+- [X] T055 [US5] `WorkspacePage` renders a hidden `PhotoStage` in main and `Open large` in the
   photo template; `workspace.js` large view (R-08, FR-036): double-click, Enter on a focused cell,
   or `Open large`; clone the cell's `<picture>` into `.ws-stage-frame` and set `sizes` to the
   stage width; "{n} of {total}"; Previous/Next and ←/→; unavailable at the ends; `?photo={id}` by
   `pushState`; Escape/back returns to the grid with the cell selected and scrolled into view; a
   direct load with `?photo=` loads chunks until found (R-08). Depends: CP-E.
-- [ ] T056 [US5] Append to `WorkspaceBrowserTests`: US5 independent test (third photo large, →→←
+- [X] T056 [US5] Append to `WorkspaceBrowserTests`: US5 independent test (third photo large, →→←
   with an edit on the way, back → the last viewed is selected with the new title);
   `Large_view_shows_the_whole_photo_as_large_as_main_allows` (frame inside main, aspect equal to
   stored within 1%); `Large_view_reload_reopens_the_same_photo`; ends unavailable. Append the
@@ -802,14 +802,14 @@ Batch G owns: `AdminLayout.razor.css` (below-1200 px rules only, C-21), `Workspa
 (`Gallery settings`, panel `Done`), `workspace.js` (sheet only), new
 `tests/Gallery.Web.Tests/WorkspacePhoneBrowserTests.cs`, `WorkspaceLayoutBrowserTests.cs` (append).
 
-- [ ] T057 [US6] Below 1200 px (C-21) (K1, K12, C12): one column, the collections list a horizontal strip
+- [X] T057 [US6] Below 1200 px (C-21) (K1, K12, C12): one column, the collections list a horizontal strip
   at the top (scrolls inside itself, never the page), the panel a bottom sheet shown while
   `admin-workspace` has `ws-sheet`; `Gallery settings` (gallery only, shown below 1200 px) and a
   `Done` in each panel heading row below 1200 px; `workspace.js` sets `ws-sheet` while a selection
   exists or `Gallery settings` is on, removes it on `Done`. Every control ≥ 44 × 44 px (the
   existing `--tap` token, `Tokens.Tap`; no new token). Frame CSS only in `AdminLayout.razor.css`. Depends: CP-F (or CP-E
   if Phase 7 is cut).
-- [ ] T058 [US6] Write `tests/Gallery.Web.Tests/WorkspacePhoneBrowserTests.cs` at 390 × 844 with
+- [X] T058 [US6] Write `tests/Gallery.Web.Tests/WorkspacePhoneBrowserTests.cs` at 390 × 844 with
   `HasTouch` and taps only: SC-008 each P1 independent test (US1 retitle + add two to a gallery,
   US2 upload one photo into a gallery, US3 reorder with Move later + Public on) with
   `scrollWidth ≤ innerWidth` and every visible control's box ≥ 44 × 44; the sheet opens on a

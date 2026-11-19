@@ -1177,4 +1177,268 @@ public sealed class WorkspaceBrowserTests(LibraryBrowserFixture fx)
         Assert.Equal(3, three.Length);
         Assert.All(three, b => Assert.Equal([true, true, true, true, true], b));
     }
+
+    // ── T056 (US5, FR-036, R-08): the large view ───────────────────────────────────────────
+
+    private static ILocator Stage(IPage page) => page.Locator(".ws-main .ws-largeview");
+    private static ILocator StageButton(IPage page, string value) => page.Locator($".ws-main .ws-largeview button[name='stage'][value='{value}']");
+
+    private static Task<string> StagePositionAsync(IPage page) =>
+        page.EvaluateAsync<string>("() => document.querySelector('.ws-main .ws-largeview .ws-stage-pos')?.textContent.trim() ?? '(no stage)'");
+
+    /// <summary>The photo the stage shows (its frame's data-id), or null when the stage is hidden.</summary>
+    private static Task<string?> StagePhotoAsync(IPage page) =>
+        page.EvaluateAsync<string?>("""
+            () => {
+              const v = document.querySelector('.ws-main .ws-largeview');
+              return v && !v.hidden && v.getClientRects().length > 0 ? v.querySelector('.ws-stage-frame').dataset.id ?? '(empty frame)' : null;
+            }
+            """);
+
+    private static Task WaitForStageAsync(IPage page, string id, string position) =>
+        WaitForAsync(page, """
+            ([id, pos]) => {
+              const v = document.querySelector('.ws-main .ws-largeview');
+              return v && !v.hidden && v.querySelector('.ws-stage-frame').dataset.id === id
+                && v.querySelector('.ws-stage-pos').textContent.trim() === pos
+                && new URLSearchParams(location.search).get('photo') === id;
+            }
+            """, new[] { id, position }, $"{id} large at {position}");
+
+    private static Task WaitForGridAsync(IPage page) =>
+        WaitForAsync(page, "() => document.querySelector('.ws-main .ws-largeview').hidden && location.search === ''", what: "the grid back");
+
+    /// <summary>[previous disabled, next disabled].</summary>
+    private static Task<bool[]> StageEndsAsync(IPage page) =>
+        page.EvaluateAsync<bool[]>("""
+            () => ['previous', 'next'].map(v => document.querySelector(`.ws-main .ws-largeview button[name="stage"][value="${v}"]`).disabled)
+            """);
+
+    /// <summary>True when the cell's box lies inside main's visible box.</summary>
+    private static Task<bool> InViewAsync(IPage page, string id) =>
+        page.EvaluateAsync<bool>("""
+            id => {
+              const c = document.querySelector(`.ws-main .ws-cell[data-id="${id}"]`).getBoundingClientRect();
+              const m = document.querySelector('.ws-main').getBoundingClientRect();
+              const top = Math.max(m.top, 0), bottom = Math.min(m.bottom, innerHeight);
+              return c.height > 0 && c.top >= top - 0.5 && c.bottom <= bottom + 0.5;
+            }
+            """, id);
+
+    [Fact]
+    public async Task Us5_third_photo_large_right_right_left_with_an_edit_then_back_selects_the_last_viewed_with_its_new_title()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var ids = await site.ImagesAsync(12);
+        var gid = await site.GalleryAsync("Coast", ids);
+        var page = await OpenAsync(site, $"/admin/g/{gid}");
+        Assert.Equal(ids.ToArray(), await CellIdsAsync(page));
+        await MarkDocumentAsync(page);
+
+        // The third photo, by double-click: shown large with its position, the panel shows it.
+        await Cells(page).Nth(2).DblClickAsync();
+        await WaitForStageAsync(page, ids[2], "3 of 12");
+        Assert.Equal([ids[2]], await SelectedAsync(page));
+        Assert.Equal("Photo", await PanelHeadingAsync(page));
+        Assert.Equal("Photo 3", await page.Locator(".ws-panel .side-panel input[name='title']").InputValueAsync());
+        Assert.Equal("← Coast", (await StageButton(page, "back").TextContentAsync())!.Trim());
+
+        // → : the next photo and its details.
+        await page.Keyboard.PressAsync("ArrowRight");
+        await WaitForStageAsync(page, ids[3], "4 of 12");
+        Assert.Equal([ids[3]], await SelectedAsync(page));
+        Assert.Equal("Photo 4", await page.Locator(".ws-panel .side-panel input[name='title']").InputValueAsync());
+
+        // An edit on the way: the details stay usable while the photo is large (FR-036).
+        var title = page.Locator(".ws-panel .side-panel input[name='title']");
+        await title.FillAsync("Pier at dusk");
+        await title.PressAsync("Tab");
+        await WaitForAsync(page, "id => document.querySelector(`.ws-main .ws-cell[data-id=\"${id}\"]`).dataset.title === 'Pier at dusk'", ids[3], "the saved title on the cell");
+        await page.Locator(".ws-main .ws-largeview .ws-stage-frame").ClickAsync();
+        Assert.Equal([ids[3]], await SelectedAsync(page));
+
+        await page.Keyboard.PressAsync("ArrowRight");
+        await WaitForStageAsync(page, ids[4], "5 of 12");
+        await page.Keyboard.PressAsync("ArrowLeft");
+        await WaitForStageAsync(page, ids[3], "4 of 12");
+        Assert.Equal("Pier at dusk", await page.Locator(".ws-panel .side-panel input[name='title']").InputValueAsync());
+
+        // Back: the grid, the last photo viewed selected, with its new title, in view; no document load.
+        await page.GoBackAsync();
+        await WaitForGridAsync(page);
+        Assert.Equal($"/admin/g/{gid}", new Uri(page.Url).AbsolutePath);
+        Assert.Equal([ids[3]], await SelectedAsync(page));
+        Assert.Equal("Pier at dusk", (await Cells(page).Nth(3).Locator(".title").TextContentAsync())!.Trim());
+        Assert.True(await InViewAsync(page, ids[3]), "the last viewed photo is not in view");
+        Assert.Equal("Photo", await PanelHeadingAsync(page));
+        Assert.Equal(1, await DocumentLoadsAsync(page));
+        Assert.Equal("Pier at dusk", (await site.Images.Find(i => i.Id == ids[3]).SingleAsync()).Title);
+        Assert.True(await page.Locator(".ws-main .cs").IsVisibleAsync());
+        Assert.True(await page.Locator(".ws-main .ws-head").IsVisibleAsync());
+    }
+
+    [Fact]
+    public async Task Large_view_shows_the_whole_photo_as_large_as_main_allows()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var ids = await site.ImagesAsync(3);
+        // Stored sizes: landscape 4:3 (as seeded), portrait 3:5, panorama 3:1.
+        var stored = new Dictionary<string, (int W, int H)> { [ids[0]] = (1280, 960), [ids[1]] = (960, 1600), [ids[2]] = (3000, 1000) };
+        foreach (var (id, (w, h)) in stored)
+            await site.Images.UpdateOneAsync(i => i.Id == id, Builders<Gallery.Web.Data.ImageDoc>.Update.Set(i => i.Width, w).Set(i => i.Height, h));
+        var page = await OpenAsync(site, "/admin");
+        const string Measure = """
+            () => {
+              const box = (el) => { const r = el.getBoundingClientRect(); return [r.left, r.top, r.right, r.bottom, r.width, r.height]; };
+              const main = document.querySelector('.ws-main');
+              const stage = document.querySelector('.ws-main .ws-largeview .ws-stage-frame');
+              const frame = stage.querySelector('.pic .frame');
+              const img = stage.querySelector('.pic picture.main img');
+              const sizes = [...stage.querySelectorAll('.pic picture.main source')].map(s => s.getAttribute('sizes'));
+              return {
+                main: box(main), stage: box(stage), frame: box(frame), img: box(img), sizes,
+                position: getComputedStyle(frame).position, fit: getComputedStyle(img).objectFit,
+                overlay: stage.querySelectorAll('.overlay, .select-mark').length,
+                scrolls: main.scrollHeight > main.clientHeight + 1 || main.scrollWidth > main.clientWidth + 1,
+              };
+            }
+            """;
+
+        var problems = new List<string>();
+        foreach (var (id, (w, h)) in stored)
+        {
+            // Enter on the focused cell opens it.
+            var cell = page.Locator($".ws-main .ws-cell[data-id='{id}']");
+            await cell.ClickAsync();
+            await cell.FocusAsync();
+            await page.Keyboard.PressAsync("Enter");
+            await WaitForAsync(page, "id => document.querySelector('.ws-main .ws-largeview .ws-stage-frame').dataset.id === id", id, $"{id} large");
+            var m = await page.EvaluateAsync<JsonElement>(Measure);
+            double[] B(string k) => m.GetProperty(k).EnumerateArray().Select(v => v.GetDouble()).ToArray();
+            var (main, stage, frame, img) = (B("main"), B("stage"), B("frame"), B("img"));
+            var name = $"{w}x{h}";
+            // The Picture's own contain-fit rules apply to the copy (its scope came with it).
+            if (m.GetProperty("position").GetString() != "absolute") problems.Add($"{name}: the frame is not laid out by Picture's rules ({m.GetProperty("position")})");
+            if (m.GetProperty("fit").GetString() != "contain") problems.Add($"{name}: the photo is not object-fit contain");
+            if (m.GetProperty("overlay").GetInt32() != 0) problems.Add($"{name}: the select mark came along");
+            // Inside main and inside the stage, main not scrolling.
+            if (frame[0] < main[0] - 0.5 || frame[1] < main[1] - 0.5 || frame[2] > main[2] + 0.5 || frame[3] > main[3] + 0.5)
+                problems.Add($"{name}: frame [{string.Join(", ", frame[..4])}] is not inside main [{string.Join(", ", main[..4])}]");
+            if (frame[0] < stage[0] - 0.5 || frame[1] < stage[1] - 0.5 || frame[2] > stage[2] + 0.5 || frame[3] > stage[3] + 0.5)
+                problems.Add($"{name}: frame is not inside the stage");
+            if (m.GetProperty("scrolls").GetBoolean()) problems.Add($"{name}: main scrolls with the stage open");
+            // The stored ratio within 1%, and as large as the stage allows (touching its width or its height).
+            var ratio = frame[4] / frame[5];
+            if (Math.Abs(ratio / ((double)w / h) - 1) > 0.01) problems.Add($"{name}: frame ratio {ratio:0.###}, stored {(double)w / h:0.###}");
+            if (Math.Abs(frame[4] - stage[4]) > 1 && Math.Abs(frame[5] - stage[5]) > 1)
+                problems.Add($"{name}: frame {frame[4]:0.#}x{frame[5]:0.#} fills neither side of the stage {stage[4]:0.#}x{stage[5]:0.#}");
+            if (Math.Abs(img[4] - frame[4]) > 0.5 || Math.Abs(img[5] - frame[5]) > 0.5) problems.Add($"{name}: the image box is not the frame's");
+            // The browser picks the file for the width it is shown at.
+            var sizes = m.GetProperty("sizes").EnumerateArray().Select(s => s.GetString()).Distinct().ToList();
+            if (sizes.Count != 1 || sizes[0] != $"{Math.Ceiling(frame[4] - 0.01)}px") problems.Add($"{name}: sizes [{string.Join(", ", sizes)}], shown {frame[4]:0.##} px wide");
+            if (stage[5] < 300) problems.Add($"{name}: the stage is only {stage[5]:0} px high");
+
+            await page.Keyboard.PressAsync("Escape");
+            await WaitForGridAsync(page);
+        }
+        Assert.True(problems.Count == 0, string.Join("\n", problems));
+    }
+
+    [Fact]
+    public async Task Large_view_reload_reopens_the_same_photo()
+    {
+        await using var site = await fx.NewSiteAsync(new() { ["Library:PageSize"] = "2" });
+        var ids = await site.ImagesAsync(5);
+        var newestFirst = Enumerable.Reverse(ids).ToArray();
+        // No IntersectionObserver: only the large view (and Show more) loads chunks.
+        const string NoObserver = "delete window.IntersectionObserver;";
+        var page = await OpenAsync(site, "/admin", NoObserver);
+        Assert.Equal(newestFirst[..2], await CellIdsAsync(page));
+
+        // Next past the last loaded cell loads the next chunk.
+        await Cells(page).Nth(1).DblClickAsync();
+        await WaitForStageAsync(page, newestFirst[1], "2 of 5");
+        Assert.Equal(new[] { false, false }, await StageEndsAsync(page));
+        await StageButton(page, "next").ClickAsync();
+        await WaitForStageAsync(page, newestFirst[2], "3 of 5");
+        Assert.Equal(newestFirst[..4], await CellIdsAsync(page));
+
+        // Reload: the same photo, large, at the same position.
+        await page.ReloadAsync();
+        await BrowserWait.LoadedAsync(page, WaitMs);
+        await ReadyAsync(page);
+        await WaitForStageAsync(page, newestFirst[2], "3 of 5");
+        Assert.Equal([newestFirst[2]], await SelectedAsync(page));
+        Assert.Equal("Photo", await PanelHeadingAsync(page));
+
+        // A direct load of the oldest photo loads chunks until it is found; it is the last, so Next is unavailable.
+        var ctx = await site.NewContextAsync();
+        await ctx.AddInitScriptAsync(NoObserver);
+        var direct = await ctx.NewPageAsync();
+        await direct.Mouse.MoveAsync(0, 0);
+        Assert.Equal(200, (await direct.GotoAsync(site.BaseUrl + $"/admin?photo={newestFirst[4]}"))!.Status);
+        await BrowserWait.LoadedAsync(direct, WaitMs);
+        await ReadyAsync(direct);
+        await WaitForStageAsync(direct, newestFirst[4], "5 of 5");
+        Assert.Equal(newestFirst, await CellIdsAsync(direct));
+        Assert.Equal(new[] { false, true }, await StageEndsAsync(direct));
+
+        // Its Back (nothing was pushed) goes to the grid in place, with the photo selected and in view.
+        await StageButton(direct, "back").ClickAsync();
+        await WaitForGridAsync(direct);
+        Assert.Equal("/admin", new Uri(direct.Url).PathAndQuery);
+        Assert.Equal([newestFirst[4]], await SelectedAsync(direct));
+        Assert.True(await InViewAsync(direct, newestFirst[4]), "the photo is not in view");
+
+        // An unknown id leaves the grid as it is and drops the address's photo.
+        var other = await ctx.NewPageAsync();
+        Assert.Equal(200, (await other.GotoAsync(site.BaseUrl + $"/admin?photo={Gallery.Core.Ids.OpaqueId.NewId()}"))!.Status);
+        await BrowserWait.LoadedAsync(other, WaitMs);
+        await ReadyAsync(other);
+        Assert.Null(await StagePhotoAsync(other));
+        Assert.Equal("/admin", new Uri(other.Url).PathAndQuery);
+    }
+
+    [Fact]
+    public async Task Large_view_ends_are_unavailable_and_Escape_returns_to_the_grid()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var ids = await site.ImagesAsync(3);
+        var gid = await site.GalleryAsync("Coast", ids);
+        var page = await OpenAsync(site, $"/admin/g/{gid}");
+
+        // Open large from the panel.
+        await Cells(page).Nth(0).ClickAsync();
+        await page.Locator(".ws-panel .side-panel .ws-large").ClickAsync();
+        await WaitForStageAsync(page, ids[0], "1 of 3");
+        Assert.Equal(new[] { true, false }, await StageEndsAsync(page));
+        await page.Keyboard.PressAsync("ArrowLeft");
+        await StageButton(page, "previous").ClickAsync(new() { Force = true });
+        Assert.Equal(ids[0], await StagePhotoAsync(page));
+        Assert.Equal("1 of 3", await StagePositionAsync(page));
+
+        await StageButton(page, "next").ClickAsync();
+        await WaitForStageAsync(page, ids[1], "2 of 3");
+        Assert.Equal(new[] { false, false }, await StageEndsAsync(page));
+        await page.Keyboard.PressAsync("ArrowRight");
+        await WaitForStageAsync(page, ids[2], "3 of 3");
+        Assert.Equal(new[] { false, true }, await StageEndsAsync(page));
+        await page.Keyboard.PressAsync("ArrowRight");
+        await StageButton(page, "next").ClickAsync(new() { Force = true });
+        Assert.Equal(ids[2], await StagePhotoAsync(page));
+        Assert.Equal("3 of 3", await StagePositionAsync(page));
+
+        // The rest of main is hidden while the photo is large; nothing else in main is shown.
+        Assert.False(await page.Locator(".ws-main .ws-head").IsVisibleAsync());
+        Assert.False(await page.Locator(".ws-main .cs").IsVisibleAsync());
+
+        // Escape: back to the grid (the pushed entry is popped), the photo selected.
+        await page.Keyboard.PressAsync("Escape");
+        await WaitForGridAsync(page);
+        Assert.Equal([ids[2]], await SelectedAsync(page));
+        Assert.Equal($"/admin/g/{gid}", new Uri(page.Url).PathAndQuery);
+        // Forward reopens it.
+        await page.GoForwardAsync();
+        await WaitForStageAsync(page, ids[2], "3 of 3");
+    }
 }

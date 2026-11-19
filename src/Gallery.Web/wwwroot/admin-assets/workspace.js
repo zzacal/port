@@ -20,6 +20,14 @@
 //   what happened through CustomEvents on the document: `upload:joined` (fetch the cell by W4, place
 //   it, mark it New, refresh the chrome at most once a second), `upload:closed` (the New marks go),
 //   `upload:said` (the server's message for the Toast) and `upload:stale` (re-read the chrome).
+//   Large view (T055, R-08, FR-036): double-click, Enter on the focused cell or Open large shows the
+//   photo in the page's hidden PhotoStage (a copy of the cell's Picture, `sizes` set to the shown
+//   width), "{n} of {total}", Previous/Next and the arrow keys (loading the next chunk when needed),
+//   ?photo={id} pushed on open and replaced on each step; Escape, the browser's back or the stage's
+//   "← {collection}" button returns to the grid with that photo selected and in view; a load with
+//   ?photo= loads chunks until it is found.
+//   Sheet (T057, K1/K12): below 1200 px the panel is a bottom sheet shown while admin-workspace has
+//   `ws-sheet`: set while a selection exists or Gallery settings is on, removed by Done.
 //
 // Markup rules (008 R-11, 020 C12): the only string-to-markup step is the function `swap`, which
 // parses a fragment the server answered. Everything else is cloned from a server-rendered
@@ -123,6 +131,9 @@ async function write(url, body) {
 
 let navSeq = 0;
 
+/** The collection whose main region is on the page (popstate within it only opens or closes the large view). */
+let shownPath = location.pathname;
+
 /** The list's current mark follows the address. */
 function markCurrent(path) {
   for (const a of list()?.querySelectorAll('a.ws-coll-row') ?? []) {
@@ -144,6 +155,15 @@ async function navigate(href, push) {
   if (tray) region.querySelector('upload-tray')?.replaceWith(tray);
   region.scrollTop = 0;
   if (push) history.pushState({ ws: true }, '', url.pathname + url.search);
+  // Gallery settings stays open over a re-read of the same gallery (after the Public switch); another collection closes it.
+  if (url.pathname !== shownPath) settingsOn = false;
+  shownPath = url.pathname;
+  largeId = null;
+  largePushed = false;
+  // A re-read of the shown collection (after a write) ends the large view: the address drops ?photo=.
+  if (!push && url.pathname === location.pathname && new URL(location.href).searchParams.has('photo')) {
+    history.replaceState({ ws: true }, '', url.pathname);
+  }
   markCurrent(url.pathname);
   const heading = region.querySelector('.ws-head h1');
   if (heading) document.title = heading.textContent.trim();
@@ -199,35 +219,49 @@ function refreshChrome() {
 
 // ── more: Show more and the sentinel ────────────────────────────────────────────────────────
 
-let moreBusy = false;
+let moreBusy = null;
 let observer = null;
 
-async function loadMore() {
+/** True while the open collection has more cells than the page holds (a sentinel is present). */
+const hasMore = () => !!main()?.querySelector('span[data-next]');
+
+/**
+ * Fetches and appends the next chunk. Resolves true when cells were appended, false otherwise; a call
+ * made while one is in flight gets that one's promise.
+ */
+function loadMore() {
+  if (moreBusy) return moreBusy;
   const region = main();
   const sentinel = region?.querySelector('span[data-next]');
-  if (moreBusy || !sentinel) return;
-  moreBusy = true;
-  try {
-    const cursor = sentinel.getAttribute('data-next') ?? '';
-    const html = await fragment(`${location.pathname}?before=${encodeURIComponent(cursor)}`, 'more');
-    if (html === null || main() !== region || !region.contains(sentinel)) return;
-    const box = document.createElement('div');
-    swap(box, html);
-    const next = box.querySelector('span[data-next]');
-    next?.remove();
-    grid()?.append(...box.children);
-    markNew();
-    if (next) {
-      sentinel.setAttribute('data-next', next.getAttribute('data-next') ?? '');
-    } else {
-      region.querySelector('.ws-more')?.remove();
-      sentinel.remove();
+  if (!sentinel) return Promise.resolve(false);
+  moreBusy = (async () => {
+    let appended = false;
+    try {
+      const cursor = sentinel.getAttribute('data-next') ?? '';
+      const html = await fragment(`${location.pathname}?before=${encodeURIComponent(cursor)}`, 'more');
+      if (html === null || main() !== region || !region.contains(sentinel)) return false;
+      const box = document.createElement('div');
+      swap(box, html);
+      const next = box.querySelector('span[data-next]');
+      next?.remove();
+      grid()?.append(...box.children);
+      markNew();
+      if (next) {
+        sentinel.setAttribute('data-next', next.getAttribute('data-next') ?? '');
+      } else {
+        region.querySelector('.ws-more')?.remove();
+        sentinel.remove();
+      }
+      rove(null);
+      appended = true;
+    } finally {
+      moreBusy = null;
     }
-    rove(null);
-  } finally {
-    moreBusy = false;
-  }
-  watchSentinel();
+    watchSentinel();
+    if (largeId) fillStage();
+    return appended;
+  })();
+  return moreBusy;
 }
 
 /** Observes the sentinel; observing again after each chunk re-checks one that is still in view. */
@@ -267,12 +301,37 @@ function select(want) {
   afterSelect();
 }
 
-function afterSelect() {
+/**
+ * After the selection changed: Clear selection, the sheet and the panel follow it. Below 1200 px the
+ * panel is a bottom sheet while `ws-sheet` is set: a selection opens it, Gallery settings opens it with
+ * nothing selected. `sheet` false keeps the sheet as it is (a step in the large view).
+ */
+function afterSelect(sheet = true) {
   const n = selected().length;
   const clear = main()?.querySelector('.ws-clear');
   if (clear) clear.hidden = n === 0;
-  host()?.classList.toggle('ws-sheet', n > 0);
+  if (n > 0) settingsOn = false;
+  const ws = host();
+  if (sheet || n === 0) ws?.classList.toggle('ws-sheet', n > 0 || settingsOn);
   showPanel();
+}
+
+// ── the sheet below 1200 px (T057) ──────────────────────────────────────────────────────────
+
+let settingsOn = false;
+
+/** Gallery settings: the gallery's panel as the sheet (the selection, if any, is cleared first). */
+function openSettings() {
+  if (galleryOf() === null) return;
+  if (selected().length > 0) clearSelection();
+  settingsOn = true;
+  host()?.classList.add('ws-sheet');
+}
+
+/** Done: the sheet closes; the selection stays (Clear selection clears it). */
+function closeSheet() {
+  settingsOn = false;
+  host()?.classList.remove('ws-sheet');
 }
 
 function clearSelection() {
@@ -344,6 +403,18 @@ const typing = (el) => el instanceof Element && el.closest('input, textarea, sel
 
 function onKey(e) {
   if (document.querySelector('dialog[open]')) return;
+  if (largeId && !typing(e.target) && !e.altKey && !e.ctrlKey && !e.metaKey) {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      leaveLarge();
+      return;
+    }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      stepLarge(e.key === 'ArrowLeft' ? -1 : 1);
+      return;
+    }
+  }
   if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === 'a' || e.key === 'A')) {
     if (typing(e.target)) return;
     e.preventDefault();
@@ -369,7 +440,163 @@ function onKey(e) {
   } else if (e.key === ' ') {
     e.preventDefault();
     toggle(cell);
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    openLarge(cell, true);
   }
+}
+
+// ── the large view (T055, K11, R-08, FR-036) ────────────────────────────────────────────────
+
+/** The open photo's id while the large view is shown, else null. */
+let largeId = null;
+/** True when opening pushed the ?photo= entry (so going back pops it); false after a load with ?photo=. */
+let largePushed = false;
+
+const largeView = () => main()?.querySelector('.ws-largeview') ?? null;
+const photoAddress = (id) => `${location.pathname}?photo=${encodeURIComponent(id)}`;
+
+/** Selects `cell` alone (keeping the sheet as it is when `sheet` is false) unless it already is. */
+function selectOnly(cell, sheet) {
+  anchorId = cell.dataset.id;
+  const sel = selected();
+  if (sel.length === 1 && sel[0] === cell) return;
+  for (const c of cells()) mark(c, c === cell);
+  afterSelect(sheet);
+}
+
+/**
+ * Shows `cell` large. `push` adds the ?photo= history entry (opening); otherwise the address is
+ * replaced (a step, or a load that already carries ?photo=). The cell is selected, so the panel shows
+ * its details throughout.
+ */
+function openLarge(cell, push) {
+  const view = largeView();
+  if (!view || !cell) return;
+  const opening = view.hidden;
+  selectOnly(cell, false);
+  // Below 1200 px the photo is shown whole: opening closes the sheet; steps keep it as it is.
+  if (opening) closeSheet();
+  largeId = cell.dataset.id;
+  rove(cell);
+  if (opening) {
+    view.hidden = false;
+    main().scrollTop = 0;
+  }
+  fillStage();
+  if (push && opening) {
+    history.pushState({ ws: true, photo: largeId }, '', photoAddress(largeId));
+    largePushed = true;
+  } else if (new URL(location.href).searchParams.get('photo') !== largeId) {
+    history.replaceState({ ws: true, photo: largeId }, '', photoAddress(largeId));
+  }
+}
+
+/**
+ * Fills the stage for the open photo: a copy of the cell's Picture (with its scope, so its contain-fit
+ * rules size it to the stored ratio) without the overlay, each <source>'s `sizes` the width it is shown
+ * at; "{n} of {total}"; Previous unavailable on the first, Next on the last (none left to load).
+ */
+function fillStage() {
+  const view = largeView();
+  const all = cells();
+  const i = all.findIndex((c) => c.dataset.id === largeId);
+  if (!view || i < 0) return;
+  const frame = view.querySelector('.ws-stage-frame');
+  const pic = all[i].querySelector('.pic')?.cloneNode(true);
+  if (frame && pic instanceof Element && frame.dataset.id !== largeId) {
+    pic.querySelector('.overlay')?.remove();
+    pic.removeAttribute('id');
+    const sizer = pic.querySelector('svg.sizer');
+    const w = Number(sizer?.getAttribute('width')) || 1;
+    const h = Number(sizer?.getAttribute('height')) || 1;
+    const shown = Math.max(1, Math.ceil(Math.min(frame.clientWidth, frame.clientHeight * (w / h), w)));
+    for (const source of pic.querySelectorAll('source')) source.setAttribute('sizes', `${shown}px`);
+    pic.querySelector('picture img')?.setAttribute('loading', 'eager');
+    frame.replaceChildren(pic);
+    frame.setAttribute('data-id', largeId);
+  }
+  const pos = view.querySelector('.ws-stage-pos');
+  if (pos) pos.textContent = pos.textContent.replace(/^\d+/, String(i + 1));
+  const prev = view.querySelector('button[name="stage"][value="previous"]');
+  const next = view.querySelector('button[name="stage"][value="next"]');
+  if (prev) prev.disabled = i === 0;
+  if (next) next.disabled = i === all.length - 1 && !hasMore();
+}
+
+/** Previous (-1) or Next (+1); past the last loaded cell the next chunk is loaded first. */
+async function stepLarge(d) {
+  let all = cells();
+  const i = all.findIndex((c) => c.dataset.id === largeId);
+  if (i < 0) return;
+  if (d > 0 && i === all.length - 1 && hasMore()) {
+    await loadMore();
+    if (!largeId) return;
+    all = cells();
+  }
+  const to = all[i + d];
+  if (to) openLarge(to, false);
+}
+
+/** Back to the grid: pops the entry opening pushed, or (after a load with ?photo=) replaces the address. */
+function leaveLarge() {
+  if (!largeId) return;
+  if (largePushed) {
+    history.back();
+    return;
+  }
+  history.replaceState({ ws: true }, '', location.pathname);
+  closeLarge();
+}
+
+/** Hides the stage; the photo it showed stays selected, focused and scrolled into view. */
+function closeLarge() {
+  const view = largeView();
+  const id = largeId;
+  largeId = null;
+  largePushed = false;
+  if (!view || view.hidden) return;
+  view.hidden = true;
+  const frame = view.querySelector('.ws-stage-frame');
+  frame?.replaceChildren();
+  frame?.removeAttribute('data-id');
+  const cell = id ? cellById(id) : null;
+  if (!cell) return;
+  selectOnly(cell, false);
+  rove(cell);
+  cell.scrollIntoView({ block: 'nearest' });
+  cell.focus({ preventScroll: true });
+}
+
+/** Opens `id` large, loading chunks until its cell is on the page (R-08); unknown → the grid. */
+async function openById(id, push) {
+  let cell = cellById(id);
+  while (!cell && hasMore()) {
+    if (!(await loadMore())) break;
+    cell = cellById(id);
+  }
+  if (cell) {
+    openLarge(cell, push);
+  } else {
+    history.replaceState({ ws: true }, '', location.pathname);
+    closeLarge();
+  }
+}
+
+/** Back, forward: within the shown collection only the large view opens or closes. */
+async function onPopState() {
+  const url = new URL(location.href);
+  const photo = url.searchParams.get('photo');
+  if (url.pathname === shownPath) {
+    if (photo) {
+      if (photo !== largeId) await openById(photo, false);
+    } else {
+      closeLarge();
+    }
+    return;
+  }
+  const ok = await navigate(url.pathname, false);
+  if (ok && photo) await openById(photo, false);
 }
 
 // ── the details panel (R-04: filled from the cell's data-*, no request) ─────────────────────
@@ -533,6 +760,8 @@ async function saveGalleryField(field) {
   else stored?.setAttribute('value', r.data[name] ?? '');
   if (name === 'title') {
     const heading = main()?.querySelector('.ws-head h1');
+    const back = largeView()?.querySelector('button[name="stage"][value="back"]');
+    if (back && heading) back.textContent = back.textContent.replace(heading.textContent, r.data.title ?? '');
     if (heading) heading.textContent = r.data.title ?? '';
     document.title = r.data.title ?? '';
     refreshChrome();
@@ -1147,6 +1376,26 @@ const clicks = [
     clearSelection();
     return true;
   }],
+  // The large view (T055): its bar, and nothing else in it clears the selection.
+  ['.ws-main .ws-largeview button[name="stage"]', (button) => {
+    if (button.value === 'back') leaveLarge();
+    else stepLarge(button.value === 'previous' ? -1 : 1);
+    return true;
+  }],
+  ['.ws-main .ws-largeview', () => true],
+  ['.ws-panel .side-panel .ws-large', () => {
+    openLarge(cellById(panelFor ?? ''), true);
+    return true;
+  }],
+  // The sheet below 1200 px (T057).
+  ['.ws-main .ws-settings', () => {
+    openSettings();
+    return true;
+  }],
+  ['.ws-panel .side-panel .ws-done', () => {
+    closeSheet();
+    return true;
+  }],
   ['.ws-main .ws-cell', (cell, e) => {
     onCellClick(cell, e);
     return true;
@@ -1256,7 +1505,11 @@ class AdminWorkspace extends HTMLElement {
     this.addEventListener('drop', onDrop);
     this.addEventListener('dragend', onDragEnd);
     document.addEventListener('keydown', onKey);
-    window.addEventListener('popstate', () => navigate(location.href, false));
+    window.addEventListener('popstate', onPopState);
+    this.addEventListener('dblclick', (e) => {
+      const cell = e.target instanceof Element ? e.target.closest('.ws-main .ws-cell') : null;
+      if (cell && !e.target.closest('label.select-mark')) openLarge(cell, true);
+    });
     document.addEventListener('dragover', onFileDragOver);
     document.addEventListener('drop', onFileDrop);
     document.addEventListener('upload:joined', (e) => onJoined(e.detail ?? {}));
@@ -1266,8 +1519,10 @@ class AdminWorkspace extends HTMLElement {
     afterSelect();
     rove(null);
     watchSentinel();
-    // `ready` after the U2 check, so an open batch's tray is back before anyone looks.
-    resumeUpload().finally(() => {
+    // `ready` after the U2 check, so an open batch's tray is back before anyone looks, and after a
+    // ?photo= in the address has been opened large (R-08).
+    const photo = new URL(location.href).searchParams.get('photo');
+    Promise.allSettled([resumeUpload(), photo ? openById(photo, false) : null]).finally(() => {
       this.dataset.script = 'ready';
     });
   }
