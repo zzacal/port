@@ -1,0 +1,22 @@
+019 plan probe, 2026-11-18, local dev stack (https://localhost:5091, Development, dev database), /admin/library,
+2 photos ticked, CSS injected into the live page (no source change). For each width the page is scrolled from 300
+to 3000 px in 137 px steps; at each stop 120 points are sampled on the bar (40 across x 3 rows: top+2, middle,
+bottom-2) with elementFromPoint. Reported: the WORST stop (points where something other than the bar is on top).
+"mark" = the first tile's select circle is still the top element at its own centre (scrolled to top).
+
+variant                                                   390x844        800x1000       1440x900
+today (no change)                                        108/120 mark ok 102/120 mark ok  96/120 mark ok
+.pic{isolation:isolate} .cell{isolation:isolate}           0/120 mark ok   0/120 mark ok   0/120 mark ok
+.selection-bar{z-index:1} only                             3/120 mark ok   4/120 mark ok   4/120 mark ok
+both                                                       0/120 mark ok   0/120 mark ok   0/120 mark ok
+
+Reading: a bar-side z-index of 1 still loses to the tile's select overlay (z-index 2). Beating the tiles from the
+bar side needs a number tied to Tile's internals. Containing the layers in Picture and Tile fixes every width with
+no number.
+
+Other Picture users with the isolation rule injected:
+  public photo page (/g/{id}/{slug}/{imageId}): picture box 1344x720 before and after; the image is the top
+  element at the picture's centre before and after.
+  sign-in card (SignInCard.razor.css:31-33): the card has z-index 1 over a background Picture. Today it ties with
+  the picture's own z-index 1 layer and wins on page order; with the picture contained, it wins outright. Not
+  probed live (needs a signed-out context); reasoned from the rules.
