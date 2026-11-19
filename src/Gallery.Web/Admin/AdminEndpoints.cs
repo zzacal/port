@@ -221,16 +221,8 @@ public static class AdminEndpoints
             .RequireAuthorization("owner")
             .AddEndpointFilter<AdminAntiforgeryFilter>();
 
-        // H4: GET/HEAD /admin — owner shell
-        admin.MapMethods("/", getVerbs, (HttpContext ctx, IAntiforgery antiforgery) =>
-        {
-            var tokens = antiforgery.GetAndStoreTokens(ctx);
-            var af = new FormToken(tokens.FormFieldName, tokens.RequestToken!);
-            return (IResult)new RazorComponentResult<ShellPage>(new Dictionary<string, object?>
-            {
-                [nameof(ShellPage.SignOut)] = af,
-            });
-        });
+        // H4 → 020 W1-W4: the workspace (pages, fragments, tile); before the H6 catch-all
+        admin.MapWorkspace();
 
         // H5: POST /admin/signout — sign out (log, clear cookie, redirect)
         admin.MapPost("/signout", async (HttpContext ctx, ILoggerFactory loggerFactory) =>

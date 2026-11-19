@@ -87,8 +87,8 @@ public class OwnerClaimTests(MongoFixture mongo) : IAsyncLifetime
         var adminResp = await _host.GetAsync("/admin");
         Assert.Equal(System.Net.HttpStatusCode.OK, adminResp.StatusCode);
         var adminHtml = await adminResp.Content.ReadAsStringAsync();
-        Assert.Contains("admin-empty", adminHtml);
-        Assert.Contains("owner-bar", adminHtml);
+        Assert.Contains("<admin-workspace", adminHtml);
+        Assert.Contains("class=\"ws-collections\"", adminHtml);
 
         // The stored owner record: sub, a recent claim time, and the client IP.
         var site = await Site(_host).Find(Builders<BsonDocument>.Filter.Eq("_id", "site")).FirstAsync();
@@ -169,12 +169,13 @@ public class OwnerClaimTests(MongoFixture mongo) : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Shell_page_passes_security_guards()
+    public async Task Workspace_page_passes_security_guards()
     {
         await _host!.SignInAsync("owner-1");
         var resp = await _host.GetAsync("/admin");
         var html = await resp.Content.ReadAsStringAsync();
-        Guards.AssertNoScript(html);
+        Assert.Equal(1, Guards.Count(html, "<script"));
+        Assert.Matches("<script type=\"module\" src=\"/admin-assets/workspace\\.js\\?v=\"", html);
         Guards.AssertNoInlineStyle(html);
     }
 

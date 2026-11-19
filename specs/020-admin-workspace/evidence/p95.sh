@@ -16,9 +16,10 @@
 #
 # Rows (p95 = nearest-rank, ceil(0.95 n); pass: post p95 <= pre p95 * 1.10 + 1 ms):
 #   SC-005  pre = tile.log `GET /admin/library 200` (n >= MIN_N), post GET 200 lines (n >= MIN_N each):
-#           W1 full (db_reads 4), W3 full `/admin/g/{gid}` (db_reads 5), W1 main (2), W3 main (2).
+#           W1 full (db_reads 4), W3 full `/admin/g/{gid}` (db_reads 4), W1 main (2), W3 main (1)
+#           (C-22: db.gallery.load is not an isDbRead op, so W3 counts one read less than R-02).
 #           INFO (no pass/fail): W3 full vs tile.log builder `GET /admin/galleries/{gid} 200`.
-#   R-02    every GET/HEAD 200 line: W1 and W2 (`/admin/unplaced`) db_reads in {4,2,1}; W3 in {5,2};
+#   R-02    every GET/HEAD 200 line: W1 and W2 (`/admin/unplaced`) db_reads in {4,2,1}; W3 in {4,1};
 #           W4 `/admin/tiles/{iid}` == 1. W1, W3, W4 must have lines; W2 with no lines is INFO only
 #           (T059 drives no W2 request).
 #   SC-006  post 200 lines (n >= MIN_W) vs the pre 303 lines they replace (pre n as captured, >= 1,
@@ -115,8 +116,8 @@ if [ "$fails" -gt 0 ]; then echo; echo "$fails FAILED"; exit "$fails"; fi
       if (w != "" && m == "GET" && s == "200") {
         if (w == "W1" && rd == "4") add("post.W1full", ms)
         if (w == "W1" && rd == "2") add("post.W1main", ms)
-        if (w == "W3" && rd == "5") add("post.W3full", ms)
-        if (w == "W3" && rd == "2") add("post.W3main", ms)
+        if (w == "W3" && rd == "4") add("post.W3full", ms)
+        if (w == "W3" && rd == "1") add("post.W3main", ms)
       }
       if (m == "POST" && s == "200") {
         if (r == "/admin/api/photos/{iid}") add("post.A1", ms)
@@ -137,13 +138,13 @@ if [ "$fails" -gt 0 ]; then echo; echo "$fails FAILED"; exit "$fails"; fi
   END {
     fails = 0
     cmp("SC-005", "W1-full(reads 4)", "pre.lib", "post.W1full", minn, minn, 0)
-    cmp("SC-005", "W3-full(reads 5)", "pre.lib", "post.W3full", minn, minn, 0)
+    cmp("SC-005", "W3-full(reads 4)", "pre.lib", "post.W3full", minn, minn, 0)
     cmp("SC-005", "W1-main(reads 2)", "pre.lib", "post.W1main", minn, minn, 0)
-    cmp("SC-005", "W3-main(reads 2)", "pre.lib", "post.W3main", minn, minn, 0)
+    cmp("SC-005", "W3-main(reads 1)", "pre.lib", "post.W3main", minn, minn, 0)
     cmp("SC-005", "W3-full-vs-builder", "pre.builder", "post.W3full", minn, minn, 1)
     reads("W1", "4 2 1", 1)
     reads("W2", "4 2 1", 0)
-    reads("W3", "5 2", 1)
+    reads("W3", "4 1", 1)
     reads("W4", "1", 1)
     cmp("SC-006", "A1", "pre.A1", "post.A1", 1, minw, 0)
     cmp("SC-006", "A5", "pre.A5", "post.A5", 1, minw, 0)

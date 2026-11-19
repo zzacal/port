@@ -53,7 +53,7 @@ ROWS = [
      '    [Fact]\n    public async Task SignIn_claims_site_sets_session_cookie_and_logs_claim()\n    {\n        var resp = await _host!.SignInAsync("owner-1");\n\n        // Should redirect to /admin\n        Assert.Equal(System.Net.HttpStatusCode.Found, resp.StatusCode);\n        var location = resp.Headers.Location?.ToString();\n        Assert.Equal("/admin", location);\n\n        // Session cookie should be set\n        Assert.NotNull(_host.SessionCookie);\n\n        // GET /admin should return 200 with admin-empty and owner-bar\n        var adminResp = await _host.GetAsync("/admin");\n        Assert.Equal(System.Net.HttpStatusCode.OK, adminResp.StatusCode);\n        var adminHtml = await adminResp.Content.ReadAsStringAsync();\n        Assert.Contains("<admin-workspace", adminHtml);\n        Assert.Contains("class=\\"ws-collections\\"", adminHtml);\n\n        // The stored owner record: sub, a recent claim time, and the client IP.\n        var site = await Site(_host).Find(Builders<BsonDocument>.Filter.Eq("_id", "site")).FirstAsync();\n        Assert.Equal("owner-1", site["claimedSubject"].AsString);\n        Assert.InRange(site["claimedAt"].ToUniversalTime(), DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow.AddSeconds(5));\n        Assert.False(string.IsNullOrWhiteSpace(site["claimedIp"].AsString));\n\n        var claimLogs = _host.LogLines.Where(l => l.Contains("auth.claim") && l.Contains("owner-1")).ToList();\n        Assert.Single(claimLogs);\n\n        var timingLogs = _host.LogLines.Where(l => l.Contains("op.timing db.site.claim") && l.Contains("won")).ToList();\n        Assert.Single(timingLogs);\n    }\n', 1),
     ('TI-41', 'CP-C', 'tests/Gallery.Web.Tests/OwnerClaimTests.cs',
      '    [Fact]\n    public async Task Shell_page_passes_security_guards()\n    {\n        await _host!.SignInAsync("owner-1");\n        var resp = await _host.GetAsync("/admin");\n        var html = await resp.Content.ReadAsStringAsync();\n        Guards.AssertNoScript(html);\n        Guards.AssertNoInlineStyle(html);\n    }\n',
-     '    [Fact]\n    public async Task Workspace_page_passes_security_guards()\n    {\n        await _host!.SignInAsync("owner-1");\n        var resp = await _host.GetAsync("/admin");\n        var html = await resp.Content.ReadAsStringAsync();\n        Assert.Equal(1, Guards.Count(html, "<script"));\n        Assert.Matches("<script type=\\"module\\" src=\\"/admin-assets/workspace\\\\.js\\\\?v=[0-9a-f]{8}\\"", html);\n        Guards.AssertNoInlineStyle(html);\n    }\n', 1),
+     '    [Fact]\n    public async Task Workspace_page_passes_security_guards()\n    {\n        await _host!.SignInAsync("owner-1");\n        var resp = await _host.GetAsync("/admin");\n        var html = await resp.Content.ReadAsStringAsync();\n        Assert.Equal(1, Guards.Count(html, "<script"));\n        Assert.Matches("<script type=\\"module\\" src=\\"/admin-assets/workspace\\\\.js\\\\?v=\\"", html);\n        Guards.AssertNoInlineStyle(html);\n    }\n', 1),
     ('TI-20', 'CP-D', 'tests/Gallery.Web.Tests/UploadConfirmTests.cs',
      RETIRE,
      None, 1),
@@ -93,7 +93,7 @@ ROWS = [
     ('TI-62', 'CP-D', 'tests/Gallery.Web.Tests/UploadPageTests.cs',
      RETIRE,
      None, 1),
-    ('TI-62', 'CP-D', 'tests/Gallery.Web.Tests/AdminNavConsistencyTests.cs',
+    ('TI-62', 'CP-C', 'tests/Gallery.Web.Tests/AdminNavConsistencyTests.cs',  # C-22: /admin becomes the workspace at CP-C
      RETIRE,
      None, 1),
     ('TI-63', 'CP-D', 'tests/Gallery.Web.Tests/UploadTimingEvidenceTests.cs',

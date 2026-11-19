@@ -35,7 +35,7 @@ The `X-Workspace` request header selects the response body on W1 to W3:
 
 | Header | Body | Reads |
 |---|---|---|
-| absent | the full document: `AdminLayout` with the collections list, the middle region and the panel templates | W1/W2: 4; W3: 5 (research R-02) |
+| absent | the full document: `AdminLayout` with the collections list, the middle region and the panel templates | W1/W2: 4; W3: 5 (research R-02) (**AMENDED (tasks) C-22**: the `db_reads` field of the request line counts W3 full as 4 and W3 `main` as 1, because `db.gallery.load` is not an `isDbRead` op; the op list per response is still R-02's) |
 | `main` | the middle region only: heading row, upload-tray mount, grid (first chunk or the whole gallery), and `<template data-panel="default">` for this collection | 2 |
 | `chrome` | the collections list and the collection-independent templates (photo panel, selection panel, checklist rows, tray, marks) | 3 |
 | `more` (W1, W2 only; needs `?before={ticks}.{id}`) | tiles only, followed by `<span data-next="{cursor}">` when more exist | 1 |

@@ -186,4 +186,95 @@ public class WorkspaceAccessTests(S3ProxyFixture s3, MongoFixture mongo) : IClas
         Assert.Equal(before, await DumpAsync(c.Host));
         Assert.Empty(c.Host.Recorder.AllPurged());
     }
+
+    // ── 020 T035: W1–W4 (pages, fragments, tile) [SAFETY I.3] ─────────────────
+
+    /// <summary>W route id → path template. {gid}/{iid} are replaced with the host's real ids.</summary>
+    private static readonly Dictionary<string, string> Pages = new()
+    {
+        ["W1"] = "/admin",
+        ["W2"] = "/admin/unplaced",
+        ["W3"] = "/admin/g/{gid}",
+        ["W4"] = "/admin/tiles/{iid}",
+    };
+
+    [Fact]
+    public void The_page_table_is_W1_to_W4()
+    {
+        Assert.Equal(["W1", "W2", "W3", "W4"], Pages.Keys.ToList());
+    }
+
+    public static TheoryData<string> PageRoutes() => new(Pages.Keys);
+
+    private static string PagePath(Ctx c, string route) =>
+        Pages[route].Replace("{gid}", c.Gid).Replace("{iid}", c.Iid);
+
+    /// <summary>
+    /// Without a session every W-route, by GET and HEAD and with each <c>X-Workspace</c> value, answers
+    /// 302 to <c>/admin/signin</c> with no workspace markup, no photo id and no read of the library.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(PageRoutes))]
+    public async Task Without_a_session_W_routes_redirect_to_signin_and_show_nothing(string route)
+    {
+        var c = await ArrangeAsync();
+        await using var _ = c.Host;
+        c.Host.Host.ClearCookies();
+        Assert.Null(c.Host.Host.SessionCookie);
+
+        foreach (var method in new[] { HttpMethod.Get, HttpMethod.Head })
+            foreach (var part in new string?[] { null, "main", "chrome", "more" })
+            {
+                int before;
+                lock (c.Host.LogLines) before = c.Host.LogLines.Count;
+                var req = new HttpRequestMessage(method, PagePath(c, route) + (part == "more" ? "?before=1.x" : ""));
+                if (part is not null) req.Headers.TryAddWithoutValidation("X-Workspace", part);
+                var resp = await c.Host.Host.SendAsync(req);
+
+                Assert.True(resp.StatusCode == HttpStatusCode.Found, $"{method} {route} [{part}] answered {(int)resp.StatusCode}");
+                var loc = resp.Headers.Location!;
+                Assert.StartsWith("/admin/signin", loc.IsAbsoluteUri ? loc.PathAndQuery : loc.OriginalString);
+                AssertAdminHeaders(resp, route);
+                var body = await resp.Content.ReadAsStringAsync();
+                Assert.DoesNotContain("<admin-workspace", body);
+                Assert.DoesNotContain("ws-", body);
+                Assert.DoesNotContain(c.Iid, body);
+                await Task.Delay(20);
+                lock (c.Host.LogLines)
+                    Assert.DoesNotContain(c.Host.LogLines.Skip(before).SelectMany(l => l.Split('\n')),
+                        l => l.StartsWith("op.timing db.library.", StringComparison.Ordinal));
+            }
+    }
+
+    /// <summary>With the owner session every W-route answers 200 with the admin headers.</summary>
+    [Theory]
+    [MemberData(nameof(PageRoutes))]
+    public async Task With_a_session_W_routes_answer_200_with_the_admin_headers(string route)
+    {
+        var c = await ArrangeAsync();
+        await using var _ = c.Host;
+
+        var resp = await c.Host.GetAsync(PagePath(c, route));
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        AssertAdminHeaders(resp, route);
+        Assert.Contains($"data-id=\"{(route == "W2" ? c.Loose : c.Iid)}\"", await resp.Content.ReadAsStringAsync());
+    }
+
+    /// <summary>W-routes are read-only: a POST with the session and token reaches no handler (404), changes nothing.</summary>
+    [Theory]
+    [MemberData(nameof(PageRoutes))]
+    public async Task W_routes_take_no_POST(string route)
+    {
+        var c = await ArrangeAsync();
+        await using var _ = c.Host;
+        var before = await DumpAsync(c.Host);
+
+        var resp = await c.Host.PostBareAsync(PagePath(c, route), csrfHeader: true);
+        Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
+        AssertAdminHeaders(resp, route);
+
+        await c.Host.EdgeIdleAsync();
+        Assert.Equal(before, await DumpAsync(c.Host));
+        Assert.Empty(c.Host.Recorder.AllPurged());
+    }
 }

@@ -20,3 +20,29 @@ public sealed record WorkspaceTile(ImageView Image, string? Caption, IReadOnlyLi
 /// first, and the cursor of the last tile when more exist (null at the end).
 /// </summary>
 public sealed record WorkspaceChunk(IReadOnlyList<WorkspaceTile> Tiles, string? Next);
+
+/// <summary>
+/// The body a workspace response renders (contracts/http.md "Pages and fragments"): the full document
+/// (no <c>X-Workspace</c> header) or one fragment (<c>main</c>, <c>chrome</c>, <c>more</c>).
+/// </summary>
+public enum WorkspacePart { Full, Main, Chrome, More }
+
+/// <summary>
+/// What <c>WorkspacePage</c> renders (tasks T032/T033). Each part reads only what it shows (research R-02):
+/// <see cref="Counts"/> for Full, Chrome and a library Main; <see cref="Galleries"/> for Full and Chrome;
+/// <see cref="Gallery"/> for a gallery's Full and Main; <see cref="Tiles"/> for Full, Main and More.
+/// <see cref="Current"/> is <c>all</c>, <c>unplaced</c> or the gallery id (<c>CollectionList.Current</c>).
+/// </summary>
+public sealed record WorkspacePageModel(
+    WorkspacePart Part,
+    string Current,
+    WorkspaceCounts? Counts,
+    IReadOnlyList<Gallery.Web.Library.GalleryRef>? Galleries,
+    Gallery.Web.Data.GalleryDoc? Gallery,
+    IReadOnlyList<WorkspaceTile> Tiles,
+    string? Next,
+    Gallery.Web.Components.FormToken? Csrf,
+    Gallery.Web.Library.LibraryOptions Options,
+    string ScriptUrl,
+    string UploadSrc,
+    string WorkerSrc);

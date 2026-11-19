@@ -168,6 +168,7 @@ applies that checkpoint's test-impact rows) and the admin usable.
   168 px, two columns below 600 px) and writes it into contracts/components.md K5; T018 uses it
   verbatim and is blocked until then.
 - **C-21** (found at gate B) The workspace frame switches at `Tokens.BreakLarge` (1200 px), not 900 px: `TokenMediaAgreementTests` requires every media query width to equal a token breakpoint, and decisions row 22 forbids a new token. Between 600 and 1199 px the workspace uses the one-column arrangement of US6.
+- **C-22** (found at C1b) The request line's `db_reads` counts only `isDbRead` ops, and `GalleryService.LoadAsync`'s `db.gallery.load` is not one, so W3 full logs 4 and W3 `main` logs 1 (R-02 says 5 and 2). The op list per response equals R-02 (`WorkspacePageTests` asserts both); `p95.sh` keys W3 rows on 4/1. `AdminNavConsistencyTests` is retired at CP-C, not CP-E: its loop GETs `/admin`, which becomes the workspace at CP-C. TI-41 asserts the module `src` prefix only: `OwnerClaimTests`' host has no web root, so the version is `dev`; the 8-hex version is pinned by `WorkspacePageTests`.
 - **C-19** Labels not in the contracts (planning defaults, PARENT may reword in T002 before
   Batch B): the naming input's label "New gallery name"; the photo cell's select-mark label
   "Select {title}".
@@ -463,7 +464,7 @@ new `tests/Gallery.Web.Tests/WorkspacePageTests.cs`, `WorkspaceAccessTests.cs` (
   `TileAsync(string iid)` = ONE `db.library.page` find; galleries via **`LibraryReader.GalleriesAsync()`**
   (called, two reads); the gallery via `GalleryService.LoadAsync` (`db.gallery.load`). Views via
   `ViewMapper.ToView`. Depends: T030. Accept: T035 read-count facts.
-- [ ] T032 [US1] [US3] `src/Gallery.Web/Admin/Pages/WorkspacePage.razor(.css)` per K12 MINUS the
+- [X] T032 [US1] [US3] `src/Gallery.Web/Admin/Pages/WorkspacePage.razor(.css)` per K12 MINUS the
   `Add photos` button and the `<upload-tray>` mount (C-15) and minus `PhotoStage` (Phase 7):
   `AdminLayout` with `CollectionList`; main = `PageHeading` (C-12 title, counts, "· Public|Private",
   "View on site ↗" for a public gallery with photos; actions `Clear selection` hidden until a
@@ -474,7 +475,7 @@ new `tests/Gallery.Web.Tests/WorkspacePageTests.cs`, `WorkspaceAccessTests.cs` (
   `Switch` disabled with `GalleryService.EmptyPublishReason` as its hint; `<noscript>`The admin
   needs JavaScript.`</noscript>`; ONE `<script type="module" src="{AdminAssets.UrlFor(WorkspaceScriptPath)}">`
   (C-06). No frame CSS in `WorkspacePage.razor.css` (IX.2). Depends: T029, T031. Accept: T035.
-- [ ] T033 [SAFETY] [US1] `src/Gallery.Web/Workspace/WorkspaceEndpoints.cs`:
+- [X] T033 [SAFETY] [US1] `src/Gallery.Web/Workspace/WorkspaceEndpoints.cs`:
   `public static RouteGroupBuilder MapWorkspace(this RouteGroupBuilder admin)` mapping W1 `GET|HEAD /`,
   W2 `GET|HEAD /unplaced`, W3 `GET|HEAD /g/{gid}`, W4 `GET /tiles/{iid}` on the passed `admin`
   group [SAFETY I.3, I.6]; `X-Workspace` absent → full document, `main`/`chrome`/`more` → the
@@ -485,12 +486,12 @@ new `tests/Gallery.Web.Tests/WorkspacePageTests.cs`, `WorkspaceAccessTests.cs` (
   "admin-assets/workspace.js"` versioned like the others (an empty placeholder
   `wwwroot/admin-assets/workspace.js` with one comment line is created here; T039 fills it).
   Depends: T032. Accept: compiles; PARENT wiring T034.
-- [ ] T034 [US1] PARENT Wiring: in `AdminEndpoints.MapAdmin` replace the H4 `admin.MapMethods("/", …ShellPage…)`
+- [X] T034 [US1] PARENT Wiring: in `AdminEndpoints.MapAdmin` replace the H4 `admin.MapMethods("/", …ShellPage…)`
   block with `admin.MapWorkspace();` (before the catch-all) and delete
   `src/Gallery.Web/Admin/Pages/ShellPage.razor`; in `LibrarySetup.AddLibrary` add
   `s.AddScoped<WorkspaceReader>();`. Accept: `GET /admin` signed in answers the workspace;
   `grep -rn ShellPage src` empty.
-- [ ] T035 [SAFETY] [US1] Write `tests/Gallery.Web.Tests/WorkspacePageTests.cs` (`LibraryHost`)
+- [X] T035 [SAFETY] [US1] Write `tests/Gallery.Web.Tests/WorkspacePageTests.cs` (`LibraryHost`)
   and append W1–W4 rows to `WorkspaceAccessTests` [I.3]: W1/W2/W3 full and each fragment by header
   (status, `text/html`, no `<html` in fragments, 400 for a bad header, 400 for a malformed
   `before`); reads per response from the `http.request` line's `db_reads` EQUAL R-02 (4, 4, 5, 2,

@@ -44,8 +44,8 @@ post() {  # $1 file
     blk GET "${W1R:-/admin}" 200 100 "${W1M_MS:-10}" 2
     blk GET "${W1R:-/admin}" 200 3 10 "${W1_X:-1}"                  # chunk/`more` lines
     blk GET /admin/unplaced 200 2 10 4; blk GET /admin/unplaced 200 2 10 "${W2_X:-1}"
-    blk GET '/admin/g/{gid}' 200 100 "${W3F_MS:-10}" 5
-    blk GET '/admin/g/{gid}' 200 100 "${W3M_MS:-10}" "${W3M_RD:-2}"
+    blk GET '/admin/g/{gid}' 200 100 "${W3F_MS:-10}" 4
+    blk GET '/admin/g/{gid}' 200 100 "${W3M_MS:-10}" "${W3M_RD:-1}"
     blk GET '/admin/g/{gid}' 404 2 9000 1                            # non-200: ignored
     blk GET '/admin/tiles/{iid}' 200 100 3 "${W4_RD:-1}"
     blk POST '/admin/api/photos/{iid}' 200 "${A1_N:-30}" "${A1_MS:-10}" 1
@@ -81,7 +81,7 @@ A9_MS=20  post "$D/slow-a9.log"
 A10_MS=20 post "$D/slow-a10.log"
 W1_X=3    post "$D/reads-w1.log"           # a W1 line with 3 reads
 W2_X=5    post "$D/reads-w2.log"
-W3M_RD=4  post "$D/reads-w3.log"           # W3 main at 4 reads: W3-main n row AND W3 reads row fail
+W3M_RD=3  post "$D/reads-w3.log"           # W3 main at 3 reads: W3-main n row AND W3 reads row fail
 W4_RD=2   post "$D/reads-w4.log"
 W1F_N=99  post "$D/w1-full-99.log"         # under-sampled read row
 A1_N=29   post "$D/a1-29.log"              # under-sampled write row
@@ -114,9 +114,9 @@ expect "$P" "$D/pass.log"          0
 expect "$P" "$D/pass-json.log"     0
 expect "$P" "$D/pass-slash.log"    0
 expect "$P" "$D/slow-w1-full.log"  1 "SC-005 W1-full(reads 4) p95"
-expect "$P" "$D/slow-w3-full.log"  1 "SC-005 W3-full(reads 5) p95"
+expect "$P" "$D/slow-w3-full.log"  1 "SC-005 W3-full(reads 4) p95"
 expect "$P" "$D/slow-w1-main.log"  1 "SC-005 W1-main(reads 2) p95"
-expect "$P" "$D/slow-w3-main.log"  1 "SC-005 W3-main(reads 2) p95"
+expect "$P" "$D/slow-w3-main.log"  1 "SC-005 W3-main(reads 1) p95"
 expect "$P" "$D/slow-a1.log"       1 "SC-006 A1 p95"
 expect "$P" "$D/slow-a5.log"       1 "SC-006 A5 p95"
 expect "$P" "$D/slow-a7.log"       1 "SC-006 A7 p95"
@@ -125,7 +125,7 @@ expect "$P" "$D/slow-a9.log"       1 "SC-006 A9 p95"
 expect "$P" "$D/slow-a10.log"      1 "SC-006 A10 p95"
 expect "$P" "$D/reads-w1.log"      1 "R-02 W1 db_reads"
 expect "$P" "$D/reads-w2.log"      1 "R-02 W2 db_reads"
-expect "$P" "$D/reads-w3.log"      2 "SC-005 W3-main(reads 2) n" "R-02 W3 db_reads"
+expect "$P" "$D/reads-w3.log"      2 "SC-005 W3-main(reads 1) n" "R-02 W3 db_reads"
 expect "$P" "$D/reads-w4.log"      1 "R-02 W4 db_reads"
 expect "$P" "$D/w1-full-99.log"    1 "SC-005 W1-full(reads 4) n"
 expect "$P" "$D/a1-29.log"         1 "SC-006 A1 n"
@@ -135,7 +135,7 @@ expect "$P" "$D/join-slow.log"     1 "SC-013 join-ms"
 expect "$P" "$D/no-forced.log"     1 "SC-013 forced no"
 expect "$P" "$D/empty.log"         1 "missing"
 expect "$P" "$D/does-not-exist.log" 1 "missing"
-expect "$D/pre-99"    "$D/pass.log" 4 "SC-005 W1-full(reads 4) n" "SC-005 W3-full(reads 5) n" "SC-005 W1-main(reads 2) n" "SC-005 W3-main(reads 2) n"
+expect "$D/pre-99"    "$D/pass.log" 4 "SC-005 W1-full(reads 4) n" "SC-005 W3-full(reads 4) n" "SC-005 W1-main(reads 2) n" "SC-005 W3-main(reads 1) n"
 expect "$D/pre-empty" "$D/pass.log" 1 "missing"
 # the real captured pre dir parses and supplies every pre row (post durations of 1 ms always pass)
 expect "$E/pre-timings" "$D/fast.log" 0

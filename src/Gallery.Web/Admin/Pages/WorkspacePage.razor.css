@@ -1,0 +1,12 @@
+/* 020 K12: the workspace page's own content. No frame geometry here (IX.2): the three regions and
+   their widths live in AdminLayout.razor.css. Elements authored by child components need ::deep. */
+.ws-head { margin: 0 0 var(--space-s); }
+.ws-meta { margin: 0; font-size: var(--type-caption); color: var(--color-muted); }
+.ws-empty { font-size: var(--type-body); color: var(--color-muted); }
+.ws-noscript { font-size: var(--type-body); }
+.ws-head ::deep .page-heading { margin: 0; }
+.ws-counts { margin: 0 0 var(--space-s); font-size: var(--type-body); }
+.ws-tips { margin: 0; padding-left: var(--space-m); font-size: var(--type-caption); color: var(--color-muted); }
+.ws-actions { display: flex; flex-wrap: wrap; gap: var(--space-s); }
+.ws-view { margin: 0; font-size: var(--type-caption); }
+.ws-unseen { color: var(--color-muted); }

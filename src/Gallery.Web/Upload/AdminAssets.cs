@@ -22,6 +22,7 @@ public sealed class AdminAssets
         {
             [LibraryScriptPath] = VersionOf(env, LibraryScriptPath),
             [ReorderScriptPath] = VersionOf(env, ReorderScriptPath),
+            [WorkspaceScriptPath] = VersionOf(env, WorkspaceScriptPath),
         };
     }
 
@@ -35,6 +36,9 @@ public sealed class AdminAssets
     // with the same VersionOf as upload.js. Additive: the members above keep their behaviour.
     public const string LibraryScriptPath = "admin-assets/library.js";
     public const string ReorderScriptPath = "admin-assets/reorder.js";
+
+    /// <summary>020 T033: the workspace module (C12), versioned like the others.</summary>
+    public const string WorkspaceScriptPath = "admin-assets/workspace.js";
 
     private readonly Dictionary<string, string> _versions;
 

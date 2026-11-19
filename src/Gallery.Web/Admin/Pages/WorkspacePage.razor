@@ -1,0 +1,167 @@
+@* 020 K12 (tasks T032): the workspace at /admin, /admin/unplaced and /admin/g/{gid}, and its fragments
+   (contracts/http.md "Pages and fragments"). Full: AdminLayout's workspace frame with the chrome in the
+   list region, the middle region in main, and the Toast plus the one module script in the panel region
+   (C-06). Main: the heading row, the grid (first chunk or the whole gallery) or the empty sentence,
+   "Show more" and the sentinel, and <template data-panel="default"> for this collection (library or
+   gallery). Chrome: CollectionList and the collection-independent templates (photo, selection, marks,
+   the cap sentence). More: cells only, then the sentinel when more exist.
+   Until Phase 5 there is no Add photos and no <upload-tray> mount (C-15); PhotoStage arrives in Phase 7.
+   Every action is a Button with visible text; deletes are the last control of their panel. *@
+@using Gallery.Web.Components
+@using Gallery.Web.Components.Atoms
+@using Gallery.Web.Components.Molecules
+@using Gallery.Web.Components.Organisms
+@using Gallery.Web.Components.Templates
+@using Gallery.Web.Library
+@using Gallery.Web.Workspace
+
+@switch (Model.Part)
+{
+    case WorkspacePart.Full:
+        <AdminLayout Title="@DocumentTitle" List="@Chrome" Panel="@PanelRegion" Csrf="@Model.Csrf" Cap="@Model.Options.PageSize"
+                     UploadSrc="@Model.UploadSrc" WorkerSrc="@Model.WorkerSrc"><noscript><p class="ws-noscript">The admin needs JavaScript.</p></noscript>@MainRegion</AdminLayout>
+        break;
+    case WorkspacePart.Main:
+        @MainRegion
+        break;
+    case WorkspacePart.Chrome:
+        @Chrome
+        break;
+    default:
+        <text>@Cells(Model.Tiles, highFirst: false)@Sentinel</text>
+        break;
+}
+
+@code {
+    [Parameter, EditorRequired] public WorkspacePageModel Model { get; set; } = default!;
+
+    /// <summary>The selection confirm's consequence (today's bulk text, contracts K12 "Confirm wording").</summary>
+    public const string BulkDeleteConsequence = "This removes them from every gallery and deletes the original files. It can't be undone.";
+
+    /// <summary>The single-line title rule (not whitespace-only), as the pages before it.</summary>
+    private const string TitlePattern = @".*\S.*";
+
+    private bool IsGallery => Model.Gallery is not null;
+    private bool IsUnplaced => Model.Current == CollectionList.UnplacedKey;
+    private bool IsPublic => Model.Gallery?.Visibility == "public";
+
+    /// <summary>C-12: "All photos", "Not in a gallery", or the gallery's title.</summary>
+    private string DocumentTitle => Model.Gallery?.Title ?? (IsUnplaced ? "Not in a gallery" : "All photos");
+
+    private int PhotoCount => IsGallery ? Model.Tiles.Count
+        : (int)(IsUnplaced ? Model.Counts?.Unplaced ?? 0 : Model.Counts?.Total ?? 0);
+
+    private string EmptySentence => IsGallery ? Messages.GalleryEmpty : IsUnplaced ? Messages.UnplacedEmpty : Messages.LibraryEmpty;
+
+    // ── chrome: the list and the collection-independent templates ───────────────────────────
+
+    private RenderFragment Chrome => @<text><CollectionList Current="@Model.Current" Total="@((int)(Model.Counts?.Total ?? 0))" Unplaced="@((int)(Model.Counts?.Unplaced ?? 0))"
+                    Galleries="@ListRows" Csrf="@SignOutToken" /><template data-panel="photo">@PhotoPanel</template><template data-panel="selection">@SelectionPanel</template><template class="ws-tpl-marks"><Mark Text="Cover" /><Mark Text="New" /></template><template class="ws-tpl-cap"><p class="ws-cap">@Messages.SelectionCap(Model.Options.PageSize)</p></template></text>;
+
+    /// <summary>The sign-out form's token (set on Full and Chrome).</summary>
+    private FormToken SignOutToken => Model.Csrf ?? throw new InvalidOperationException("The chrome needs the antiforgery token.");
+
+    private IReadOnlyList<CollectionGallery> ListRows => (Model.Galleries ?? [])
+        .Select(g => new CollectionGallery(g.Id, g.Slug, g.Title, g.IsPublic, g.PhotoCount))
+        .ToList();
+
+    private IReadOnlyList<ChecklistGallery> CheckRows => (Model.Galleries ?? [])
+        .Select(g => new ChecklistGallery(g.Id, g.Title, g.IsPublic))
+        .ToList();
+
+    // ── panel region: the result line and the one module script (C-06) ──────────────────────
+
+    private RenderFragment PanelRegion => @<text><Toast /><script type="module" src="@Model.ScriptUrl"></script></text>;
+
+    // ── main: heading, grid or empty sentence, Show more + sentinel, the default panel ──────
+
+    private RenderFragment MainRegion => @<text><div class="ws-head"><PageHeading Text="@DocumentTitle" Actions="@HeadActions" /><p class="ws-meta">@Messages.Photos(PhotoCount)@Visibility@ViewOnSite</p></div>@Grid@More<template data-panel="default">@(IsGallery ? GalleryPanel : LibraryPanel)</template></text>;
+
+    private RenderFragment HeadActions => @<Button Variant="ButtonVariant.Quiet" Type="button" class="ws-clear" hidden="@true">Clear selection</Button>;
+
+    private RenderFragment? Visibility => IsGallery ? @<text> · @(IsPublic ? "Public" : "Private")</text> : null;
+
+    private RenderFragment? ViewOnSite => IsGallery && IsPublic && Model.Tiles.Count > 0
+        ? @<text> <TextLink Href="@($"/g/{Model.Gallery!.Id}/{Model.Gallery.Slug}")" Target="_blank">View on site ↗</TextLink></text>
+        : null;
+
+    private RenderFragment Grid => Model.Tiles.Count == 0
+        ? @<p class="ws-empty">@EmptySentence</p>
+        : @<ContactSheet Fill="true">@Cells(Model.Tiles, highFirst: true)</ContactSheet>;
+
+    private RenderFragment? More => Model.Next is null
+        ? null
+        : @<text><Button Variant="ButtonVariant.Secondary" Type="button" class="ws-more">Show more</Button>@Sentinel</text>;
+
+    private RenderFragment? Sentinel => Model.Next is null ? null : @<span data-next="@Model.Next"></span>;
+
+    private RenderFragment Cells(IReadOnlyList<WorkspaceTile> tiles, bool highFirst) => @<text>@for (var i = 0; i < tiles.Count; i++)
+        {
+            var t = tiles[i];
+            <PhotoCell Image="t.Image" Caption="@t.Caption" GalleryIds="t.GalleryIds" Cover="@IsCover(t)"
+                       Priority="@(highFirst && i < 4 ? PicturePriority.High : PicturePriority.Lazy)" />
+        }</text>;
+
+    /// <summary>The Cover mark: the gallery's chosen (pinned) cover, in a gallery collection only.</summary>
+    private bool IsCover(WorkspaceTile t) => Model.Gallery?.PinnedCover is { } pin && pin == t.Id;
+
+    // ── panel templates (K12) ───────────────────────────────────────────────────────────────
+
+    private RenderFragment LibraryPanel => @<SidePanel Heading="@(IsUnplaced ? "Not in a gallery" : "Library")" Save="false">
+        <p class="ws-counts">@Messages.Photos((int)(Model.Counts?.Total ?? 0)) in all · @(Model.Counts?.Unplaced ?? 0) not in a gallery.</p>
+        <ul class="ws-tips">
+            <li>Click a photo to see its details. Ctrl or ⌘-click adds to the selection; Shift-click selects a range.</li>
+            <li>Drag photos onto a gallery's name to add them to it.</li>
+            <li>Tick a gallery under In galleries to add the selected photos; untick it to take them out.</li>
+            <li>Ctrl or ⌘+A selects every photo shown, up to @Model.Options.PageSize.</li>
+        </ul>
+    </SidePanel>;
+
+    private RenderFragment GalleryPanel => @<SidePanel Heading="Gallery" Save="false" Danger="@GalleryDanger">
+        <Input Label="Title" Name="title" Value="@Model.Gallery!.Title" MaxLength="@Model.Options.TitleMax" Required="true" Pattern="@TitlePattern" />
+        <Input Label="Description" Name="description" Multiline="true" Value="@Model.Gallery.Description" MaxLength="@Model.Options.DescriptionMax" />
+        <Switch Label="Public" Name="public" Checked="@IsPublic" Disabled="@PublicDisabled" Hint="@PublicHint" />
+        <div class="ws-actions">
+            <Button Variant="ButtonVariant.Secondary" Type="button" class="ws-move-up">Move up</Button>
+            <Button Variant="ButtonVariant.Secondary" Type="button" class="ws-move-down">Move down</Button>
+        </div>
+    </SidePanel>;
+
+    /// <summary>An empty private gallery cannot be made public (FR, <see cref="GalleryService.EmptyPublishReason"/>).</summary>
+    private bool PublicDisabled => !IsPublic && Model.Tiles.Count == 0;
+
+    private string PublicHint => IsPublic ? "Visitors can see this gallery and its photos."
+        : PublicDisabled ? GalleryService.EmptyPublishReason
+        : "Only you can see this gallery.";
+
+    private RenderFragment GalleryDanger => @<DangerConfirm Id="ws-del-gallery" Action="Delete gallery" Target="@Model.Gallery!.Title"
+                       Consequence="@($"Its {Model.Tiles.Count} photos stay in your library. This can't be undone.")"
+                       ConfirmLabel="Delete gallery" />;
+
+    private RenderFragment PhotoPanel => @<SidePanel Heading="Photo" Save="false" Danger="@PhotoDanger">
+        <div class="ws-preview"></div>
+        <Input Label="Title" Name="title" MaxLength="@Model.Options.TitleMax" Required="true" Pattern="@TitlePattern" />
+        <Input Label="Caption" Name="caption" Multiline="true" MaxLength="@Model.Options.CaptionMax" />
+        <GalleryChecklist Galleries="@CheckRows" TitleMax="@Model.Options.TitleMax" />
+        <div class="ws-actions ws-in-gallery" hidden>
+            <Button Variant="ButtonVariant.Secondary" Type="button" class="ws-cover">Use as gallery cover</Button>
+            <Button Variant="ButtonVariant.Secondary" Type="button" class="ws-earlier">Move earlier</Button>
+            <Button Variant="ButtonVariant.Secondary" Type="button" class="ws-later">Move later</Button>
+        </div>
+        <div class="ws-actions">
+            <Button Variant="ButtonVariant.Secondary" Type="button" class="ws-large">Open large</Button>
+        </div>
+        <p class="ws-view"><TextLink Href="/" Target="_blank">View on site ↗</TextLink><span class="ws-unseen" hidden>Not on the site yet</span></p>
+    </SidePanel>;
+
+    private static RenderFragment PhotoDanger => @<DangerConfirm Id="ws-del-photo" Action="Delete photo" Target="" Title="Delete photo?"
+                       Consequence="@Messages.DeleteConsequence(0)" ConfirmLabel="Delete photo" />;
+
+    private RenderFragment SelectionPanel => @<SidePanel Heading="0 photos selected" Save="false" Danger="@SelectionDanger">
+        <div class="ws-previews"></div>
+        <GalleryChecklist Galleries="@CheckRows" TitleMax="@Model.Options.TitleMax" />
+    </SidePanel>;
+
+    private static RenderFragment SelectionDanger => @<DangerConfirm Id="ws-del-selection" Action="Delete 0 photos" Target="0 photos" Title="Delete 0 photos?"
+                       Consequence="@BulkDeleteConsequence" ConfirmLabel="Delete photos" />;
+}
