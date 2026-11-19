@@ -1,0 +1,11 @@
+PASS (devhost) Evaluate ignores DevTargetGuard -> red:   Failed Gallery.Web.Tests.LocalSignInRuleTests.Evaluate_follows_the_truth_table(env: "Production", db: "x", bucket: "gallery-dev-p", password: "abcdefghijklmn5", expected: NotDevelopmentHost) |  Assert.Equal() Failure: Values differ Expected: NotDevelopmentHost 
+PASS (minlen) MinLength 16 -> 1 -> red:   Failed Gallery.Web.Tests.LocalSignInRuleTests.Evaluate_follows_the_truth_table(env: "Development", db: "x_dev", bucket: "gallery-dev-p", password: "abcdefghijklmn5", expected: TooShort) |  Assert.Equal() Failure: Values differ Expected: TooShort 
+PASS (prodguard) production accepts LocalSignIn:Password -> red:   Failed Gallery.Web.Tests.LocalSignInRuleTests.ProductionGuard_refuses_the_key_naming_it_never_the_value |  Assert.Equal() Failure: Collections differ  ↓ (pos 0) 
+PASS (matches) Matches returns true -> red:   Failed Gallery.Web.Tests.LocalSignInTests.Bad_password_answers_401_with_notice_and_no_session(shape: "wrong") |  Assert.Equal() Failure: Values differ Expected: Unauthorized 
+PASS (unmapped) H7 mapped without if (local.Enabled) -> red:   Failed Gallery.Web.Tests.LocalSignInGuardTests.Disabled_host_has_no_local_form_no_route_no_session(shape: "b_database") |  Assert.Equal() Failure: Strings differ Expected: "" 
+PASS (csrf) H7 skips the antiforgery check -> red:   Failed Gallery.Web.Tests.LocalSignInTests.No_antiforgery_token_answers_400_with_notice_and_no_session |  Assert.Equal() Failure: Values differ Expected: BadRequest 
+PASS (owner) H7 ignores the stored owner -> red:   Failed Gallery.Web.Tests.LocalSignInTests.Right_password_on_claimed_site_signs_in_as_the_stored_owner |  Assert.Equal() Failure: Values differ Expected: OK 
+PASS (leak) auth.local.refused logs the submitted password -> red:   Failed Gallery.Web.Tests.LocalSignInTests.No_response_or_log_line_contains_the_configured_or_a_submitted_password |  Assert.DoesNotContain() Failure: Filter matched in collection  ↓ (pos 13) 
+restored: build clean
+
+ALL PASS

@@ -225,14 +225,14 @@ Then run the quickstart owner steps against a throwaway dev host, run gate B, an
 
 ## Phase 4: Polish (parent)
 
-- [ ] T016 [P] Write `specs/018-local-dev-signin/decisions.md`: the clarify answers (OWNER), the
+- [X] T016 [P] Write `specs/018-local-dev-signin/decisions.md`: the clarify answers (OWNER), the
   plan corrections (R-02 the 6.2.1 wording, R-07 the notice, the test-impact correction about
   browser fixtures, the "environment" reading of I.7a), every executor `decisions_made`, and the
   severable seam (a `/ui` specimen).
-- [ ] T017 [P] Write the 018 entry in `docs/roadmap.md`: status, evidence, OWNER-ONLY O-01.
-- [ ] T018 Re-run the test-impact grep against the finished tree; confirm no existing test file
+- [X] T017 [P] Write the 018 entry in `docs/roadmap.md`: status, evidence, OWNER-ONLY O-01.
+- [X] T018 Re-run the test-impact grep against the finished tree; confirm no existing test file
   changed (`git diff --stat <base> -- tests/` lists only the new files and the T003 fixtures).
-- [ ] T019 Write `specs/018-local-dev-signin/evidence/non-vacuity.sh` from 017's. One break per
+- [X] T019 Write `specs/018-local-dev-signin/evidence/non-vacuity.sh` from 017's. One break per
   guard, each anchored to the code line (not a comment) and failing on its own assertion:
   - `Evaluate` skips the dev-host check → LocalSignInRuleTests table and GuardTests (b) red;
   - `MinLength` 16 → 1 → RuleTests 15-char row and GuardTests (e) red;
