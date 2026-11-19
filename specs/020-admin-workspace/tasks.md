@@ -865,7 +865,7 @@ Batch G owns: `AdminLayout.razor.css` (below-1200 px rules only, C-21), `Workspa
   `specs/016-galleries-list-icons/spec.md`, `specs/017-photo-edit-screen/spec.md`,
   `specs/019-selection-bar-layering/spec.md`. Accept: `grep -c 'SUPERSEDED by 020'` ≥ 1 in each
   of the eight files, 7 in 008.
-- [ ] T065 [P] PARENT Fold every executor `decisions_made` into `decisions.md` (one row each, kind
+- [X] T065 [P] PARENT Fold every executor `decisions_made` into `decisions.md` (one row each, kind
   DEFAULT/PLAN/IMPLEMENT/STATED-CHANGE; one STATED-CHANGE row per TI row with its checkpoint), and
   write the 020 entry in `docs/roadmap.md` (status, evidence paths, owner-only items, which
   severable phases shipped).

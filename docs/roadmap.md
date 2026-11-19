@@ -332,6 +332,31 @@ OWNER-ONLY (after the build, not gates):
   src/Gallery.Web`, Ctrl+R the watch window, then sign in at https://localhost:5081/admin/signin
   with "Sign in locally".
 
+### 020 Admin workspace
+
+**Status: built on branch `020-admin-workspace`, not merged (2026-11-19). Final gate and non-vacuity in `specs/020-admin-workspace/evidence/`; owner walk-through (T070) pending.**
+Decisions, defaults, corrections C-01 to C-22 and stated test changes in
+`specs/020-admin-workspace/decisions.md`. Evidence: `specs/020-admin-workspace/evidence/` (gates,
+p95 all PASS, public pages EQUAL, browser-public, live-limits, non-vacuity, design validate 0 failures).
+
+The owner's whole admin is one screen at `/admin`: a collections list (All photos, Not in a gallery,
+each gallery in home order), the photos of the open collection, and a details panel for whatever is
+selected. Titles and captions save when the field is left; gallery membership is a checklist that
+also creates a gallery by name; photos and galleries reorder by drag or by Move buttons; Public is a
+switch. Upload is a tray inside the workspace: each photo joins as soon as it is checked, into the
+open gallery if one is open (a public gallery says so before any file is picked). A large view
+steps through a collection, and below 1200 px the list is a strip and the panel a bottom sheet. The
+Upload, Library, photo edit, Galleries and builder pages, their routes, two scripts and 13
+components are gone; old addresses answer as unknown. Supersedes D-23 with D-27; constitution
+6.3.0 (II.5a to 5d) and 6.3.1 (IX.1 wording). Both severable phases (large view, phone) shipped.
+
+OWNER-ONLY (after the build, not gates):
+
+- [ ] O-01 (T070) Live walk-through on your machine with the development sign-in: quickstart
+  "Live walk" steps 1–15 at 1440 × 900 and 390 × 844. Ctrl+R the watch window first (new routes).
+- [ ] O-02 (T072) After the merge and deploy, sign in to the automation browser on port.zacal.me
+  for the production check of `/admin` (T073).
+
 ## Not a feature
 
 - **Cost cap (D-18, E-19)**: no budget alert (constitution 6.0.0 withdrew the $7 alert). The
