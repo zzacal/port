@@ -1,27 +1,13 @@
 <!--
 Sync Impact Report
-- Version change: 6.2.2 → 6.3.0 (MINOR)
-- Rationale: owner decision (2026-11-18, feature 020 clarify, question 1): photos uploaded while a
-  public gallery is open join that gallery and are visible to visitors at once. II.5 said "nothing
-  becomes public as a side effect of upload, tagging, or editing." That sentence stays. It now
-  carries a stated exemption: an upload the owner aims at a gallery is the owner's decision, not a
-  side effect, under four conditions written into the rule (5a to 5d). What is given up: until now
-  an upload could never change a public page, so a wrong file could not reach visitors without a
-  second, separate action. With an aimed upload it can. What remains: the destination and the
-  visitor notice shown before any file is picked, no destination meaning no gallery, no change to
-  any gallery's visibility, and every III rule on what a published photo may contain. A guarantee
-  narrowed by a stated exemption whose controls are in the principle: MINOR.
-- Modified principles: II (rule 5 expanded with conditions a to d; rationale gains one sentence).
-  No rule number added. Added/removed sections: none.
-- Templates requiring updates: none (templates read the constitution at runtime).
-- Prior specs swept: 008 FR-033 ("Confirmed images MUST join no gallery ... (Constitution II.5)")
-  annotated in place: still what the built upload does; 6.3.0 permits the aimed upload that
-  feature 020 specifies. 013 (camera grouping must not publish library-only photos) and 014 (new
-  galleries are private) rely on the unchanged first sentence and need no note.
-- Design record: traceability matrix header moved to v6.3.0; the II.5 row's mechanism and test are
-  rewritten by feature 020 when the aimed upload is built (its FR-045).
-- Deferred TODOs: IX.1 names the "owner bar" as an example of shared chrome; feature 020 removes
-  that bar. The rule does not depend on the example; reword it when 020 lands.
+- Version change: 6.3.0 → 6.3.1 (PATCH)
+- Rationale: feature 020 removed the bar of owner links at the top of every admin page. IX.1 used it as an example of shared
+  chrome; the example now names the collections list, the workspace's shared chrome. Wording only:
+  the rule and its measured check (IX.4) are unchanged.
+- Modified principles: IX.1 (example reworded). Added/removed sections: none.
+- Templates requiring updates: none.
+- Prior specs swept: none needed (no FR quotes the example).
+- Deferred TODOs: none (6.3.0's IX.1 TODO resolved here).
 - History: 1.0.0 initial ratification. 1.1.0 perceived performance, private = unlisted. 2.0.0
   client-generated derivatives with server validation. 3.0.0 Azure Blob replaced R2, masters kept,
   $10 metered cap (2026-10-27). 4.0.0 images on Cloudflare R2, managed-identity guarantee
@@ -31,7 +17,8 @@ Sync Impact Report
   (2026-11-02). 5.0.0 fixed hosting ceiling B1 -> B2 (2026-11-02). 6.0.0 US$7 budget alert
   withdrawn (2026-11-02). 6.1.0 V.4 proportional effort (2026-11-02). 6.2.0 I.7 development-only
   local sign-in; 6.2.1 its disabled address answers as any unknown admin address; 6.2.2 its
-  password may come from any configuration source (all 2026-11-18, feature 018).
+  password may come from any configuration source (all 2026-11-18, feature 018). 6.3.0 II.5a to
+  5d: an upload the owner aims at a gallery (2026-11-18, feature 020).
 -->
 
 # Gallery Constitution
@@ -293,7 +280,7 @@ inside feature plans produces contradictions that are expensive to unwind.
 ### IX. Visual Consistency Through Shared Containers
 
 1. Visual consistency between pages is a requirement, not polish. The same element on two pages
-   (header, navigation, breadcrumb, owner bar, page gutters, the gap between the chrome and the
+   (header, navigation, breadcrumb, collections list, page gutters, the gap between the chrome and the
    content) MUST render at the same position, height, and spacing.
 2. Each site (public, admin) MUST have exactly one layout container that owns its chrome and the
    page frame around the content. Pages supply content and data only; they MUST NOT add margins,
@@ -361,4 +348,4 @@ These are binding inputs to every plan:
   place, not silently edited.
 - Every plan and analyze pass verifies compliance and cites principles by number.
 
-**Version**: 6.3.0 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-11-18
+**Version**: 6.3.1 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-11-19
