@@ -31,6 +31,25 @@ Owner feedback this spec encodes:
 - The galleries control on a photo or a selection keeps the old ability to make a new gallery by
   typing its name.
 
+## Clarifications
+
+### Session 2026-11-18
+
+- Q: The owner opens a public gallery and uploads photos into it. Do visitors see them straight
+  away? → A: Yes. The upload area says visitors will see the photos before any file is picked.
+  This needs a constitution amendment before planning (FR-046). Proposed wording for II.5, a MINOR
+  change (6.2.2 → 6.3.0): "Only the owner decides what is visible; nothing becomes public as a side
+  effect of upload, tagging, or editing. An upload the owner aims at a public gallery is the owner's
+  decision, not a side effect: the destination, and that visitors will see the photos, MUST be shown
+  before any file is picked." Accepted risk: with the answer below, a wrong file dropped into a
+  public gallery is visible to visitors seconds after it finishes, with no confirm step in between.
+  Detection is immediate (the photo appears in the open gallery marked New); reversal is one action
+  (untick the gallery, or delete the photo).
+- Q: When do uploaded photos join the library? → A: Each photo as it finishes, as the preview
+  showed. A failed photo holds nothing up. There is no confirm step and no batch-wide discard. This
+  reworks the upload batch rules built in feature 008 (design record D-11 and its lifecycle entries)
+  and the tests of those rules; the checks each photo passes are unchanged.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Organise photos without leaving the screen (Priority: P1)
@@ -101,15 +120,21 @@ photos. Repeat from All photos and check the photos are in no gallery.
 4. **Given** photos are uploading into a gallery, **When** the owner opens another collection,
    **Then** the upload carries on, the upload area stays visible, and the photos still go to the
    gallery it named.
-5. **Given** an upload from inside a gallery has finished, **When** the owner looks at that gallery,
-   **Then** the new photos are at its end, in the order they were picked, marked New.
-6. **Given** an upload from All photos or Not in a gallery has finished, **When** the owner looks,
+5. **Given** photos are uploading into a gallery, **When** one of them finishes, **Then** it appears
+   at the end of that gallery marked New while the others are still working.
+6. **Given** the gallery being uploaded into is public, **When** the upload area opens, **Then** it
+   says visitors will see the photos, before any file is picked; each photo is visible to visitors
+   once it finishes.
+7. **Given** an upload from All photos or Not in a gallery has finished, **When** the owner looks,
    **Then** the new photos are in the library and in no gallery.
-7. **Given** one photo failed, **When** the owner looks at the upload area, **Then** that photo
-   shows why in words, with Retry and Remove.
-8. **Given** an upload has finished, **When** the owner presses Done, **Then** the upload area
+8. **Given** one photo failed, **When** the owner looks at the upload area, **Then** that photo
+   shows why in words, with Retry and Remove, and every other photo has still been added.
+9. **Given** an upload has finished, **When** the owner presses Done, **Then** the upload area
    closes and the New marks clear.
-9. **Given** a file that is not allowed (wrong type, too large, too many), **When** it is picked or
+10. **Given** the upload area holds photos that failed or were interrupted, **When** the owner
+    closes it, **Then** those photos are dropped, nothing of them is kept, and the result says how
+    many were not added.
+11. **Given** a file that is not allowed (wrong type, too large, too many), **When** it is picked or
    dropped, **Then** it is refused at once by name with the reason, and the allowed files carry on.
 
 ---
@@ -255,7 +280,18 @@ gallery, upload a photo into a gallery, reorder a gallery and make it public.
 - The owner switches collection with photos selected: the selection is cleared.
 - The owner reloads or closes the tab while photos are uploading: on return the upload area is open
   again with the same photos, the ones that stopped marked interrupted with Retry and Remove.
-- The owner closes the upload area with failed photos still in it: [depends on FR-030].
+- The owner closes the upload area with failed or interrupted photos still in it: they are dropped
+  with their uploaded files, and the result says how many were not added. Photos already added stay.
+- The owner tries to close the upload area while photos are still working: closing is unavailable
+  until they finish, fail or are removed; Hide is the way to get it out of the way.
+- A photo is retried after others finished: it joins at the end, after the ones already added.
+- The gallery an upload is aimed at is deleted while photos are still working: the remaining photos
+  join the library only, and the upload area says so.
+- The gallery an upload is aimed at is made public or private while photos are still working: each
+  remaining photo follows the gallery's visibility at the moment it joins, and the upload area's
+  notice changes to match.
+- A wrong photo lands in a public gallery: it is visible to visitors until the owner unticks the
+  gallery or deletes it; there is no confirm step to catch it first (accepted, see Clarifications).
 - The library is empty: the middle says so and points at Add photos.
 - A gallery is empty: the middle says how to fill it (Add photos here, or drag photos onto its name
   from All photos).
@@ -362,23 +398,31 @@ gallery, upload a photo into a gallery, reorder a gallery and make it public.
   the workspace MUST have the same effect.
 - **FR-029**: The upload area MUST open above the photos, name the destination before any file is
   picked, state the file limits, and refuse a disallowed file at pick time by name with the reason.
-- **FR-030**: Photos MUST join the library [NEEDS CLARIFICATION: when do uploaded photos join —
-  each as it finishes, all together when the whole set is ready with no button, or on a button as
-  today? See question 2.]
-- **FR-031**: Photos added while a gallery is open MUST also join that gallery, at its end, in the
-  order they were picked. Photos added from All photos or Not in a gallery join no gallery.
-  [NEEDS CLARIFICATION: when that gallery is public, do the photos become visible to visitors
-  straight away? See question 1.]
+- **FR-030**: Each photo MUST join the library as soon as it has passed every check, without
+  waiting for the other photos and without a confirm step. A photo that fails or is interrupted
+  MUST NOT hold up, undo or block any other photo.
+- **FR-031**: Photos added while a gallery is open MUST also join that gallery as each one joins the
+  library, at the gallery's end, in the order they finish (the order picked, except that a retried
+  photo lands after those already added). Photos added from All photos or Not in a gallery join no
+  gallery. When the destination gallery is public, each photo is visible to visitors once it joins,
+  and the upload area MUST say that visitors will see the photos before any file is picked and for
+  as long as it is open.
 - **FR-032**: Each photo in the upload area MUST show its state in words (waiting, preparing,
   uploading, added, failed with the reason, interrupted), with Retry and Remove on failed and
   interrupted photos.
 - **FR-033**: The upload area MUST have Hide and Show while it works, and a control that closes it
   when the owner is done. It MUST stay in place and keep its destination when the owner opens
-  another collection.
-- **FR-034**: Everything the upload pipeline guarantees today MUST hold unchanged: what files are
-  accepted, the checks every photo passes before visitors can receive it, the removal of location
+  another collection; files added while it is open go to that same destination. Closing is
+  unavailable while any photo is still working. Closing with failed or interrupted photos drops
+  them and their uploaded files and reports how many were not added. There is no batch-wide
+  discard: a photo that has joined the library is removed only by the ordinary delete.
+- **FR-034**: Everything the upload pipeline guarantees for a single photo MUST hold unchanged: what
+  files are accepted, the checks every photo passes before it is stored where visitors can receive
+  it, the rejection of the whole photo when any of its sizes fails a check, the removal of location
   and other embedded data, the limits, and recovery of an upload interrupted by a reload or a
-  closed tab.
+  closed tab. What changes is only the moment of joining (per photo, FR-030) and the removal of the
+  confirm and discard steps. Joining MUST be safe to repeat: a join interrupted partway and tried
+  again finishes without duplicating the photo.
 - **FR-035**: Photos added in the current upload MUST carry a New mark in the grid until the upload
   area is closed.
 
@@ -429,11 +473,11 @@ gallery, upload a photo into a gallery, reorder a gallery and make it public.
   and outcome, so each time-bound success criterion below is checked from logs alone.
 - **FR-045**: The design record MUST be updated in this feature: the admin layout decision (the
   "site with a frame" direction) is replaced by the workspace, the component list is brought up to
-  date, and the upload lifecycle entry reflects the answer to question 2.
-- **FR-046**: BLOCKING, before planning: if the answer to question 1 lets an upload make photos
-  public, the constitution's rule that nothing becomes public as a side effect of upload (II.5)
-  MUST first be reworded to say an upload the owner aims at a public gallery is the owner's
-  decision, stated before files are picked.
+  date, and the upload batch lifecycle entries are rewritten for per-photo joining with no confirm or
+  discard step.
+- **FR-046**: BLOCKING, before planning: the constitution's rule that nothing becomes public as a
+  side effect of upload (II.5) MUST be amended as worded in Clarifications, so that an upload the
+  owner aims at a public gallery, announced before files are picked, is the owner's decision.
 - **FR-047**: Requirements in earlier specs that this feature supersedes MUST be annotated in
   place, not silently edited.
 
@@ -447,8 +491,9 @@ gallery, upload a photo into a gallery, reorder a gallery and make it public.
 - **Selection**: the photos the owner has marked in the open collection. Lives only in the
   workspace; cleared on changing collection.
 - **Upload set**: the photos currently in the upload area with their states and one destination
-  (the library, or the library and one gallery). The destination is new; the rest is today's upload
-  batch.
+  (the library, or the library and one gallery). It replaces today's upload batch: it has a
+  destination, each photo leaves it for the library on its own, and it has no confirmed or
+  discarded state. It ends when the owner closes the upload area.
 
 ## Success Criteria *(mandatory)*
 
@@ -478,8 +523,13 @@ gallery, upload a photo into a gallery, reorder a gallery and make it public.
   ones; each state listed in FR-042 is present.
 - **SC-011**: Every public page is byte-for-byte what it was before the change, checked against a
   capture taken before the change.
-- **SC-012**: The upload pipeline's existing safety checks (including refusal of a photo carrying
-  location data) pass without being edited.
+- **SC-012**: The existing automated checks of what a single photo must pass (including refusal of
+  a photo carrying location data, and rejection of the whole photo when one size fails) pass without
+  being edited. Checks of the confirm and discard steps are replaced, as a stated requirement
+  change.
+- **SC-013**: With one photo of ten forced to fail, the other nine are in the library (and in the
+  destination gallery) without any owner action, and each was added within 2 seconds of its upload
+  finishing, read from timing events.
 
 ## Assumptions
 
@@ -522,12 +572,18 @@ gallery, upload a photo into a gallery, reorder a gallery and make it public.
   toggle, token combobox, the icon and icon-button atoms, and the admin layout template (replaced).
   Kept because something else uses them: button, input, switch, the delete confirmation, breadcrumb
   and pager (public pages), and the sign-in card.
-- Earlier requirements superseded, to be annotated in place: feature 008's rules that confirmed
-  photos join no gallery and that the owner stays on the upload page (FR-033, FR-034), subject to
-  questions 1 and 2; the page-level requirements of features 009, 010 (admin bar and breadcrumb),
+- Earlier requirements superseded, to be annotated in place: feature 008's confirm, discard and
+  landing rules (its FR-013, FR-030 to FR-034 and Clarification 1, including "confirmed images join
+  no gallery" and "confirm triggers no visitor page refresh"); the page-level requirements of features 009, 010 (admin bar and breadcrumb),
   014, 015, 016, 017 and 019.
-- Design record entries affected: D-23 (admin layout, replaced), D-21 (component list), D-11
-  (upload batch lifecycle, per question 2), E-08 (starting an upload while one is open).
+- Design record entries affected: D-23 (admin layout, replaced), D-21 (component list), D-11 and
+  the upload lifecycle entries L-01 to L-06 (per-photo joining, no confirm or discard), E-08
+  (starting an upload while one is open).
+- Uploading 100 photos into a public gallery means up to 100 changes to that gallery's public
+  pages. Planning decides whether visitor page refreshes are grouped; visitors must see every added
+  photo no later than shortly after the last one finishes.
+- Cost of the per-photo answer: the confirm path, the batch states and their tests from feature 008
+  are reworked. The owner chose this over keeping the pipeline as built.
 - The workspace cannot be reviewed on the live site without the owner signed in; the local stack
   with the development sign-in is the review target.
 - Stack is unchanged and is a planning input only: server-rendered pages with scripted admin

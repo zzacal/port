@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,17 +31,18 @@
 
 ## Notes
 
-- 15 of 16 items pass. The open item is two [NEEDS CLARIFICATION] markers (FR-030, FR-031), both
-  about uploads. One edge case ("closing the upload area with failed photos") waits on FR-030.
-- Question 1 (FR-031): does uploading into a public gallery show the photos to visitors at once?
-  It touches constitution II.5 and feature 008 FR-033; FR-046 makes the amendment blocking if the
-  answer is yes.
-- Question 2 (FR-030): when uploaded photos join the library. It decides whether the upload
-  pipeline's batch rules (design record D-11) stay as built or are reworked.
+- 16 of 16 items pass (was 15 of 16 before the two upload questions were answered on 2026-11-18).
+- Answer 1 (uploads into a public gallery are visible at once) needs constitution II.5 amended
+  before planning; FR-046 is blocking and the wording is in the spec's Clarifications.
+- Answer 2 (each photo joins as it finishes) grew the feature: the upload batch rules of feature 008
+  are reworked, not only moved. Delta: FR-030, FR-031, FR-033 and FR-034 rewritten, 2 acceptance
+  scenarios and 6 edge cases added, SC-012 narrowed, SC-013 added (12 → 13), the Upload set entity
+  redefined. Severable seam if it must ship smaller: keep the pipeline as built and have the page
+  finish the set automatically when every photo is ready.
+- Accepted risk recorded once in Clarifications: a wrong file dropped into a public gallery is live
+  until the owner removes it.
 - Component names appear only in Assumptions, as planning inputs.
-- Clarify targets beyond the two markers: save-as-you-go and the immediate Public switch (reverses
-  earlier owner feedback), no redirects for old admin addresses, the six unasked inclusions listed
-  in Assumptions.
-- Size: 6 stories (4 at P1), 47 FRs, 12 SCs. The removal of the old pages and the catalogue update
-  are in scope as the owner asked; the phone story and the large view are the severable parts.
+- Remaining clarify targets: save-as-you-go and the immediate Public switch (reverses earlier owner
+  feedback), no redirects for old admin addresses, the six unasked inclusions listed in Assumptions.
+- Size: 6 stories (4 at P1), 47 FRs, 13 SCs.
 - No extension hooks are configured (`.specify/extensions.yml` is absent).
