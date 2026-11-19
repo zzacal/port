@@ -313,6 +313,25 @@ OWNER-ONLY (after merge and deploy, not gates):
 - [x] O-01 On port.zacal.me, edit a photo from library page 2: the screen shows only that photo,
   Save keeps you there, "Library" takes you back to page 2. (Done, as reported by the owner, 2026-11-18.)
 
+### 018 Local sign-in without Google
+
+**Status: built on branch `018-local-dev-signin` (implement in progress).**
+Decisions and defaults in `specs/018-local-dev-signin/decisions.md`. Evidence:
+`specs/018-local-dev-signin/evidence/` (baseline, gates, non-vacuity, test-impact grep).
+
+On a development host (Development environment, `_dev` database, `gallery-dev-` buckets) with a
+`LocalSignIn:Password` of 16+ characters in any configuration source, the sign-in page offers
+"Local password" with "Sign in locally" (or "Claim locally" on an empty site, which claims it for
+`local-owner`). It issues the same owner session as Google. On any other host the form and the
+route `POST /admin/signin/local` don't exist, and a production start with the setting present
+refuses to run. Amends constitution I.7 (6.2.0-6.2.2) and D-04.
+
+OWNER-ONLY (after the build, not gates):
+
+- [ ] O-01 On your machine: `dotnet user-secrets set LocalSignIn:Password "<16+ chars>" --project
+  src/Gallery.Web`, Ctrl+R the watch window, then sign in at https://localhost:5081/admin/signin
+  with "Sign in locally".
+
 ## Not a feature
 
 - **Cost cap (D-18, E-19)**: no budget alert (constitution 6.0.0 withdrew the $7 alert). The

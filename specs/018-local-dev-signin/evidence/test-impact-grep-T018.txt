@@ -1,0 +1,38 @@
+== signin/local
+== LocalSignIn
+== local-owner
+== type=\\"password\\"
+== Password
+== EndpointDataSource
+== RouteEndpoint
+== isn't set up
+tests/Gallery.Web.Tests/AdminAccessTests.cs:342:            "Expected 'Sign-in isn't set up on this server' notice in body");
+== si-notice
+tests/Gallery.Web.Tests/SignInComponentTests.cs:60:    // ── SignInCard: Notice renders <p class="si-notice" role="alert"> after <h1> ──
+tests/Gallery.Web.Tests/SignInComponentTests.cs:79:        var noticePPos = html.IndexOf("class=\"si-notice\" role=\"alert\"", StringComparison.Ordinal);
+tests/Gallery.Web.Tests/SignInComponentTests.cs:94:        Assert.DoesNotContain("si-notice", html);
+== Sign in with Google
+== DevTargetGuard
+tests/Gallery.Web.Tests/ProductionGuardTests.cs:45:        Assert.False(d["Storage:PublicBucket"]!.StartsWith(DevTargetGuard.DevBucketPrefix, StringComparison.Ordinal));
+tests/Gallery.Web.Tests/ProductionGuardTests.cs:46:        Assert.False(d["Storage:PrivateBucket"]!.StartsWith(DevTargetGuard.DevBucketPrefix, StringComparison.Ordinal));
+tests/Gallery.Web.Tests/ProductionGuardTests.cs:47:        Assert.False(d["Mongo:Database"]!.EndsWith(DevTargetGuard.DevDatabaseSuffix, StringComparison.Ordinal));
+tests/Gallery.Web.Tests/ProductionGuardTests.cs:48:        Assert.All(d.Values, v => Assert.DoesNotContain(DevTargetGuard.DevBucketPrefix, v!, StringComparison.Ordinal));
+tests/Gallery.Web.Tests/ProductionGuardTests.cs:63:        { "Mongo:Database", "gallery" + DevTargetGuard.DevDatabaseSuffix },
+tests/Gallery.Web.Tests/ProductionGuardTests.cs:68:        { "Storage:PublicBucket", DevTargetGuard.DevBucketPrefix + "public" },
+tests/Gallery.Web.Tests/ProductionGuardTests.cs:70:        { "Storage:PrivateBucket", DevTargetGuard.DevBucketPrefix + "private" },
+tests/Gallery.Web.Tests/ProductionGuardTests.cs:108:        const string bad = DevTargetGuard.DevBucketPrefix + "public-hostcheck";
+tests/Gallery.Web.Tests/Fixtures/AdminHost.cs:48:        // 018 T003: a development host (DevTargetGuard's three markers): environment Development,
+tests/Gallery.Web.Tests/Fixtures/AdminHost.cs:52:            db = db.Client.GetDatabase(dbName + Gallery.Web.Maintenance.DevTargetGuard.DevDatabaseSuffix);
+tests/Gallery.Web.Tests/Fixtures/LibraryBrowserFixture.cs:46:    /// <summary>018 T003: buckets a development-host site uses (DevTargetGuard's gallery-dev- prefix).</summary>
+tests/Gallery.Web.Tests/Fixtures/LibraryBrowserFixture.cs:126:            db = db.Client.GetDatabase(db.DatabaseNamespace.DatabaseName + Gallery.Web.Maintenance.DevTargetGuard.DevDatabaseSuffix);
+tests/Gallery.Web.Tests/RemoveSeededTests.cs:249:    public void DevTargetGuard_passes_only_a_dev_target()
+tests/Gallery.Web.Tests/RemoveSeededTests.cs:253:        Assert.Empty(DevTargetGuard.Check("Development", s, m));
+tests/Gallery.Web.Tests/RemoveSeededTests.cs:254:        Assert.Single(DevTargetGuard.Check("Production", s, m));
+tests/Gallery.Web.Tests/RemoveSeededTests.cs:255:        Assert.Single(DevTargetGuard.Check("Development", new StorageOptions { PublicBucket = "gallery-public" }, m));
+tests/Gallery.Web.Tests/RemoveSeededTests.cs:256:        Assert.Single(DevTargetGuard.Check("Development", new StorageOptions(), m));
+tests/Gallery.Web.Tests/RemoveSeededTests.cs:257:        Assert.Single(DevTargetGuard.Check("Development", s, new MongoOptions { Database = "gallery" }));
+tests/Gallery.Web.Tests/RemoveSeededTests.cs:258:        Assert.Single(DevTargetGuard.Check("Development", s, new MongoOptions { Database = "gallery_dev_x" }));
+== appsettings
+tests/Gallery.Web.Tests/Fixtures/R2Fixture.cs:23:        // Read the dev bucket names from appsettings (non-secret).
+== si-local
+== auth\.local
