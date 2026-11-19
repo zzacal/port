@@ -73,12 +73,12 @@ test files it names, in the same batch as the code.
 
 ## Phase 1: Setup (parent)
 
-- [ ] T001 Record the baseline in `specs/018-local-dev-signin/evidence/baseline.txt`:
+- [X] T001 Record the baseline in `specs/018-local-dev-signin/evidence/baseline.txt`:
   `git rev-parse HEAD` and the full-suite counts, taken from the finished run's own output.
-- [ ] T002 Copy `specs/017-photo-edit-screen/evidence/gate.sh` to
+- [X] T002 Copy `specs/017-photo-edit-screen/evidence/gate.sh` to
   `specs/018-local-dev-signin/evidence/gate.sh`. Output `/tmp/018-gate-$L.txt`; add
   `specs/017-photo-edit-screen/evidence` to the restored dirs; keep `PHOTO_TIMING_LOG=/tmp/...`.
-- [ ] T003 Test infrastructure (parent; existing tests must stay green):
+- [X] T003 Test infrastructure (parent; existing tests must stay green):
   - `tests/Gallery.Web.Tests/Fixtures/AdminHost.cs`: `CreateAsync` gains `bool devHost = false`.
     When it is true:
     - pass `--environment Development --contentRoot <Render.RepoRoot>/src/Gallery.Web`;
@@ -93,7 +93,7 @@ test files it names, in the same batch as the code.
   - Prove it: one throwaway fact per fixture that starts a dev host and reads
     `IWebHostEnvironment.EnvironmentName == "Development"` and a `Mongo:Database` ending `_dev`. Run
     it, then delete it. Then run `AdminAccessTests` and `GridWidthBrowserTests` green, unmodified.
-- [ ] T004 Re-run the test-impact grep (header of contracts/test-impact.md). Add any new hit as a
+- [X] T004 Re-run the test-impact grep (header of contracts/test-impact.md). Add any new hit as a
   row "(found at implement)".
 
 ## Phase 2: Foundational (Batch A, executor; blocks every story)

@@ -40,20 +40,28 @@ public sealed class AdminHost : IAsyncDisposable
         FakeGoogle? fakeGoogle = null,
         Dictionary<string, string?>? extraOverrides = null,
         Action<WebApplicationBuilder>? configure = null,
-        bool forceHttpsScheme = true)
+        bool forceHttpsScheme = true,
+        bool devHost = false)
     {
         var db = mongo.NewDatabase();
         var dbName = db.DatabaseNamespace.DatabaseName;
+        // 018 T003: a development host (DevTargetGuard's three markers): environment Development,
+        // a database ending _dev, gallery-dev- buckets. Default false keeps every caller unchanged.
+        if (devHost)
+        {
+            db = db.Client.GetDatabase(dbName + Gallery.Web.Maintenance.DevTargetGuard.DevDatabaseSuffix);
+            dbName = db.DatabaseNamespace.DatabaseName;
+        }
         var overrides = new Dictionary<string, string?>
         {
             ["Mongo:ConnectionString"] = mongo.ConnectionString,
-            ["Mongo:Database"] = db.DatabaseNamespace.DatabaseName,
+            ["Mongo:Database"] = dbName,
             ["Storage:ImageBaseUrl"] = "https://img.test",
             ["Storage:ServiceUrl"] = "http://localhost:19999",
             ["Storage:AccessKeyId"] = "local",
             ["Storage:SecretAccessKey"] = "localsecret",
-            ["Storage:PublicBucket"] = "pub",
-            ["Storage:PrivateBucket"] = "priv",
+            ["Storage:PublicBucket"] = devHost ? "gallery-dev-pub" : "pub",
+            ["Storage:PrivateBucket"] = devHost ? "gallery-dev-priv" : "priv",
             ["Site:OutputCache"] = "false",
         };
 
@@ -72,8 +80,12 @@ public sealed class AdminHost : IAsyncDisposable
         // Use the SAME list instance in both the provider and the host
         var logLines = new List<string>();
 
+        string[] args = devHost
+            ? ["--urls", "http://127.0.0.1:0", "--environment", "Development",
+               "--contentRoot", Path.Combine(Render.RepoRoot, "src", "Gallery.Web")]
+            : ["--urls", "http://127.0.0.1:0"];
         var app = Gallery.Web.AppBuilder.Build(
-            ["--urls", "http://127.0.0.1:0"],
+            args,
             overrides,
             b =>
             {
