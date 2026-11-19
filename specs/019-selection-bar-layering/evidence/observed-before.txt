@@ -1,0 +1,23 @@
+019 reproduction, 2026-11-18, local dev stack (Development, dev database/buckets), /admin/library, 94 tiles,
+two photos ticked, page scrolled so photos pass behind the bar. Screenshot: before-1440.png.
+
+Bar (selection region "N selected / Clear / Select all on this page / Add to gallery... / Delete..."):
+  stays pinned 16 px above the window's bottom edge (8 px offset + rounded card), background rgb(244,244,244),
+  no shadow, no edge line; it starts no stacking layer of its own (layer "auto").
+Photo layers inside each tile sit on raised layers (placeholder 0, picture 1, title/select overlay 2).
+Result: wherever a photo passes the bar, the photo, its title strip and its select circle paint OVER the bar.
+
+Sampled 40 points across the bar's middle line; points where something other than the bar is on top:
+  width 1440 x 900: bar x 48..1392, y 836..884   covered 33/40   (tiles span x 96..1344)
+  width  800 x 1000: bar x 32..768,  y 936..984  covered 35/40   (tiles start x 64)
+  width  390 x 844: bar x 16..374,  y 740..828   covered  0/40   (this scroll position put a gap under the bar;
+                                                                 bar wraps to 2 rows, 88 px tall)
+Bar is also wider than the photo grid at 800 and 1440 (starts 32-48 px left of the first tile, ends 48 px past the last).
+
+Existing check LibraryBrowserTests.cs:588-590 samples only the centre of "Add to gallery..." with a dialog open;
+it never samples the bar over a photo, so it cannot see this defect.
+
+Same layering mechanism (pinned bar with no layer of its own, raised photo layers earlier in the page):
+  BatchFooter (upload page, Components/Organisms/BatchFooter.razor.css:3) pinned to the bottom over BatchItem
+  previews, which use the same picture layers. Not observed live (needs a running upload batch); inferred from
+  the identical rules.

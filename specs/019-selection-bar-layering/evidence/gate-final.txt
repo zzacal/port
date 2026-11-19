@@ -1,0 +1,7 @@
+019 T007 gate (build -warnaserror, full suite), 2026-11-18
+build exit 0
+Passed!  - Failed:     0, Passed:   123, Skipped:     0, Total:   123, Duration: 103 ms - Gallery.Core.Tests.dll (net10.0)
+  Failed Gallery.Web.Tests.BrowserTests.Walk_home_gallery_photo_next_back_with_javascript_off [31 s]
+Failed!  - Failed:     1, Passed:  1590, Skipped:     1, Total:  1592, Duration: 5 m 1 s - Gallery.Web.Tests.dll (net10.0)
+Re-run alone: BrowserTests.Walk_home_gallery_photo_next_back_with_javascript_off -> Passed 1/1 (a 30 s NetworkIdle timeout under full-suite load; the public walk has no Tile/Picture layering assertion).
+Count: 1592 = 018 baseline 1589 + 3 (LayeringBrowserTests, 3 widths).

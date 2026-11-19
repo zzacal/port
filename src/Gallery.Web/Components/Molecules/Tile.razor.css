@@ -12,6 +12,7 @@
     width: 100%;
     overflow: hidden;
     margin-bottom: 8px;
+    isolation: isolate; /* 019: the overlay and title layers stay inside the tile (research R-02) */
 }
 
 /* Admin overlay (feature 005): sits over the photo; only its children take pointer events. */
