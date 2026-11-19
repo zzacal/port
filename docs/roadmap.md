@@ -296,7 +296,7 @@ OWNER-ONLY (after merge and deploy, not gates):
 
 ### 017 Focused photo edit screen
 
-**Status: implemented on branch `017-photo-edit-screen`; not yet merged. SC-005 met (p95 4.65 ms <= 29.75; 3 reads, was 4).**
+**Status: live at https://port.zacal.me (merged cc57b64, 2026-11-18; deploy green); full suite 123 + 1530 passed, 1 skipped. SC-005 met (p95 4.65 ms <= 29.75; 3 reads, was 4).**
 Decisions, defaults and stated test changes in `specs/017-photo-edit-screen/decisions.md`.
 Evidence: `specs/017-photo-edit-screen/evidence/` (gates, p95, non-vacuity, design record validate
 0 failures, test-impact edit output).
@@ -310,8 +310,8 @@ shows the plain library. Amends D-20 and D-23.
 
 OWNER-ONLY (after merge and deploy, not gates):
 
-- [ ] O-01 On port.zacal.me, edit a photo from library page 2: the screen shows only that photo,
-  Save keeps you there, "Library" takes you back to page 2.
+- [x] O-01 On port.zacal.me, edit a photo from library page 2: the screen shows only that photo,
+  Save keeps you there, "Library" takes you back to page 2. (Done, as reported by the owner, 2026-11-18.)
 
 ## Not a feature
 

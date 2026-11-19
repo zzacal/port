@@ -266,17 +266,18 @@ removal only), the new `src/Gallery.Web/Admin/Pages/PhotoEditPage.razor` and `.r
 - [X] T023 Final gate (`evidence/gate-final.txt`): `dotnet clean`, `-warnaserror` build, full suite
   including Evidence and Browser; `p95.sh` recorded; restore earlier features' regenerated logs;
   commit.
-- [ ] T024 Merge to main (`--no-ff`, body as in 016's) and push. Watch the deploy job go green.
+- [X] T024 Merge to main (`--no-ff`, body as in 016's) and push. Watch the deploy job go green.
   Signed out, `curl -sI https://port.zacal.me/admin/library/images/{any-id}` answers 302 to
   sign-in; save to `evidence/browser-prod.txt`. Do not change production data.
-- [ ] T025 OWNER step, then parent: the owner signs in to the automation browser on
+- [X] T025 OWNER step, then parent: the owner signs in to the automation browser on
   port.zacal.me. Then open one library photo's edit screen at 390 and 1440: no horizontal scroll,
   0 broken images, photo wholly visible, breadcrumb back to the same library page. Append to
-  `evidence/browser-prod.txt`. No saves on production.
+  `evidence/browser-prod.txt`. No saves on production. (Done as reported by the owner, 2026-11-18;
+  agent measurements not captured, see browser-prod.txt.)
 
 ## OWNER-ONLY (after the build; not gates)
 
-- [ ] O-01 On port.zacal.me, edit a photo from library page 2: the screen shows only that photo,
+- [X] O-01 On port.zacal.me, edit a photo from library page 2: the screen shows only that photo,
   Save keeps you there, "Library" takes you back to page 2.
 
 ## Dependencies and execution order
