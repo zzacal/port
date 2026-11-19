@@ -1,0 +1,5 @@
+HEAD (pre-feature tree): a5806fbb9804131e41d18d5669b1ffbad7a22b91
+Full suite (evidence/gate.sh setup, finished run, /tmp/020-gate-setup.txt):
+Passed!  - Failed:     0, Passed:   123, Skipped:     0, Total:   123 - Gallery.Core.Tests.dll (net10.0)
+Passed!  - Failed:     0, Passed:  1591, Skipped:     1, Total:  1592 - Gallery.Web.Tests.dll (net10.0)
+ls tests/Gallery.Web.Tests/*.cs | wc -l: 144

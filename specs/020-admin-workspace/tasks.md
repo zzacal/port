@@ -183,16 +183,16 @@ copy, run `evidence/gate.sh <label>`, grep each [SAFETY] mechanism, commit.
 
 ## Phase 1: Setup (PARENT, before any code change)
 
-- [ ] T001 PARENT Record `specs/020-admin-workspace/evidence/baseline.txt`: `git rev-parse HEAD`,
+- [X] T001 PARENT Record `specs/020-admin-workspace/evidence/baseline.txt`: `git rev-parse HEAD`,
   the full-suite `Passed!/Failed!` lines from a finished run (never a partial file),
   `ls tests/Gallery.Web.Tests/*.cs | wc -l` (144). Accept: file has the three values.
-- [ ] T002 PARENT Fold corrections C-01…C-17 into `contracts/http.md`, `contracts/components.md`,
+- [X] T002 PARENT Fold corrections C-01…C-17 into `contracts/http.md`, `contracts/components.md`,
   `contracts/log-events.md`, `plan.md`, `research.md` (R-06, R-11) as "AMENDED (tasks)" notes in
   place, and add PLAN-CORRECTION rows 23+ to `decisions.md` (one per correction, with pivot cost).
   Re-run `bash specs/020-admin-workspace/evidence/test-impact-hits.sh > …/test-impact-hits.txt`;
   any hit outside the TI rows becomes the next TI row "(found at T002)". Accept:
   `grep -c 'AMENDED (tasks)' contracts/*.md plan.md research.md` ≥ 10; decisions.md has rows 23–39.
-- [ ] T003 PARENT Write `specs/020-admin-workspace/evidence/gate.sh` from
+- [X] T003 PARENT Write `specs/020-admin-workspace/evidence/gate.sh` from
   `specs/017-photo-edit-screen/evidence/gate.sh`: output `/tmp/020-gate-$L.txt`; the `restore`
   list adds `specs/017-photo-edit-screen/evidence`, `specs/018-local-dev-signin/evidence`,
   `specs/019-selection-bar-layering/evidence`, `specs/005-admin-ui-components/evidence/baseline`
@@ -200,7 +200,7 @@ copy, run `evidence/gate.sh <label>`, grep each [SAFETY] mechanism, commit.
   `WORKSPACE_TIMING_LOG`, `PUBLIC_CAPTURE_DIR` to `/tmp/020-gate-*` paths so a gate never
   overwrites committed captures; print failure messages (`grep -A3 'Error Message'`) for failed
   facts. Accept: `bash …/gate.sh setup` exits 0 and `git status --short specs/` is empty after it.
-- [ ] T004 PARENT Write `tests/Gallery.Web.Tests/Fixtures/PublicCapture.cs` and
+- [X] T004 PARENT Write `tests/Gallery.Web.Tests/Fixtures/PublicCapture.cs` and
   `tests/Gallery.Web.Tests/PublicCaptureEvidenceTests.cs` (`[Trait("Category","Evidence")]`):
   build `HomeCaptureLibrary.BuildAsync` on a `LibraryHost`, GET every public page type (`/`, `/g`,
   each listed gallery page, one photo page per listed gallery, `/c`, every camera page and one
@@ -208,7 +208,7 @@ copy, run `evidence/gate.sh <label>`, grep each [SAFETY] mechanism, commit.
   gallery id with `G0…G4` (creation order) and strip nothing else, write each body to
   `{PUBLIC_CAPTURE_DIR ?? specs/020-admin-workspace/evidence/pre-public}/{label}.html` plus
   `index.txt` (label, path, status). Accept: two runs into two dirs are `diff -r`-identical.
-- [ ] T005 PARENT Write and run `specs/020-admin-workspace/evidence/capture-pre.sh` (quickstart Part A)
+- [X] T005 PARENT Write and run `specs/020-admin-workspace/evidence/capture-pre.sh` (quickstart Part A)
   on the UNCHANGED tree:
   1. run the five timing tests (`LibraryTimingEvidenceTests`, `GalleryListTimingEvidenceTests`,
      `PhotoEditTimingEvidenceTests`, `MembershipTimingEvidenceTests`, `TileTimingEvidenceTests`,
@@ -265,7 +265,7 @@ copy, run `evidence/gate.sh <label>`, grep each [SAFETY] mechanism, commit.
   file xN`, tee to `evidence/test-impact-edit-<cp>.txt`. Rewrites carry the full new fact bodies
   written from contracts/test-impact.md TI rows and contracts/http.md. Accept: `DRYRUN=1` on the
   unchanged tree matches every row's count.
-- [ ] T010 PARENT TI-01: move `LibraryHtml` to `tests/Gallery.Web.Tests/Fixtures/LibraryHtml.cs`
+- [X] T010 PARENT TI-01: move `LibraryHtml` to `tests/Gallery.Web.Tests/Fixtures/LibraryHtml.cs`
   and `GalleryHtml` to `tests/Gallery.Web.Tests/Fixtures/GalleryHtml.cs` verbatim; add
   `LibraryHost.PostJsonAsync`/`GetJsonAsync` and `UploadSite.OpenWorkspaceAsync` as TI-01 says.
   Accept: gate green with the same `Passed!` counts as T001.

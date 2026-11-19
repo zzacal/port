@@ -88,6 +88,8 @@ Additions beyond the literal request (V.4):
 | Grouped purges for big uploads | fewer purge calls | timer + second write path | no (dropped; decisions row 15) |
 | Lookup route for a deep `?photo=` reload | faster reload in a rare case | a route | no (dropped; decisions row 20) |
 
+**AMENDED (tasks)**: tasks.md corrections C-01 to C-19 override the contract text they name; each is folded into the contract in place and logged in decisions.md rows 23 to 41.
+
 Post-design re-check: unchanged. Everything is PASS, N/A or DEVIATION-handled. No MUST is crossed;
 Complexity Tracking is empty.
 
@@ -124,11 +126,11 @@ src/Gallery.Web/
 ├── Admin/Pages/WorkspacePage.razor(.css)            # NEW; the six old pages deleted
 ├── Library/
 │   ├── GalleryService.cs                            # + RemoveManyAsync
-│   ├── LibraryReader.cs                             # GalleriesAsync kept; page/photo reads move out
+│   ├── LibraryReader.cs                             # GalleriesAsync kept; page/photo reads move out (AMENDED (tasks) C-16: Live, TileFields become internal static)
 │   └── LibraryEndpoints.cs                          # DELETED
 ├── Upload/
 │   ├── UploadEndpoints.cs                           # U1, U10, U11 removed; U2, U3 changed; U12, U13
-│   ├── JoinService.cs                               # was ConfirmService (per-item body kept)
+│   ├── ConfirmService.cs                            # AMENDED (tasks) C-02: keeps its name; gains JoinAsync (per-item body moved)
 │   ├── BatchStore.cs  EffectiveState.cs             # claim, added, destination, clear; joining
 │   └── UploadPageModel.cs                           # DELETED
 ├── Data/BatchDocuments.cs                           # destination, added, joining

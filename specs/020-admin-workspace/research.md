@@ -106,7 +106,7 @@ Today: U7 validates and leaves the item `succeeded` in staging; U10 confirm copi
 the public and private stores, upserts the images and closes the batch (`ConfirmService`).
 
 **Decision**: U7 is unchanged. A new call, U12 `join`, does for ONE item what confirm did per item
-(`ConfirmService.ConfirmItemAsync`, moved to `JoinService` with its body kept), then adds the photo
+(`ConfirmService.ConfirmItemAsync`, moved to `JoinService` with its body kept; **AMENDED (tasks) C-02**: no `JoinService`, the method is `ConfirmService.JoinAsync`), then adds the photo
 to the destination gallery through `GalleryService.AddAsync`. The page calls U12 right after U7
 succeeds, and for every `succeeded`/`joining` item it finds on load (resume). U10 confirm and U11
 discard are removed; U13 `clear` drops what did not join.
@@ -209,7 +209,7 @@ fails once. This feature therefore: adds 8 baseline files (generated, reviewed, 
 13, and regenerates 4 whose pages change (`index`, `templates/admin-layout`,
 `organisms/side-panel`, `organisms/contact-sheet`), each with a diff against the frozen copy that
 shows only the intended change. `PublicOutputUnchangedTests` (005 baseline) is append-tolerant and
-must pass unmodified: `ContactSheetPage` only gains a specimen after the existing ones.
+must pass unmodified: `ContactSheetPage` only gains a specimen after the existing ones. **AMENDED (tasks) C-04**: it also loses specimens 4–6 at removal (they render removed components); the PARENT trims the 005 baseline (TI-57) and `PublicOutputUnchangedTests` then passes unmodified.
 
 ## R-12 Existing tests
 
@@ -218,7 +218,7 @@ by `evidence/test-impact-hits.sh`). Classes and the per-file table are in
 `contracts/test-impact.md`. Summary: 1,105 facts in `Gallery.Web.Tests`; about 60 files change.
 
 The guard `UploadSourceGuardTests.cs:89` bans the words `Purge` and `Warm` in `Upload/` (008
-FR-033: an upload refreshes no public page). `JoinService` calls `GalleryService.AddAsync` and
+FR-033: an upload refreshes no public page). `JoinService` (**AMENDED (tasks) C-02**: `ConfirmService.JoinAsync`) calls `GalleryService.AddAsync` and
 names neither word, so the guard keeps passing; its meaning is restated by two new [SAFETY] facts
 (no destination → no edge work; join never changes visibility).
 

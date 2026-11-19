@@ -1,0 +1,28 @@
+== library.log
+   1 http.request GET /admin/ 200
+  30 http.request GET /admin/library 200
+   5 http.request POST /admin/galleries 303
+  30 http.request POST /admin/galleries/order 303
+  30 http.request POST /admin/galleries/{gid} 303
+  30 http.request POST /admin/galleries/{gid}/cover 303
+   5 http.request POST /admin/galleries/{gid}/delete 303
+  30 http.request POST /admin/galleries/{gid}/order 303
+  30 http.request POST /admin/galleries/{gid}/remove 303
+  30 http.request POST /admin/galleries/{gid}/visibility 303
+   5 http.request POST /admin/library/add 303
+   5 http.request POST /admin/library/delete 303
+  30 http.request POST /admin/library/images/{iid} 303
+   5 http.request POST /admin/library/images/{iid}/delete 303
+== list.log
+   1 http.request GET /admin/ 200
+ 100 http.request GET /admin/galleries 200
+== photo.log
+   1 http.request GET /admin/ 200
+ 100 http.request GET /admin/library/images/{iid} 200
+== membership.log
+   1 http.request GET /admin/ 200
+ 100 http.request POST /admin/library/images/{iid} 303
+== tile.log
+   1 http.request GET /admin/ 200
+ 100 http.request GET /admin/galleries/{gid} 200
+ 100 http.request GET /admin/library 200

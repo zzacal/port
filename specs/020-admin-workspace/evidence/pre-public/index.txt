@@ -1,0 +1,10 @@
+home	/	200
+listing	/g	200
+gallery-0	/g/G0/alpha	200
+photo-0	/g/G0/alpha/aaaaaaaaaaaaaaaaaaaaaaaaa2	200
+gallery-1	/g/G1/bravo	200
+photo-1	/g/G1/bravo/bbbbbbbbbbbbbbbbbbbbbbbbb2	200
+gallery-2	/g/G2/charlie	200
+photo-2	/g/G2/charlie/ccccccccccccccccccccccccc2	200
+cameras	/c	200
+unknown-gallery	/g/zzzzzzzzzzzzzzzzzzzzzzzzz2/x	404

@@ -25,6 +25,7 @@ The layout owns all frame geometry (IX.2): three columns at 900 px and wider (li
 320 px); below 900 px one column with the list as a horizontal strip and the panel as a bottom
 sheet shown while `admin-workspace` has class `ws-sheet`. Pages add no frame CSS.
 Removed parameters: `Current`, `Crumbs`, `Aside`, `ShowOwnerBar`, `SignOut`.
+**AMENDED (tasks) C-05**: two steps. T029 adds the workspace mode additively (new parameters `List`, `Panel`, `Csrf`, `Cap`, `UploadSrc`, `WorkerSrc`; old parameters kept; render with `List` null byte-identical to today) because the old pages still need `Current`, `Crumbs`, `Aside`, `ShowOwnerBar`, `SignOut`; T052 makes it final as above. **AMENDED (tasks) C-06**: the layout renders no `<script>`; the workspace module `<script>` is rendered by `WorkspacePage` (`OrganismComponentTests.AdminLayout_has_no_script_element` stays unmodified).
 
 **K2 `SidePanel`**: new optional `Save` (bool, default true). False renders no save row. Default
 render byte-identical. Used as the details panel body in all four contexts.
@@ -44,6 +45,11 @@ Markup: `<div class="ws-cell" role="option" tabindex="-1" draggable="true" data-
 data-caption data-galleries aria-selected>` holding one `Tile` (no `Href`, title under the photo,
 `Overlay` = `SelectMark`, and a `Mark` when Cover or New). `Sizes` = `Sizes.ForFill()` (new, in
 `Gallery.Core`, the `sizes` string for the fill grid).
+**AMENDED (tasks) C-18**: exact string `(min-width: 1200px) 384px, (min-width: 600px) 368px, calc((100vw - 48px) / 2)`, built as
+`$"(min-width: {Tokens.BreakLarge}px) {2 * FillMin + Tokens.SpaceL}px, (min-width: {Tokens.BreakMedium}px) {2 * FillMin + Tokens.SpaceM}px, calc((100vw - {3 * Tokens.SpaceS}px) / 2)"` with `public const int FillMin = 168;` in `Sizes`.
+Why: with `repeat(auto-fill, minmax(168px, 1fr))` a cell is always narrower than two minimum columns plus one gap (else one more column would fit), and `.cs` keeps its gaps (`--space-s` / `--space-m` from 600 px / `--space-l` from 1200 px), so `2 × 168 + gap` is the largest cell at each width whatever the list and panel take; below 600 px the fill grid has two columns, `.cs` pads `--space-s` on each side with one `--space-s` gap, and `.ws-main` adds no horizontal padding there. The value is an upper bound (the browser may fetch one size larger than needed, never smaller).
+**AMENDED (tasks) C-10**: each `PhotoCell` root also carries `data-consequence` = `Messages.DeleteConsequence(GalleryIds.Count)`; the selection confirm text is the server's bulk sentence in the template, the script sets only the count.
+**AMENDED (tasks) C-19**: the select-mark label is "Select {title}" (planning default).
 States: plain, selected, cover, new, drop-position (`ws-drop`, a bar on the leading edge).
 
 **K6 `GalleryChecklist`** (molecule, `ws-checks`). Parameters: `Galleries` (id, title, public),
@@ -66,7 +72,7 @@ processing, uploading, succeeded|joining → Adding, failed, interrupted.
 place results appear (FR-018): fixed at the bottom centre of the window. States: result, refusal.
 
 **K9 `CollectionList`** (organism, `ws-collections`). Parameters: `Current` (all | unplaced | gallery
-id), `Total`, `Unplaced`, `Galleries`, `Naming` (bool), `Csrf`.
+id), `Total`, `Unplaced`, `Galleries`, `Naming` (bool), `Csrf`. **AMENDED (tasks) C-19**: the naming input's label is "New gallery name" (planning default).
 Markup, in order: brand; link "All photos" + count; link "Not in a gallery" + count; heading
 "Galleries" with the note "in home page order"; one link per gallery (`data-gid`, `data-slug`,
 `data-public`, `draggable`), with `Mark` "Private" and its count; `New gallery` (a `Button`), or
@@ -115,6 +121,7 @@ middle, last.
     danger slot: `DangerConfirm` "Delete {n} photos…".
   Below 900 px each panel heading row also holds `Done`.
 - A `<noscript>` sentence: "The admin needs JavaScript."
+- **AMENDED (tasks) C-15**: until Phase 5 the page renders neither `Add photos` nor the `<upload-tray>` mount (the old upload page still uploads; R-15). **C-12**: document titles W1 "All photos", W2 "Not in a gallery", W3 the gallery title.
 
 Empty sentences: library "No photos yet. Use Add photos, or drop files anywhere on this page.";
 unplaced "Every photo is in a gallery."; gallery "This gallery has no photos yet. Use Add photos to
@@ -137,11 +144,12 @@ Scripts: `library.js`, `reorder.js`.
 
 - New entries (8): K4 to K11, each page showing every state named above. `PhotoCell`,
   `CollectionList` and `UploadTray` pages also show the 390 px arrangement.
-- `templates/admin-layout`: the three regions with sample content, and the bare mode.
+- `templates/admin-layout`: the three regions with sample content, and the bare mode. **AMENDED (tasks) C-09**: three regions only; bare mode cannot share the page (AdminLayoutPage renders the layout as the whole document) and is covered by `WorkspaceComponentTests` and the sign-in capture.
 - `organisms/side-panel` and `organisms/contact-sheet`: one specimen appended after the existing
   ones (`Save="false"`; `Fill`).
 - Removed entries (13) and the index reflect the list above: 35 entries.
-- Insert the new entries where no test pins a list tail (after the last entry of their level).
+- Insert the new entries where no test pins a list tail (after the last entry of their level). **AMENDED (tasks) C-03** (`NavCataloguePageTests.cs:61` pins `TakeLast(5)` of the molecules): `Mark` after `SelectMark`; `PhotoCell`, `GalleryChecklist`, `UploadRow`, `Toast` (in that order) after `DangerConfirm`; `CollectionList`, `UploadTray`, `PhotoStage` after `SignInCard`.
+- **AMENDED (tasks) C-04**: `ContactSheetPage` loses its specimens 4–6 at removal (they render `SelectionBar`, `DragHandle`, `BatchItem`, `BatchFooter`; ContactSheetPage.razor:27-59) and gains one appended specimen "Workspace fill grid" (T027). **AMENDED (tasks) C-13**: appended specimen labels are `SidePanelPage` "Without a save row" and `ContactSheetPage` "Workspace fill grid".
 
 ## Scripts
 

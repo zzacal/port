@@ -9,6 +9,8 @@ the old addresses, in about 60 of the 144 files of `tests/Gallery.Web.Tests` (1,
 executor is dispatched. A fact not covered by a row must pass unmodified; a failure there means the
 change is wrong.
 
+**AMENDED (tasks) C-11**: `LibraryAccessTests` is retired; `WorkspaceAccessTests` (new) carries its three guarantees for W1–W4 and A1–A11 (TI-35). Corrections C-01 to C-19 in tasks.md override the rows they name.
+
 ## Classes
 
 - **U unchanged**: must pass byte-for-byte as written.

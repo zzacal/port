@@ -15,6 +15,7 @@ Shared rules:
 - `message` is the result line the page shows (FR-018). The server writes it
   (`Workspace/Messages.cs`); the script never composes one.
 - Body limits (`RequestSizeLimitAttribute`; oversize → 413): 4 KiB unless stated.
+- **AMENDED (tasks) C-14**: A-routes read their JSON with `UploadEndpoints.ReadAsync<T>(ctx)` inside the handler (no `[FromBody]` binding), so the antiforgery filter answers 400 first and a bare POST with the CSRF header answers 400 `bad-request`, never 500.
 - Signed out: GET → 302 `/admin/signin`; POST → the 007 behaviour. Missing or bad token → 400.
 
 ## Pages and fragments
@@ -25,6 +26,8 @@ Shared rules:
 | W2 | `GET|HEAD /admin/unplaced` | Not in a gallery |
 | W3 | `GET|HEAD /admin/g/{gid}` | one gallery; unknown gallery → 404 |
 | W4 | `GET /admin/tiles/{iid}` | one tile fragment; unknown or tombstoned → 404 |
+
+**AMENDED (tasks) C-12**: document titles W1 "All photos", W2 "Not in a gallery", W3 the gallery's title (planning default). The list's current row has `aria-current="page"`.
 
 `?photo={iid}` on W1 to W3 is read by the script only (large view). The server ignores it.
 
@@ -91,7 +94,7 @@ Messages (exact; `{n}` photo/photos pluralised, `{g}` the gallery title):
 | A4 | `Gallery order saved.` |
 | A9 | `Order saved.` |
 | A10 | `{photo title} is now the cover of {g}.` / `{g} uses its first photo as the cover.` |
-| A2 | `{n} deleted.` plus today's leftovers/failed sentences |
+| A2 | `{n} deleted.` plus today's leftovers/failed sentences (**AMENDED (tasks) C-07**, exact: `{n} deleted.` ("1 photo deleted."), then when leftovers > 0 ` {k} files could not be removed and were logged.`, then when failed > 0 ` {f} could not be deleted. Try again.`; LibraryEndpoints.cs:555-557) |
 | A11 | `{g} deleted. Its photos are still in All photos.` |
 
 Refusal messages are the services' existing reasons, unchanged.
@@ -114,7 +117,7 @@ Changed:
   "items": [ { …as today…, "state": "queued|processing|uploading|succeeded|joining|failed|interrupted" } ] } }
 ```
 
-`confirming` is removed. `{ "batch": null }` when there is no open batch, or when the open batch
+`confirming` is removed. **AMENDED (tasks) C-01**: the batch object keeps `"confirming": false`, always false (`UploadFlowTests.cs:200` reads it and passes unmodified, SC-012); only the item-state value `confirming` is gone. `{ "batch": null }` when there is no open batch, or when the open batch
 has no items and no `added` ids. `joining` is never reported as `interrupted`.
 
 **U3 `POST /admin/upload/items`** gains two optional fields:
@@ -141,7 +144,7 @@ New:
 1. The item must be in the open batch with that attempt (404 / 409 `stale-attempt` as the other
    item routes) and in state `succeeded` or `joining` (else 409 `not-active`).
 2. [SAFETY] Claim: atomically set `joining`.
-3. Publish the item (`JoinService.JoinAsync`): copy-if-match of the master and every size on the
+3. Publish the item (`JoinService.JoinAsync`; **AMENDED (tasks) C-02**: there is no `JoinService`; the method is `ConfirmService.JoinAsync(batchId, itemId, attemptId)`, built from the body of the private `ConfirmItemAsync`; `ConfirmService` keeps its name and its public statics, loses `ConfirmAsync`/`RunAsync`/`ConfirmResult`/`ConfirmStatus`): copy-if-match of the master and every size on the
    validated ETags, image upsert with `$setOnInsert`, staged prefix deleted. A staged file that is
    missing is accepted only when its destination exists. A refused copy: the item becomes `failed`
    "changed after validation", the public names this run created and the master copy are removed,

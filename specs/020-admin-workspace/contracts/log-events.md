@@ -1,7 +1,9 @@
 # Log Events: 020 Admin Workspace
 
 Field names and templates are fixed; evidence scripts parse them. `http.request {route} {status}
-{duration_ms}` is emitted for every request as today (IV.1).
+{duration_ms}` is emitted for every request as today (IV.1). **AMENDED (tasks) C-08**: the line is `http.request {method} {route} {status} {duration_ms} {db_reads}` with the route TEMPLATE (RequestTimingMiddleware.cs:46).
+
+**AMENDED (tasks) C-17**: p95 rows read per-source pre logs (`evidence/pre-timings/*.log`), because L2 plain saves and L2 membership saves share one route template; `evidence/pre-timings.log` is their concatenation for quickstart's command.
 
 ## Reads (all `op.timing`, `isDbRead: true`, names reused so pinned lists stay valid)
 

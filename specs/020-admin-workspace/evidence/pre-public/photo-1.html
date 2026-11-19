@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en" b-cfctrbo221><head b-cfctrbo221><meta charset="utf-8" b-cfctrbo221>
+    <meta name="viewport" content="width=device-width, initial-scale=1" b-cfctrbo221>
+    <title b-cfctrbo221>Photo 3 &#x2014; Bravo</title><style b-cfctrbo221></style><style></style></head>
+<body class="public" b-cfctrbo221><header class="site-header" b-6w3ue1cv7k><nav class="breadcrumb" aria-label="Breadcrumb" b-wjdti06txf><ol b-wjdti06txf><li b-wjdti06txf><a class="text-link tap" href="/" b-hlb7toju9s>Home</a></li><li b-wjdti06txf><a class="text-link tap" href="/g" b-hlb7toju9s>Galleries</a></li><li b-wjdti06txf><a class="text-link tap" href="/g/G1/bravo#p-bbbbbbbbbbbbbbbbbbbbbbbbb2" b-hlb7toju9s>Bravo</a></li><li aria-current="page" b-wjdti06txf><span b-wjdti06txf>Photo 3</span></li></ol></nav></header>
+    <main class="public-main" b-cfctrbo221><article class="solo" data-prefetch="https://img.test/41f4cc19d78e09ac.avif 320w, https://img.test/2383fd2bb909908c.avif 640w, https://img.test/1127e72d825a27df.avif 960w, https://img.test/514797145dbb2ab5.avif 1280w" b-kmeq3ezs93><div class="stage" b-kmeq3ezs93><div class="pic fit-contain" id="p-bbbbbbbbbbbbbbbbbbbbbbbbb2" b-t02bb33sx6><div class="frame" b-t02bb33sx6><svg class="sizer" viewBox="0 0 1280 960" width="1280" height="960" aria-hidden="true" focusable="false" b-t02bb33sx6></svg>
+        <img class="layer ph" src="data:image/webp;base64,UklGRhIAAABXRUJQVlA4TAYAAAAvAAAAAAfQ//73v/&#x2B;BiOh/AAA=" width="1280" height="960" alt aria-hidden="true" b-t02bb33sx6 /><img class="layer thumb" src="https://img.test/c51b7bf0264dbf34.webp" width="1280" height="960" alt aria-hidden="true" decoding="async" b-t02bb33sx6 /><picture class="layer main" b-t02bb33sx6><source type="image/avif" srcset="https://img.test/7004f4d09d9f3523.avif 320w, https://img.test/f8f5df2ef6b1be86.avif 640w, https://img.test/f66dacd35f3cb57e.avif 960w, https://img.test/dbce9c1ac0b429f6.avif 1280w" sizes="100vw" b-t02bb33sx6 />
+            <source type="image/webp" srcset="https://img.test/52385bf8a481f22b.webp 320w, https://img.test/c51b7bf0264dbf34.webp 640w, https://img.test/d700d15945c6823e.webp 960w, https://img.test/7566d15ac8f50149.webp 1280w" sizes="100vw" b-t02bb33sx6 /><img src="https://img.test/7566d15ac8f50149.webp" width="1280" height="960" alt="Photo 3" fetchpriority="high" loading="eager" b-t02bb33sx6 /></picture></div></div></div>
+    <div class="caption" b-kmeq3ezs93><h1 class="title" title="Photo 3" b-n0hftypm2m>Photo 3</h1>
+        
+        <nav class="pager" aria-label="Image navigation" b-fqd4kuoiz5><span class="prev" b-fqd4kuoiz5></span><div class="here" b-fqd4kuoiz5><p class="photo-count" b-kyne1eb7x4>1 / 2</p></div>
+    <span class="next" b-fqd4kuoiz5><a class="text-link tap" href="/g/G1/bravo/bbbbbbbbbbbbbbbbbbbbbbbbb3" rel="next" b-hlb7toju9s>Next</a></span></nav></div></article></main><script type="speculationrules" b-cfctrbo221>{"prerender":[{"where":{"or":[{"href_matches":"/g"},{"href_matches":"/g/*"},{"href_matches":"/c"},{"href_matches":"/c/*"}]},"eagerness":"moderate"}]}</script>
+    <script type="module" b-cfctrbo221>(() => {
+document.addEventListener('keydown', e => {
+const k = { ArrowLeft: 'article.solo a[rel=prev]', ArrowRight: 'article.solo a[rel=next]', Escape: '.breadcrumb a[href*="#p-"]' }[e.key];
+if (!k || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || e.defaultPrevented || e.target.closest?.('input,textarea,select,[contenteditable]')) return;
+document.querySelector(k)?.click();
+});
+if (navigator.connection?.saveData) return;
+// Fetch through a detached <picture> with the destination's own AVIF <source> (same srcset and
+// sizes), so the browser picks, and caches, exactly the file the destination page then uses.
+const warm = (srcset, sizes, priority) => {
+    const pic = document.createElement('picture');
+    const img = Object.assign(document.createElement('img'), { fetchPriority: priority, decoding: 'async' });
+    pic.append(Object.assign(document.createElement('source'), { type: 'image/avif', srcset, sizes }), img);
+    img.src = 'data:,';
+};
+const onIntent = e => {
+    const el = e.target.closest?.('[data-preload-srcset]');
+    if (!el || el.dataset.preloaded) return;
+    el.dataset.preloaded = '1';
+    warm(el.dataset.preloadSrcset, el.dataset.preloadSizes || '100vw', 'high');
+};
+document.addEventListener('pointerenter', onIntent, true);
+document.addEventListener('touchstart', onIntent, { passive: true });
+window.addEventListener('load', () => {
+    const sets = document.querySelector('article.solo[data-prefetch]')?.dataset.prefetch.split('|').filter(Boolean) ?? [];
+    for (const srcset of sets) warm(srcset, '100vw', 'low');
+});
+})();</script></body></html>
