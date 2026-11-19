@@ -315,7 +315,7 @@ OWNER-ONLY (after merge and deploy, not gates):
 
 ### 018 Local sign-in without Google
 
-**Status: merged to main (2026-11-18); full suite 123 + 1588 passed, 1 skipped; non-vacuity 8/8.**
+**Status: live at https://port.zacal.me (merged 70b7d19, 2026-11-18; deploy green; production probe PASS); full suite 123 + 1588 passed, 1 skipped; non-vacuity 8/8.**
 Decisions and defaults in `specs/018-local-dev-signin/decisions.md`. Evidence:
 `specs/018-local-dev-signin/evidence/` (baseline, gates, non-vacuity, test-impact grep).
 
