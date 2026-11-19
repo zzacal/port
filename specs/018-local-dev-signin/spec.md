@@ -162,7 +162,7 @@ password variable set refuses to start.
   configured password.
 - **FR-011**: The Google sign-in, claim, refusal and sign-out behaviour MUST be unchanged; existing
   sign-in tests MUST pass unmodified.
-- **FR-012** *(blocking, before planning)*: The constitution's ownership rules (I.1 "ownership is
+- **FR-012** *(blocking, before planning; amendment DONE: constitution 6.2.0, rule I.7)*: The constitution's ownership rules (I.1 "ownership is
   established by Google sign-in", I.3 "every other identity is refused and gets no session") MUST
   be amended with a narrow development-only exemption that states the FR-004 conditions (including
   the password), the local claim of FR-007 (a dev-only identity besides Google, under the same

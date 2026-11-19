@@ -1,0 +1,10 @@
+OK .specify/memory/constitution.md: '- Version change: 6.0.0 → 6.1.0 (MINOR)\n- Rationale: owner d'
+OK .specify/memory/constitution.md: '  (2026-11-02). 5.0.0 fixed hosting ceiling B1 -> B2 (2026-1'
+OK .specify/memory/constitution.md: '1. Ownership MUST be established by the first successful Goo'
+OK .specify/memory/constitution.md: '6. All admin state-changing requests MUST be protected again'
+OK .specify/memory/constitution.md: 'Rationale: a personal gallery needs no user management; a cl'
+OK .specify/memory/constitution.md: '- Identity: Google OIDC, with a cookie session that has a 7-'
+OK .specify/memory/constitution.md: '**Version**: 6.1.0 | **Ratified**: 2026-10-27 | **Last Amend'
+OK specs/007-owner-signin-claim/spec.md: '- **FR-003**: Sign-in MUST use Google as the only identity p'
+OK specs/018-local-dev-signin/spec.md: '- **FR-012** *(blocking, before planning)*:'
+wrote 3 files
