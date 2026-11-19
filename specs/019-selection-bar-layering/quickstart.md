@@ -6,7 +6,7 @@
 dotnet test tests/Gallery.Web.Tests --filter "FullyQualifiedName~LayeringBrowserTests"
 ```
 
-Both facts (library bar, upload footer) pass. With the two `isolation` lines removed they fail
+The library fact passes at 390, 800 and 1440 px. With the two `isolation` lines removed they fail
 (`evidence/non-vacuity.txt`).
 
 ## By hand (the owner's check)

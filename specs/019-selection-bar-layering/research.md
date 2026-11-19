@@ -18,8 +18,8 @@ context, so its z-index values only order its own children. The bar, later in th
 then paints above every tile.
 
 Rationale: one rule fixes the class: any pinned or overlapping element now meets a photo as one flat
-box. The upload footer (`BatchFooter`, same sticky pattern over `BatchItem` previews, which use
-`Picture`) is fixed by the `Picture` line with no edit of its own. Probe: 0/120 covered at every width,
+box. (Implement correction, decisions #6: the live upload page renders no `Picture` in batch items, so its
+footer was never covered; only `/ui` catalogue pages show previews.) Probe: 0/120 covered at every width,
 select circle still on top of its photo (`evidence/probe-isolation.txt`).
 
 Alternatives rejected:

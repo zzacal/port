@@ -58,8 +58,11 @@ the bar, then click each bar control at a spot with a photo underneath: each cli
   front of every photo and every part of a tile (picture, placeholder, title strip, select circle,
   icon row) at every width and scroll position.
 - **FR-002**: A mouse click anywhere on a bar control MUST reach that control, never a tile underneath.
-- **FR-003**: The upload page's batch footer is pinned the same way over photo previews; it MUST also be
-  drawn in front of the previews and its controls MUST receive their clicks.
+- **FR-003**: (Corrected at implement, decisions #6.) The upload page's batch footer is pinned the same
+  way, but the real upload page draws no photos in its batch items (filename placeholders only; preview
+  pictures appear only on the `/ui` catalogue pages), so nothing there can cover it. The shared fix MUST
+  live in the photo components themselves, so any page that does put photos under a pinned bar (the
+  catalogue pages included) gets the same result with no per-bar change.
 - **FR-004**: Modal dialogs opened from the bar (gallery picker, bulk delete confirm) MUST still cover
   the bar and keep it unreachable while open.
 - **FR-005**: Nothing else about the bar changes: its look, position, width, wording and selection
@@ -77,8 +80,8 @@ the bar, then click each bar control at a spot with a photo underneath: each cli
 - **SC-001**: With 2 photos ticked and photos behind the bar, 100% of sampled points across the bar
   land on the bar at 390, 800 and 1440 px (today photos take 33 of 40 samples at 1440 px and 35 of 40 at
   800 px).
-- **SC-002**: On the upload page with a batch in progress, 100% of sampled points across the batch
-  footer land on the footer.
+- **SC-002**: (Withdrawn at implement, decisions #6: the real upload page has no photos under its
+  footer; a check there passed on the unfixed code and so guards nothing.)
 - **SC-003**: The owner can click every bar control with photos behind it, at any width, first try.
 
 ## Assumptions
@@ -88,15 +91,15 @@ the bar, then click each bar control at a spot with a photo underneath: each cli
   picture, title strip and select circle are. Those draw over the bar wherever they meet it, and the
   topmost element also receives the click. Measured: 33/40 samples across the bar hit a photo at
   1440 px, 35/40 at 800 px, 0/40 at 390 px (that scroll position put a gap under the bar).
-- Blast radius: 2 pinned bottom bars in the admin site, the library selection bar
-  (`Components/Molecules/SelectionBar.razor.css:9`) and the upload batch footer
-  (`Components/Organisms/BatchFooter.razor.css:3`); the second is inferred from identical rules, not
-  observed live. The side panel (`AdminLayout.razor.css:78`) sits beside the grid, not over photos.
+- Blast radius: 1 affected bar, the library selection bar
+  (`Components/Molecules/SelectionBar.razor.css:9`). The upload batch footer
+  (`Components/Organisms/BatchFooter.razor.css:3`) has the same pinning, but the live upload page puts
+  no photos under it (corrected at implement, decisions #6). The side panel
+  (`AdminLayout.razor.css:78`) sits beside the grid, not over photos.
 - The existing check at `tests/Gallery.Web.Tests/LibraryBrowserTests.cs:588-590` samples only the
   centre of one button, with a dialog open; it cannot see this defect, which is why FR-006 adds one.
 - Constitution IX: the fix goes in the shared bar components, not in the library page.
 - Out of scope (owner, clarification): the bar's floating look and its being wider than the photo grid.
-- Severable seams: the batch footer fix (FR-003; cut it and the upload page keeps the overlap) and the
-  regression check (FR-006; cut it and the overlap can return unnoticed).
+- Severable seam: the regression check (FR-006; cut it and the overlap can return unnoticed).
 - No timing instrumentation is added: presentation only, no server work.
 - Feature 018 is fully merged into `main`, so this branch starts from `main`.

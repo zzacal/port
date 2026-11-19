@@ -1,0 +1,14 @@
+019 T004 non-vacuity: the new facts on today's code (before the isolation lines), 2026-11-18
+  Failed Gallery.Web.Tests.LayeringBrowserTests.Selection_bar_is_in_front_of_the_photos_and_takes_its_own_clicks(width: 390) [5 s]
+   390px: 3960 points on the bar are covered, e.g. scroll 0 at (36,498) hit img.; scroll 0 at (36,540) hit img.; scroll 0 at (36,582) hit img.; scroll 0 at (45,498) hit img.; scroll 0 at (45,540) hit img.
+  Failed Gallery.Web.Tests.LayeringBrowserTests.Selection_bar_is_in_front_of_the_photos_and_takes_its_own_clicks(width: 800) [3 s]
+   800px: 1632 points on the bar are covered, e.g. scroll 0 at (72,538) hit img.; scroll 0 at (72,560) hit img.; scroll 0 at (72,582) hit img.; scroll 0 at (90,538) hit img.; scroll 0 at (90,560) hit img.
+  Failed Gallery.Web.Tests.LayeringBrowserTests.Selection_bar_is_in_front_of_the_photos_and_takes_its_own_clicks(width: 1440) [1 s]
+   1440px: 544 points on the bar are covered, e.g. scroll 0 at (119,538) hit img.; scroll 0 at (119,560) hit img.; scroll 0 at (119,582) hit img.; scroll 0 at (153,538) hit img.; scroll 0 at (153,560) hit img.
+Failed!  - Failed:     4 (3 library rows + the upload fact, which failed only as vacuous at 390x500), Passed: 0, Duration: 10 s - Gallery.Web.Tests.dll (net10.0)
+
+Upload footer fact (dropped, decisions #6): PASSED on today's code at 390x300 with previews under the footer region;
+the real upload page renders no Picture in batch items (upload.js builds filename placeholders; Preview= is passed only on /ui catalogue pages), so the footer has no photo layers to lose to.
+
+019 T006 after the isolation lines (Picture .pic, Tile .cell):
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3 (390, 800, 1440: 0 points covered, Clear clicked through a photo spot clears the selection)

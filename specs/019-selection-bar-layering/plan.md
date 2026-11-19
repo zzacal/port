@@ -13,7 +13,7 @@ page, and the pinned but un-layered bar loses. Fix at the source (R-02): each co
 layers to itself (`isolation: isolate` on Picture's `.pic` and Tile's `.cell`). The pinned bars then
 paint above the photos with no number chosen to beat the tiles' numbers. Probe: 0 of 120 sample
 points covered at 390, 800 and 1440 px (today 96–108 of 120), select circle still on top of its photo.
-The upload batch footer is fixed by the same Picture line. One browser fact per bar guards it.
+One browser fact guards it. (The upload footer was planned with its own fact; implement found the live upload page puts no photos under it, decisions #6.)
 
 ## Technical Context
 
@@ -34,7 +34,7 @@ The upload batch footer is fixed by the same Picture line. One browser fact per 
 
 **Constraints**: existing tests unmodified (FR-007); the bar's look unchanged (FR-005)
 
-**Scale/Scope**: 2 CSS declarations, 2 browser facts
+**Scale/Scope**: 2 CSS declarations, 1 browser theory (3 widths)
 
 ## Constitution Check
 
@@ -44,7 +44,7 @@ The upload batch footer is fixed by the same Picture line. One browser fact per 
 | II Public visibility | PASS: no data or route change. Picture is also on public pages; isolation changes only what its own layers compete with, never layout (R-03). |
 | III Published images leak nothing | PASS: not touched. |
 | IV Performance | PASS (IV.1–2 justified N/A): no server work, no new request; request timing events unchanged. IV.5: the effect is visual, verified by real-browser measurement (T002, T003). |
-| V Minimal scope | PASS. V.4 additions beyond the literal request: (a) upload footer check: the fix itself costs nothing there (same Picture line); the fact is about 40 lines; benefit: the same defect on the upload page can't return unseen. (b) Library regression fact: today's only check samples one point in a gap and never saw this defect. Dropped as marginal: a z-index on the bars as a second guard (decisions #3). |
+| V Minimal scope | PASS. V.4 additions beyond the literal request: (a) upload footer check: dropped at implement, it passed on the unfixed code (decisions #6). (b) Library regression fact: today's only check samples one point in a gap and never saw this defect. Dropped as marginal: a z-index on the bars as a second guard (decisions #3). |
 | VI Official CLIs | PASS: no scaffolding. |
 | VII Design before code | PASS: the design record says nothing about layering; no deviation, no record edit. |
 | VIII Cost ceiling | PASS. |
@@ -72,7 +72,6 @@ verbatim in tasks.md).
 src/Gallery.Web/Components/Atoms/Picture.razor.css      .pic gains isolation: isolate
 src/Gallery.Web/Components/Molecules/Tile.razor.css     .cell gains isolation: isolate
 tests/Gallery.Web.Tests/LayeringBrowserTests.cs          new: library bar fact
-tests/Gallery.Web.Tests/UploadLayeringBrowserTests.cs    new: upload footer fact
 ```
 
 **Structure Decision**: new facts in new files, so every existing test file stays byte-identical.

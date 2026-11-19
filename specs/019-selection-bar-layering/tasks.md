@@ -13,7 +13,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Write `specs/019-selection-bar-layering/evidence/gate.sh <label>`: build `-warnaserror`, full suite
+- [X] T001 Write `specs/019-selection-bar-layering/evidence/gate.sh <label>`: build `-warnaserror`, full suite
   into `artifacts/`, print only `Passed!/Failed!` lines, restore earlier features' evidence dirs on exit
   (copy of 018's gate.sh with 019 paths, adding `specs/018-local-dev-signin/evidence` to the restore list).
 
@@ -21,7 +21,7 @@
 
 **Independent test**: both new facts green; by hand per quickstart.md.
 
-- [ ] T002 [P] [US1] New file `tests/Gallery.Web.Tests/LayeringBrowserTests.cs`, class `LayeringBrowserTests`,
+- [X] T002 [P] [US1] New file `tests/Gallery.Web.Tests/LayeringBrowserTests.cs`, class `LayeringBrowserTests`,
   `[Collection("library-browser")]`, `[Trait("Category","Browser")]`, ctor `(LibraryBrowserFixture fx)`.
   One `[Theory]` over widths 390, 800, 1440 (height 600): `site.ImagesAsync(16)`, open `/admin/library`,
   wait for `section.lib .selection-bar[data-script='ready']`, click the first two `label.select-mark`s,
@@ -31,7 +31,7 @@
   in the page, find a scroll position where some `.lib-tile .cell` lies under the centre of the bar's
   "Clear" button (scrollTo, re-measure); assert such a position exists; `page.Mouse.ClickAsync` at that
   point; assert the bar becomes hidden (`el.hidden`). Covers FR-001, FR-002, FR-006, SC-001, SC-003.
-- [ ] T003 [P] [US1] New file `tests/Gallery.Web.Tests/UploadLayeringBrowserTests.cs`, class
+- [X] T003 [P] [US1] DROPPED at T004 (decisions #6: passed on the unfixed code; the live upload page has no photos under its footer). New file `tests/Gallery.Web.Tests/UploadLayeringBrowserTests.cs`, class
   `UploadLayeringBrowserTests`, `[Collection]` and fixture as `UploadBrowserTests` uses (read its header),
   `[Trait("Category","Browser")]`. Open the upload page (`site.OpenUploadAsync()`), set files
   `orientation-6.jpg` and `gps-camera.jpg` on the page's file input (same way `UploadBrowserTests.Pick`
@@ -39,21 +39,21 @@
   390x500, then for scroll stops 0..max in 50 px steps sample `upload-batch > .batch-footer` exactly as
   T002 samples the bar; assert at least one stop had a `.bcell` overlapping the footer's box (so the fact
   is not vacuous). Covers FR-003, SC-002.
-- [ ] T004 [US1] Run T002 and T003 on today's code; both MUST fail. Save the failing lines to
+- [X] T004 [US1] Run T002 and T003 on today's code; both MUST fail. Save the failing lines to
   `specs/019-selection-bar-layering/evidence/non-vacuity.txt`. If either passes, the fact is wrong: fix
   the fact, not the code.
-- [ ] T005 [US1] The fix, verbatim:
+- [X] T005 [US1] The fix, verbatim:
   - `src/Gallery.Web/Components/Atoms/Picture.razor.css`, in `.pic { … }` after `width: 100%;`:
     `isolation: isolate; /* 019: the layers below stay inside the picture, so a pinned bar is never under a photo */`
   - `src/Gallery.Web/Components/Molecules/Tile.razor.css`, in `.cell { … }` after `margin-bottom: 8px;`:
     `isolation: isolate; /* 019: the overlay and title layers stay inside the tile (research R-02) */`
-- [ ] T006 [US1] Re-run T002 and T003: both green. Append the passing lines to `evidence/non-vacuity.txt`.
+- [X] T006 [US1] Re-run T002 and T003: both green. Append the passing lines to `evidence/non-vacuity.txt`.
 
 ## Phase 3: Polish
 
-- [ ] T007 `bash specs/019-selection-bar-layering/evidence/gate.sh final`: build clean, full suite green,
-  counts = baseline + 4 (3 theory rows + 1 fact). Save the Passed lines to `evidence/gate-final.txt`.
-- [ ] T008 Live check on the dev stack in a real browser (as `evidence/probe-isolation.txt`, without
+- [X] T007 `bash specs/019-selection-bar-layering/evidence/gate.sh final`: build clean, full suite green,
+  counts = baseline + 3 (3 theory rows). Save the Passed lines to `evidence/gate-final.txt`.
+- [X] T008 Live check on the dev stack in a real browser (as `evidence/probe-isolation.txt`, without
   injection): 0/120 covered at 390, 800, 1440; screenshot to `evidence/after-1440.png`; append to
   `evidence/probe-isolation.txt`.
 

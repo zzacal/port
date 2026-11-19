@@ -20,3 +20,10 @@ Other Picture users with the isolation rule injected:
   sign-in card (SignInCard.razor.css:31-33): the card has z-index 1 over a background Picture. Today it ties with
   the picture's own z-index 1 layer and wins on page order; with the picture contained, it wins outright. Not
   probed live (needs a signed-out context); reasoned from the rules.
+
+T008 live check after the fix (source change, no injection), same method as above:
+  computed isolation on .cell / .pic: isolate / isolate at every width
+  390x844   0/120 mark ok
+  800x1000  0/120 mark ok
+  1440x900  0/120 mark ok
+  screenshot: after-1440.png (bar in front of the bottom photo row)
