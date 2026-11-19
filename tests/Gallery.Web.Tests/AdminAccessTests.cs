@@ -165,16 +165,19 @@ public class AdminAccessTests(MongoFixture mongo) : IAsyncLifetime
     // moves to /admin/not-built. No other assertion in this file changed.
 
     [Fact]
-    public async Task Owner_GetAdminUpload_and_library_return_200()
+    public async Task Owner_gets_the_workspace_and_old_pages_answer_404()
     {
         var host = await CreateHostWithClaimedOwner();
         await using var _ = host;
 
+        var workspace = await host.GetAsync("/admin");
+        Assert.Equal(HttpStatusCode.OK, workspace.StatusCode);
+
         var resp = await host.GetAsync("/admin/upload");
-        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
 
         var library = await host.GetAsync("/admin/library");
-        Assert.Equal(HttpStatusCode.OK, library.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, library.StatusCode);
 
         var notBuilt = await host.GetAsync("/admin/not-built");
         Assert.Equal(HttpStatusCode.NotFound, notBuilt.StatusCode);

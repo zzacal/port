@@ -36,6 +36,14 @@ public class LibraryDeleteTests(S3ProxyFixture s3, MongoFixture mongo) : IClassF
     private static int DeleteTimings(LibraryHost h) =>
         h.LogLines.Count(l => l.StartsWith("op.timing library.image.delete ", StringComparison.Ordinal));
 
+    /// <summary>The JSON answer's root element (020 TI-11).</summary>
+    private static async Task<System.Text.Json.JsonElement> JsonAsync(HttpResponseMessage resp)
+    {
+        using var doc = await UploadHost.ParseAsync(resp);
+        Assert.NotNull(doc);
+        return doc!.RootElement.Clone();
+    }
+
     [Fact]
     public async Task L5_deletes_the_photo_everywhere_and_logs_one_owner_action()
     {
@@ -46,9 +54,12 @@ public class LibraryDeleteTests(S3ProxyFixture s3, MongoFixture mongo) : IClassF
         var b = await GalleryHtml.GalleryAsync(h, "Studio", [img.Id]);
         await h.SettleAsync();
 
-        var resp = await h.PostFormAsync($"/admin/library/images/{img.Id}/delete", [F("page", "1")]);
-        Assert.Equal(HttpStatusCode.SeeOther, resp.StatusCode);
-        Assert.Equal("/admin/library?page=1&deleted=1&leftovers=0", resp.Headers.Location?.ToString());
+        var resp = await h.PostJsonAsync("/admin/api/photos/delete", new { ids = new[] { img.Id } });
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        var json = await JsonAsync(resp);
+        Assert.Equal((1, 0, 0, "1 photo deleted."),
+            (json.GetProperty("deleted").GetInt32(), json.GetProperty("leftovers").GetInt32(), json.GetProperty("failed").GetInt32(),
+             json.GetProperty("message").GetString()));
         await h.SettleAsync();
 
         Assert.Equal(0, await h.Images.CountDocumentsAsync(i => i.Id == img.Id));
@@ -61,14 +72,10 @@ public class LibraryDeleteTests(S3ProxyFixture s3, MongoFixture mongo) : IClassF
         Assert.Single(h.LogLines, l => l.StartsWith($"owner.action image.delete {img.Id} ", StringComparison.Ordinal));
         Assert.Equal(1, DeleteTimings(h));
 
-        var lib = await GalleryHtml.GetOkAsync(h, resp.Headers.Location!.ToString());
-        Assert.Equal("1 deleted", LibraryHtml.Status(lib));
-        Assert.Equal([keep.Id], LibraryHtml.TileIds(lib));
-
-        // Repeat on the already-deleted id → 303 deleted=0, nothing more logged or purged.
-        var again = await h.PostFormAsync($"/admin/library/images/{img.Id}/delete", [F("page", "1")]);
-        Assert.Equal(HttpStatusCode.SeeOther, again.StatusCode);
-        Assert.Equal("/admin/library?page=1&deleted=0&leftovers=0", again.Headers.Location?.ToString());
+        // Repeat on the already-deleted id → 200 deleted 0, nothing more logged or purged.
+        var again = await h.PostJsonAsync("/admin/api/photos/delete", new { ids = new[] { img.Id } });
+        Assert.Equal(HttpStatusCode.OK, again.StatusCode);
+        Assert.Equal(0, (await JsonAsync(again)).GetProperty("deleted").GetInt32());
         Assert.Empty(await h.SettleAsync());
         Assert.Single(h.LogLines, l => l.StartsWith($"owner.action image.delete {img.Id} ", StringComparison.Ordinal));
     }
@@ -90,9 +97,10 @@ public class LibraryDeleteTests(S3ProxyFixture s3, MongoFixture mongo) : IClassF
         target.Key = imgs[1].Derivatives[0].Avif;
         var before = DeleteTimings(h);
 
-        var resp = await h.PostFormAsync("/admin/library/delete", ids.Select(id => F("ids", id)).Append(F("page", "1")));
-        Assert.Equal(HttpStatusCode.SeeOther, resp.StatusCode);
-        Assert.Equal("/admin/library?page=1&deleted=3&leftovers=1&failed=0", resp.Headers.Location?.ToString());
+        var resp = await h.PostJsonAsync("/admin/api/photos/delete", new { ids });
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        var json = await JsonAsync(resp);
+        Assert.Equal((3, 1, 0), (json.GetProperty("deleted").GetInt32(), json.GetProperty("leftovers").GetInt32(), json.GetProperty("failed").GetInt32()));
         await h.SettleAsync();
 
         Assert.Equal(3, DeleteTimings(h) - before);
@@ -100,8 +108,7 @@ public class LibraryDeleteTests(S3ProxyFixture s3, MongoFixture mongo) : IClassF
         Assert.Equal(3, h.LogLines.Count(l => l.StartsWith("owner.action image.delete ", StringComparison.Ordinal)));
         Assert.Single(h.LogLines, l => l.StartsWith("library.delete_leftover ", StringComparison.Ordinal));
 
-        var lib = await GalleryHtml.GetOkAsync(h, resp.Headers.Location!.ToString());
-        Assert.Equal("3 deleted · 1 files could not be removed and were logged", LibraryHtml.Status(lib));
+        Assert.Equal("3 photos deleted. 1 files could not be removed and were logged.", json.GetProperty("message").GetString());
     }
 
     [Fact]
@@ -111,40 +118,12 @@ public class LibraryDeleteTests(S3ProxyFixture s3, MongoFixture mongo) : IClassF
         var ids = new List<string>();
         for (var i = 0; i < 3; i++) ids.Add((await h.InsertUploadedImageAsync(files: false)).Id);
 
-        var resp = await h.PostFormAsync("/admin/library/delete", ids.Select(id => F("ids", id)).Append(F("page", "1")));
+        var resp = await h.PostJsonAsync("/admin/api/photos/delete", new { ids });
         Assert.Equal(HttpStatusCode.UnprocessableEntity, resp.StatusCode);
-        Assert.Equal("Select at most 2 photos.", LibraryHtml.Status(await LibraryHtml.BodyAsync(resp)));
+        Assert.Equal("Select at most 2 photos.", (await JsonAsync(resp)).GetProperty("message").GetString());
         Assert.Equal(3, await h.Images.CountDocumentsAsync(i => ids.Contains(i.Id) && i.DeletingAt == null));
         Assert.Equal(0, DeleteTimings(h));
         Assert.DoesNotContain(h.LogLines, l => l.StartsWith("owner.action image.delete", StringComparison.Ordinal));
         Assert.Empty(await h.SettleAsync());
-    }
-
-    /// <summary>The markup without Razor's scoped-CSS attributes (b-xxxxxxxxxx) and with … “ ” un-escaped, so assertions read as written.</summary>
-    private static string Unscoped(string html) => System.Text.RegularExpressions.Regex.Replace(
-        System.Text.RegularExpressions.Regex.Replace(html, " b-[a-z0-9]{10}(?=[ >/])", ""),
-        "&#x(2026|201C|201D);", m => ((char)Convert.ToInt32(m.Groups[1].Value, 16)).ToString());
-
-    [Fact]
-    public async Task The_bulk_confirm_copy_matches_the_contract_and_is_outlined_danger()
-    {
-        await using var h = await LibraryHost.CreateAsync(mongo, s3);
-        await h.InsertUploadedImageAsync(files: false);
-
-        var html = await GalleryHtml.GetOkAsync(h, "/admin/library");
-        html = Unscoped(html);
-        var bulk = LibraryHtml.Blocks(html, "dialog", "danger-dialog").Single();
-        Assert.Contains("id=\"lib-bulk-confirm\"", bulk);
-        Assert.Contains("This removes them from every gallery and deletes the original files. It can't be undone.", bulk);
-        Assert.Contains(">Delete 0 photos?</h2>", bulk);
-        // The bar's "Delete…" is the only trigger (no second identical control); the dialog has
-        // Cancel first and the outlined danger action last, which library.js renames "Delete {n} photos".
-        Assert.Equal(1, Guards.Count(html, "Delete…"));
-        Assert.DoesNotContain("danger-trigger", html);
-        Assert.Matches("<button [^>]*class=\"btn btn-quiet danger-cancel\" type=\"button\"[^>]*>Cancel</button>\\s*<button class=\"btn btn-danger\"[^>]*type=\"submit\"[^>]*form=\"lib-delete\"[^>]*>\\s*Delete photos\\s*</button>", bulk);
-        Assert.DoesNotContain("btn-primary", bulk);
-        Assert.DoesNotContain("lib-bulk-delete", html);
-        Assert.DoesNotContain("<details", html);
-        Assert.Matches("<form id=\"lib-delete\" method=\"post\" action=\"/admin/library/delete\" hidden[ >]", html);
     }
 }

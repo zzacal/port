@@ -16,7 +16,7 @@ this document after the claim (I.4).
 
 ### Image (collection `images`)
 
-An Image exists only after its batch is confirmed. It has no state field (FR-017).
+An Image exists only after its upload item has passed every check and joined (feature 020; before it, after its batch was confirmed). It has no state field (FR-017).
 
 | Field | Type | Rule |
 |---|---|---|
@@ -73,18 +73,20 @@ A unique partial index on `{state:"open"}` enforces a single open batch (FR-029,
 | Field | Type | Rule |
 |---|---|---|
 | _id | id | |
-| state | `open` \| `confirmed` \| `discarded` | A unique partial index on `{state:"open"}` enforces a single open batch (FR-029). |
+| state | `open` | A unique partial index on `{state:"open"}` enforces a single open batch (FR-029). Feature 020 writes only `open`; `confirmed` and `discarded` documents from before stay, inert. |
 | items | BatchItem[] | |
+| destination | id? | Feature 020. The gallery this upload's photos also join. Set by the first registration while the batch has no items and no `added` ids; unset when that gallery is gone at a join; cleared on close. |
+| added | id[] | Feature 020. Images joined in this upload, oldest first; cleared on close. |
 | createdAt, updatedAt | datetime | |
 
 ### BatchItem
 
 | Field | Type | Rule |
 |---|---|---|
-| itemId | id | Becomes the Image `_id` when the batch is confirmed. |
+| itemId | id | Becomes the Image `_id` when the item joins (feature 020; before it, when the batch was confirmed). |
 | fileName | string | Shown when the owner is asked to pick the file again (FR-027). |
 | fileSize | int | 20 MB at most (FR-014). |
-| state | `queued` \| `processing` \| `uploading` \| `succeeded` \| `failed` \| `interrupted` | `interrupted` is computed on read from `heartbeatAt`, never stored (D-11). |
+| state | `queued` \| `processing` \| `uploading` \| `succeeded` \| `joining` \| `failed` \| `interrupted` | `interrupted` is computed on read from `heartbeatAt`, never stored, and never reported for a `joining` item (D-11). `joining` was added by feature 020. |
 | reason | string? | Set when the state is `failed`. |
 | masterStored | bool | Lets Restart reuse the staged master (FR-027). |
 | derivativesStored | key[] | |
@@ -100,6 +102,9 @@ stateDiagram-v2
     queued --> processing
     processing --> uploading
     uploading --> succeeded
+    succeeded --> joining : join claims the item (feature 020)
+    joining --> [*] : joined, the item leaves the batch and the Image exists
+    joining --> failed : a staged file changed after validation
     queued --> failed : error (with reason)
     processing --> failed : error (with reason)
     uploading --> failed : error (with reason)
@@ -121,13 +126,13 @@ stateDiagram-v2
 ```mermaid
 stateDiagram-v2
     [*] --> open
-    open --> confirmed : all items succeeded and at least one item present (FR-028)
-    open --> discarded : always allowed — all staged keys are deleted (FR-029)
+    open --> open : close (feature 020) — refused while a photo is working; drops failed and interrupted items and their staged keys
 ```
 
-On confirm, each item's derivatives and master are copied out of staging (see the Storage Layout
-section below), its Image document is created, and the batch is marked confirmed. A confirm that
-crashes partway through can be re-run (D-11).
+Amended by feature 020: there is no confirm and no discard, and the batch stays `open`. Each
+item joins on its own: its derivatives and master are copied out of staging (see the Storage
+Layout section below) and its Image document is created. A join that crashes partway through
+can be re-run (D-11). Before feature 020 the batch moved to `confirmed` or `discarded`.
 
 ### Storage Layout
 
@@ -135,9 +140,9 @@ There are two R2 buckets (D-07). Only `public` is reachable from outside, and on
 `img.<domain>` (D-19). Keys below are `bucket/key`.
 
 ```
-private/staging/{batchId}/{itemId}/{attemptId}/master.jpg         replaced on confirm by:
+private/staging/{batchId}/{itemId}/{attemptId}/master.jpg         replaced on join by:
 private/masters/{imageId}.jpg                                     kept permanently; Infrequent Access after 30 days
-private/staging/{batchId}/{itemId}/{attemptId}/{w}.{avif|webp}    deleted after confirm
+private/staging/{batchId}/{itemId}/{attemptId}/{w}.{avif|webp}    deleted after join
 public/{sha256-16hex}.{avif|webp}                                 immutable (IV.21)
 ```
 
@@ -145,13 +150,13 @@ Derivative names are content hashes, so their addresses are unguessable and cont
 (II.3, FR-011). They are stored with object metadata
 `Cache-Control: public, max-age=31536000, immutable`, which the edge respects.
 
-On confirm, for each item:
+On join, for each item (on confirm before feature 020):
 
 1. Copy the staged derivatives into the `public` bucket.
 2. Copy the master into `private/masters/`.
 3. Delete the staged objects.
 
-These are server-side copies inside R2. The confirm step is idempotent per item.
+These are server-side copies inside R2. The join is idempotent per item.
 
 A lifecycle rule deletes `private/staging/` objects 7 days after creation. This is the backstop
 sweep for orphaned files (FR-030).

@@ -1,0 +1,99 @@
+/* Feature 020 K6. Existing tokens only, no size literal; the box borrows the Input atom's rule colour. */
+.ws-checks {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--space-s) / 4);
+}
+
+.ws-checks-find {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--space-s) / 4);
+}
+
+.ws-checks-head {
+    font-size: var(--type-caption);
+    font-weight: 600;
+}
+
+.ws-checks-q {
+    min-height: var(--tap);
+    box-sizing: border-box;
+    padding: 0 calc(var(--space-s) / 2);
+    border: thin solid var(--color-rule);
+    border-radius: calc(var(--space-s) / 4);
+    background: var(--color-bg);
+    font: inherit;
+    font-size: var(--type-body);
+}
+
+.ws-checks-q:focus-visible {
+    outline: calc(var(--space-s) / 8) solid var(--color-text);
+    outline-offset: calc(var(--space-s) / 8);
+}
+
+.ws-checks-box {
+    display: flex;
+    flex-direction: column;
+    border: thin solid var(--color-rule);
+    border-radius: calc(var(--space-s) / 4);
+}
+
+.ws-checks-row {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--space-s) / 2);
+    min-height: var(--tap);
+    padding: 0 calc(var(--space-s) / 2);
+    cursor: pointer;
+    font-size: var(--type-body);
+}
+
+.ws-checks-row[hidden] {
+    display: none;
+}
+
+.ws-checks-row ~ .ws-checks-row {
+    border-top: thin solid var(--color-rule);
+}
+
+.ws-checks-row:hover {
+    background: var(--color-surface);
+}
+
+.ws-checks-row input {
+    margin: 0;
+    accent-color: var(--color-text);
+}
+
+.ws-checks-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ws-checks-vis {
+    color: var(--color-muted);
+    font-size: var(--type-caption);
+}
+
+.ws-checks-box ::deep .ws-checks-new {
+    justify-content: flex-start;
+    border-top: thin solid var(--color-rule);
+}
+
+.ws-checks-box ::deep .ws-checks-new[hidden] {
+    display: none;
+}
+
+.ws-checks-msg {
+    margin: 0;
+    color: var(--color-danger);
+    font-size: var(--type-caption);
+}
+
+.ws-checks-msg:empty {
+    display: none;
+}

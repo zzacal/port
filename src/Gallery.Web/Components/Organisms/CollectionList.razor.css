@@ -1,0 +1,119 @@
+/* Feature 020 K9. Existing tokens only, no size literal: sizes are --tap and fractions of --space-s. */
+.ws-collections {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--space-s) / 4);
+    min-width: 0;
+    font-size: var(--type-body);
+}
+
+.ws-brand {
+    padding: 0 calc(var(--space-s) / 2) var(--space-s);
+    color: var(--color-text);
+    font-size: var(--type-brand);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.ws-brand-sub {
+    color: var(--color-muted);
+    font-weight: 400;
+}
+
+.ws-coll-row {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--space-s) / 2);
+    min-height: var(--tap);
+    padding: 0 calc(var(--space-s) / 2);
+    border-radius: calc(var(--space-s) / 4);
+    color: var(--color-text);
+    text-decoration: none;
+}
+
+.ws-coll-row:hover {
+    background: var(--color-bg);
+}
+
+.ws-coll-row[aria-current="page"] {
+    background: var(--color-bg);
+    font-weight: 600;
+    box-shadow: 0 0 0 thin var(--color-rule);
+}
+
+.ws-coll-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ws-coll-count {
+    color: var(--color-muted);
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Drag target: photos dropped here join the gallery. */
+.ws-over {
+    background: var(--color-text);
+    color: var(--color-bg);
+}
+
+.ws-over .ws-coll-count {
+    color: var(--color-bg);
+}
+
+/* Reorder position: the dragged gallery lands before this row. */
+.ws-before {
+    box-shadow: 0 calc(var(--space-s) / -4) 0 var(--color-text);
+}
+
+.ws-coll-head {
+    margin: var(--space-s) 0 0;
+    padding: 0 calc(var(--space-s) / 2);
+    color: var(--color-muted);
+    font-size: var(--type-caption);
+    font-weight: 400;
+    text-transform: uppercase;
+}
+
+.ws-coll-note {
+    display: block;
+    text-transform: none;
+}
+
+.ws-naming {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--space-s) / 4);
+    padding: 0 calc(var(--space-s) / 2);
+    font-size: var(--type-caption);
+    color: var(--color-muted);
+}
+
+.ws-naming-input {
+    min-height: var(--tap);
+    padding: 0 calc(var(--space-s) / 2);
+    border: thin solid var(--color-text);
+    border-radius: calc(var(--space-s) / 4);
+    font: inherit;
+    font-size: var(--type-body);
+    color: var(--color-text);
+    background: var(--color-bg);
+}
+
+.ws-coll-foot {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: calc(var(--space-s) / 4);
+    margin-top: var(--space-s);
+    padding-top: var(--space-s);
+    border-top: thin solid var(--color-rule);
+}
+
+.ws-signout {
+    margin: 0;
+}

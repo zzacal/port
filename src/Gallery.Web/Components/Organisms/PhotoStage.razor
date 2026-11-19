@@ -1,0 +1,20 @@
+@* Feature 020 K11: the large view. A bar (back, position, Previous, Next), then an empty frame the
+   script fills with the cloned <picture>. Previous is unavailable on the first photo, Next on the last.
+   The buttons carry name="stage" and value back|previous|next for the script. *@
+<div class="ws-stage">
+    <div class="ws-stage-bar">
+        <Button Variant="ButtonVariant.Quiet" Type="button" Name="stage" Value="back">← @BackLabel</Button>
+        <span class="ws-stage-pos">@Position of @Total</span>
+        <span class="ws-stage-nav">
+            <Button Type="button" Name="stage" Value="previous" Disabled="@(Position <= 1)">Previous</Button>
+            <Button Type="button" Name="stage" Value="next" Disabled="@(Position >= Total)">Next</Button>
+        </span>
+    </div>
+    <div class="ws-stage-frame"></div>
+</div>
+
+@code {
+    [Parameter] public int Position { get; set; } = 1;
+    [Parameter] public int Total { get; set; } = 1;
+    [Parameter, EditorRequired] public string BackLabel { get; set; } = "";
+}

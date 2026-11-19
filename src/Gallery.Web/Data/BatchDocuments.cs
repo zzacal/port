@@ -24,6 +24,8 @@ public static class ItemStates
     public const string Processing = "processing";
     public const string Uploading = "uploading";
     public const string Succeeded = "succeeded";
+    /// <summary>020: claimed by a join (U12). Never aged into interrupted; U8 and U9 refuse it.</summary>
+    public const string Joining = "joining";
     public const string Failed = "failed";
     public const string Interrupted = "interrupted";
 }
@@ -36,7 +38,13 @@ public sealed class BatchDoc
     [BsonElement("createdAt")] public DateTime CreatedAt { get; set; }
     [BsonElement("updatedAt")] public DateTime UpdatedAt { get; set; }
 
+    // 020 data-model "Upload set": the gallery photos of this set also join (omitted when unset),
+    // and the image ids joined in this set, oldest first.
+    [BsonElement("destination")] [BsonIgnoreIfNull] public string? Destination { get; set; }
+    [BsonElement("added")] public List<string> Added { get; set; } = [];
+
     // Omitted while unset. A Mongo filter `confirmStartedAt: null` matches the missing field.
+    // 020: the four fields below are no longer written; documents from before keep them.
     [BsonElement("confirmStartedAt")] [BsonIgnoreIfNull] public DateTime? ConfirmStartedAt { get; set; }
     [BsonElement("confirmedAt")]      [BsonIgnoreIfNull] public DateTime? ConfirmedAt      { get; set; }
     [BsonElement("discardedAt")]      [BsonIgnoreIfNull] public DateTime? DiscardedAt      { get; set; }

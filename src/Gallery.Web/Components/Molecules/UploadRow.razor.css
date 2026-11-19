@@ -1,0 +1,40 @@
+/* Feature 020 K7. Existing tokens only, no size literal. */
+.ws-up {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--space-s) / 4);
+    min-width: 0;
+    font-size: var(--type-caption);
+}
+
+.ws-up-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ws-up-state {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: calc(var(--space-s) / 2);
+}
+
+.ws-up-muted {
+    color: var(--color-muted);
+}
+
+.ws-up-ok {
+    color: var(--color-success);
+}
+
+.ws-up-reason {
+    color: var(--color-danger);
+}
+
+.ws-up-bar {
+    display: block;
+    width: 100%;
+    height: calc(var(--space-s) / 4);
+    accent-color: var(--color-text);
+}

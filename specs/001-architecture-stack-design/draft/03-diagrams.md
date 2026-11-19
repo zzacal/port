@@ -45,14 +45,14 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-  Admin["Admin page"]
+  Admin["Workspace upload tray: destination named first"]
   Worker["Web Worker - decode, resize, encode, ThumbHash"]
   AppPresign["App Service presign"]
   R2Staging["R2 private/staging"]
   AppComplete["App Service complete"]
   AppInsights["Application Insights"]
   ItemOK["Item succeeded"]
-  AppConfirm["App Service confirm batch"]
+  AppJoin["App Service join, one photo"]
   R2Final["R2 public and private/masters"]
   Atlas["MongoDB Atlas"]
   CFEdge["Cloudflare Edge purge and warm"]
@@ -65,10 +65,10 @@ flowchart TD
   AppComplete -->|"ranged GET for validation"| R2Staging
   AppComplete -->|"log op.timing events"| AppInsights
   AppComplete -->|"validation passed"| ItemOK
-  ItemOK -->|"owner presses Confirm"| AppConfirm
-  AppConfirm -->|"copy"| R2Final
-  AppConfirm -->|"Image documents created"| Atlas
-  AppConfirm -->|"purge and warm"| CFEdge
+  ItemOK -->|"page calls join at once, no confirm"| AppJoin
+  AppJoin -->|"copy"| R2Final
+  AppJoin -->|"Image document created, added to the destination gallery if any"| Atlas
+  AppJoin -->|"purge and warm, public destination only"| CFEdge
 ```
 
 ### Diagram: Owner sign-in and claim

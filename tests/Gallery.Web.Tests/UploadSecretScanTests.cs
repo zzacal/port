@@ -62,7 +62,7 @@ public class UploadSecretScanTests : IClassFixture<MongoFixture>, IAsyncLifetime
         Assert.Equal(HttpStatusCode.OK, u4.StatusCode);
         scanned.Add(("POST /admin/upload/items/{itemId}/master (U4)", await u4.Content.ReadAsStringAsync()));
 
-        foreach (var route in new[] { "/admin/upload", "/admin/upload/state" })
+        foreach (var route in new[] { "/admin", "/admin/upload/state" })
         {
             var resp = await host.GetAsync(route);
             Assert.True(resp.StatusCode == HttpStatusCode.OK, $"GET {route} did not answer 200");
@@ -96,7 +96,7 @@ public class UploadSecretScanTests : IClassFixture<MongoFixture>, IAsyncLifetime
         Assert.True(secret == _s3.StorageOptions.SecretAccessKey, "the host secret is not the fixture's");
 
         var scanned = await CollectAsync(host);
-        // 4 route bodies (U3, U4, U1, U2) plus every admin-asset file.
+        // 4 route bodies (U3, U4, W1, U2) plus every admin-asset file.
         Assert.Equal(4 + Directory.GetFiles(Path.Combine(Render.WebRoot, "admin-assets"), "*", SearchOption.AllDirectories).Length,
             scanned.Count);
 

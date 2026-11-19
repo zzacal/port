@@ -1,0 +1,24 @@
+<UiLayout Title="GalleryChecklist">
+    <Specimen Label="Unticked" Width="w-320"><GalleryChecklist Galleries="Unticked" /></Specimen>
+    <Specimen Label="Ticked" Width="w-320"><GalleryChecklist Galleries="Ticked" /></Specimen>
+    <Specimen Label="Partly ticked" Note="Some of the selected photos are in Birds." Width="w-320"><GalleryChecklist Galleries="Partly" /></Specimen>
+    <Specimen Label="Narrowed" Note="Typed “coa”." Width="w-320"><GalleryChecklist Galleries="Unticked" Query="coa" /></Specimen>
+    <Specimen Label="Offering a new gallery" Note="Typed “Night sky”." Width="w-320"><GalleryChecklist Galleries="Unticked" Query="Night sky" /></Specimen>
+    <Specimen Label="No galleries" Width="w-320"><GalleryChecklist Galleries="None" /></Specimen>
+</UiLayout>
+
+@code {
+    private static readonly IReadOnlyList<ChecklistGallery> Unticked =
+    [
+        new("gal-coast", "Coast", true), new("gal-birds", "Birds", true), new("gal-coastline", "Coastline", false), new("gal-desert", "Desert", false),
+    ];
+    private static readonly IReadOnlyList<ChecklistGallery> Ticked =
+    [
+        new("gal-coast", "Coast", true, ChecklistTick.All), new("gal-birds", "Birds", true), new("gal-coastline", "Coastline", false, ChecklistTick.All), new("gal-desert", "Desert", false),
+    ];
+    private static readonly IReadOnlyList<ChecklistGallery> Partly =
+    [
+        new("gal-coast", "Coast", true, ChecklistTick.All), new("gal-birds", "Birds", true, ChecklistTick.Some), new("gal-coastline", "Coastline", false), new("gal-desert", "Desert", false),
+    ];
+    private static readonly IReadOnlyList<ChecklistGallery> None = [];
+}

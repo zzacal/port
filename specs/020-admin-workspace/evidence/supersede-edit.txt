@@ -1,0 +1,121 @@
+OK specs/008-upload-pipeline/spec.md Clarification 1
+OK specs/008-upload-pipeline/spec.md FR-013
+OK specs/008-upload-pipeline/spec.md FR-030
+OK specs/008-upload-pipeline/spec.md FR-031
+OK specs/008-upload-pipeline/spec.md FR-032
+OK specs/008-upload-pipeline/spec.md FR-033
+OK specs/008-upload-pipeline/spec.md FR-034
+OK specs/009-library-galleries/spec.md Clarification 2
+OK specs/009-library-galleries/spec.md Clarification 4
+OK specs/009-library-galleries/spec.md FR-002
+OK specs/009-library-galleries/spec.md FR-004
+OK specs/009-library-galleries/spec.md FR-005
+OK specs/009-library-galleries/spec.md FR-006
+OK specs/009-library-galleries/spec.md FR-007
+OK specs/009-library-galleries/spec.md FR-008
+OK specs/009-library-galleries/spec.md FR-009
+OK specs/009-library-galleries/spec.md FR-011
+OK specs/009-library-galleries/spec.md FR-018
+OK specs/009-library-galleries/spec.md FR-019
+OK specs/009-library-galleries/spec.md FR-020
+OK specs/009-library-galleries/spec.md FR-021
+OK specs/009-library-galleries/spec.md FR-022
+OK specs/009-library-galleries/spec.md FR-023
+OK specs/009-library-galleries/spec.md FR-024
+OK specs/009-library-galleries/spec.md FR-025
+OK specs/009-library-galleries/spec.md FR-027
+OK specs/009-library-galleries/spec.md FR-029
+OK specs/010-navigation-improvements/spec.md Clarification 5
+OK specs/010-navigation-improvements/spec.md FR-011
+OK specs/010-navigation-improvements/spec.md SC-009
+OK specs/010-navigation-improvements/spec.md Owner review 1 (admin part)
+OK specs/014-gallery-combobox/spec.md Clarification 1
+OK specs/014-gallery-combobox/spec.md Clarification 2
+OK specs/014-gallery-combobox/spec.md Clarification 3
+OK specs/014-gallery-combobox/spec.md FR-001
+OK specs/014-gallery-combobox/spec.md FR-002
+OK specs/014-gallery-combobox/spec.md FR-003
+OK specs/014-gallery-combobox/spec.md FR-004
+OK specs/014-gallery-combobox/spec.md FR-005
+OK specs/014-gallery-combobox/spec.md FR-006
+OK specs/014-gallery-combobox/spec.md FR-007
+OK specs/014-gallery-combobox/spec.md FR-008
+OK specs/014-gallery-combobox/spec.md FR-009
+OK specs/014-gallery-combobox/spec.md FR-010
+OK specs/014-gallery-combobox/spec.md FR-011
+OK specs/014-gallery-combobox/spec.md FR-012
+OK specs/014-gallery-combobox/spec.md FR-015
+OK specs/014-gallery-combobox/spec.md FR-018
+OK specs/014-gallery-combobox/spec.md FR-020
+OK specs/014-gallery-combobox/spec.md FR-021
+OK specs/015-tile-icon-controls/spec.md Clarification Q1
+OK specs/015-tile-icon-controls/spec.md Clarification Q2
+OK specs/015-tile-icon-controls/spec.md Owner direction
+OK specs/015-tile-icon-controls/spec.md FR-001
+OK specs/015-tile-icon-controls/spec.md FR-002
+OK specs/015-tile-icon-controls/spec.md FR-003
+OK specs/015-tile-icon-controls/spec.md FR-005
+OK specs/015-tile-icon-controls/spec.md FR-006
+OK specs/015-tile-icon-controls/spec.md FR-007
+OK specs/015-tile-icon-controls/spec.md FR-008
+OK specs/015-tile-icon-controls/spec.md FR-009
+OK specs/015-tile-icon-controls/spec.md FR-010
+OK specs/015-tile-icon-controls/spec.md FR-011
+OK specs/015-tile-icon-controls/spec.md FR-012
+OK specs/015-tile-icon-controls/spec.md FR-013
+OK specs/015-tile-icon-controls/spec.md FR-014
+OK specs/015-tile-icon-controls/spec.md FR-015
+OK specs/015-tile-icon-controls/spec.md FR-016
+OK specs/015-tile-icon-controls/spec.md FR-017
+OK specs/015-tile-icon-controls/spec.md FR-018
+OK specs/015-tile-icon-controls/spec.md FR-019
+OK specs/015-tile-icon-controls/spec.md FR-020
+OK specs/015-tile-icon-controls/spec.md FR-021
+OK specs/015-tile-icon-controls/spec.md FR-022
+OK specs/015-tile-icon-controls/spec.md FR-023
+OK specs/015-tile-icon-controls/spec.md FR-025
+OK specs/016-galleries-list-icons/spec.md Clarification Q2
+OK specs/016-galleries-list-icons/spec.md Clarification Q1
+OK specs/016-galleries-list-icons/spec.md FR-001
+OK specs/016-galleries-list-icons/spec.md FR-002
+OK specs/016-galleries-list-icons/spec.md FR-003
+OK specs/016-galleries-list-icons/spec.md FR-004
+OK specs/016-galleries-list-icons/spec.md FR-005
+OK specs/016-galleries-list-icons/spec.md FR-006
+OK specs/016-galleries-list-icons/spec.md FR-007
+OK specs/016-galleries-list-icons/spec.md FR-008
+OK specs/016-galleries-list-icons/spec.md FR-009
+OK specs/016-galleries-list-icons/spec.md FR-010
+OK specs/016-galleries-list-icons/spec.md FR-011
+OK specs/016-galleries-list-icons/spec.md FR-012
+OK specs/016-galleries-list-icons/spec.md FR-014
+OK specs/016-galleries-list-icons/spec.md FR-015
+OK specs/017-photo-edit-screen/spec.md FR-001
+OK specs/017-photo-edit-screen/spec.md FR-002
+OK specs/017-photo-edit-screen/spec.md FR-003
+OK specs/017-photo-edit-screen/spec.md FR-004
+OK specs/017-photo-edit-screen/spec.md FR-005
+OK specs/017-photo-edit-screen/spec.md FR-006
+OK specs/017-photo-edit-screen/spec.md FR-007
+OK specs/017-photo-edit-screen/spec.md FR-008
+OK specs/017-photo-edit-screen/spec.md FR-009
+OK specs/017-photo-edit-screen/spec.md FR-010
+OK specs/017-photo-edit-screen/spec.md FR-012
+OK specs/017-photo-edit-screen/spec.md FR-013
+OK specs/019-selection-bar-layering/spec.md Clarification 1
+OK specs/019-selection-bar-layering/spec.md FR-001
+OK specs/019-selection-bar-layering/spec.md FR-002
+OK specs/019-selection-bar-layering/spec.md FR-003
+OK specs/019-selection-bar-layering/spec.md FR-004
+OK specs/019-selection-bar-layering/spec.md FR-005
+OK specs/019-selection-bar-layering/spec.md FR-006
+--- grep -c 'SUPERSEDED by 020' per file
+7 specs/008-upload-pipeline/spec.md
+20 specs/009-library-galleries/spec.md
+4 specs/010-navigation-improvements/spec.md
+19 specs/014-gallery-combobox/spec.md
+26 specs/015-tile-icon-controls/spec.md
+16 specs/016-galleries-list-icons/spec.md
+12 specs/017-photo-edit-screen/spec.md
+7 specs/019-selection-bar-layering/spec.md
+111 annotations in 8 files

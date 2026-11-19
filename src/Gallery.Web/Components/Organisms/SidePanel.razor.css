@@ -42,3 +42,21 @@
     color: var(--color-muted);
     margin: 0 0 8px;
 }
+
+/* Feature 020 T057: an optional control in the heading row (HeadingAction). The panel becomes a two-column
+   grid: the heading and the control share the first row, every other part spans both columns. The wrapper
+   is display: contents, so a control its owner hides (display: none) leaves an empty, zero-width column. */
+.side-panel:has(> .sp-head-action) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 0;
+}
+
+.side-panel:has(> .sp-head-action) > :not(h2, .sp-head-action) {
+    grid-column: 1 / -1;
+}
+
+.sp-head-action {
+    display: contents;
+}

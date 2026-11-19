@@ -1,0 +1,18 @@
+020 test-impact-edit: 16 of 140 rows (CP-D); root /Users/zzacal/repos/gallery
+OK TI-20 CP-D tests/Gallery.Web.Tests/UploadConfirmTests.cs RETIRE (exists; deleting)
+OK TI-21 CP-D tests/Gallery.Web.Tests/UploadLifecycleTests.cs x1
+OK TI-21 CP-D tests/Gallery.Web.Tests/UploadLifecycleTests.cs x1
+OK TI-21 CP-D tests/Gallery.Web.Tests/UploadLifecycleTests.cs x1
+OK TI-30 CP-D tests/Gallery.Web.Tests/UploadAccessTests.cs x1
+OK TI-30 CP-D tests/Gallery.Web.Tests/UploadAccessTests.cs x1
+OK TI-31 CP-D tests/Gallery.Web.Tests/UploadSecretScanTests.cs x1
+OK TI-31 CP-D tests/Gallery.Web.Tests/UploadSecretScanTests.cs x1
+OK TI-32 CP-D tests/Gallery.Web.Tests/BatchStoreTests.cs x1
+OK TI-32 CP-D tests/Gallery.Web.Tests/BatchStoreTests.cs x1
+OK TI-33 CP-D tests/Gallery.Web.Tests/UploadResumeTests.cs x1
+OK TI-34 CP-D tests/Gallery.Web.Tests/AdminAccessTests.cs x1
+OK TI-62 CP-D tests/Gallery.Web.Tests/UploadPageTests.cs RETIRE (exists; deleting)
+OK TI-63 CP-D tests/Gallery.Web.Tests/UploadTimingEvidenceTests.cs RETIRE (exists; deleting)
+OK TI-70 CP-D tests/Gallery.Web.Tests/UploadBrowserTests.cs RETIRE (exists; deleting)
+OK TI-70 CP-D tests/Gallery.Web.Tests/LayoutConsistencyBrowserTests.cs x1
+wrote 7 files, deleted 4

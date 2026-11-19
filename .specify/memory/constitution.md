@@ -1,28 +1,13 @@
 <!--
 Sync Impact Report
-- Version change: 6.2.1 → 6.2.2 (PATCH; 6.2.0 MINOR and 6.2.1 PATCH were the same day)
-- 6.2.2 (2026-11-18, feature 018 analyze, owner directive "anywhere a configuration could
-  come from"): I.7a said the password is "supplied through the environment at startup"; it is
-  now any configuration source (environment variable, user-secrets, settings file, any other
-  provider). I.7c "password variable" becomes "password setting". No control depended on the
-  source: the development-host gate and the production refusal (which reads the final
-  configuration, so it catches the setting from any source) are unchanged. PATCH.
-- 6.2.1 (2026-11-18, feature 018 plan, research R-02): I.7a said the disabled local sign-in's
-  address "answers not found"; the plan does not map the route at all on a non-qualifying host,
-  so it answers as any unknown admin address does. Wording only, no guarantee changed: PATCH.
-- Rationale: owner directive (2026-11-18, feature 018 clarify): "a way for local stack to be logged
-  in without a real auth", gated by a password the person starting the app sets, and able to claim
-  an empty dev database so a self-contained CI browser suite can sign in. I.1 said ownership "MUST
-  be established by the first successful Google OIDC sign-in"; it now also allows, on development
-  hosts only, the password local sign-in of the new rule I.7. Production identity stays Google
-  only. A guarantee narrowed by a stated exemption whose controls are written into the principle:
-  MINOR.
-- Modified principles: I (rule 1 points at the exemption; rule 7 added). Platform Constraints:
-  Identity bullet notes the development-only exemption. Added/removed sections: none.
-- Templates requiring updates: none (templates read the constitution at runtime).
-- Prior specs swept: 007 FR-003 ("Google as the only identity provider. No passwords") annotated
-  in place: still true for every non-development host.
-- Deferred TODOs: none. Design record D-04 is amended by feature 018 (its FR-013).
+- Version change: 6.3.0 → 6.3.1 (PATCH)
+- Rationale: feature 020 removed the bar of owner links at the top of every admin page. IX.1 used it as an example of shared
+  chrome; the example now names the collections list, the workspace's shared chrome. Wording only:
+  the rule and its measured check (IX.4) are unchanged.
+- Modified principles: IX.1 (example reworded). Added/removed sections: none.
+- Templates requiring updates: none.
+- Prior specs swept: none needed (no FR quotes the example).
+- Deferred TODOs: none (6.3.0's IX.1 TODO resolved here).
 - History: 1.0.0 initial ratification. 1.1.0 perceived performance, private = unlisted. 2.0.0
   client-generated derivatives with server validation. 3.0.0 Azure Blob replaced R2, masters kept,
   $10 metered cap (2026-10-27). 4.0.0 images on Cloudflare R2, managed-identity guarantee
@@ -30,7 +15,10 @@ Sync Impact Report
   no empty galleries shown (2026-10-31). 4.3.0 canonical remote (2026-11-01). 4.4.0 IX visual
   consistency through shared containers (2026-11-01). 4.5.0 home page at `/`, listing at `/g`
   (2026-11-02). 5.0.0 fixed hosting ceiling B1 -> B2 (2026-11-02). 6.0.0 US$7 budget alert
-  withdrawn (2026-11-02). 6.1.0 V.4 proportional effort (2026-11-02).
+  withdrawn (2026-11-02). 6.1.0 V.4 proportional effort (2026-11-02). 6.2.0 I.7 development-only
+  local sign-in; 6.2.1 its disabled address answers as any unknown admin address; 6.2.2 its
+  password may come from any configuration source (all 2026-11-18, feature 018). 6.3.0 II.5a to
+  5d: an upload the owner aims at a gallery (2026-11-18, feature 020).
 -->
 
 # Gallery Constitution
@@ -95,7 +83,18 @@ Google only by rule 7c, not by the password.
    gallery's title or from sequential identifiers.
 4. Changing a gallery's title MUST NOT break links already shared.
 5. Only the owner decides what is visible; nothing becomes public as a side effect of upload,
-   tagging, or editing.
+   tagging, or editing. An upload the owner aims at a gallery (photos added while that gallery is
+   the open destination) is the owner's decision, not a side effect, and its photos MAY join that
+   gallery as they are accepted. These rules are the entire protection for that path:
+   a. The destination gallery MUST be named in the upload control before any file is picked and
+      for as long as the upload is open. When that gallery is public, the control MUST also say,
+      in visible words, that visitors will see the photos. Text behind a hover, an expander or an
+      icon does not satisfy this rule.
+   b. An upload with no gallery as its destination MUST join no gallery and change no public page.
+   c. An upload MUST NOT change any gallery's visibility. Photos aimed at a private gallery are
+      published nowhere; an empty private gallery stays private (rule 6).
+   d. A photo MUST pass every check of III.5 to III.7 before it joins a gallery or is stored in a
+      public location, exactly as an upload with no destination does.
 6. Visitors MUST never be shown an empty gallery. A gallery MUST hold at least one image to be
    made public; the owner's publish action MUST refuse otherwise, saying why. A public gallery that
    becomes empty (its last image removed or deleted) stays public but MUST be left out of the
@@ -106,7 +105,9 @@ Google only by rule 7c, not by the password.
 Rationale: private doubles as draft and as share-by-link. An empty gallery is a draft by
 definition, so it is never listed or shown even when its visibility says public. Private means
 unlisted, not secret: it is not access control, and nothing private-but-sensitive belongs on this
-site. Opaque ids are kept because they are what make links survive renames.
+site. Opaque ids are kept because they are what make links survive renames. Since 6.3.0 an upload
+aimed at a public gallery publishes as it goes, so a wrong file is public until the owner removes
+it; rule 5a (the owner is told before picking) is what makes that the owner's choice.
 
 ### III. Published Images Leak Nothing
 
@@ -279,7 +280,7 @@ inside feature plans produces contradictions that are expensive to unwind.
 ### IX. Visual Consistency Through Shared Containers
 
 1. Visual consistency between pages is a requirement, not polish. The same element on two pages
-   (header, navigation, breadcrumb, owner bar, page gutters, the gap between the chrome and the
+   (header, navigation, breadcrumb, collections list, page gutters, the gap between the chrome and the
    content) MUST render at the same position, height, and spacing.
 2. Each site (public, admin) MUST have exactly one layout container that owns its chrome and the
    page frame around the content. Pages supply content and data only; they MUST NOT add margins,
@@ -347,4 +348,4 @@ These are binding inputs to every plan:
   place, not silently edited.
 - Every plan and analyze pass verifies compliance and cites principles by number.
 
-**Version**: 6.2.2 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-11-18
+**Version**: 6.3.1 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-11-19

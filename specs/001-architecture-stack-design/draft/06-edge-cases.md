@@ -9,8 +9,8 @@
 **Mechanism**: D-04 writes claimedSubject, claimedAt, and claimedIp atomically. No web route can overwrite a set claimedSubject (data-model Owner). The owner's subsequent sign-in fails the conditional update and receives no session.
 
 ### E-03: Tab closed or connection lost mid-batch
-**Outcome**: When the owner returns, the open batch is still there. Images that had succeeded remain succeeded; images that were waiting, processing, or uploading with no progress for more than two minutes are shown as interrupted with Restart and Delete. Nothing has entered the library.
-**Mechanism**: D-11 persists the batch on the server (FR-017). D-11 (decisions #17) evaluates the heartbeat field: no heartbeat for 2 minutes transitions the item to interrupted when the batch is next read. L-02 captures the failed-or-interrupted state; L-05 has not fired, so no image is in the library.
+**Outcome**: When the owner returns, the open batch is still there. Photos that had joined are in the library; a photo that passed its checks but had not joined is joined when the workspace loads (feature 020). Photos that were waiting, processing, or uploading with no progress for more than two minutes are shown as interrupted with Restart and Delete; they are not in the library.
+**Mechanism**: D-11 persists the batch on the server (FR-017). D-11 (decisions #17) evaluates the heartbeat field: no heartbeat for 2 minutes transitions the item to interrupted when the batch is next read. L-02 captures the failed-or-interrupted state; an interrupted photo has not joined (L-05), so it is not in the library. Every workspace load reads the open batch and joins its `succeeded` and `joining` items (feature 020).
 
 ### E-04: Restart when master never reached the server
 **Outcome**: The owner is prompted to pick that same named file again. If they pick a different file, it is treated as a new image with a new attemptId.
@@ -24,13 +24,13 @@
 **Outcome**: The server rejects the whole image (FR-016). Every staged file for that image is discarded, and the item shows as failed with the rejection reason and offers Restart and Delete.
 **Mechanism**: D-10 runs hand-written AVIF and WebP structural parsers plus MetadataExtractor; any metadata present, dimension mismatch, or disallowed format causes rejection. Staged objects for the item are deleted. The BatchItem transitions to failed with the reason (data-model item state machine).
 
-### E-07: Owner tries to confirm a batch with failed or interrupted images
-**Outcome**: Confirmation is refused — by the page and by the server — and the page states how many images still need Restart or Delete.
-**Mechanism**: D-11 enforces FR-028: the Confirm action is disabled client-side until every remaining item is succeeded, and the server independently rejects a confirm request if any item is not in the succeeded state.
+### E-07: Owner closes the upload with failed or interrupted photos
+**Outcome**: The photos that passed have already joined. Closing drops the failed and interrupted photos with their uploaded files and says how many were not added. Closing is refused while any photo is still working. (Before feature 020 this case was a confirm, refused until every photo had succeeded.)
+**Mechanism**: D-11 (feature 020): the close request is refused with `still-working` while any item is queued, processing, uploading, succeeded or joining; otherwise the server deletes the staged files of the remaining items and removes them (L-06). Done is unavailable on the page while a photo is working.
 
-### E-08: Owner tries to start a new upload while a batch is unconfirmed
-**Outcome**: The upload page shows the existing open batch, and newly picked files join it (up to the 100-photo limit); no second batch is started.
-**Mechanism**: D-11 enforces FR-029 via the unique partial index on `{state:"open"}` in the batches collection (data-model Upload batch). The server returns the open batch's URL; no second batch document can be inserted while one is open.
+### E-08: Owner adds photos while an upload is still open
+**Outcome**: The upload area shows the open upload, and newly picked files join it (up to the 100-photo limit) with its destination, even when the owner has since opened another collection; no second batch is started. After a reload or a closed tab the workspace reopens the open upload (feature 020).
+**Mechanism**: D-11 enforces FR-029 via the unique partial index on `{state:"open"}` in the batches collection (data-model Upload batch); no second batch document can be inserted while one is open. The destination is set only while the batch has no items and no `added` ids, and the stored one wins after that (020 contracts/http.md U3). Every workspace load reads the open batch (U2).
 
 ### E-09: Selected file is not a JPEG, is over 20 MB, or is a corrupt JPEG
 **Outcome**: The file is rejected with the reason before it joins the batch; nothing is stored and no upload begins.

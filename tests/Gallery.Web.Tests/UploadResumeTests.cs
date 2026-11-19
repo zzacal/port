@@ -52,7 +52,7 @@ public class UploadResumeTests : IClassFixture<MongoFixture>, IAsyncLifetime
             .Select(i => (i.GetProperty("itemId").GetString()!, i.GetProperty("state").GetString()!)).ToList();
 
     [Fact]
-    public async Task After_121_seconds_U2_and_the_page_show_the_three_active_items_interrupted()
+    public async Task After_121_seconds_U2_shows_the_three_active_items_interrupted()
     {
         await using var host = await NewHostAsync();
         var items = await FourStatesAsync(host);
@@ -70,17 +70,6 @@ public class UploadResumeTests : IClassFixture<MongoFixture>, IAsyncLifetime
         Assert.Equal(
             [(items[0].ItemId, "interrupted"), (items[1].ItemId, "interrupted"), (items[2].ItemId, "interrupted"), (items[3].ItemId, "succeeded")],
             StatesOf(state!));
-
-        var page = await host.GetAsync("/admin/upload");
-        Assert.Equal(HttpStatusCode.OK, page.StatusCode);
-        var html = await page.Content.ReadAsStringAsync();
-        for (var i = 0; i < 3; i++)
-            Assert.Equal(1, Guards.Count(html, $"<div class=\"batch-item state-interrupted\" data-item=\"{items[i].ItemId}\""));
-        Assert.Equal(1, Guards.Count(html, $"<div class=\"batch-item state-succeeded\" data-item=\"{items[3].ItemId}\""));
-        // Rendered tiles (outside the per-state <template>s) carry a 26-char item id.
-        Assert.Equal(3, System.Text.RegularExpressions.Regex.Count(html, "<div class=\"batch-item state-interrupted\" data-item=\"[0-9a-z]{26}\""));
-        Assert.Equal(1, System.Text.RegularExpressions.Regex.Count(html, "<div class=\"batch-item state-succeeded\" data-item=\"[0-9a-z]{26}\""));
-        Assert.Equal(4, System.Text.RegularExpressions.Regex.Count(html, "<div class=\"batch-item state-[a-z]+\" data-item=\"[0-9a-z]{26}\""));
 
         // Interrupted is computed, never stored.
         var batch = await UploadApi.BatchAsync(host, items[0].BatchId);

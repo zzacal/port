@@ -1,6 +1,28 @@
-@* Rendered with AdminLayout itself (not UiLayout) so the template is shown as it really is,
-   like PublicLayoutPage. *@
-<AdminLayout Title="AdminLayout · UI" Current="AdminPage.Library">
-    <ChildContent><p class="empty-body">Empty page body</p></ChildContent>
-    <Aside><SidePanel Heading="Photo"><Fields /></SidePanel></Aside>
+@* Rendered with AdminLayout itself (not UiLayout) so the template is shown as it really is, like
+   PublicLayoutPage: the three regions (the collections list with Coast current, the open gallery's
+   grid, a photo's details). Bare mode (the sign-in page) cannot share this document (020 C-09). *@
+@inject SampleCatalog Samples
+<AdminLayout Title="AdminLayout · UI" List="@ListRegion" Panel="@PanelRegion" Csrf="@Token" Cap="100">
+    <PageHeading Text="Coast" />
+    <ContactSheet Fill="true">
+        @for (var i = 0; i < Four.Count; i++)
+        {
+            <PhotoCell Image="Four[i]" Cover="@(i == 0)" />
+        }
+    </ContactSheet>
 </AdminLayout>
+
+@code {
+    private static readonly FormToken Token = new("__RequestVerificationToken", "catalogue-sample");
+    private static readonly IReadOnlyList<CollectionGallery> Galleries =
+    [
+        new("gal-coast", "coast", "Coast", true, 4),
+        new("gal-desert", "desert", "Desert", false, 9),
+    ];
+
+    private IReadOnlyList<ImageView> Four => Samples.All.Take(4).ToList();
+
+    private static RenderFragment ListRegion => @<CollectionList Current="gal-coast" Total="128" Unplaced="14" Galleries="Galleries" Csrf="Token" />;
+
+    private static RenderFragment PanelRegion => @<SidePanel Heading="Photo" Save="false"><Fields /></SidePanel>;
+}

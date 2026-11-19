@@ -1,0 +1,250 @@
+@* 020 K12 (tasks T032): the workspace at /admin, /admin/unplaced and /admin/g/{gid}, and its fragments
+   (contracts/http.md "Pages and fragments"). Full: AdminLayout's workspace frame with the chrome in the
+   list region, the middle region in main, and the Toast plus the one module script in the panel region
+   (C-06). Main: the heading row, the grid (first chunk or the whole gallery) or the empty sentence,
+   "Show more" and the sentinel, and <template data-panel="default"> for this collection (library or
+   gallery). Chrome: CollectionList and the collection-independent templates (photo, selection, marks,
+   the cap sentence). More: cells only, then the sentinel when more exist.
+   Phase 5 (T045): Add photos (Primary) in the heading actions, the <upload-tray> mount at the top of main
+   (empty and hidden until upload.js fills it; it carries the upload limits for the at-pick refusals), and the
+   UploadTray / UploadRow / refusal <template>s in the chrome. The tray names its destination from the open
+   gallery's CollectionList row (title, data-public), so the [SAFETY II.5a] notice shows before any file is
+   picked; no attribute carries the destination.
+   Phase 7 (T055, K11/R-08): a hidden PhotoStage in main, right after the tray mount (which stays main's first
+   child), in a .ws-largeview wrapper of this page's scope, so this page's rules can hide the rest of main
+   while the large view is open; workspace.js fills its frame.
+   Phase 8 (T057, K12): Gallery settings in the heading actions (a gallery only; shown below 1200 px) and a Done in
+   the heading row of the gallery, photo and selection panels (SidePanel HeadingAction; shown below 1200 px).
+   T074/T075 (owner walk-through): the chrome opens with the menu button (below 1200 px the list is a menu it
+   opens; the list sits in div#ws-menu), and main holds the selection bar after the grid (below 1200 px).
+   Every action is a Button with visible text; deletes are the last control of their panel. *@
+@using Gallery.Web.Components
+@using Gallery.Web.Components.Atoms
+@using Gallery.Web.Components.Molecules
+@using Gallery.Web.Components.Organisms
+@using Gallery.Web.Components.Templates
+@using Gallery.Web.Library
+@using Gallery.Web.Upload
+@using Gallery.Web.Workspace
+@inject UploadOptions Upload
+
+@switch (Model.Part)
+{
+    case WorkspacePart.Full:
+        <AdminLayout Title="@DocumentTitle" List="@Chrome" Panel="@PanelRegion" Csrf="@Model.Csrf" Cap="@Model.Options.PageSize"
+                     UploadSrc="@Model.UploadSrc" WorkerSrc="@Model.WorkerSrc"><noscript><p class="ws-noscript">The admin needs JavaScript.</p></noscript>@MainRegion</AdminLayout>
+        break;
+    case WorkspacePart.Main:
+        @MainRegion
+        break;
+    case WorkspacePart.Chrome:
+        @Chrome
+        break;
+    default:
+        <text>@Cells(Model.Tiles, highFirst: false)@Sentinel</text>
+        break;
+}
+
+@code {
+    [Parameter, EditorRequired] public WorkspacePageModel Model { get; set; } = default!;
+
+    /// <summary>The selection confirm's consequence: <see cref="Messages.BulkDeleteConsequence"/> (the one copy).</summary>
+    public const string BulkDeleteConsequence = Messages.BulkDeleteConsequence;
+
+    /// <summary>The single-line title rule (not whitespace-only), as the pages before it.</summary>
+    private const string TitlePattern = @".*\S.*";
+
+    private bool IsGallery => Model.Gallery is not null;
+    private bool IsUnplaced => Model.Current == CollectionList.UnplacedKey;
+    private bool IsPublic => Model.Gallery?.Visibility == "public";
+
+    /// <summary>C-12: "All photos", "Not in a gallery", or the gallery's title.</summary>
+    private string DocumentTitle => Model.Gallery?.Title ?? (IsUnplaced ? "Not in a gallery" : "All photos");
+
+    private int PhotoCount => IsGallery ? Model.Tiles.Count
+        : (int)(IsUnplaced ? Model.Counts?.Unplaced ?? 0 : Model.Counts?.Total ?? 0);
+
+    private string EmptySentence => IsGallery ? Messages.GalleryEmpty : IsUnplaced ? Messages.UnplacedEmpty : Messages.LibraryEmpty;
+
+    // ── chrome: the list and the collection-independent templates ───────────────────────────
+
+    private RenderFragment Chrome => @<text><Button Variant="ButtonVariant.Secondary" Type="button" class="ws-menu-toggle" aria-expanded="false" aria-controls="ws-menu"><span class="ws-menu-name">@CurrentName</span><span aria-hidden="true">▾</span></Button><div class="ws-menu" id="ws-menu"><CollectionList Current="@Model.Current" Total="@((int)(Model.Counts?.Total ?? 0))" Unplaced="@((int)(Model.Counts?.Unplaced ?? 0))"
+                    Galleries="@ListRows" Csrf="@SignOutToken" NamingTemplate="true" /></div><template data-panel="photo">@PhotoPanel</template><template data-panel="selection">@SelectionPanel</template><template class="ws-tpl-marks"><Mark Text="Cover" /><Mark Text="New" /></template><template class="ws-tpl-cap"><p class="ws-cap">@Messages.SelectionCap(Model.Options.PageSize)</p></template>@TrayTemplates</text>;
+
+    /// <summary>
+    /// T074: the menu button's text below 1200 px, the open collection's name (from the list's rows, so the
+    /// chrome fragment needs no gallery read). workspace.js copies the current row's name after a main swap.
+    /// </summary>
+    private string CurrentName => Model.Current switch
+    {
+        CollectionList.All => "All photos",
+        CollectionList.UnplacedKey => "Not in a gallery",
+        var id => (Model.Galleries ?? []).FirstOrDefault(g => g.Id == id)?.Title ?? Model.Gallery?.Title ?? "",
+    };
+
+    /// <summary>The sign-out form's token (set on Full and Chrome).</summary>
+    private FormToken SignOutToken => Model.Csrf ?? throw new InvalidOperationException("The chrome needs the antiforgery token.");
+
+    private IReadOnlyList<CollectionGallery> ListRows => (Model.Galleries ?? [])
+        .Select(g => new CollectionGallery(g.Id, g.Slug, g.Title, g.IsPublic, g.PhotoCount))
+        .ToList();
+
+    private IReadOnlyList<ChecklistGallery> CheckRows => (Model.Galleries ?? [])
+        .Select(g => new ChecklistGallery(g.Id, g.Title, g.IsPublic))
+        .ToList();
+
+    // ── panel region: the result line and the one module script (C-06) ──────────────────────
+
+    private RenderFragment PanelRegion => @<text><Toast /><script type="module" src="@Model.ScriptUrl"></script></text>;
+
+    /// <summary>
+    /// T075: below 1200 px, while photos are selected and the sheet is closed, a bar fixed at the bottom of the
+    /// window: "{n} selected" (the script sets only the number) and Add to gallery, which opens the sheet.
+    /// At the end of main (the panel region holds no filled button); hidden by default and from 1200 px
+    /// (AdminLayout.razor.css), and with the rest of main while the large view is open.
+    /// </summary>
+    private static RenderFragment CountBar => @<div class="ws-selbar" hidden><p class="ws-selbar-text"><span class="ws-selbar-n">0</span> selected</p><Button Variant="ButtonVariant.Primary" Type="button" class="ws-selbar-add">Add to gallery</Button></div>;
+
+    // ── main: heading, grid or empty sentence, Show more + sentinel, the default panel ──────
+
+    private RenderFragment MainRegion => @<text><upload-tray hidden data-max-bytes="@Upload.MaxFileBytes" data-max-photos="@Upload.MaxPhotosPerBatch"></upload-tray><div class="ws-largeview" hidden><PhotoStage Position="1" Total="@PhotoCount" BackLabel="@DocumentTitle" /></div><div class="ws-head"><PageHeading Text="@DocumentTitle" Actions="@HeadActions" /><p class="ws-meta">@Messages.Photos(PhotoCount)@Visibility@ViewOnSite</p></div>@Grid@More@CountBar<template data-panel="default">@(IsGallery ? GalleryPanel : LibraryPanel)</template></text>;
+
+    private RenderFragment HeadActions => @<text>@(IsGallery ? SettingsButton : null)<Button Variant="ButtonVariant.Quiet" Type="button" class="ws-clear" hidden="@true">Clear selection</Button><Button Variant="ButtonVariant.Primary" Type="button" class="ws-add">Add photos</Button></text>;
+
+    /// <summary>T057: opens the gallery panel as a bottom sheet below 1200 px (hidden from 1200 px by this page's CSS).</summary>
+    private static RenderFragment SettingsButton => @<Button Variant="ButtonVariant.Secondary" Type="button" class="ws-settings">Gallery settings</Button>;
+
+    /// <summary>T057: closes the bottom sheet; in the heading row of each panel that can be a sheet (shown below 1200 px).</summary>
+    private static RenderFragment Done => @<span class="ws-done-row"><Button Variant="ButtonVariant.Secondary" Type="button" class="ws-done">Done</Button></span>;
+
+    // ── upload tray templates (T045, C13): upload.js clones these and fills them ─────────────────
+    // Strings are sentinels (U+2063 key U+2063) replaced in text nodes and attribute values; counts are
+    // integers, so the heading's numbers are replaced by position (working: added, total; finished:
+    // added; failed: added, failed) and "1 photo" / "{n} photos" each has its own template. One set for
+    // the library ("lib") and one for a gallery ("gal", rendered public: the script removes the notice
+    // for a private one). Rows render Grouped so no control is named only by an aria-label.
+
+    private const string TokenMark = "\u2063";
+    private static string Token(string key) => TokenMark + key + TokenMark;
+
+    private static readonly (string Key, TrayState State, UploadRowState? Row, int Added)[] TrayVariants =
+    [
+        ("empty", TrayState.Empty, null, 0),
+        ("working", TrayState.Working, UploadRowState.Waiting, 0),
+        ("finished-1", TrayState.Finished, UploadRowState.Added, 1),
+        ("finished-n", TrayState.Finished, UploadRowState.Added, 2),
+        ("failed-1", TrayState.FinishedWithFailures, UploadRowState.Failed, 1),
+        ("failed-n", TrayState.FinishedWithFailures, UploadRowState.Failed, 2),
+        ("hidden-busy", TrayState.Hidden, UploadRowState.Waiting, 0),
+        ("hidden-idle", TrayState.Hidden, UploadRowState.Added, 1),
+    ];
+
+    private static readonly UploadRowState[] RowStates =
+    [
+        UploadRowState.Waiting, UploadRowState.Preparing, UploadRowState.Uploading, UploadRowState.Adding,
+        UploadRowState.Added, UploadRowState.Failed, UploadRowState.Interrupted,
+    ];
+
+    private static IReadOnlyList<UploadTrayRow> SampleRows(UploadRowState? state) =>
+        state is { } s ? [new UploadTrayRow(Token("name"), s, 0, Token("reason"), Token("id"))] : [];
+
+    private int MaxMb => (int)Upload.MaxMb;
+
+    private RenderFragment TrayTemplates => @<text>@foreach (var kind in new[] { "lib", "gal" })
+        {
+            foreach (var v in TrayVariants)
+            {
+                <template class="@($"ws-tpl-tray-{kind}-{v.Key}")"><UploadTray State="v.State" Destination="@(kind == "gal" ? Token("dest") : null)" DestinationPublic="@(kind == "gal")"
+                    Rows="@SampleRows(v.Row)" Added="v.Added" Total="0" MaxMb="MaxMb" MaxPhotos="Upload.MaxPhotosPerBatch" GroupedRows="true" /></template>
+            }
+        }@foreach (var r in RowStates)
+        {
+            <template class="@($"ws-tpl-row-{r.ToString().ToLowerInvariant()}")"><UploadRow FileName="@Token("name")" State="r" Percent="0" Reason="@Token("reason")" ItemId="@Token("id")" Grouped="true" /></template>
+        }<template class="ws-tpl-refusals"><UploadDropzone State="DropzoneState.Refused" Refusals="@([new Refusal(Token("name"), Token("reason"))])" MaxMb="MaxMb" MaxPhotos="Upload.MaxPhotosPerBatch" /></template></text>;
+
+    private RenderFragment? Visibility => IsGallery ? @<text> · @(IsPublic ? "Public" : "Private")</text> : null;
+
+    private RenderFragment? ViewOnSite => IsGallery && IsPublic && Model.Tiles.Count > 0
+        ? @<text> <TextLink Href="@($"/g/{Model.Gallery!.Id}/{Model.Gallery.Slug}")" Target="_blank">View on site ↗</TextLink></text>
+        : null;
+
+    private RenderFragment Grid => Model.Tiles.Count == 0
+        ? @<p class="ws-empty">@EmptySentence</p>
+        : @<ContactSheet Fill="true">@Cells(Model.Tiles, highFirst: true)</ContactSheet>;
+
+    private RenderFragment? More => Model.Next is null
+        ? null
+        : @<text><Button Variant="ButtonVariant.Secondary" Type="button" class="ws-more">Show more</Button>@Sentinel</text>;
+
+    private RenderFragment? Sentinel => Model.Next is null ? null : @<span data-next="@Model.Next"></span>;
+
+    private RenderFragment Cells(IReadOnlyList<WorkspaceTile> tiles, bool highFirst) => @<text>@for (var i = 0; i < tiles.Count; i++)
+        {
+            var t = tiles[i];
+            <PhotoCell Image="t.Image" Caption="@t.Caption" GalleryIds="t.GalleryIds" Cover="@IsCover(t)"
+                       Priority="@(highFirst && i < 4 ? PicturePriority.High : PicturePriority.Lazy)" />
+        }</text>;
+
+    /// <summary>The Cover mark: the gallery's chosen (pinned) cover, in a gallery collection only.</summary>
+    private bool IsCover(WorkspaceTile t) => Model.Gallery?.PinnedCover is { } pin && pin == t.Id;
+
+    // ── panel templates (K12) ───────────────────────────────────────────────────────────────
+
+    private RenderFragment LibraryPanel => @<SidePanel Heading="@(IsUnplaced ? "Not in a gallery" : "Library")" Save="false">
+        <p class="ws-counts">@Messages.Photos((int)(Model.Counts?.Total ?? 0)) in all · @(Model.Counts?.Unplaced ?? 0) not in a gallery.</p>
+        <ul class="ws-tips">
+            <li>Click a photo to see its details. Ctrl or ⌘-click adds to the selection; Shift-click selects a range.</li>
+            <li>Drag photos onto a gallery's name to add them to it.</li>
+            <li>Tick a gallery under In galleries to add the selected photos; untick it to take them out.</li>
+            <li>Ctrl or ⌘+A selects every photo shown, up to @Model.Options.PageSize.</li>
+        </ul>
+    </SidePanel>;
+
+    private RenderFragment GalleryPanel => @<SidePanel Heading="Gallery" Save="false" Danger="@GalleryDanger" HeadingAction="@Done">
+        <Input Label="Title" Name="title" Value="@Model.Gallery!.Title" MaxLength="@Model.Options.TitleMax" Required="true" Pattern="@TitlePattern" />
+        <Input Label="Description" Name="description" Multiline="true" Value="@Model.Gallery.Description" MaxLength="@Model.Options.DescriptionMax" />
+        <Switch Label="Public" Name="public" Checked="@IsPublic" Disabled="@PublicDisabled" Hint="@PublicHint" />
+        <div class="ws-actions">
+            <Button Variant="ButtonVariant.Secondary" Type="button" class="ws-move-up">Move up</Button>
+            <Button Variant="ButtonVariant.Secondary" Type="button" class="ws-move-down">Move down</Button>
+        </div>
+    </SidePanel>;
+
+    /// <summary>An empty private gallery cannot be made public (FR, <see cref="GalleryService.EmptyPublishReason"/>).</summary>
+    private bool PublicDisabled => !IsPublic && Model.Tiles.Count == 0;
+
+    private string PublicHint => IsPublic ? "Visitors can see this gallery and its photos."
+        : PublicDisabled ? GalleryService.EmptyPublishReason
+        : "Only you can see this gallery.";
+
+    private RenderFragment GalleryDanger => @<DangerConfirm Id="ws-del-gallery" Action="Delete gallery" Target="@Model.Gallery!.Title"
+                       Consequence="@($"Its {Model.Tiles.Count} photos stay in your library. This can't be undone.")"
+                       ConfirmLabel="Delete gallery" />;
+
+    private RenderFragment PhotoPanel => @<SidePanel Heading="Photo" Save="false" Danger="@PhotoDanger" HeadingAction="@Done">
+        <div class="ws-preview"></div>
+        <Input Label="Title" Name="title" MaxLength="@Model.Options.TitleMax" Required="true" Pattern="@TitlePattern" />
+        <Input Label="Caption" Name="caption" Multiline="true" MaxLength="@Model.Options.CaptionMax" />
+        <GalleryChecklist Galleries="@CheckRows" TitleMax="@Model.Options.TitleMax" />
+        <div class="ws-actions ws-in-gallery" hidden>
+            <Button Variant="ButtonVariant.Secondary" Type="button" class="ws-cover">Use as gallery cover</Button>
+            <Button Variant="ButtonVariant.Secondary" Type="button" class="ws-earlier">Move earlier</Button>
+            <Button Variant="ButtonVariant.Secondary" Type="button" class="ws-later">Move later</Button>
+        </div>
+        <div class="ws-actions">
+            <Button Variant="ButtonVariant.Secondary" Type="button" class="ws-large">Open large</Button>
+        </div>
+        <p class="ws-view"><TextLink Href="/" Target="_blank">View on site ↗</TextLink><span class="ws-unseen" hidden>Not on the site yet</span></p>
+    </SidePanel>;
+
+    private static RenderFragment PhotoDanger => @<DangerConfirm Id="ws-del-photo" Action="Delete photo" Target="" Title="Delete photo?"
+                       Consequence="@Messages.DeleteConsequence(0)" ConfirmLabel="Delete photo" />;
+
+    private RenderFragment SelectionPanel => @<SidePanel Heading="0 photos selected" Save="false" Danger="@SelectionDanger" HeadingAction="@Done">
+        <div class="ws-previews"></div>
+        <GalleryChecklist Galleries="@CheckRows" TitleMax="@Model.Options.TitleMax" />
+    </SidePanel>;
+
+    private static RenderFragment SelectionDanger => @<DangerConfirm Id="ws-del-selection" Action="Delete 0 photos" Target="0 photos" Title="Delete 0 photos?"
+                       Consequence="@Messages.BulkDeleteConsequence" ConfirmLabel="Delete photos" />;
+}

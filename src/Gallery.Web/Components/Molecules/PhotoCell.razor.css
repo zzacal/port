@@ -1,0 +1,35 @@
+/* Feature 020 K5. Existing tokens only, no size literal: offsets are fractions of --space-s. */
+.ws-cell {
+    position: relative;
+    min-width: 0;
+    cursor: default;
+}
+
+.ws-cell:focus-visible {
+    outline: calc(var(--space-s) / 4) solid var(--color-text);
+    outline-offset: calc(var(--space-s) / 4);
+}
+
+.ws-cell.is-selected ::deep .cell {
+    outline: calc(var(--space-s) / 4) solid var(--color-text);
+    outline-offset: calc(var(--space-s) / -4);
+}
+
+/* The drop position: a bar on the cell's leading edge, in the grid gap. */
+.ws-drop {
+    box-shadow: calc(var(--space-s) / -2) 0 0 calc(var(--space-s) / -4) var(--color-text);
+}
+
+.ws-cell-sel {
+    position: absolute;
+    top: calc(var(--space-s) / 2);
+    left: calc(var(--space-s) / 2);
+}
+
+.ws-cell-marks {
+    position: absolute;
+    top: calc(var(--space-s) / 2);
+    right: calc(var(--space-s) / 2);
+    display: flex;
+    gap: calc(var(--space-s) / 4);
+}

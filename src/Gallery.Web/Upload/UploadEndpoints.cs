@@ -3,24 +3,23 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Gallery.Core.Ids;
 using Gallery.Core.Images;
-using Gallery.Web.Admin.Pages;
-using Gallery.Web.Components;
 using Gallery.Web.Data;
+using Gallery.Web.Library;
 using Gallery.Web.Observability;
 using Gallery.Web.Storage;
-using Microsoft.AspNetCore.Antiforgery;
-using Microsoft.AspNetCore.Http.HttpResults;
+using Gallery.Web.Workspace;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 
 namespace Gallery.Web.Upload;
 
 /// <summary>
-/// The 008 upload endpoints on the protected <c>/admin</c> group (contracts/http.md U1–U11).
+/// The upload endpoints on the protected <c>/admin</c> group (008 contracts/http.md U2–U9, 020
+/// contracts/http.md "Upload": U2/U3 changed, U12 join, U13 clear; U1, U10, U11 removed).
 /// They inherit <c>RequireAuthorization("owner")</c> and <c>AdminAntiforgeryFilter</c> from the
 /// group. Shared rules: path ids must pass <see cref="OpaqueId.IsValid"/> (else 404); an item
-/// outside the OPEN batch is 404; <c>confirm-in-progress</c>, <c>stale-attempt</c> and
-/// <c>not-active</c> answer 409; every endpoint states its own body limit (research R-15).
+/// outside the OPEN batch is 404; <c>stale-attempt</c> and <c>not-active</c> answer 409; every
+/// endpoint states its own body limit (research R-15).
 /// Error messages never echo a key, a URL or a value read from a file.
 /// </summary>
 public static partial class UploadEndpoints
@@ -67,19 +66,18 @@ public static partial class UploadEndpoints
         admin.MapPost("/upload/items/{itemId}/complete", Complete)
             .WithMetadata(new RequestSizeLimitAttribute(CompleteBodyLimit));
 
-        // U1 and U10 (Batch E).
-        admin.MapMethods("/upload", ["GET", "HEAD"], (Delegate)Page);
-        admin.MapPost("/upload/confirm", (Delegate)Confirm)
-            .WithMetadata(new RequestSizeLimitAttribute(SmallBodyLimit));
-
-        // U6, U8, U9 and U11 (Batch F).
+        // U6, U8, U9 (008 Batch F).
         admin.MapPost("/upload/items/{itemId}/fail", Fail)
             .WithMetadata(new RequestSizeLimitAttribute(SmallBodyLimit));
         admin.MapPost("/upload/items/{itemId}/restart", Restart)
             .WithMetadata(new RequestSizeLimitAttribute(SmallBodyLimit));
         admin.MapPost("/upload/items/{itemId}/delete", Delete)
             .WithMetadata(new RequestSizeLimitAttribute(SmallBodyLimit));
-        admin.MapPost("/upload/discard", (Delegate)Discard)
+
+        // 020 U12 join and U13 clear.
+        admin.MapPost("/upload/items/{itemId}/join", Join)
+            .WithMetadata(new RequestSizeLimitAttribute(SmallBodyLimit));
+        admin.MapPost("/upload/clear", (Delegate)Clear)
             .WithMetadata(new RequestSizeLimitAttribute(SmallBodyLimit));
 
         return admin;
@@ -88,7 +86,8 @@ public static partial class UploadEndpoints
     // ── request bodies (only the fields the contract lets the server read) ──────
 
     public sealed record RegisterFile(string? Name, long Size, string? Type);
-    public sealed record RegisterRequest(List<RegisterFile>? Files);
+    /// <summary>U3 body; <c>Gallery</c> and <c>VisibleToVisitors</c> are optional (020).</summary>
+    public sealed record RegisterRequest(List<RegisterFile>? Files, string? Gallery = null, bool? VisibleToVisitors = null);
     public sealed record AttemptRequest(string? AttemptId);
     public sealed record ProgressRequest(string? AttemptId, string? State, int Percent);
     public sealed record FailRequest(string? AttemptId, string? Reason);
@@ -126,15 +125,20 @@ public static partial class UploadEndpoints
     {
         var d = Deps.For(ctx);
         var batch = await d.Store.GetOpenAsync();
-        if (batch is null)
+        // 020: an open batch with no items and no added ids is reported as no batch.
+        if (batch is null || (batch.Items.Count == 0 && batch.Added.Count == 0))
             return Results.Json(new { batch = (object?)null });
 
+        var destination = batch.Destination is { } gid ? await LoadGalleryAsync(ctx, gid) : null;
         return Results.Json(new
         {
             batch = new
             {
                 id = batch.Id,
-                confirming = batch.ConfirmStartedAt is not null,
+                // tasks.md C-01: kept, always false (no batch lock exists any more).
+                confirming = false,
+                destination = DestinationJson(destination),
+                added = batch.Added,
                 limits = new { maxFileBytes = d.Options.MaxFileBytes, maxPhotos = d.Options.MaxPhotosPerBatch },
                 items = batch.Items.Select(i => new
                 {
@@ -164,8 +168,42 @@ public static partial class UploadEndpoints
 
         // 1. Get or create the open batch.
         var batch = await d.Store.GetOrCreateOpenAsync();
-        if (batch.ConfirmStartedAt is not null)
-            return ConfirmInProgress();
+
+        // 020 step 2: the destination is set only while the set is empty (no items, no added
+        // ids); otherwise the stored one stays, whatever was sent. An unknown gallery → 404.
+        GalleryDoc? destination = null;
+        var applied = false;
+        if (batch.Items.Count == 0 && batch.Added.Count == 0)
+        {
+            var wanted = body.Gallery;
+            if (wanted is not null)
+            {
+                destination = OpaqueId.IsValid(wanted) ? await LoadGalleryAsync(ctx, wanted) : null;
+                if (destination is null) return GalleryGone();
+            }
+            applied = await d.Store.SetDestinationIfEmptyAsync(batch.Id, wanted);
+            // Another request filled the set first: its stored destination wins.
+            if (!applied) batch = await d.Store.GetByIdAsync(batch.Id) ?? batch;
+        }
+
+        if (!applied)
+        {
+            destination = null;
+            if (batch.Destination is { } stored)
+            {
+                destination = await LoadGalleryAsync(ctx, stored);
+                // The stored destination was deleted meanwhile: the set goes to the library only.
+                if (destination is null) await d.Store.UnsetDestinationAsync(batch.Id);
+            }
+        }
+
+        // 020 step 3, [SAFETY] II.5a: photos aimed at a public gallery need the owner's
+        // visibleToVisitors: true (sent only while the tray shows the public notice).
+        if (destination is not null && IsPublic(destination) && body.VisibleToVisitors != true)
+        {
+            d.Log.LogInformation("upload.destination-refused {batch} {gallery}", batch.Id, destination.Id);
+            return Error(409, "destination-public", Messages.DestinationPublic(destination.Title));
+        }
 
         // 2. Per-file refusals.
         var refused = new List<(int Index, string Name, string Reason)>();
@@ -223,6 +261,7 @@ public static partial class UploadEndpoints
         return Results.Json(new
         {
             batchId = batch.Id,
+            destination = DestinationJson(destination),
             accepted,
             refused = refused.OrderBy(r => r.Index).Select(r => new { index = r.Index, name = r.Name, reason = r.Reason }),
         });
@@ -484,87 +523,77 @@ public static partial class UploadEndpoints
         Iso = e.Iso,
     };
 
-    // ── U1 GET|HEAD /admin/upload ────────────────────────────────────────────
+    // ── U12 POST /admin/upload/items/{itemId}/join ───────────────────────────
 
     /// <summary>
-    /// The upload page (contracts/http.md U1). ONE <c>db.batch.read</c> fetches the open batch and,
-    /// when <c>?confirmed=</c> is a valid id, that batch if it is confirmed (SC-010). Any other
-    /// <c>confirmed</c> value is ignored.
+    /// Join (020 contracts/http.md U12): the item must be in the open batch with this attempt and
+    /// in state succeeded or joining; [SAFETY] the claim sets it joining atomically, then
+    /// <see cref="ConfirmService.JoinAsync"/> publishes it and adds it to the destination.
     /// </summary>
-    private static async Task<IResult> Page(HttpContext ctx, IAntiforgery antiforgery, IMongoDatabase db, AdminAssets assets)
+    private static async Task<IResult> Join(string itemId, HttpContext ctx, ConfirmService join)
     {
         var d = Deps.For(ctx);
-        var confirmedId = ctx.Request.Query["confirmed"].ToString();
-        var withConfirmed = OpaqueId.IsValid(confirmedId);
+        var (_, batch, item, fail) = await ResolveAsync<AttemptRequest>(itemId, ctx, d, b => b.AttemptId);
+        if (fail is not null) return fail;
+        if (d.Effective(item!) is not (ItemStates.Succeeded or ItemStates.Joining)) return NotActive();
 
-        var f = Builders<BatchDoc>.Filter;
-        var filter = f.Eq(b => b.State, BatchStates.Open);
-        if (withConfirmed)
-            filter = f.Or(filter, f.And(f.Eq(b => b.Id, confirmedId), f.Eq(b => b.State, BatchStates.Confirmed)));
-
-        var col = db.GetCollection<BatchDoc>(BatchStore.CollectionName);
-        var found = await d.Timer.Time("db.batch.read",
-            async () => await col.Find(filter).Limit(2).ToListAsync(), isDbRead: true);
-
-        var open = found.FirstOrDefault(b => b.State == BatchStates.Open);
-        var confirmed = withConfirmed ? found.FirstOrDefault(b => b.Id == confirmedId && b.State == BatchStates.Confirmed) : null;
-
-        var tokens = antiforgery.GetAndStoreTokens(ctx);
-        var model = UploadPageModel.Create(open, confirmed?.ConfirmedCount, d.Options, assets,
-            tokens.RequestToken!, d.Clock.GetUtcNow());
-
-        return new RazorComponentResult<UploadPage>(new Dictionary<string, object?>
+        if (!await d.Store.TryClaimJoinAsync(batch!.Id, item!.ItemId, item.AttemptId))
         {
-            [nameof(UploadPage.Model)] = model,
-            [nameof(UploadPage.SignOut)] = new FormToken(tokens.FormFieldName, tokens.RequestToken!),
-        });
+            // Lost a race: report what changed, as the shared rules would have on a fresh read.
+            var now = (await d.Store.GetOpenAsync())?.Items.FirstOrDefault(i => i.ItemId == item.ItemId);
+            if (now is null) return NotFound();
+            return now.AttemptId != item.AttemptId ? StaleAttempt() : NotActive();
+        }
+
+        var result = await join.JoinAsync(batch.Id, item.ItemId, item.AttemptId);
+        return result.Status switch
+        {
+            JoinStatus.Joined => Results.Json(new
+            {
+                imageId = result.ImageId,
+                gallery = result.Gallery is { } g ? new { id = g.Id, title = g.Title, @public = g.Public } : null,
+                galleryGone = result.GalleryGone,
+            }),
+            JoinStatus.ChangedAfterValidation => Error(409, "changed-after-validation",
+                "1 photo changed after it was checked. Restart or delete it."),
+            JoinStatus.StaleAttempt => StaleAttempt(),
+            JoinStatus.NotActive => NotActive(),
+            _ => NotFound(),
+        };
     }
 
-    // ── U10 POST /admin/upload/confirm ───────────────────────────────────────
+    // ── U13 POST /admin/upload/clear ─────────────────────────────────────────
 
     public sealed record BatchRequest(string? BatchId);
 
-    private static async Task<IResult> Confirm(HttpContext ctx, ConfirmService confirm)
+    /// <summary>
+    /// Clear (020 contracts/http.md U13): refused while any item is effectively queued,
+    /// processing, uploading, succeeded or joining; otherwise the staging prefix of every remaining
+    /// (failed, interrupted) item is deleted, the items removed, <c>added</c> and
+    /// <c>destination</c> cleared.
+    /// </summary>
+    private static async Task<IResult> Clear(HttpContext ctx)
     {
+        var d = Deps.For(ctx);
         var (body, bad) = await ReadAsync<BatchRequest>(ctx);
         if (bad is not null) return bad;
         if (!OpaqueId.IsValid(body!.BatchId)) return BatchNotFound();
 
-        var batchId = body.BatchId!;
-        var result = await confirm.ConfirmAsync(batchId);
-        return result.Status switch
-        {
-            ConfirmStatus.Confirmed => Results.Json(new
-            {
-                batchId,
-                count = result.Count,
-                redirect = $"/admin/upload?confirmed={batchId}",
-            }),
-            ConfirmStatus.NotReady => Results.Json(new
-            {
-                error = "not-ready",
-                message = NotReadyMessage(result.NotReadyCount),
-                notReady = result.NotReadyCount,
-            }, statusCode: 409),
-            ConfirmStatus.ChangedAfterValidation => Results.Json(new
-            {
-                error = "changed-after-validation",
-                message = result.Failed == 1
-                    ? "1 photo changed after it was checked. Restart or delete it."
-                    : $"{result.Failed} photos changed after they were checked. Restart or delete them.",
-                added = result.Added,
-                failed = result.Failed,
-            }, statusCode: 409),
-            _ => BatchNotFound(),
-        };
-    }
+        var batch = await d.Store.GetOpenAsync();
+        if (batch is null || batch.Id != body.BatchId) return BatchNotFound();
+        if (batch.Items.Any(i => d.Effective(i) is not (ItemStates.Failed or ItemStates.Interrupted)))
+            return Error(409, "still-working", Messages.StillWorking);
 
-    private static string NotReadyMessage(int n) => n switch
-    {
-        0 => "Add photos to the batch first.",
-        1 => "Restart or delete the 1 photo that isn't ready",
-        _ => $"Restart or delete the {n} photos that aren't ready",
-    };
+        foreach (var item in batch.Items)
+            await d.Images.DeletePrefixAsync(d.Priv, StagingKeys.ItemPrefix(batch.Id, item.ItemId), d.Log);
+        await d.Store.ClearAsync(batch.Id);
+
+        var dropped = batch.Items.Count;
+        d.Log.LogInformation("upload.cleared {batch} {dropped}", batch.Id, dropped);
+        return dropped == 0
+            ? Results.Json(new { dropped })
+            : Results.Json(new { dropped, message = Messages.NotAdded(dropped) });
+    }
 
     private static IResult BatchNotFound() =>
         Error(404, "not-found", "That batch isn't open.");
@@ -692,7 +721,8 @@ public static partial class UploadEndpoints
     // ── U9 POST /admin/upload/items/{itemId}/delete ──────────────────────────
 
     /// <summary>
-    /// Delete (contracts/http.md U9, L-04): any state, idempotent for the open batch. An
+    /// Delete (contracts/http.md U9, L-04): any state except joining (020: 409 not-active),
+    /// idempotent for the open batch. An
     /// <c>attemptId</c>, when sent, must be current (409 stale-attempt). The item is
     /// <c>$pull</c>ed and its whole <c>staging/{b}/{i}/</c> prefix (all attempts) deleted. An item
     /// that is already gone from the open batch answers 204 again and its prefix is swept again.
@@ -706,46 +736,18 @@ public static partial class UploadEndpoints
 
         var batch = await d.Store.GetOpenAsync();
         if (batch is null) return NotFound();
-        if (batch.ConfirmStartedAt is not null) return ConfirmInProgress();
 
         var item = batch.Items.FirstOrDefault(i => i.ItemId == itemId);
         if (item is not null && !string.IsNullOrEmpty(body!.AttemptId)
             && !string.Equals(body.AttemptId, item.AttemptId, StringComparison.Ordinal))
             return StaleAttempt();
+        // [SAFETY] the join claim: a joining item's files may be going public; it cannot be removed.
+        if (item is not null && item.State == ItemStates.Joining) return NotActive();
 
         if (item is not null)
             await d.Store.PullItemAsync(batch.Id, itemId);
         await d.Images.DeletePrefixAsync(d.Priv, StagingKeys.ItemPrefix(batch.Id, itemId), d.Log);
         return Results.NoContent();
-    }
-
-    // ── U11 POST /admin/upload/discard ───────────────────────────────────────
-
-    /// <summary>
-    /// Discard (contracts/http.md U11, L-06): the open, not-confirming batch becomes
-    /// <c>discarded</c> and its whole <c>staging/{batchId}/</c> prefix is deleted. The state change
-    /// comes first, so a Confirm can never start on a batch whose files are being removed.
-    /// </summary>
-    private static async Task<IResult> Discard(HttpContext ctx)
-    {
-        var d = Deps.For(ctx);
-        var (body, bad) = await ReadAsync<BatchRequest>(ctx);
-        if (bad is not null) return bad;
-        if (!OpaqueId.IsValid(body!.BatchId)) return BatchNotFound();
-
-        var batch = await d.Store.GetOpenAsync();
-        if (batch is null || batch.Id != body.BatchId) return BatchNotFound();
-        if (batch.ConfirmStartedAt is not null) return ConfirmInProgress();
-
-        if (!await d.Store.MarkDiscardedAsync(batch.Id))
-        {
-            var now = await d.Store.GetByIdAsync(batch.Id);
-            return now is { State: BatchStates.Open, ConfirmStartedAt: not null } ? ConfirmInProgress() : BatchNotFound();
-        }
-
-        await d.Images.DeletePrefixAsync(d.Priv, StagingKeys.BatchPrefix(batch.Id), d.Log);
-        d.Log.LogInformation("upload.discarded {batch} {count}", batch.Id, batch.Items.Count);
-        return Results.Json(new { redirect = "/admin/upload" });
     }
 
     /// <summary>Presigned PUTs for every ladder width of <paramref name="width"/> (U4 and U8 shape).</summary>
@@ -787,8 +789,8 @@ public static partial class UploadEndpoints
 
     /// <summary>
     /// Shared item-request rules in order: invalid id → 404; body → 400 when unreadable or with no
-    /// attemptId; item not in the OPEN batch → 404; confirming → 409 confirm-in-progress; attempt
-    /// mismatch → 409 stale-attempt. The caller checks the effective state.
+    /// attemptId; item not in the OPEN batch → 404; attempt mismatch → 409 stale-attempt. The
+    /// caller checks the effective state.
     /// </summary>
     private static async Task<(T? Body, BatchDoc? Batch, BatchItemDoc? Item, IResult? Fail)> ResolveAsync<T>(
         string itemId, HttpContext ctx, Deps d, Func<T, string?> attemptOf) where T : class
@@ -804,7 +806,6 @@ public static partial class UploadEndpoints
         var batch = await d.Store.GetOpenAsync();
         var item = batch?.Items.FirstOrDefault(i => i.ItemId == itemId);
         if (batch is null || item is null) return (null, null, null, NotFound());
-        if (batch.ConfirmStartedAt is not null) return (null, null, null, ConfirmInProgress());
         if (!string.Equals(attemptId, item.AttemptId, StringComparison.Ordinal))
             return (null, null, null, StaleAttempt());
 
@@ -815,7 +816,7 @@ public static partial class UploadEndpoints
     /// Reads the JSON body whatever its content type (never <c>ReadFormAsync</c>), so a bodiless or
     /// malformed POST answers 400 instead of throwing. An over-limit body answers 413.
     /// </summary>
-    private static async Task<(T? Body, IResult? Fail)> ReadAsync<T>(HttpContext ctx) where T : class
+    internal static async Task<(T? Body, IResult? Fail)> ReadAsync<T>(HttpContext ctx) where T : class
     {
         try
         {
@@ -835,14 +836,24 @@ public static partial class UploadEndpoints
     private static bool IsActive(string effective) =>
         effective is ItemStates.Queued or ItemStates.Processing or ItemStates.Uploading;
 
-    private static IResult Error(int status, string code, string message) =>
+    internal static IResult Error(int status, string code, string message) =>
         Results.Json(new { error = code, message }, statusCode: status);
 
     private static IResult NotFound() =>
         Error(404, "not-found", "That photo isn't in the open batch.");
 
-    private static IResult ConfirmInProgress() =>
-        Error(409, "confirm-in-progress", "The batch is being added to your library.");
+    private static IResult GalleryGone() =>
+        Error(404, "gallery-gone", ImageService.NoGalleryReason);
+
+    /// <summary>The owner read of a destination gallery through <see cref="GalleryService.LoadAsync"/>.</summary>
+    private static Task<GalleryDoc?> LoadGalleryAsync(HttpContext ctx, string gid) =>
+        ctx.RequestServices.GetRequiredService<GalleryService>().LoadAsync(gid);
+
+    private static bool IsPublic(GalleryDoc g) => g.Visibility == "public";
+
+    /// <summary>U2/U3 <c>destination</c>: <c>{ id, title, public }</c> or null.</summary>
+    private static object? DestinationJson(GalleryDoc? g) =>
+        g is null ? null : new { id = g.Id, title = g.Title, @public = IsPublic(g) };
 
     private static IResult StaleAttempt() =>
         Error(409, "stale-attempt", "This photo was restarted; that request is out of date.");

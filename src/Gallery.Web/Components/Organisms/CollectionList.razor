@@ -1,0 +1,69 @@
+@* Feature 020 K9: the collections list (the workspace's left region). In order: brand; All photos and
+   Not in a gallery with their counts; the Galleries heading ("in home page order"); one row per gallery
+   (data-gid, data-slug, data-public, draggable; Mark "Private" when private; its count); New gallery or,
+   while naming, the "New gallery name" input; View site (new tab); the sign-out form. Links are real
+   hrefs to W1-W3 (workspace.js intercepts them); the current row has aria-current="page".
+   Over/Before are the drag states (ws-over: a drop target; ws-before: the reorder position). *@
+<div class="ws-collections">
+    <a class="ws-brand" href="/admin">Gallery <span class="ws-brand-sub">admin</span></a>
+    <a class="ws-coll-row" href="/admin" aria-current="@CurrentOf(All)"><span class="ws-coll-name">All photos</span><span class="ws-coll-count">@Total</span></a>
+    <a class="ws-coll-row" href="/admin/unplaced" aria-current="@CurrentOf(UnplacedKey)"><span class="ws-coll-name">Not in a gallery</span><span class="ws-coll-count">@Unplaced</span></a>
+    <h2 class="ws-coll-head">Galleries <span class="ws-coll-note">in home page order</span></h2>
+    @foreach (var g in Galleries)
+    {
+        <a class="@RowClass(g.Id)" href="/admin/g/@g.Id" aria-current="@CurrentOf(g.Id)" data-gid="@g.Id" data-slug="@g.Slug" data-public="@(g.Public ? "true" : "false")" draggable="true"><span class="ws-coll-name">@g.Title</span>@(g.Public ? null : PrivateMark)<span class="ws-coll-count">@g.Count</span></a>
+    }
+    @NewGallery@(NamingTemplate ? NamingTpl : null)
+    <div class="ws-coll-foot">
+        <Button Element="ButtonElement.Link" Variant="ButtonVariant.Quiet" Href="/" Target="_blank">View site ↗</Button>
+        <form method="post" action="/admin/signout" class="ws-signout"><input type="hidden" name="@Csrf.FieldName" value="@Csrf.Value" /><Button Variant="ButtonVariant.Quiet">Sign out</Button></form>
+    </div>
+</div>
+
+@code {
+    /// <summary>The <see cref="Current"/> value of All photos (W1).</summary>
+    public const string All = "all";
+
+    /// <summary>The <see cref="Current"/> value of Not in a gallery (W2).</summary>
+    public const string UnplacedKey = "unplaced";
+
+    /// <summary>The open collection: <c>all</c>, <c>unplaced</c> or a gallery id.</summary>
+    [Parameter] public string Current { get; set; } = All;
+
+    [Parameter] public int Total { get; set; }
+    [Parameter] public int Unplaced { get; set; }
+
+    /// <summary>Every gallery, in home page order.</summary>
+    [Parameter] public IReadOnlyList<CollectionGallery> Galleries { get; set; } = [];
+
+    /// <summary>Show the naming input instead of the New gallery button.</summary>
+    [Parameter] public bool Naming { get; set; }
+
+    /// <summary>
+    /// 020 T038 hook: also render the naming input inside <c>&lt;template class="ws-tpl-naming"&gt;</c>, so
+    /// workspace.js clones it (with this component's scope) when New gallery is pressed. Default off:
+    /// the default render is byte-identical.
+    /// </summary>
+    [Parameter] public bool NamingTemplate { get; set; }
+
+    /// <summary>The antiforgery field for the sign-out form.</summary>
+    [Parameter, EditorRequired] public FormToken Csrf { get; set; } = default!;
+
+    /// <summary>The gallery row photos are dragged over (class <c>ws-over</c>).</summary>
+    [Parameter] public string? Over { get; set; }
+
+    /// <summary>The gallery row a dragged gallery would be placed before (class <c>ws-before</c>).</summary>
+    [Parameter] public string? Before { get; set; }
+
+    private string? CurrentOf(string key) => key == Current ? "page" : null;
+
+    private string RowClass(string id) => "ws-coll-row" + (id == Over ? " ws-over" : "") + (id == Before ? " ws-before" : "");
+
+    private static RenderFragment PrivateMark => @<Mark Text="Private" />;
+
+    private RenderFragment NamingTpl => @<template class="ws-tpl-naming"><label class="ws-naming"><span class="ws-naming-label">New gallery name</span><input class="ws-naming-input" type="text" name="title" autocomplete="off" /></label></template>;
+
+    private RenderFragment NewGallery => Naming
+        ? @<label class="ws-naming"><span class="ws-naming-label">New gallery name</span><input class="ws-naming-input" type="text" name="title" autocomplete="off" autofocus /></label>
+        : @<Button Variant="ButtonVariant.Quiet" Type="button" Name="collection" Value="new">New gallery</Button>;
+}

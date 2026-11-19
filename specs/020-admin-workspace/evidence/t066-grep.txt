@@ -1,0 +1,110 @@
+== test-impact-hits.sh on the finished tree
+== upload page (U1): 6 lines in 3 files
+tests/Gallery.Web.Tests/AdminAccessTests.cs: 111 176 35
+tests/Gallery.Web.Tests/Fixtures/UploadBrowserFixture.cs: 249 250
+tests/Gallery.Web.Tests/WorkspaceRemovalGuardTests.cs: 47
+
+== confirm (U10): 1 lines in 1 files
+tests/Gallery.Web.Tests/WorkspaceRemovalGuardTests.cs: 48
+
+== discard (U11): 1 lines in 1 files
+tests/Gallery.Web.Tests/WorkspaceRemovalGuardTests.cs: 49
+
+== upload item API (kept): 91 lines in 8 files
+tests/Gallery.Web.Tests/UploadAccessTests.cs: 44 45 47 49 51 55 62 64 67
+tests/Gallery.Web.Tests/UploadFlowTests.cs: 111 196 209 322 342 406 408 429 432 438 447 462 473 474 486 496 538 541 543 552 555 570 571 596 597 598 599 601 602 609 61 612 83
+tests/Gallery.Web.Tests/UploadIntakeTests.cs: 100 109 118 43 77 81 98
+tests/Gallery.Web.Tests/UploadJoinTests.cs: 101 1027 112 124 272 275 278 309 313 324 342 344 346 476 553 560 620 633 658 84 844 863 908 917 944 958 971 983
+tests/Gallery.Web.Tests/UploadLifecycleTests.cs: 246 357 401 67
+tests/Gallery.Web.Tests/UploadResumeTests.cs: 108 121 61 68
+tests/Gallery.Web.Tests/UploadSecretScanTests.cs: 48 52 63 65
+tests/Gallery.Web.Tests/WorkspaceUploadBrowserTests.cs: 130 397
+
+== library page (L1): 4 lines in 3 files
+tests/Gallery.Web.Tests/AdminAccessTests.cs: 179 36
+tests/Gallery.Web.Tests/LocalSignInBrowserTests.cs: 31
+tests/Gallery.Web.Tests/WorkspaceRemovalGuardTests.cs: 50
+
+== photo edit / save (L2, L5, L6): 2 lines in 1 files
+tests/Gallery.Web.Tests/WorkspaceRemovalGuardTests.cs: 51 54
+
+== bulk add (L3): 1 lines in 1 files
+tests/Gallery.Web.Tests/WorkspaceRemovalGuardTests.cs: 52
+
+== bulk delete (L4): 1 lines in 1 files
+tests/Gallery.Web.Tests/WorkspaceRemovalGuardTests.cs: 53
+
+== galleries (G1 to G4, B1 to B6): 10 lines in 3 files
+tests/Gallery.Web.Tests/AdminAccessTests.cs: 37
+tests/Gallery.Web.Tests/Fixtures/GalleryHtml.cs: 63
+tests/Gallery.Web.Tests/WorkspaceRemovalGuardTests.cs: 55 56 57 58 59 60 61 62
+
+== shell (H4): 144 lines in 26 files
+tests/Gallery.Web.Tests/AdminAccessTests.cs: 110 131 173 195 34 411 57 60 62 79 99
+tests/Gallery.Web.Tests/BatchStoreTests.cs: 141
+tests/Gallery.Web.Tests/CameraRoutesTests.cs: 345 363
+tests/Gallery.Web.Tests/EdgeSecretTests.cs: 121 83 84 85
+tests/Gallery.Web.Tests/Fixtures/LibraryHost.cs: 101
+tests/Gallery.Web.Tests/Fixtures/UploadBrowserFixture.cs: 257
+tests/Gallery.Web.Tests/Fixtures/UploadHost.cs: 74
+tests/Gallery.Web.Tests/GalleryServiceTests.cs: 62
+tests/Gallery.Web.Tests/LibraryFlowTests.cs: 44
+tests/Gallery.Web.Tests/LibrarySourceGuardTests.cs: 102 83
+tests/Gallery.Web.Tests/LocalSignInBrowserTests.cs: 38 42 46 50
+tests/Gallery.Web.Tests/LocalSignInTests.cs: 112 116 135 145 222 248
+tests/Gallery.Web.Tests/NewTabLinkTests.cs: 25
+tests/Gallery.Web.Tests/OwnerClaimTests.cs: 175 81 87
+tests/Gallery.Web.Tests/OwnerSessionTests.cs: 111 135 151 167 185 222 230 246 260 277 62 66 95
+tests/Gallery.Web.Tests/RefusalTests.cs: 224 85
+tests/Gallery.Web.Tests/SignInTimingEvidenceTests.cs: 35
+tests/Gallery.Web.Tests/UploadSecretScanTests.cs: 65
+tests/Gallery.Web.Tests/WorkspaceAccessTests.cs: 195
+tests/Gallery.Web.Tests/WorkspaceBrowserTests.cs: 1030 1043 1081 1131 1132 1154 122 1289 1355 1389 139 1399 141 184 191 193 206 226 241 274 294 319 343 387 416 491 513 609 682 707 736 759 786 842 885
+tests/Gallery.Web.Tests/WorkspaceComponentTests.cs: 469 497
+tests/Gallery.Web.Tests/WorkspaceLayoutBrowserTests.cs: 122 127 170 173 174 176 182 71 73 74 79
+tests/Gallery.Web.Tests/WorkspacePageTests.cs: 133 159 167 181 190 193 196 262 269 280 301 317 368 389 421 475 489 503 557 564 577 597 641 675
+tests/Gallery.Web.Tests/WorkspacePhoneBrowserTests.cs: 103
+tests/Gallery.Web.Tests/WorkspaceRemovalGuardTests.cs: 87
+tests/Gallery.Web.Tests/WorkspaceUploadBrowserTests.cs: 196 227 277 318 341 388 423 474 511 525 769 810 892
+
+== catalogue (/ui): 15 lines in 4 files
+tests/Gallery.Web.Tests/IndexTests.cs: 13 21
+tests/Gallery.Web.Tests/NavCataloguePageTests.cs: 8
+tests/Gallery.Web.Tests/UiOwnerOnlyTests.cs: 11 36 44 51 58 83 89 90 92 94
+tests/Gallery.Web.Tests/UiPagesUnchangedTests.cs: 6 7
+
+== components being removed, named in tests
+OwnerBar: 4 files
+SelectionBar: 2 files
+PhotoActions: 3 files
+GalleryActions: 1 files
+GalleryBuilder: 1 files
+BatchFooter: 1 files
+BatchItem: 5 files
+DragHandle: 2 files
+CoverMarker: 2 files
+TokenCombobox: 3 files
+VisibilityToggle: 2 files
+IconButton: 2 files
+Icon>: 0 files
+Icons.: 1 files
+LibraryPage: 2 files
+PhotoEditPage: 1 files
+GalleriesPage: 1 files
+GalleryPage: 2 files
+UploadPage: 2 files
+ShellPage: 1 files
+== removed names in src/tests
+tests/Gallery.Web.Tests/LibrarySourceGuardTests.cs:14:///   <item>C4: <c>library.js</c> and <c>reorder.js</c> use no HTML injection sink.</item>
+tests/Gallery.Web.Tests/WorkspaceRemovalGuardTests.cs:128:        "ShellPage", "LibraryPage", "PhotoEditPage", "GalleriesPage", "UploadPage",
+tests/Gallery.Web.Tests/WorkspaceRemovalGuardTests.cs:137:        "library.js", "reorder.js", "\"/library", "\"/galleries", "\"/upload/confirm\"", "\"/upload/discard\"",
+tests/Gallery.Web.Tests/WorkspaceRemovalGuardTests.cs:147:        "Admin/Pages/UploadPage.razor", "Admin/Pages/ShellPage.razor",
+tests/Gallery.Web.Tests/WorkspaceRemovalGuardTests.cs:149:        "wwwroot/admin-assets/library.js", "wwwroot/admin-assets/reorder.js",
+tests/Gallery.Web.Tests/Fixtures/LibraryBrowserFixture.cs:22:/// 009 T050: the library, gallery list and builder pages with library.js and reorder.js in a real
+
+== Review (parent, T066)
+Remaining test-impact hits are the upload item routes that still exist under /admin/upload/ (U2-U9, U12, U13),
+the sign-in and access facts for /admin itself, and the new workspace tests. No fact loads a removed page.
+Removed component names left in tests/ are doc comments only (summaries of 005/008 test files and
+IndexTests/SignInComponentTests prose); WorkspaceRemovalGuardTests scans src/, where none remain (green in gate E).
+library.js/reorder.js: two doc comments (LibrarySourceGuardTests.cs:14, LibraryBrowserFixture.cs:22).

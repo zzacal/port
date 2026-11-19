@@ -12,7 +12,7 @@
 
 ### Session 2026-11-18
 
-- Q: Should the bar's look change too (docked, or a card with a shadow aligned to the grid)? → A: No.
+- **SUPERSEDED by 020 (2026-11-19): The selection bar is removed; a selection's actions are in the details panel (020 FR-009, FR-039).** Q: Should the bar's look change too (docked, or a card with a shadow aligned to the grid)? → A: No.
   "For now I just don't want it to be behind the images." The defect is that photos draw over the bar
   and take the mouse clicks meant for its buttons. The bar's look, offset and width stay as they are.
 
@@ -54,21 +54,21 @@ the bar, then click each bar control at a spot with a photo underneath: each cli
 
 ### Functional Requirements
 
-- **FR-001**: While one or more photos are ticked in the library, the selection bar MUST be drawn in
+- **FR-001**: **SUPERSEDED by 020 (2026-11-19): The selection bar is removed; a selection's actions are in the details panel (020 FR-009, FR-039).** While one or more photos are ticked in the library, the selection bar MUST be drawn in
   front of every photo and every part of a tile (picture, placeholder, title strip, select circle,
   icon row) at every width and scroll position.
-- **FR-002**: A mouse click anywhere on a bar control MUST reach that control, never a tile underneath.
-- **FR-003**: (Corrected at implement, decisions #6.) The upload page's batch footer is pinned the same
+- **FR-002**: **SUPERSEDED by 020 (2026-11-19): The selection bar is removed (020 FR-039).** A mouse click anywhere on a bar control MUST reach that control, never a tile underneath.
+- **FR-003**: **SUPERSEDED by 020 (2026-11-19): The upload page and its batch footer are removed (020 FR-039).** (Corrected at implement, decisions #6.) The upload page's batch footer is pinned the same
   way, but the real upload page draws no photos in its batch items (filename placeholders only; preview
   pictures appear only on the `/ui` catalogue pages), so nothing there can cover it. The shared fix MUST
   live in the photo components themselves, so any page that does put photos under a pinned bar (the
   catalogue pages included) gets the same result with no per-bar change.
-- **FR-004**: Modal dialogs opened from the bar (gallery picker, bulk delete confirm) MUST still cover
+- **FR-004**: **SUPERSEDED by 020 (2026-11-19): The selection bar is removed; the delete confirmation opens from the details panel (020 FR-012).** Modal dialogs opened from the bar (gallery picker, bulk delete confirm) MUST still cover
   the bar and keep it unreachable while open.
-- **FR-005**: Nothing else about the bar changes: its look, position, width, wording and selection
+- **FR-005**: **SUPERSEDED by 020 (2026-11-19): The selection bar is removed; the selection rules are 020 FR-007 and FR-008.** Nothing else about the bar changes: its look, position, width, wording and selection
   behaviour (count, Clear, Select all on this page, the selection cap, show at 1 / hide at 0, the two
   actions) stay as today.
-- **FR-006**: A browser check MUST guard the fix. With photos ticked and scrolled behind the bar, it
+- **FR-006**: **SUPERSEDED by 020 (2026-11-19): The selection bar is removed, so this check has nothing left to guard (020 FR-039).** A browser check MUST guard the fix. With photos ticked and scrolled behind the bar, it
   samples points across the full bar at 390, 800 and 1440 px, and every sample must land on the bar or
   one of its controls. It MUST fail on today's code.
 - **FR-007**: Existing tests MUST pass unmodified.

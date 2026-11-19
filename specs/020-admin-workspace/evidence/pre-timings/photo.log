@@ -1,0 +1,641 @@
+The WebRootPath was not found: /Users/zzacal/repos/gallery/artifacts/parent-pre/bin/Gallery.Web.Tests/debug/wwwroot. Static files may be unavailable.
+Now listening on: http://127.0.0.1:59864
+Application started. Press Ctrl+C to shut down.
+Hosting environment: Production
+Content root path: /Users/zzacal/repos/gallery/artifacts/parent-pre/bin/Gallery.Web.Tests/debug
+op.timing db.site.claim 67.78 won
+op.timing db.site.owner.read 13.11 ok
+op.timing startup.inline-styles 0.11 missing
+http.request GET /admin/ 200 39.75 0
+op.timing db.gallery.create 2.97 ok
+op.timing db.cameras.load 2.17 ok
+op.timing db.site.project 18.44 ok
+op.timing db.gallery.load 0.9 ok
+op.timing db.gallery.load 8.9 ok
+op.timing db.gallery.update 1.5 ok
+op.timing db.image.update 0.64 ok
+op.timing db.gallery.load 0.93 ok
+op.timing db.gallery.update 0.43 ok
+op.timing db.image.update 0.38 ok
+op.timing db.gallery.load 0.56 ok
+op.timing db.gallery.update 0.38 ok
+op.timing db.image.update 0.3 ok
+op.timing db.gallery.load 0.46 ok
+op.timing db.gallery.update 0.34 ok
+op.timing db.image.update 0.28 ok
+op.timing db.gallery.load 0.5 ok
+op.timing db.gallery.update 0.38 ok
+op.timing db.image.update 0.27 ok
+op.timing db.gallery.load 0.41 ok
+op.timing db.gallery.update 0.32 ok
+op.timing db.image.update 0.28 ok
+op.timing db.gallery.load 0.5 ok
+op.timing db.gallery.update 0.36 ok
+op.timing db.image.update 0.29 ok
+op.timing db.gallery.load 0.44 ok
+op.timing db.gallery.update 0.3 ok
+op.timing db.image.update 0.32 ok
+op.timing db.gallery.load 0.46 ok
+op.timing db.gallery.update 0.32 ok
+op.timing db.image.update 0.27 ok
+op.timing db.gallery.load 0.42 ok
+op.timing db.gallery.update 0.32 ok
+op.timing db.image.update 0.3 ok
+op.timing db.gallery.load 0.48 ok
+op.timing db.gallery.load 1.49 ok
+op.timing db.gallery.update 0.8 ok
+op.timing db.cameras.load 0.29 ok
+op.timing db.site.project 1.67 ok
+op.timing cache.evict 0.22 ok
+op.timing db.gallery.load 1.02 ok
+op.timing db.gallery.create 0.72 ok
+edge.purge gallery.add recorder 11 0.83 ok https://site.test/g/arsxg2ihrpbpvmdfixmyg4pbfy/gallery-0 https://site.test/g/arsxg2ihrpbpvmdfixmyg4pbfy/gallery-0/2e7fr23giu3fnmwc3oz7yl52ky https://site.test/g/arsxg2ihrpbpvmdfixmyg4pbfy/gallery-0/64iflxkvsxj755u43c5pewhpue https://site.test/g/arsxg2ihrpbpvmdfixmyg4pbfy/gallery-0/l4ybij33ylwmpyryrmowembfsq https://site.test/g/arsxg2ihrpbpvmdfixmyg4pbfy/gallery-0/lq6vogklezwibehn4kwbshmph4 https://site.test/g/arsxg2ihrpbpvmdfixmyg4pbfy/gallery-0/lzmdw3xu7dek7ibgbfkg4pagxa https://site.test/g/arsxg2ihrpbpvmdfixmyg4pbfy/gallery-0/p3zv6uemp3k5kbcxb6j2dooeii https://site.test/g/arsxg2ihrpbpvmdfixmyg4pbfy/gallery-0/q42iejcqxz4hfbc5ran4etds44 https://site.test/g/arsxg2ihrpbpvmdfixmyg4pbfy/gallery-0/rdf5t62dpc57dtwo4vfvfhpfvy https://site.test/g/arsxg2ihrpbpvmdfixmyg4pbfy/gallery-0/scqiabzrbz5ibguf3fqqfh3c4m https://site.test/g/arsxg2ihrpbpvmdfixmyg4pbfy/gallery-0/zza5bzvuctldbzbmy7gpqgcqqu
+edge.warm gallery.add recorder 51 0.2 ok
+edge.lag gallery.add 3.05
+op.timing db.cameras.load 0.26 ok
+op.timing db.site.project 1.36 ok
+op.timing db.gallery.load 0.29 ok
+op.timing db.gallery.load 0.52 ok
+op.timing db.gallery.update 0.36 ok
+op.timing db.image.update 0.33 ok
+op.timing db.gallery.load 0.48 ok
+op.timing db.gallery.update 0.37 ok
+op.timing db.image.update 0.31 ok
+op.timing db.gallery.load 0.51 ok
+op.timing db.gallery.update 0.39 ok
+op.timing db.image.update 0.32 ok
+op.timing db.gallery.load 0.48 ok
+op.timing db.gallery.update 0.38 ok
+op.timing db.image.update 0.34 ok
+op.timing db.gallery.load 0.48 ok
+op.timing db.gallery.update 0.35 ok
+op.timing db.image.update 0.3 ok
+op.timing db.gallery.load 0.46 ok
+op.timing db.gallery.update 0.36 ok
+op.timing db.image.update 0.31 ok
+op.timing db.gallery.load 0.46 ok
+op.timing db.gallery.update 0.34 ok
+op.timing db.image.update 0.34 ok
+op.timing db.gallery.load 0.47 ok
+op.timing db.gallery.update 0.36 ok
+op.timing db.image.update 0.32 ok
+op.timing db.gallery.load 0.49 ok
+op.timing db.gallery.update 0.38 ok
+op.timing db.image.update 0.32 ok
+op.timing db.gallery.load 17.84 ok
+op.timing db.gallery.update 0.58 ok
+op.timing db.image.update 0.34 ok
+op.timing db.gallery.load 0.35 ok
+op.timing db.gallery.load 0.31 ok
+op.timing db.gallery.update 0.4 ok
+op.timing db.cameras.load 0.27 ok
+op.timing db.site.project 1.25 ok
+op.timing cache.evict 0.01 ok
+op.timing db.gallery.load 0.5 ok
+edge.purge gallery.add recorder 11 0.01 ok https://site.test/g/rg2zuyymseqr7p43la4l7a6qjy/gallery-1 https://site.test/g/rg2zuyymseqr7p43la4l7a6qjy/gallery-1/2e7fr23giu3fnmwc3oz7yl52ky https://site.test/g/rg2zuyymseqr7p43la4l7a6qjy/gallery-1/64iflxkvsxj755u43c5pewhpue https://site.test/g/rg2zuyymseqr7p43la4l7a6qjy/gallery-1/l4ybij33ylwmpyryrmowembfsq https://site.test/g/rg2zuyymseqr7p43la4l7a6qjy/gallery-1/lq6vogklezwibehn4kwbshmph4 https://site.test/g/rg2zuyymseqr7p43la4l7a6qjy/gallery-1/lzmdw3xu7dek7ibgbfkg4pagxa https://site.test/g/rg2zuyymseqr7p43la4l7a6qjy/gallery-1/p3zv6uemp3k5kbcxb6j2dooeii https://site.test/g/rg2zuyymseqr7p43la4l7a6qjy/gallery-1/q42iejcqxz4hfbc5ran4etds44 https://site.test/g/rg2zuyymseqr7p43la4l7a6qjy/gallery-1/rdf5t62dpc57dtwo4vfvfhpfvy https://site.test/g/rg2zuyymseqr7p43la4l7a6qjy/gallery-1/scqiabzrbz5ibguf3fqqfh3c4m https://site.test/g/rg2zuyymseqr7p43la4l7a6qjy/gallery-1/zza5bzvuctldbzbmy7gpqgcqqu
+edge.warm gallery.add recorder 51 0.01 ok
+edge.lag gallery.add 0.4
+op.timing db.gallery.create 0.69 ok
+op.timing db.cameras.load 0.26 ok
+op.timing db.site.project 1.25 ok
+op.timing db.gallery.load 0.29 ok
+op.timing db.gallery.load 0.55 ok
+op.timing db.gallery.update 0.38 ok
+op.timing db.image.update 0.33 ok
+op.timing db.gallery.load 0.51 ok
+op.timing db.gallery.update 0.38 ok
+op.timing db.image.update 0.34 ok
+op.timing db.gallery.load 0.49 ok
+op.timing db.gallery.update 0.38 ok
+op.timing db.image.update 0.32 ok
+op.timing db.gallery.load 0.45 ok
+op.timing db.gallery.update 0.36 ok
+op.timing db.image.update 0.32 ok
+op.timing db.gallery.load 0.48 ok
+op.timing db.gallery.update 0.34 ok
+op.timing db.image.update 0.32 ok
+op.timing db.gallery.load 0.46 ok
+op.timing db.gallery.update 0.35 ok
+op.timing db.image.update 0.33 ok
+op.timing db.gallery.load 0.45 ok
+op.timing db.gallery.update 0.37 ok
+op.timing db.image.update 0.32 ok
+op.timing db.gallery.load 0.44 ok
+op.timing db.gallery.update 0.36 ok
+op.timing db.image.update 0.31 ok
+op.timing db.gallery.load 0.46 ok
+op.timing db.gallery.update 0.35 ok
+op.timing db.image.update 0.3 ok
+op.timing db.gallery.load 0.43 ok
+op.timing db.gallery.update 0.34 ok
+op.timing db.image.update 0.33 ok
+op.timing db.gallery.load 0.32 ok
+op.timing db.gallery.load 0.31 ok
+op.timing db.gallery.update 0.35 ok
+op.timing db.cameras.load 0.27 ok
+op.timing db.site.project 1.24 ok
+op.timing cache.evict 0.01 ok
+op.timing db.gallery.load 0.45 ok
+edge.purge gallery.add recorder 11 0 ok https://site.test/g/ujlieoxrhfp6spwtsthtf7lzgu/gallery-2 https://site.test/g/ujlieoxrhfp6spwtsthtf7lzgu/gallery-2/2e7fr23giu3fnmwc3oz7yl52ky https://site.test/g/ujlieoxrhfp6spwtsthtf7lzgu/gallery-2/64iflxkvsxj755u43c5pewhpue https://site.test/g/ujlieoxrhfp6spwtsthtf7lzgu/gallery-2/l4ybij33ylwmpyryrmowembfsq https://site.test/g/ujlieoxrhfp6spwtsthtf7lzgu/gallery-2/lq6vogklezwibehn4kwbshmph4 https://site.test/g/ujlieoxrhfp6spwtsthtf7lzgu/gallery-2/lzmdw3xu7dek7ibgbfkg4pagxa https://site.test/g/ujlieoxrhfp6spwtsthtf7lzgu/gallery-2/p3zv6uemp3k5kbcxb6j2dooeii https://site.test/g/ujlieoxrhfp6spwtsthtf7lzgu/gallery-2/q42iejcqxz4hfbc5ran4etds44 https://site.test/g/ujlieoxrhfp6spwtsthtf7lzgu/gallery-2/rdf5t62dpc57dtwo4vfvfhpfvy https://site.test/g/ujlieoxrhfp6spwtsthtf7lzgu/gallery-2/scqiabzrbz5ibguf3fqqfh3c4m https://site.test/g/ujlieoxrhfp6spwtsthtf7lzgu/gallery-2/zza5bzvuctldbzbmy7gpqgcqqu
+edge.warm gallery.add recorder 51 0 ok
+edge.lag gallery.add 0.08
+op.timing db.site.owner.read 0.41 ok
+op.timing db.library.page 1.46 ok
+op.timing db.galleries.list 0.57 ok
+op.timing db.site.order 0.37 ok
+http.request GET /admin/library/images/{iid} 200 21.28 3
+op.timing db.site.owner.read 0.51 ok
+op.timing db.library.page 0.59 ok
+op.timing db.galleries.list 0.37 ok
+op.timing db.site.order 0.31 ok
+http.request GET /admin/library/images/{iid} 200 5.95 3
+op.timing db.site.owner.read 9.66 ok
+op.timing db.library.page 0.6 ok
+op.timing db.galleries.list 0.41 ok
+op.timing db.site.order 0.33 ok
+http.request GET /admin/library/images/{iid} 200 12.12 3
+op.timing db.site.owner.read 0.37 ok
+op.timing db.library.page 0.52 ok
+op.timing db.galleries.list 0.35 ok
+op.timing db.site.order 0.29 ok
+http.request GET /admin/library/images/{iid} 200 2.13 3
+op.timing db.site.owner.read 0.31 ok
+op.timing db.library.page 0.46 ok
+op.timing db.galleries.list 0.34 ok
+op.timing db.site.order 0.31 ok
+http.request GET /admin/library/images/{iid} 200 1.94 3
+op.timing db.site.owner.read 0.28 ok
+op.timing db.library.page 0.41 ok
+op.timing db.galleries.list 0.32 ok
+op.timing db.site.order 1.15 ok
+http.request GET /admin/library/images/{iid} 200 2.7 3
+op.timing db.site.owner.read 0.72 ok
+op.timing db.library.page 0.93 ok
+op.timing db.galleries.list 0.76 ok
+op.timing db.site.order 0.64 ok
+http.request GET /admin/library/images/{iid} 200 3.59 3
+op.timing db.site.owner.read 0.62 ok
+op.timing db.library.page 0.95 ok
+op.timing db.galleries.list 0.77 ok
+op.timing db.site.order 0.7 ok
+http.request GET /admin/library/images/{iid} 200 3.57 3
+op.timing db.site.owner.read 0.65 ok
+op.timing db.library.page 0.87 ok
+op.timing db.galleries.list 0.69 ok
+op.timing db.site.order 0.59 ok
+http.request GET /admin/library/images/{iid} 200 3.3 3
+op.timing db.site.owner.read 0.67 ok
+op.timing db.library.page 0.8 ok
+op.timing db.galleries.list 0.69 ok
+op.timing db.site.order 0.56 ok
+http.request GET /admin/library/images/{iid} 200 3.2 3
+op.timing db.site.owner.read 0.57 ok
+op.timing db.library.page 0.9 ok
+op.timing db.galleries.list 0.66 ok
+op.timing db.site.order 0.5 ok
+http.request GET /admin/library/images/{iid} 200 3.12 3
+op.timing db.site.owner.read 0.6 ok
+op.timing db.library.page 0.79 ok
+op.timing db.galleries.list 0.74 ok
+op.timing db.site.order 0.41 ok
+http.request GET /admin/library/images/{iid} 200 3.03 3
+op.timing db.site.owner.read 0.31 ok
+op.timing db.library.page 0.43 ok
+op.timing db.galleries.list 0.34 ok
+op.timing db.site.order 0.31 ok
+http.request GET /admin/library/images/{iid} 200 3.56 3
+op.timing db.site.owner.read 0.29 ok
+op.timing db.library.page 0.47 ok
+op.timing db.galleries.list 0.36 ok
+op.timing db.site.order 0.28 ok
+http.request GET /admin/library/images/{iid} 200 1.92 3
+op.timing db.site.owner.read 0.31 ok
+op.timing db.library.page 0.4 ok
+op.timing db.galleries.list 0.34 ok
+op.timing db.site.order 0.31 ok
+http.request GET /admin/library/images/{iid} 200 1.86 3
+op.timing db.site.owner.read 1.01 ok
+op.timing db.library.page 1 ok
+op.timing db.galleries.list 0.79 ok
+op.timing db.site.order 0.66 ok
+http.request GET /admin/library/images/{iid} 200 3.91 3
+op.timing db.site.owner.read 0.36 ok
+op.timing db.library.page 0.41 ok
+op.timing db.galleries.list 0.32 ok
+op.timing db.site.order 0.28 ok
+http.request GET /admin/library/images/{iid} 200 1.85 3
+op.timing db.site.owner.read 0.29 ok
+op.timing db.library.page 0.39 ok
+op.timing db.galleries.list 0.28 ok
+op.timing db.site.order 0.27 ok
+http.request GET /admin/library/images/{iid} 200 1.74 3
+op.timing db.site.owner.read 0.29 ok
+op.timing db.library.page 0.43 ok
+op.timing db.galleries.list 0.34 ok
+op.timing db.site.order 0.3 ok
+http.request GET /admin/library/images/{iid} 200 1.85 3
+op.timing db.site.owner.read 0.28 ok
+op.timing db.library.page 0.43 ok
+op.timing db.galleries.list 0.32 ok
+op.timing db.site.order 0.31 ok
+http.request GET /admin/library/images/{iid} 200 1.83 3
+op.timing db.site.owner.read 0.28 ok
+op.timing db.library.page 0.4 ok
+op.timing db.galleries.list 0.3 ok
+op.timing db.site.order 0.28 ok
+http.request GET /admin/library/images/{iid} 200 1.76 3
+op.timing db.site.owner.read 0.28 ok
+op.timing db.library.page 0.44 ok
+op.timing db.galleries.list 0.36 ok
+op.timing db.site.order 0.3 ok
+http.request GET /admin/library/images/{iid} 200 1.88 3
+op.timing db.site.owner.read 0.31 ok
+op.timing db.library.page 0.42 ok
+op.timing db.galleries.list 0.32 ok
+op.timing db.site.order 0.3 ok
+http.request GET /admin/library/images/{iid} 200 1.9 3
+op.timing db.site.owner.read 0.3 ok
+op.timing db.library.page 0.43 ok
+op.timing db.galleries.list 0.33 ok
+op.timing db.site.order 0.29 ok
+http.request GET /admin/library/images/{iid} 200 1.85 3
+op.timing db.site.owner.read 0.28 ok
+op.timing db.library.page 0.42 ok
+op.timing db.galleries.list 0.31 ok
+op.timing db.site.order 0.28 ok
+http.request GET /admin/library/images/{iid} 200 1.8 3
+op.timing db.site.owner.read 0.27 ok
+op.timing db.library.page 0.4 ok
+op.timing db.galleries.list 0.31 ok
+op.timing db.site.order 0.28 ok
+http.request GET /admin/library/images/{iid} 200 1.75 3
+op.timing db.site.owner.read 0.34 ok
+op.timing db.library.page 0.42 ok
+op.timing db.galleries.list 0.32 ok
+op.timing db.site.order 0.27 ok
+http.request GET /admin/library/images/{iid} 200 1.85 3
+op.timing db.site.owner.read 1.15 ok
+op.timing db.library.page 1.07 ok
+op.timing db.galleries.list 0.36 ok
+op.timing db.site.order 0.28 ok
+http.request GET /admin/library/images/{iid} 200 3.35 3
+op.timing db.site.owner.read 0.27 ok
+op.timing db.library.page 0.39 ok
+op.timing db.galleries.list 0.32 ok
+op.timing db.site.order 0.28 ok
+http.request GET /admin/library/images/{iid} 200 1.74 3
+op.timing db.site.owner.read 0.32 ok
+op.timing db.library.page 0.41 ok
+op.timing db.galleries.list 0.32 ok
+op.timing db.site.order 0.28 ok
+http.request GET /admin/library/images/{iid} 200 1.82 3
+op.timing db.site.owner.read 0.28 ok
+op.timing db.library.page 0.42 ok
+op.timing db.galleries.list 0.32 ok
+op.timing db.site.order 0.29 ok
+http.request GET /admin/library/images/{iid} 200 1.81 3
+op.timing db.site.owner.read 0.28 ok
+op.timing db.library.page 0.4 ok
+op.timing db.galleries.list 0.32 ok
+op.timing db.site.order 0.28 ok
+http.request GET /admin/library/images/{iid} 200 1.75 3
+op.timing db.site.owner.read 0.26 ok
+op.timing db.library.page 0.4 ok
+op.timing db.galleries.list 0.32 ok
+op.timing db.site.order 0.28 ok
+http.request GET /admin/library/images/{iid} 200 1.75 3
+op.timing db.site.owner.read 0.28 ok
+op.timing db.library.page 0.39 ok
+op.timing db.galleries.list 0.32 ok
+op.timing db.site.order 0.27 ok
+http.request GET /admin/library/images/{iid} 200 1.73 3
+op.timing db.site.owner.read 0.3 ok
+op.timing db.library.page 0.42 ok
+op.timing db.galleries.list 0.33 ok
+op.timing db.site.order 0.27 ok
+http.request GET /admin/library/images/{iid} 200 1.81 3
+op.timing db.site.owner.read 0.28 ok
+op.timing db.library.page 0.38 ok
+op.timing db.galleries.list 0.31 ok
+op.timing db.site.order 0.27 ok
+http.request GET /admin/library/images/{iid} 200 1.74 3
+op.timing db.site.owner.read 0.27 ok
+op.timing db.library.page 0.42 ok
+op.timing db.galleries.list 0.31 ok
+op.timing db.site.order 0.27 ok
+http.request GET /admin/library/images/{iid} 200 1.74 3
+op.timing db.site.owner.read 0.26 ok
+op.timing db.library.page 0.41 ok
+op.timing db.galleries.list 0.32 ok
+op.timing db.site.order 0.27 ok
+http.request GET /admin/library/images/{iid} 200 1.72 3
+op.timing db.site.owner.read 1.1 ok
+op.timing db.library.page 0.45 ok
+op.timing db.galleries.list 0.31 ok
+op.timing db.site.order 1.25 ok
+http.request GET /admin/library/images/{iid} 200 3.63 3
+op.timing db.site.owner.read 0.69 ok
+op.timing db.library.page 1.02 ok
+op.timing db.galleries.list 0.82 ok
+op.timing db.site.order 0.65 ok
+http.request GET /admin/library/images/{iid} 200 3.63 3
+op.timing db.site.owner.read 0.6 ok
+op.timing db.library.page 0.78 ok
+op.timing db.galleries.list 0.72 ok
+op.timing db.site.order 0.3 ok
+http.request GET /admin/library/images/{iid} 200 2.85 3
+op.timing db.site.owner.read 0.27 ok
+op.timing db.library.page 0.4 ok
+op.timing db.galleries.list 0.3 ok
+op.timing db.site.order 0.25 ok
+http.request GET /admin/library/images/{iid} 200 1.7 3
+op.timing db.site.owner.read 0.27 ok
+op.timing db.library.page 0.4 ok
+op.timing db.galleries.list 0.33 ok
+op.timing db.site.order 0.29 ok
+http.request GET /admin/library/images/{iid} 200 1.75 3
+op.timing db.site.owner.read 0.28 ok
+op.timing db.library.page 0.39 ok
+op.timing db.galleries.list 0.33 ok
+op.timing db.site.order 0.27 ok
+http.request GET /admin/library/images/{iid} 200 1.75 3
+op.timing db.site.owner.read 0.3 ok
+op.timing db.library.page 0.39 ok
+op.timing db.galleries.list 0.3 ok
+op.timing db.site.order 0.28 ok
+http.request GET /admin/library/images/{iid} 200 1.73 3
+op.timing db.site.owner.read 0.27 ok
+op.timing db.library.page 0.38 ok
+op.timing db.galleries.list 0.3 ok
+op.timing db.site.order 0.25 ok
+http.request GET /admin/library/images/{iid} 200 1.68 3
+op.timing db.site.owner.read 0.27 ok
+op.timing db.library.page 0.39 ok
+op.timing db.galleries.list 0.3 ok
+op.timing db.site.order 0.28 ok
+http.request GET /admin/library/images/{iid} 200 1.7 3
+op.timing db.site.owner.read 0.29 ok
+op.timing db.library.page 0.41 ok
+op.timing db.galleries.list 0.34 ok
+op.timing db.site.order 0.29 ok
+http.request GET /admin/library/images/{iid} 200 1.81 3
+op.timing db.site.owner.read 0.27 ok
+op.timing db.library.page 0.39 ok
+op.timing db.galleries.list 0.3 ok
+op.timing db.site.order 0.28 ok
+http.request GET /admin/library/images/{iid} 200 1.74 3
+op.timing db.site.owner.read 0.3 ok
+op.timing db.library.page 1.2 ok
+op.timing db.galleries.list 0.9 ok
+op.timing db.site.order 0.29 ok
+http.request GET /admin/library/images/{iid} 200 3.16 3
+op.timing db.site.owner.read 0.28 ok
+op.timing db.library.page 0.39 ok
+op.timing db.galleries.list 0.32 ok
+op.timing db.site.order 0.28 ok
+http.request GET /admin/library/images/{iid} 200 1.73 3
+op.timing db.site.owner.read 0.27 ok
+op.timing db.library.page 0.4 ok
+op.timing db.galleries.list 0.31 ok
+op.timing db.site.order 0.3 ok
+http.request GET /admin/library/images/{iid} 200 1.74 3
+op.timing db.site.owner.read 0.26 ok
+op.timing db.library.page 0.39 ok
+op.timing db.galleries.list 0.32 ok
+op.timing db.site.order 0.27 ok
+http.request GET /admin/library/images/{iid} 200 1.72 3
+op.timing db.site.owner.read 0.29 ok
+op.timing db.library.page 0.38 ok
+op.timing db.galleries.list 0.3 ok
+op.timing db.site.order 0.29 ok
+http.request GET /admin/library/images/{iid} 200 1.73 3
+op.timing db.site.owner.read 0.29 ok
+op.timing db.library.page 0.38 ok
+op.timing db.galleries.list 0.32 ok
+op.timing db.site.order 0.27 ok
+http.request GET /admin/library/images/{iid} 200 1.74 3
+op.timing db.site.owner.read 0.28 ok
+op.timing db.library.page 0.37 ok
+op.timing db.galleries.list 0.29 ok
+op.timing db.site.order 0.27 ok
+http.request GET /admin/library/images/{iid} 200 1.69 3
+op.timing db.site.owner.read 0.29 ok
+op.timing db.library.page 0.4 ok
+op.timing db.galleries.list 0.31 ok
+op.timing db.site.order 0.26 ok
+http.request GET /admin/library/images/{iid} 200 1.73 3
+op.timing db.site.owner.read 0.27 ok
+op.timing db.library.page 0.4 ok
+op.timing db.galleries.list 0.3 ok
+op.timing db.site.order 0.27 ok
+http.request GET /admin/library/images/{iid} 200 1.71 3
+op.timing db.site.owner.read 0.31 ok
+op.timing db.library.page 0.41 ok
+op.timing db.galleries.list 0.31 ok
+op.timing db.site.order 0.27 ok
+http.request GET /admin/library/images/{iid} 200 1.75 3
+op.timing db.site.owner.read 0.27 ok
+op.timing db.library.page 0.4 ok
+op.timing db.galleries.list 0.31 ok
+op.timing db.site.order 0.28 ok
+http.request GET /admin/library/images/{iid} 200 1.72 3
+op.timing db.site.owner.read 0.27 ok
+op.timing db.library.page 0.39 ok
+op.timing db.galleries.list 0.32 ok
+op.timing db.site.order 0.25 ok
+http.request GET /admin/library/images/{iid} 200 1.69 3
+op.timing db.site.owner.read 0.26 ok
+op.timing db.library.page 0.4 ok
+op.timing db.galleries.list 0.31 ok
+op.timing db.site.order 1.07 ok
+http.request GET /admin/library/images/{iid} 200 2.53 3
+op.timing db.site.owner.read 0.68 ok
+op.timing db.library.page 1.02 ok
+op.timing db.galleries.list 0.84 ok
+op.timing db.site.order 0.3 ok
+http.request GET /admin/library/images/{iid} 200 3.28 3
+op.timing db.site.owner.read 0.27 ok
+op.timing db.library.page 0.41 ok
+op.timing db.galleries.list 0.29 ok
+op.timing db.site.order 0.27 ok
+http.request GET /admin/library/images/{iid} 200 2.8 3
+op.timing db.site.owner.read 0.31 ok
+op.timing db.library.page 0.45 ok
+op.timing db.galleries.list 0.32 ok
+op.timing db.site.order 0.27 ok
+http.request GET /admin/library/images/{iid} 200 1.87 3
+op.timing db.site.owner.read 0.35 ok
+op.timing db.library.page 0.44 ok
+op.timing db.galleries.list 0.35 ok
+op.timing db.site.order 0.32 ok
+http.request GET /admin/library/images/{iid} 200 2.06 3
+op.timing db.site.owner.read 0.33 ok
+op.timing db.library.page 0.44 ok
+op.timing db.galleries.list 0.37 ok
+op.timing db.site.order 0.31 ok
+http.request GET /admin/library/images/{iid} 200 2.18 3
+op.timing db.site.owner.read 0.38 ok
+op.timing db.library.page 19.63 ok
+op.timing db.galleries.list 0.83 ok
+op.timing db.site.order 0.61 ok
+http.request GET /admin/library/images/{iid} 200 22.67 3
+op.timing db.site.owner.read 0.68 ok
+op.timing db.library.page 0.85 ok
+op.timing db.galleries.list 0.63 ok
+op.timing db.site.order 0.53 ok
+http.request GET /admin/library/images/{iid} 200 3.16 3
+op.timing db.site.owner.read 0.73 ok
+op.timing db.library.page 0.95 ok
+op.timing db.galleries.list 0.74 ok
+op.timing db.site.order 0.59 ok
+http.request GET /admin/library/images/{iid} 200 3.5 3
+op.timing db.site.owner.read 0.58 ok
+op.timing db.library.page 0.71 ok
+op.timing db.galleries.list 0.64 ok
+op.timing db.site.order 0.57 ok
+http.request GET /admin/library/images/{iid} 200 2.96 3
+op.timing db.site.owner.read 0.61 ok
+op.timing db.library.page 0.75 ok
+op.timing db.galleries.list 0.71 ok
+op.timing db.site.order 0.62 ok
+http.request GET /admin/library/images/{iid} 200 3.15 3
+op.timing db.site.owner.read 0.57 ok
+op.timing db.library.page 0.8 ok
+op.timing db.galleries.list 0.74 ok
+op.timing db.site.order 0.58 ok
+http.request GET /admin/library/images/{iid} 200 3.15 3
+op.timing db.site.owner.read 0.59 ok
+op.timing db.library.page 0.79 ok
+op.timing db.galleries.list 0.7 ok
+op.timing db.site.order 0.78 ok
+http.request GET /admin/library/images/{iid} 200 3.3 3
+op.timing db.site.owner.read 0.79 ok
+op.timing db.library.page 0.9 ok
+op.timing db.galleries.list 0.76 ok
+op.timing db.site.order 0.5 ok
+http.request GET /admin/library/images/{iid} 200 3.42 3
+op.timing db.site.owner.read 0.62 ok
+op.timing db.library.page 0.77 ok
+op.timing db.galleries.list 0.62 ok
+op.timing db.site.order 0.56 ok
+http.request GET /admin/library/images/{iid} 200 3.05 3
+op.timing db.site.owner.read 0.62 ok
+op.timing db.library.page 0.74 ok
+op.timing db.galleries.list 0.66 ok
+op.timing db.site.order 0.55 ok
+http.request GET /admin/library/images/{iid} 200 3.06 3
+op.timing db.site.owner.read 0.59 ok
+op.timing db.library.page 0.81 ok
+op.timing db.galleries.list 0.67 ok
+op.timing db.site.order 0.55 ok
+http.request GET /admin/library/images/{iid} 200 3.08 3
+op.timing db.site.owner.read 0.58 ok
+op.timing db.library.page 0.81 ok
+op.timing db.galleries.list 0.65 ok
+op.timing db.site.order 0.54 ok
+http.request GET /admin/library/images/{iid} 200 3.03 3
+op.timing db.site.owner.read 0.65 ok
+op.timing db.library.page 0.73 ok
+op.timing db.galleries.list 0.62 ok
+op.timing db.site.order 0.61 ok
+http.request GET /admin/library/images/{iid} 200 3.08 3
+op.timing db.site.owner.read 0.55 ok
+op.timing db.library.page 0.73 ok
+op.timing db.galleries.list 0.55 ok
+op.timing db.site.order 0.57 ok
+http.request GET /admin/library/images/{iid} 200 2.88 3
+op.timing db.site.owner.read 0.58 ok
+op.timing db.library.page 0.75 ok
+op.timing db.galleries.list 0.65 ok
+op.timing db.site.order 0.52 ok
+http.request GET /admin/library/images/{iid} 200 2.98 3
+op.timing db.site.owner.read 0.72 ok
+op.timing db.library.page 0.81 ok
+op.timing db.galleries.list 0.6 ok
+op.timing db.site.order 0.51 ok
+http.request GET /admin/library/images/{iid} 200 3.09 3
+op.timing db.site.owner.read 0.6 ok
+op.timing db.library.page 0.81 ok
+op.timing db.galleries.list 0.94 ok
+op.timing db.site.order 0.61 ok
+http.request GET /admin/library/images/{iid} 200 3.41 3
+op.timing db.site.owner.read 0.67 ok
+op.timing db.library.page 0.76 ok
+op.timing db.galleries.list 0.63 ok
+op.timing db.site.order 0.55 ok
+http.request GET /admin/library/images/{iid} 200 3.07 3
+op.timing db.site.owner.read 0.58 ok
+op.timing db.library.page 0.86 ok
+op.timing db.galleries.list 0.79 ok
+op.timing db.site.order 0.61 ok
+http.request GET /admin/library/images/{iid} 200 3.29 3
+op.timing db.site.owner.read 0.64 ok
+op.timing db.library.page 0.82 ok
+op.timing db.galleries.list 0.67 ok
+op.timing db.site.order 0.62 ok
+http.request GET /admin/library/images/{iid} 200 3.2 3
+op.timing db.site.owner.read 0.69 ok
+op.timing db.library.page 0.82 ok
+op.timing db.galleries.list 0.68 ok
+op.timing db.site.order 0.58 ok
+http.request GET /admin/library/images/{iid} 200 3.26 3
+op.timing db.site.owner.read 0.63 ok
+op.timing db.library.page 0.82 ok
+op.timing db.galleries.list 0.68 ok
+op.timing db.site.order 0.65 ok
+http.request GET /admin/library/images/{iid} 200 3.24 3
+op.timing db.site.owner.read 0.64 ok
+op.timing db.library.page 3.36 ok
+op.timing db.galleries.list 0.66 ok
+op.timing db.site.order 0.57 ok
+http.request GET /admin/library/images/{iid} 200 5.75 3
+op.timing db.site.owner.read 0.57 ok
+op.timing db.library.page 0.97 ok
+op.timing db.galleries.list 0.8 ok
+op.timing db.site.order 0.59 ok
+http.request GET /admin/library/images/{iid} 200 3.42 3
+op.timing db.site.owner.read 0.63 ok
+op.timing db.library.page 0.9 ok
+op.timing db.galleries.list 0.75 ok
+op.timing db.site.order 0.65 ok
+http.request GET /admin/library/images/{iid} 200 3.37 3
+op.timing db.site.owner.read 0.72 ok
+op.timing db.library.page 0.83 ok
+op.timing db.galleries.list 0.82 ok
+op.timing db.site.order 0.64 ok
+http.request GET /admin/library/images/{iid} 200 3.5 3
+op.timing db.site.owner.read 0.78 ok
+op.timing db.library.page 1.12 ok
+op.timing db.galleries.list 0.88 ok
+op.timing db.site.order 0.7 ok
+http.request GET /admin/library/images/{iid} 200 3.97 3
+op.timing db.site.owner.read 0.72 ok
+op.timing db.library.page 0.92 ok
+op.timing db.galleries.list 0.68 ok
+op.timing db.site.order 0.42 ok
+http.request GET /admin/library/images/{iid} 200 3.22 3
+op.timing db.site.owner.read 0.38 ok
+op.timing db.library.page 0.53 ok
+op.timing db.galleries.list 0.35 ok
+op.timing db.site.order 0.36 ok
+http.request GET /admin/library/images/{iid} 200 2.15 3
+op.timing db.site.owner.read 0.32 ok
+op.timing db.library.page 0.46 ok
+op.timing db.galleries.list 0.38 ok
+op.timing db.site.order 0.32 ok
+http.request GET /admin/library/images/{iid} 200 2 3
+op.timing db.site.owner.read 0.37 ok
+op.timing db.library.page 0.49 ok
+op.timing db.galleries.list 0.39 ok
+op.timing db.site.order 0.31 ok
+http.request GET /admin/library/images/{iid} 200 2.07 3
+op.timing db.site.owner.read 0.33 ok
+op.timing db.library.page 0.96 ok
+op.timing db.galleries.list 0.89 ok
+op.timing db.site.order 0.55 ok
+http.request GET /admin/library/images/{iid} 200 3.25 3
+op.timing db.site.owner.read 0.68 ok
+op.timing db.library.page 0.92 ok
+op.timing db.galleries.list 0.71 ok
+op.timing db.site.order 0.59 ok
+http.request GET /admin/library/images/{iid} 200 3.39 3

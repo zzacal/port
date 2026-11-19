@@ -12,9 +12,9 @@
 
 ### Session 2026-11-06
 
-- Q: Accept the spec's defaults (apply on Save; validate all before any change; keep the three severable seams)? → A: Yes, all accepted by the owner ("I like your choices").
-- Owner direction (during tasks): "I intend to make this a reusable component. Add this to the component library." → The field is a generic multi-value combobox component in the component catalogue, with its own catalogue page; galleries are its first use (FR-020, FR-021).
-- Owner direction (after analyze): "research how tags are added in successful design systems … follow the important principles" → research-notes/tag-input-patterns.md; changes: first match highlighted, no placeholder state, announced counts/picks/removals, one-line options with the public warning moved to the pick, truncation, 44 px remove targets, Backspace described (FR-002, FR-005, FR-008, FR-010).
+- **SUPERSEDED by 020 (2026-11-19): Membership changes apply at once when a gallery is ticked or unticked; there is no Save (020 FR-014).** Q: Accept the spec's defaults (apply on Save; validate all before any change; keep the three severable seams)? → A: Yes, all accepted by the owner ("I like your choices").
+- **SUPERSEDED by 020 (2026-11-19): The combobox component is removed; the galleries control is the GalleryChecklist (020 FR-014, FR-015, FR-043).** Owner direction (during tasks): "I intend to make this a reusable component. Add this to the component library." → The field is a generic multi-value combobox component in the component catalogue, with its own catalogue page; galleries are its first use (FR-020, FR-021).
+- **SUPERSEDED by 020 (2026-11-19): The combobox and its tag-input behaviour are removed (020 FR-014, FR-015).** Owner direction (after analyze): "research how tags are added in successful design systems … follow the important principles" → research-notes/tag-input-patterns.md; changes: first match highlighted, no placeholder state, announced counts/picks/removals, one-line options with the public warning moved to the pick, truncation, 44 px remove targets, Backspace described (FR-002, FR-005, FR-008, FR-010).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -106,30 +106,30 @@ no longer lists the photo and the photo is still in the library.
 
 Display
 
-- **FR-001**: The photo edit panel MUST replace the "In galleries" heading-and-list section with one gallery field labelled "Galleries".
-- **FR-002**: The field MUST show each gallery holding the photo as a token, in title order, and MUST show a visible line "Not in a gallery" when the photo is in none. Placeholder text MUST NOT carry a label, hint or state.
-- **FR-003**: Each saved token MUST still lead to that gallery's admin page (the link the old list had), without interfering with the remove control.
+- **FR-001**: **SUPERSEDED by 020 (2026-11-19): The photo edit panel and its Galleries field are removed; the details panel holds a galleries checklist (020 FR-014).** The photo edit panel MUST replace the "In galleries" heading-and-list section with one gallery field labelled "Galleries".
+- **FR-002**: **SUPERSEDED by 020 (2026-11-19): Membership is shown as ticks in the galleries checklist, not as tokens (020 FR-014).** The field MUST show each gallery holding the photo as a token, in title order, and MUST show a visible line "Not in a gallery" when the photo is in none. Placeholder text MUST NOT carry a label, hint or state.
+- **FR-003**: **SUPERSEDED by 020 (2026-11-19): There are no tokens; a gallery is opened from the collections list (020 FR-002).** Each saved token MUST still lead to that gallery's admin page (the link the old list had), without interfering with the remove control.
 
 Search and pick
 
-- **FR-004**: Typing at least one non-space character MUST show a list of existing galleries whose title contains the trimmed text, compared case-insensitively, excluding galleries already present as tokens.
-- **FR-005**: The list MUST show at most 10 galleries in title order, each on one line as "{title} · Public|Private". Picking a public gallery MUST show one warning line under the field until the pick is saved or removed: "{title} is public: visitors will see this photo after you save."
-- **FR-006**: The last row of the list MUST read "+ {text}" (trimmed text) whenever the trimmed text is not a case-insensitive exact match for any existing gallery title or pending new token; it MUST be absent otherwise.
-- **FR-007**: The "+" row MUST be withheld, with an inline message, when the trimmed text breaks the gallery title rule (over the title limit).
-- **FR-008**: The field and list MUST be fully operable from the keyboard (Down/Up to move, Enter to pick, Esc to close) and MUST expose combobox/listbox semantics to assistive technology. Focus MUST stay in the text box, the first matching row MUST be highlighted as the owner types so Enter takes it, and the number of options, picks and removals MUST be announced ("3 options", "No matches", "Added Coast", "Removed Coast").
-- **FR-009**: Picking an option or the "+" row MUST add a token, clear the text and close the list. A pending (unsaved) token MUST look different from a saved one.
+- **FR-004**: **SUPERSEDED by 020 (2026-11-19): The checklist's text field narrows the full list of galleries instead (020 FR-015).** Typing at least one non-space character MUST show a list of existing galleries whose title contains the trimmed text, compared case-insensitively, excluding galleries already present as tokens.
+- **FR-005**: **SUPERSEDED by 020 (2026-11-19): The checklist lists every gallery with Public or Private in words; a tick applies at once and the result says when visitors can see the photo (020 FR-014, FR-018).** The list MUST show at most 10 galleries in title order, each on one line as "{title} · Public|Private". Picking a public gallery MUST show one warning line under the field until the pick is saved or removed: "{title} is public: visitors will see this photo after you save."
+- **FR-006**: **SUPERSEDED by 020 (2026-11-19): The checklist offers New gallery “{text}” when the text matches no gallery name (020 FR-015).** The last row of the list MUST read "+ {text}" (trimmed text) whenever the trimmed text is not a case-insensitive exact match for any existing gallery title or pending new token; it MUST be absent otherwise.
+- **FR-007**: **SUPERSEDED by 020 (2026-11-19): A name over the title limit is refused by the server when the gallery is created, with the reason (020 FR-015).** The "+" row MUST be withheld, with an inline message, when the trimmed text breaks the gallery title rule (over the title limit).
+- **FR-008**: **SUPERSEDED by 020 (2026-11-19): The combobox is removed; the checklist is a text field and checkboxes, and Enter creates or adds (020 FR-015).** The field and list MUST be fully operable from the keyboard (Down/Up to move, Enter to pick, Esc to close) and MUST expose combobox/listbox semantics to assistive technology. Focus MUST stay in the text box, the first matching row MUST be highlighted as the owner types so Enter takes it, and the number of options, picks and removals MUST be announced ("3 options", "No matches", "Added Coast", "Removed Coast").
+- **FR-009**: **SUPERSEDED by 020 (2026-11-19): A tick applies at once; there are no pending tokens (020 FR-014, FR-015).** Picking an option or the "+" row MUST add a token, clear the text and close the list. A pending (unsaved) token MUST look different from a saved one.
 
 Remove (severable seam, User Story 3)
 
-- **FR-010**: Each token MUST have a remove control labelled "Remove from {title}" with a 44×44 px touch target; Backspace in an empty text box MUST remove the last token, and the field's description MUST say so. Long token labels MUST truncate with the full title still available.
+- **FR-010**: **SUPERSEDED by 020 (2026-11-19): Unticking a gallery removes the photo from it; there are no tokens to remove (020 FR-014).** Each token MUST have a remove control labelled "Remove from {title}" with a 44×44 px touch target; Backspace in an empty text box MUST remove the last token, and the field's description MUST say so. Long token labels MUST truncate with the full title still available.
 
 Save
 
-- **FR-011**: Membership changes MUST apply only when the owner presses the panel's Save, together with title and caption; leaving the panel discards them.
-- **FR-012**: On Save, each "+" token MUST create one private gallery with that title (placed last in the owner's gallery order) and add the photo to it; each existing-gallery token added MUST add the photo through the same add rule the bulk picker uses; each removed token MUST take the photo out through the same rule as the builder's remove.
+- **FR-011**: **SUPERSEDED by 020 (2026-11-19): There is no Save; each membership change applies at once (020 FR-014).** Membership changes MUST apply only when the owner presses the panel's Save, together with title and caption; leaving the panel discards them.
+- **FR-012**: **SUPERSEDED by 020 (2026-11-19): Enter on new text creates a private gallery holding the photo or selection at once (020 FR-015).** On Save, each "+" token MUST create one private gallery with that title (placed last in the owner's gallery order) and add the photo to it; each existing-gallery token added MUST add the photo through the same add rule the bulk picker uses; each removed token MUST take the photo out through the same rule as the builder's remove.
 - **FR-013**: A new gallery created here MUST be private (Constitution II.5); adding the photo to a public gallery MUST trigger the same visitor-page refreshes as the bulk add does today, and a removal the same refreshes as the builder's remove.
 - **FR-014**: The server MUST validate every requested change (title rule, gallery exists, photo exists) before applying any gallery change; a refusal MUST be shown in the panel with the reason, and title/caption validation failures MUST apply no gallery change.
-- **FR-015**: After a successful Save the panel MUST re-render from stored data, showing the photo's actual memberships, with the existing "Saved" state.
+- **FR-015**: **SUPERSEDED by 020 (2026-11-19): There is no Save; the result appears in the one result message (020 FR-018).** After a successful Save the panel MUST re-render from stored data, showing the photo's actual memberships, with the existing "Saved" state.
 - **FR-016**: The save request MUST be protected against cross-site request forgery like every other admin write.
 
 Observability (Constitution IV.1–2, IV.4)
@@ -138,13 +138,13 @@ Observability (Constitution IV.1–2, IV.4)
 
 Scope guards
 
-- **FR-018**: The bulk "Add to gallery…" picker on the selection bar MUST be unchanged by this feature.
+- **FR-018**: **SUPERSEDED by 020 (2026-11-19): The selection bar and its picker are removed; the same checklist serves a selection (020 FR-014).** The bulk "Add to gallery…" picker on the selection bar MUST be unchanged by this feature.
 - **FR-019**: Existing tests MUST pass unmodified except those listed in `contracts/test-impact.md` (the removed "In galleries" markup and the catalogue's index count and baselines), each with old and new expected output.
 
 Reuse (owner direction)
 
-- **FR-020**: The field MUST be built as a reusable component of the component library that knows nothing about galleries: its label, values, searchable options, field names, create rule and messages are supplied by the page using it.
-- **FR-021**: The component catalogue MUST list the component with specimens of its states: empty, with values, typing with matches and the create row, a highlighted option, an exact match with no create row, create row only, pending values, and text over the limit.
+- **FR-020**: **SUPERSEDED by 020 (2026-11-19): The reusable combobox component is removed (020 FR-039, FR-043).** The field MUST be built as a reusable component of the component library that knows nothing about galleries: its label, values, searchable options, field names, create rule and messages are supplied by the page using it.
+- **FR-021**: **SUPERSEDED by 020 (2026-11-19): The combobox catalogue page is removed (020 FR-043).** The component catalogue MUST list the component with specimens of its states: empty, with values, typing with matches and the create row, a highlighted option, an exact match with no create row, create row only, pending values, and text over the limit.
 
 ### Key Entities
 

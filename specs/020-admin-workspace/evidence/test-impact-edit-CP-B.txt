@@ -1,0 +1,6 @@
+020 test-impact-edit: 4 of 140 rows (CP-B); root /Users/zzacal/repos/gallery
+OK TI-50 CP-B tests/Gallery.Web.Tests/IndexTests.cs x1
+OK TI-50 CP-B tests/Gallery.Web.Tests/IndexTests.cs x1
+OK TI-56 CP-B tests/Gallery.Web.Tests/OrganismStatePageTests.cs x1
+OK TI-56 CP-B tests/Gallery.Web.Tests/OrganismStatePageTests.cs x1
+wrote 2 files, deleted 0

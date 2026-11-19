@@ -12,12 +12,12 @@
 
 ### Session 2026-11-06
 
-- Q1: What does the gallery icon do when activated? → A: it opens the photo's edit panel with the
+- **SUPERSEDED by 020 (2026-11-19): There is no gallery icon; the details panel shows one photo's galleries (020 FR-010, FR-014).** Q1: What does the gallery icon do when activated? → A: it opens the photo's edit panel with the
   Galleries field in view (FR-007). Like the edit icon, it toggles: activating it on the photo
   whose panel is open closes the panel.
-- Q2: Which tiles change? → B: the library's photo tiles AND the gallery builder's photo tiles
+- **SUPERSEDED by 020 (2026-11-19): The library and builder tiles are removed; workspace photos carry only the select mark (020 FR-005, FR-039).** Q2: Which tiles change? → B: the library's photo tiles AND the gallery builder's photo tiles
   (FR-021, User Story 4). The galleries list cards keep their current look.
-- Owner direction on the gallery icon's words: "simplify only icon and total count". The hover
+- **SUPERSEDED by 020 (2026-11-19): The gallery icon is removed with every icon-only control (020 FR-010).** Owner direction on the gallery icon's words: "simplify only icon and total count". The hover
   text and accessible name give only the count ("Not in a gallery", "In 1 gallery", "In 3
   galleries"); no gallery title and no public count (FR-006).
 
@@ -161,89 +161,89 @@ assistive technology; drag, keyboard move, cover and remove still work as before
 
 **Title on the photo**
 
-- **FR-001**: On library and builder tiles, the photo's title MUST be drawn inside the photo's own rectangle,
+- **FR-001**: **SUPERSEDED by 020 (2026-11-19): The title is under the photo in the workspace grid, not drawn on it (020 FR-005; 020 contracts/components.md K5).** On library and builder tiles, the photo's title MUST be drawn inside the photo's own rectangle,
   along its bottom edge, on one line, truncated with an ellipsis when it does not fit, with the
   full title available on hover.
-- **FR-002**: The title MUST stay readable over any photo (light, dark or busy), meeting text
+- **FR-002**: **SUPERSEDED by 020 (2026-11-19): The title is no longer drawn over the photo (020 FR-005).** The title MUST stay readable over any photo (light, dark or busy), meeting text
   contrast of at least 4.5:1 against its immediate background.
-- **FR-003**: The title band MUST NOT cover the select mark, and MUST NOT change the tile's
+- **FR-003**: **SUPERSEDED by 020 (2026-11-19): The title band is removed; the title is under the photo (020 FR-005).** The title band MUST NOT cover the select mark, and MUST NOT change the tile's
   height or the photo's size or position.
 - **FR-004**: Public pages MUST be unchanged: public tiles keep their title under the photo,
   byte for byte.
 
 **Control row**
 
-- **FR-005**: Under each library photo there MUST be one row of exactly three icon buttons, in
+- **FR-005**: **SUPERSEDED by 020 (2026-11-19): There are no icon rows; actions are worded buttons in the details panel (020 FR-010).** Under each library photo there MUST be one row of exactly three icon buttons, in
   this order: gallery, view, edit. They MUST replace the current status text, "Edit" and
   "View ↗" words.
-- **FR-006**: The gallery icon MUST show one of three distinct icons: in no gallery, in exactly one
+- **FR-006**: **SUPERSEDED by 020 (2026-11-19): The gallery icon is removed; membership is shown in the galleries control (020 FR-010, FR-014).** The gallery icon MUST show one of three distinct icons: in no gallery, in exactly one
   gallery, in two or more galleries. Its accessible name and hover text MUST give only the count,
   in words: "Not in a gallery", "In 1 gallery", "In {n} galleries". No gallery title and no public
   count appear on the tile (owner: "simplify only icon and total count").
-- **FR-007**: Activating the gallery icon MUST open that photo's edit panel with the Galleries field
+- **FR-007**: **SUPERSEDED by 020 (2026-11-19): The gallery icon and the edit panel are removed (020 FR-010, FR-039).** Activating the gallery icon MUST open that photo's edit panel with the Galleries field
   in view, exactly as activating the edit icon does (same open state, same active edit icon). On
   the photo whose panel is already open, it MUST close the panel, as the edit icon does.
-- **FR-008**: The view icon MUST open the photo's public page in a new tab when the photo has one
+- **FR-008**: **SUPERSEDED by 020 (2026-11-19): The view icon is removed; View on site is a worded control in the details panel (020 FR-017).** The view icon MUST open the photo's public page in a new tab when the photo has one
   (as the "View ↗" link does today) and MUST render as an unavailable, non-link icon with the
   accessible name "No public page" when it has none, so the row never changes length (IX.3).
-- **FR-009**: Every icon button MUST have a visible hover text and an accessible name, a 44×44
+- **FR-009**: **SUPERSEDED by 020 (2026-11-19): Icon buttons are removed; every action is a worded button (020 FR-010).** Every icon button MUST have a visible hover text and an accessible name, a 44×44
   minimum hit area, and a visible keyboard focus indicator. Icons MUST NOT be the only carrier of
   meaning to assistive technology.
-- **FR-010**: No icon MAY be a filled (primary) style at any time; the active state is a ring, not
+- **FR-010**: **SUPERSEDED by 020 (2026-11-19): Icon buttons are removed (020 FR-010).** No icon MAY be a filled (primary) style at any time; the active state is a ring, not
   a fill, so the panel's Save stays the one filled action when the panel is open (009 UI-3: one
   filled action per state; amended at plan, research R-05).
 
 **Edit toggle**
 
-- **FR-011**: The edit icon MUST have two visible states: normal (enabled) and active (pressed).
+- **FR-011**: **SUPERSEDED by 020 (2026-11-19): The edit icon is removed; selecting a photo shows it in the details panel (020 FR-009, FR-010).** The edit icon MUST have two visible states: normal (enabled) and active (pressed).
   It is active exactly when the edit panel is open for that photo.
-- **FR-012**: Activating a normal edit icon MUST open the edit panel for that photo and make that
+- **FR-012**: **SUPERSEDED by 020 (2026-11-19): The edit icon is removed; selecting a photo shows it in the details panel (020 FR-007, FR-009).** Activating a normal edit icon MUST open the edit panel for that photo and make that
   icon active; any other tile's active edit icon MUST return to normal. At most one tile is active.
-- **FR-013**: Activating the active edit icon MUST close the panel and return the icon to normal,
+- **FR-013**: **SUPERSEDED by 020 (2026-11-19): The edit icon is removed; Escape or a click on empty space clears the selection (020 FR-007).** Activating the active edit icon MUST close the panel and return the icon to normal,
   keeping the owner on the same library page.
-- **FR-014**: The open/close state MUST survive a reload and work with scripting disabled
+- **FR-014**: **SUPERSEDED by 020 (2026-11-19): The edit icon is removed; the open collection and a photo viewed large have their own addresses (020 FR-003).** The open/close state MUST survive a reload and work with scripting disabled
   (ordinary navigation), and the active icon MUST expose its pressed or current state to assistive
   technology.
-- **FR-015**: Closing the panel this way MUST NOT save or discard anything beyond what leaving the
+- **FR-015**: **SUPERSEDED by 020 (2026-11-19): The edit panel is removed; fields save when the owner leaves them (020 FR-013).** Closing the panel this way MUST NOT save or discard anything beyond what leaving the
   panel does today (unsaved edits are lost exactly as when navigating away now).
 
 **Icon system and component library**
 
-- **FR-016**: Icons MUST come from one free, permissively licensed icon set, chosen after
+- **FR-016**: **SUPERSEDED by 020 (2026-11-19): No icon set is used in the admin any more (020 FR-010, FR-039).** Icons MUST come from one free, permissively licensed icon set, chosen after
   comparing candidates on licence, coverage of the needed icons, visual fit with the site, and
   delivery cost. The choice, the candidates and the licence MUST be recorded. An icon is made
   (with the owner's image tool) only when no free set has a usable icon for a needed meaning; any
   made icon MUST match the chosen set's grid and stroke and be recorded as such.
-- **FR-017**: Icons MUST add no network request and no third-party runtime dependency to any page
+- **FR-017**: **SUPERSEDED by 020 (2026-11-19): No icon set is used in the admin any more (020 FR-010, FR-039).** Icons MUST add no network request and no third-party runtime dependency to any page
   that shows them, MUST scale with no blur at any pixel ratio, and MUST take their colour from the
   surrounding text colour so they follow the site's colours.
-- **FR-018**: Only the icons the site uses are shipped; adding an icon is a deliberate step, not a
+- **FR-018**: **SUPERSEDED by 020 (2026-11-19): No icon set is used in the admin any more (020 FR-010, FR-039).** Only the icons the site uses are shipped; adding an icon is a deliberate step, not a
   whole-set download.
-- **FR-019**: The component library MUST gain: an icon page listing every shipped icon with its
+- **FR-019**: **SUPERSEDED by 020 (2026-11-19): The icon, icon-button, library-tile and builder-tile catalogue pages are removed (020 FR-043).** The component library MUST gain: an icon page listing every shipped icon with its
   name and stating the source set and licence; an icon-button page showing normal, active and
   unavailable states; the library tile states of User Story 3; and a builder tile in each cover
   state.
-- **FR-020**: The icon and the icon button MUST be reusable components with no knowledge of
+- **FR-020**: **SUPERSEDED by 020 (2026-11-19): The Icon and IconButton components are removed (020 FR-039).** The icon and the icon button MUST be reusable components with no knowledge of
   galleries or photos (labels and the icon name are parameters).
 
 **Scope**
 
-- **FR-021**: This feature changes the library's photo tiles and the gallery builder's photo tiles.
+- **FR-021**: **SUPERSEDED by 020 (2026-11-19): The library, builder and galleries list pages are removed (020 FR-039).** This feature changes the library's photo tiles and the gallery builder's photo tiles.
   The galleries list cards (`/admin/galleries`) keep their current look.
-- **FR-022**: On builder tiles the title MUST be on the photo as in FR-001 to FR-003, and the
+- **FR-022**: **SUPERSEDED by 020 (2026-11-19): The builder is removed; in a gallery, cover and order are worded controls in the details panel (020 FR-022 to FR-024).** On builder tiles the title MUST be on the photo as in FR-001 to FR-003, and the
   builder's controls MUST become icon buttons, in this order: move, cover, remove, view. Each
   keeps its current action, form target and accessible name ("Move {title}", "Make {title} the
   cover" / "Unpin cover", "Remove {title} from this gallery", view in a new tab). The cover icon
   shows three states: not the cover, the automatic cover (first photo, no pin; named "Cover: first
   photo"), and the pinned cover (active, named "Unpin cover").
-- **FR-023**: Drag and keyboard reordering, cover pinning, removal, and the builder's lifted-photo
+- **FR-023**: **SUPERSEDED by 020 (2026-11-19): Reordering is by drag, or with Move earlier and Move later; the drag handle is removed (020 FR-022, FR-023).** Drag and keyboard reordering, cover pinning, removal, and the builder's lifted-photo
   announcement MUST behave exactly as today.
 - **FR-024**: The bulk selection, the select mark, the edit panel's contents, and every server
   operation MUST be unchanged.
 
 **Observability**
 
-- **FR-025**: The library and builder pages' existing request timing MUST still cover them, and
+- **FR-025**: **SUPERSEDED by 020 (2026-11-19): The library and builder pages are removed; every workspace read and write is timed instead (020 FR-044).** The library and builder pages' existing request timing MUST still cover them, and
   neither page MUST make more datastore reads than today (the membership state comes from data the
   library page already reads).
 

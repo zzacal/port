@@ -1,0 +1,60 @@
+/* Feature 020 K10. Existing tokens only, no size literal. The heading line is a grid row: heading and
+   controls side by side, the public notice and the progress bar full width under the heading. */
+.ws-tray {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+        "head ctl"
+        "notice notice"
+        "bar bar"
+        "body body";
+    align-items: center;
+    gap: calc(var(--space-s) / 2) var(--space-s);
+    margin: 0 0 var(--space-m);
+    padding: var(--space-s);
+    border: thin solid var(--color-rule);
+    border-radius: calc(var(--space-s) / 2);
+    background: var(--color-bg);
+}
+
+.ws-tray-head {
+    grid-area: head;
+    margin: 0;
+    font-size: var(--type-body);
+    font-weight: 600;
+}
+
+/* [SAFETY II.5a] always visible: plain body text, never hidden or collapsed. */
+.ws-notice {
+    grid-area: notice;
+    margin: 0;
+    font-size: var(--type-body);
+    color: var(--color-text);
+}
+
+.ws-tray-bar {
+    grid-area: bar;
+    display: block;
+    width: 100%;
+    height: calc(var(--space-s) / 2);
+    accent-color: var(--color-text);
+}
+
+.ws-tray-ctl {
+    grid-area: ctl;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: calc(var(--space-s) / 2);
+}
+
+.ws-tray-body {
+    grid-area: body;
+    min-width: 0;
+}
+
+.ws-tray-rows {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(calc(var(--space-l) * 6), 1fr));
+    gap: var(--space-s);
+}

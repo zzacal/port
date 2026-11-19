@@ -1,0 +1,15 @@
+SELFTEST OK   pre vs itself: expected exit 0, actual 0; EQUAL 11 files 
+SELFTEST OK   pre vs an exact copy: expected exit 0, actual 0; EQUAL 11 files 
+SELFTEST OK   copy with one byte changed: expected exit 1, actual 1; DIFF home.html 
+SELFTEST OK   copy with one file missing: expected exit 1, actual 1; ONLY-PRE index.txt 
+SELFTEST OK   copy with one extra file: expected exit 1, actual 1; ONLY-POST zz-extra.html 
+SELFTEST OK   post dir absent: expected exit 255, actual 255; FAIL no post capture dir: /var/folders/f2/rghbkpfd641b7f4_6szj0_4h0000gn/T//020-cp-selftest.g3yJWs/nope 
+
+SELFTEST ALL OK
+
+== real mode (bash compare-public.sh, ARTIFACTS=artifacts/exec-ev, attempt 1 of up to 6, 2026-11-18)
+Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 789 ms - Gallery.Web.Tests.dll (net10.0)
+== pre:  /Users/zzacal/repos/gallery/specs/020-admin-workspace/evidence/pre-public
+== post: /tmp/020-post-public
+EQUAL 11 files
+exit 0

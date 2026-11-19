@@ -1,0 +1,62 @@
+/* 020 K12: the workspace page's own content. No frame geometry here (IX.2): the three regions and
+   their widths live in AdminLayout.razor.css. Elements authored by child components need ::deep. */
+.ws-head { margin: 0 0 var(--space-s); }
+.ws-meta { margin: 0; font-size: var(--type-caption); color: var(--color-muted); }
+.ws-empty { font-size: var(--type-body); color: var(--color-muted); }
+.ws-noscript { font-size: var(--type-body); }
+.ws-head ::deep .page-heading { margin: 0; }
+.ws-counts { margin: 0 0 var(--space-s); font-size: var(--type-body); }
+.ws-tips { margin: 0; padding-left: var(--space-m); font-size: var(--type-caption); color: var(--color-muted); }
+.ws-actions { display: flex; flex-wrap: wrap; gap: var(--space-s); }
+.ws-view { margin: 0; font-size: var(--type-caption); }
+.ws-unseen { color: var(--color-muted); }
+/* Panel previews: the script copies the cell's <picture> in (R-04, no request). The box takes the
+   grid cell's ratio and the photo is letterboxed inside it, whatever its stored size. */
+.ws-preview { aspect-ratio: var(--cell-ratio); background: var(--color-surface); margin: 0 0 var(--space-s); }
+.ws-previews { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: calc(var(--space-s) / 2); margin: 0 0 var(--space-s); }
+.ws-previews ::deep picture { aspect-ratio: var(--cell-ratio); background: var(--color-surface); }
+.ws-preview ::deep picture,
+.ws-previews ::deep picture { display: block; overflow: hidden; }
+.ws-preview ::deep picture { height: 100%; }
+.ws-preview ::deep img,
+.ws-previews ::deep img { display: block; width: 100%; height: 100%; object-fit: contain; }
+/* T045: the upload tray mount at the top of main. Empty and hidden until upload.js fills it; open, it is
+   a block whose tray (UploadTray's own rules) has no top margin, so the frame's first box does not move.
+   At-pick refusals span the rows grid. */
+upload-tray:not([hidden]) { display: block; }
+upload-tray ::deep .ws-tray-rows > .dz-refusals { grid-column: 1 / -1; }
+/* A hidden Button stays hidden (.btn sets display, which beats the [hidden] UA rule): Clear selection. */
+.ws-head ::deep .btn[hidden] { display: none; }
+/* T055 (K11, R-08): the large view. Open, it is main's only box: the tray before it and every sibling after it
+   are hidden, and it
+   takes main's height (from 1200 px main is the viewport's height; below, the viewport less the collections
+   menu button's row: its --tap plus the list's --space-s padding above and below; dynamic viewport units,
+   so a phone's address bar is left out). The script copies the
+   cell's whole Picture (.pic, with its scope) into the frame, so Picture's own contain-fit rules size the
+   photo to its stored ratio, as large as the frame allows. */
+.ws-largeview:not([hidden]) { display: block; height: calc(100dvh - var(--tap) - 2 * var(--space-s)); }
+.ws-largeview:not([hidden]) ~ ::deep * { display: none; }
+upload-tray:has(~ .ws-largeview:not([hidden])) { display: none; }
+.ws-largeview ::deep .ws-stage-frame { overflow: hidden; }
+/* T057 (K12): Gallery settings and the panels' Done exist below 1200 px only. In the bottom sheet the photo
+   panel's preview is left out (the photo is in the grid above it, or shown large). */
+.ws-done-row { margin-left: var(--space-s); }
+/* T075: the selection bar's sentence (its place and visibility are frame rules, AdminLayout.razor.css). */
+.ws-selbar-text { margin: 0; font-size: var(--type-body); }
+@media not all and (min-width: 1200px) {
+    .ws-preview { display: none; }
+    /* The heading row lines up with the grid's own side padding (ContactSheet: --space-s, --space-m from 600 px). */
+    .ws-head { padding: var(--space-s) var(--space-s) 0; }
+    /* The rows holding a "View on site" link are --tap high and stretch their items, so the link's box is
+       --tap high too (TextLink's own tap rule stays the one tap rule for links; none is added for links here). */
+    .ws-meta,
+    .ws-view { display: flex; flex-wrap: wrap; align-items: stretch; column-gap: calc(var(--space-s) / 4); min-height: var(--tap); }
+}
+@media (min-width: 600px) and (not (min-width: 1200px)) {
+    .ws-head { padding: var(--space-s) var(--space-m) 0; }
+}
+@media (min-width: 1200px) {
+    .ws-largeview:not([hidden]) { height: 100%; }
+    .ws-head ::deep .ws-settings,
+    .ws-done-row { display: none; }
+}

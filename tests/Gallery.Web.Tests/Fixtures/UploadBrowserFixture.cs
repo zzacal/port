@@ -253,6 +253,19 @@ public sealed class UploadSite(
         return page;
     }
 
+    /// <summary>A new context and page, navigated to <paramref name="path"/> (the workspace) and loaded. 020 TI-01.</summary>
+    public async Task<IPage> OpenWorkspaceAsync(string path = "/admin", bool javaScript = true, Func<IPage, Task>? beforeNavigate = null)
+    {
+        var ctx = await NewContextAsync(javaScript);
+        var page = await ctx.NewPageAsync();
+        if (beforeNavigate is not null) await beforeNavigate(page);
+        var resp = await page.GotoAsync(BaseUrl + path, new() { WaitUntil = WaitUntilState.NetworkIdle });
+        if (resp is null || resp.Status != 200 || !page.Url.EndsWith(path, StringComparison.Ordinal))
+            throw new InvalidOperationException(
+                $"GET {path} answered {resp?.Status} at {page.Url}; the owner session cookie was not accepted.");
+        return page;
+    }
+
     public async ValueTask DisposeAsync()
     {
         foreach (var c in _contexts) await c.DisposeAsync();

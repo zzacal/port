@@ -62,7 +62,7 @@ public sealed class BatchStore(IMongoDatabase db, OpTimer timer, TimeProvider cl
 
     // ── reads ────────────────────────────────────────────────────────────────
 
-    /// <summary>The open batch (including one that is confirming), or null.</summary>
+    /// <summary>The open batch, or null.</summary>
     public async Task<BatchDoc?> GetOpenAsync()
     {
         await EnsureIndexAsync();
@@ -189,72 +189,97 @@ public sealed class BatchStore(IMongoDatabase db, OpTimer timer, TimeProvider cl
             async () => (await _col.UpdateOneAsync(filter, update)).ModifiedCount == 1);
     }
 
-    // ── confirm / discard ────────────────────────────────────────────────────
+    // ── join (020 U12) and the upload set (U3, U13) ──────────────────────────
 
     /// <summary>
-    /// The confirm gate (research R-09): sets <c>confirmStartedAt</c> only when the batch is open,
-    /// has ≥1 item and every item is <c>succeeded</c> (a succeeded item is never effectively
-    /// interrupted). A repeated confirm keeps the first start time (<c>$min</c> on a missing field
-    /// sets it). Returns whether the gate passed.
+    /// [SAFETY] The join claim (contracts/http.md U12 step 2, II.5d): ONE atomic update whose
+    /// filter requires the open batch and an item with this id, this attempt and stored state
+    /// <c>succeeded</c> or <c>joining</c> (states reachable only through U7's validation), and sets
+    /// it <c>joining</c>. Returns whether an item matched.
     /// </summary>
-    public async Task<bool> TryStartConfirmAsync(string batchId)
+    public async Task<bool> TryClaimJoinAsync(string batchId, string itemId, string attemptId)
     {
         await EnsureIndexAsync();
         var filter = F.And(
             F.Eq(b => b.Id, batchId),
             F.Eq(b => b.State, BatchStates.Open),
-            F.Exists("items.0"),
-            F.Not(F.ElemMatch(b => b.Items, i => i.State != ItemStates.Succeeded)));
-        var now = Now;
-        var update = U.Min(b => b.ConfirmStartedAt, now).Set(b => b.UpdatedAt, now);
+            F.ElemMatch(b => b.Items, i => i.ItemId == itemId && i.AttemptId == attemptId
+                                           && (i.State == ItemStates.Succeeded || i.State == ItemStates.Joining)));
+        var update = U.Set("items.$.state", ItemStates.Joining).Set(b => b.UpdatedAt, Now);
         return await timer.Time(OpUpdate,
             async () => (await _col.UpdateOneAsync(filter, update)).MatchedCount == 1);
     }
 
     /// <summary>
-    /// Clears <c>confirmStartedAt</c> (<c>$unset</c>, so the field is absent again) after a confirm
-    /// that left failed items behind (contracts/http.md U10, decisions row 45).
+    /// A finished join (U12 step 4): pulls the <c>joining</c> item from the open batch and adds
+    /// <paramref name="imageId"/> to <c>added</c> only when it is absent (<c>$addToSet</c> appends,
+    /// so <c>added</c> stays oldest first). Returns the batch after the update, or null when no
+    /// joining item matched (another join of the same item finished first).
     /// </summary>
-    public async Task<bool> ClearConfirmStartedAsync(string batchId)
+    public async Task<BatchDoc?> CompleteJoinAsync(string batchId, string itemId, string imageId)
+    {
+        await EnsureIndexAsync();
+        var filter = F.And(
+            F.Eq(b => b.Id, batchId),
+            F.Eq(b => b.State, BatchStates.Open),
+            F.ElemMatch(b => b.Items, i => i.ItemId == itemId && i.State == ItemStates.Joining));
+        var update = U
+            .PullFilter(b => b.Items, i => i.ItemId == itemId)
+            .AddToSet(b => b.Added, imageId)
+            .Set(b => b.UpdatedAt, Now);
+        return await timer.Time(OpUpdate, () => _col.FindOneAndUpdateAsync(filter, update,
+            new FindOneAndUpdateOptions<BatchDoc, BatchDoc?> { ReturnDocument = ReturnDocument.After }));
+    }
+
+    /// <summary>
+    /// U3 step 2: sets <c>destination</c> to <paramref name="galleryId"/> (unsets it when null) and
+    /// clears <c>added</c>, only while the open batch has no items and no added ids. Returns
+    /// whether it applied; otherwise the stored destination stays.
+    /// </summary>
+    public async Task<bool> SetDestinationIfEmptyAsync(string batchId, string? galleryId)
+    {
+        await EnsureIndexAsync();
+        var filter = F.And(
+            F.Eq(b => b.Id, batchId),
+            F.Eq(b => b.State, BatchStates.Open),
+            F.Exists("items.0", false),
+            F.Exists("added.0", false));
+        var now = Now;
+        var update = galleryId is null
+            ? U.Unset(b => b.Destination).Set(b => b.Added, []).Set(b => b.UpdatedAt, now)
+            : U.Set(b => b.Destination, galleryId).Set(b => b.Added, []).Set(b => b.UpdatedAt, now);
+        return await timer.Time(OpUpdate,
+            async () => (await _col.UpdateOneAsync(filter, update)).MatchedCount == 1);
+    }
+
+    /// <summary>The destination gallery was found gone at a join: unset it (the photo stays in the library).</summary>
+    public async Task<bool> UnsetDestinationAsync(string batchId)
     {
         await EnsureIndexAsync();
         var filter = F.And(F.Eq(b => b.Id, batchId), F.Eq(b => b.State, BatchStates.Open));
-        var update = U.Unset(b => b.ConfirmStartedAt).Set(b => b.UpdatedAt, Now);
+        var update = U.Unset(b => b.Destination).Set(b => b.UpdatedAt, Now);
         return await timer.Time(OpUpdate,
             async () => (await _col.UpdateOneAsync(filter, update)).MatchedCount == 1);
     }
 
-    /// <summary>open + confirming → confirmed with <paramref name="count"/>.</summary>
-    public async Task<bool> MarkConfirmedAsync(string batchId, int count)
+    /// <summary>
+    /// U13: removes the items that did not join (stored <c>failed</c>, or an active state whose
+    /// heartbeat is older than <c>HeartbeatTimeout</c>: the query form of
+    /// <see cref="EffectiveState.Of"/>'s <c>interrupted</c>), and clears <c>added</c> and
+    /// <c>destination</c>. Returns whether the open batch matched.
+    /// </summary>
+    public async Task<bool> ClearAsync(string batchId)
     {
         await EnsureIndexAsync();
-        var filter = F.And(
-            F.Eq(b => b.Id, batchId),
-            F.Eq(b => b.State, BatchStates.Open),
-            F.Ne(b => b.ConfirmStartedAt, null));
-        var now = Now;
+        var cutoff = Now - options.HeartbeatTimeout;
+        var filter = F.And(F.Eq(b => b.Id, batchId), F.Eq(b => b.State, BatchStates.Open));
         var update = U
-            .Set(b => b.State, BatchStates.Confirmed)
-            .Set(b => b.ConfirmedAt, now)
-            .Set(b => b.ConfirmedCount, count)
-            .Set(b => b.UpdatedAt, now);
-        return await timer.Time(OpUpdate,
-            async () => (await _col.UpdateOneAsync(filter, update)).MatchedCount == 1);
-    }
-
-    /// <summary>open and not confirming → discarded.</summary>
-    public async Task<bool> MarkDiscardedAsync(string batchId)
-    {
-        await EnsureIndexAsync();
-        var filter = F.And(
-            F.Eq(b => b.Id, batchId),
-            F.Eq(b => b.State, BatchStates.Open),
-            F.Eq(b => b.ConfirmStartedAt, null));
-        var now = Now;
-        var update = U
-            .Set(b => b.State, BatchStates.Discarded)
-            .Set(b => b.DiscardedAt, now)
-            .Set(b => b.UpdatedAt, now);
+            .PullFilter(b => b.Items, i => i.State == ItemStates.Failed
+                || ((i.State == ItemStates.Queued || i.State == ItemStates.Processing || i.State == ItemStates.Uploading)
+                    && i.HeartbeatAt < cutoff))
+            .Set(b => b.Added, [])
+            .Unset(b => b.Destination)
+            .Set(b => b.UpdatedAt, Now);
         return await timer.Time(OpUpdate,
             async () => (await _col.UpdateOneAsync(filter, update)).MatchedCount == 1);
     }

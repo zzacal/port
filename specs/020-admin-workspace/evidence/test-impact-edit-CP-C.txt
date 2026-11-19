@@ -1,0 +1,6 @@
+020 test-impact-edit: 4 of 140 rows (CP-C); root /Users/zzacal/repos/gallery
+OK TI-40 CP-C tests/Gallery.Web.Tests/OwnerSessionTests.cs x1
+OK TI-41 CP-C tests/Gallery.Web.Tests/OwnerClaimTests.cs x1
+OK TI-41 CP-C tests/Gallery.Web.Tests/OwnerClaimTests.cs x1
+OK TI-62 CP-C tests/Gallery.Web.Tests/AdminNavConsistencyTests.cs RETIRE (exists; deleting)
+wrote 2 files, deleted 1

@@ -66,8 +66,8 @@ public class OwnerSessionTests(MongoFixture mongo) : IAsyncLifetime
         var adminResp = await host.GetAsync("/admin");
         Assert.Equal(System.Net.HttpStatusCode.OK, adminResp.StatusCode);
         var html = await adminResp.Content.ReadAsStringAsync();
-        Assert.Contains("admin-empty", html);
-        Assert.Contains("owner-bar", html);
+        Assert.Contains("<admin-workspace", html);
+        Assert.Contains("class=\"ws-collections\"", html);
 
         // DB unchanged: claimedSubject still owner-1
         var site = await db.GetCollection<BsonDocument>("site")

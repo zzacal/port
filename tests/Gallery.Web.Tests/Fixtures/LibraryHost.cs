@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json;
 using Amazon.S3.Model;
 using Gallery.Web.Data;
 using Gallery.Web.Edge;
@@ -164,6 +165,28 @@ public sealed class LibraryHost : IAsyncDisposable
         if (csrf) all.Add(new("__RequestVerificationToken", CsrfToken));
         return Host.SendAsync(new HttpRequestMessage(HttpMethod.Post, path) { Content = new FormUrlEncodedContent(all) });
     }
+
+    /// <summary>GETs <paramref name="path"/> and parses the body as JSON (any status). 020 TI-01.</summary>
+    public async Task<(HttpResponseMessage Response, JsonDocument? Body)> GetJsonAsync(string path)
+    {
+        var resp = await Host.GetAsync(path);
+        return (resp, await UploadHost.ParseAsync(resp));
+    }
+
+    /// <summary>POSTs <paramref name="body"/> as JSON, with the cached <c>X-CSRF-TOKEN</c> unless
+    /// <paramref name="csrf"/> is false (same shape as <see cref="UploadHost.PostJsonAsync"/>). 020 TI-01.</summary>
+    public Task<HttpResponseMessage> PostJsonAsync(string path, object body, bool csrf = true)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, path)
+        {
+            Content = new StringContent(JsonSerializer.Serialize(body, Json), Encoding.UTF8, "application/json"),
+        };
+        if (csrf)
+            request.Headers.TryAddWithoutValidation("X-CSRF-TOKEN", CsrfToken);
+        return Host.SendAsync(request);
+    }
+
+    private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
     /// <summary>
     /// A POST with no body and no content type. With <paramref name="csrfHeader"/> the cached token

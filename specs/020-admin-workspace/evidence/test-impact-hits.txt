@@ -1,0 +1,181 @@
+== upload page (U1): 26 lines in 13 files
+tests/Gallery.Web.Tests/AdminAccessTests.cs: 111 173 35
+tests/Gallery.Web.Tests/AdminNavConsistencyTests.cs: 41 99
+tests/Gallery.Web.Tests/Fixtures/UploadBrowserFixture.cs: 249 250
+tests/Gallery.Web.Tests/LayoutConsistencyBrowserTests.cs: 89
+tests/Gallery.Web.Tests/OrganismComponentTests.cs: 24
+tests/Gallery.Web.Tests/UploadAccessTests.cs: 44
+tests/Gallery.Web.Tests/UploadBrowserTests.cs: 124 169
+tests/Gallery.Web.Tests/UploadConfirmTests.cs: 289
+tests/Gallery.Web.Tests/UploadLifecycleTests.cs: 331
+tests/Gallery.Web.Tests/UploadPageTests.cs: 107 191 273 284 302 311 321 49 85
+tests/Gallery.Web.Tests/UploadResumeTests.cs: 74
+tests/Gallery.Web.Tests/UploadSecretScanTests.cs: 65
+tests/Gallery.Web.Tests/UploadTimingEvidenceTests.cs: 102
+
+== confirm (U10): 6 lines in 4 files
+tests/Gallery.Web.Tests/UploadAccessTests.cs: 67
+tests/Gallery.Web.Tests/UploadConfirmTests.cs: 101 245 337
+tests/Gallery.Web.Tests/UploadLifecycleTests.cs: 445
+tests/Gallery.Web.Tests/UploadTimingEvidenceTests.cs: 60
+
+== discard (U11): 7 lines in 2 files
+tests/Gallery.Web.Tests/UploadAccessTests.cs: 69
+tests/Gallery.Web.Tests/UploadLifecycleTests.cs: 329 346 355 357 383 472
+
+== upload item API (kept): 72 lines in 9 files
+tests/Gallery.Web.Tests/UploadAccessTests.cs: 45 46 48 50 52 56 63 65
+tests/Gallery.Web.Tests/UploadBrowserTests.cs: 168 249
+tests/Gallery.Web.Tests/UploadConfirmTests.cs: 175 260 265 390 478 67 78 89
+tests/Gallery.Web.Tests/UploadFlowTests.cs: 111 196 209 322 342 406 408 429 432 438 447 462 473 474 486 496 538 541 543 552 555 570 571 596 597 598 599 601 602 609 61 612 83
+tests/Gallery.Web.Tests/UploadIntakeTests.cs: 100 109 118 43 77 81 98
+tests/Gallery.Web.Tests/UploadLifecycleTests.cs: 246 341 508 552 67
+tests/Gallery.Web.Tests/UploadPageTests.cs: 135
+tests/Gallery.Web.Tests/UploadResumeTests.cs: 119 132 61 68
+tests/Gallery.Web.Tests/UploadSecretScanTests.cs: 48 52 63 65
+
+== library page (L1): 87 lines in 29 files
+tests/Gallery.Web.Tests/AdminAccessTests.cs: 176 36
+tests/Gallery.Web.Tests/AdminNavBrowserTests.cs: 26
+tests/Gallery.Web.Tests/AdminNavConsistencyTests.cs: 37 70 99
+tests/Gallery.Web.Tests/CameraRoutesTests.cs: 345 363
+tests/Gallery.Web.Tests/EdgeModeTests.cs: 107 158 167 223
+tests/Gallery.Web.Tests/EdgeSecretTests.cs: 119 83 84
+tests/Gallery.Web.Tests/GridWidthBrowserTests.cs: 130
+tests/Gallery.Web.Tests/InvariantTests.cs: 104 155
+tests/Gallery.Web.Tests/LayeringBrowserTests.cs: 64
+tests/Gallery.Web.Tests/LayoutConsistencyBrowserTests.cs: 89
+tests/Gallery.Web.Tests/LibraryAccessTests.cs: 27
+tests/Gallery.Web.Tests/LibraryBrowserTests.cs: 184 311 335 368 487 509 565 611 642
+tests/Gallery.Web.Tests/LibraryDeleteTests.cs: 134 51 71 95
+tests/Gallery.Web.Tests/LibraryEditTests.cs: 204
+tests/Gallery.Web.Tests/LibraryFlowTests.cs: 110 36 98
+tests/Gallery.Web.Tests/LibraryMembershipTests.cs: 58
+tests/Gallery.Web.Tests/LibraryPageTests.cs: 104 121 125 128 140 148 167 196 238 244 282 297 337
+tests/Gallery.Web.Tests/LibrarySourceGuardTests.cs: 103 84
+tests/Gallery.Web.Tests/LibraryTileGeometryTests.cs: 52 97
+tests/Gallery.Web.Tests/LibraryTimingEvidenceTests.cs: 177 182 84
+tests/Gallery.Web.Tests/LocalSignInBrowserTests.cs: 31 46 50
+tests/Gallery.Web.Tests/NewTabLinkTests.cs: 25
+tests/Gallery.Web.Tests/OrganismComponentTests.cs: 249 33
+tests/Gallery.Web.Tests/PhotoActionsTests.cs: 212 248
+tests/Gallery.Web.Tests/PhotoEditBrowserTests.cs: 124 195 207 218 224 260
+tests/Gallery.Web.Tests/PhotoEditPageTests.cs: 111 209 224 258
+tests/Gallery.Web.Tests/PhotoEditTimingEvidenceTests.cs: 10
+tests/Gallery.Web.Tests/TileIconBrowserTests.cs: 122 174 243 281 314 326 347 390
+tests/Gallery.Web.Tests/TileTimingEvidenceTests.cs: 46
+
+== photo edit / save (L2, L5, L6): 89 lines in 18 files
+tests/Gallery.Web.Tests/EdgeModeTests.cs: 114 115 159
+tests/Gallery.Web.Tests/EdgeSecretTests.cs: 109 110 85
+tests/Gallery.Web.Tests/GalleryFieldBrowserTests.cs: 183 225 254 292 313 350 387 419 437 465 478 497 537 565 591 623
+tests/Gallery.Web.Tests/LayoutConsistencyBrowserTests.cs: 89
+tests/Gallery.Web.Tests/LibraryAccessTests.cs: 28 31 32
+tests/Gallery.Web.Tests/LibraryBrowserTests.cs: 518 660
+tests/Gallery.Web.Tests/LibraryDeleteTests.cs: 49 69
+tests/Gallery.Web.Tests/LibraryEditTests.cs: 106 183 190 192 35 55
+tests/Gallery.Web.Tests/LibraryMembershipEditTests.cs: 271 339 41 95
+tests/Gallery.Web.Tests/LibraryMembershipTests.cs: 126
+tests/Gallery.Web.Tests/LibraryPageTests.cs: 223 248 270 297
+tests/Gallery.Web.Tests/LibraryTimingEvidenceTests.cs: 176 94 96
+tests/Gallery.Web.Tests/MembershipTimingEvidenceTests.cs: 17 53 56 72 73
+tests/Gallery.Web.Tests/PhotoActionsTests.cs: 257 258
+tests/Gallery.Web.Tests/PhotoEditBrowserTests.cs: 127 143 156 168 198 203 227 238 254
+tests/Gallery.Web.Tests/PhotoEditPageTests.cs: 109 120 123 130 142 148 163 164 165 173 186 189 210 237 250 267 85
+tests/Gallery.Web.Tests/PhotoEditTimingEvidenceTests.cs: 11 12 23 57
+tests/Gallery.Web.Tests/TileIconBrowserTests.cs: 341 353 354 395
+
+== bulk add (L3): 13 lines in 10 files
+tests/Gallery.Web.Tests/BuilderTests.cs: 376
+tests/Gallery.Web.Tests/EdgeModeTests.cs: 108 109 217
+tests/Gallery.Web.Tests/EdgeSecretTests.cs: 75
+tests/Gallery.Web.Tests/InvariantTests.cs: 102
+tests/Gallery.Web.Tests/LibraryAccessTests.cs: 29
+tests/Gallery.Web.Tests/LibraryFlowTests.cs: 106 40
+tests/Gallery.Web.Tests/LibraryMembershipEditTests.cs: 105
+tests/Gallery.Web.Tests/LibraryPageTests.cs: 312
+tests/Gallery.Web.Tests/LibrarySourceGuardTests.cs: 70
+tests/Gallery.Web.Tests/LibraryTimingEvidenceTests.cs: 103
+
+== bulk delete (L4): 9 lines in 6 files
+tests/Gallery.Web.Tests/EdgeModeTests.cs: 168 224
+tests/Gallery.Web.Tests/InvariantTests.cs: 153
+tests/Gallery.Web.Tests/LibraryAccessTests.cs: 30
+tests/Gallery.Web.Tests/LibraryDeleteTests.cs: 114 148 93
+tests/Gallery.Web.Tests/LibraryPageTests.cs: 317
+tests/Gallery.Web.Tests/LibraryTimingEvidenceTests.cs: 181
+
+== galleries (G1 to G4, B1 to B6): 232 lines in 29 files
+tests/Gallery.Web.Tests/AdminAccessTests.cs: 37
+tests/Gallery.Web.Tests/AdminNavBrowserTests.cs: 42 59
+tests/Gallery.Web.Tests/AdminNavConsistencyTests.cs: 38 39 40 55 64 86 88 94 95 99
+tests/Gallery.Web.Tests/BuilderIconBrowserTests.cs: 130 156 191 226 230 70
+tests/Gallery.Web.Tests/BuilderTests.cs: 101 102 125 149 164 167 182 186 189 197 199 213 241 242 246 247 251 270 272 275 280 287 289 293 301 306 312 330 332 343 345 356 369 372 399 401 412 415 422 440 442 446 453 456 457 48 49 73 74
+tests/Gallery.Web.Tests/EdgeModeTests.cs: 102 103 104 110 111 118 119 123 124 125 126 127 128 134 135 147 148 151 152 153 154 169 170 219 220 221 222
+tests/Gallery.Web.Tests/EdgeSecretTests.cs: 100 101 103 104 106 107 112 113 120 79 86 87 94 95 97 98
+tests/Gallery.Web.Tests/GalleryActionsTests.cs: 193 53
+tests/Gallery.Web.Tests/GalleryFieldBrowserTests.cs: 214 356
+tests/Gallery.Web.Tests/GalleryListBrowserTests.cs: 126 24 253 513
+tests/Gallery.Web.Tests/GalleryListTests.cs: 119 120 126 127 147 231 255 258 287 289 293 306 309 310 317 334 339 359 373 375 384 386 397 63
+tests/Gallery.Web.Tests/GalleryListTimingEvidenceTests.cs: 10 11 21 71
+tests/Gallery.Web.Tests/GridWidthBrowserTests.cs: 140 150 166
+tests/Gallery.Web.Tests/InvariantTests.cs: 111 116 119 124 125 129 135 141 146 161 162 169 176 71 93 97
+tests/Gallery.Web.Tests/LayoutConsistencyBrowserTests.cs: 89
+tests/Gallery.Web.Tests/LibraryAccessTests.cs: 33 34 35 36 37 38 39 40 41 42
+tests/Gallery.Web.Tests/LibraryBrowserTests.cs: 201 235 260 284 407 410 433 492 495 523 525
+tests/Gallery.Web.Tests/LibraryEditTests.cs: 185
+tests/Gallery.Web.Tests/LibraryFlowTests.cs: 45 46 55 58 63 73 77
+tests/Gallery.Web.Tests/LibraryMembershipEditTests.cs: 221 332 356
+tests/Gallery.Web.Tests/LibraryMembershipTests.cs: 109
+tests/Gallery.Web.Tests/LibraryPageTests.cs: 107
+tests/Gallery.Web.Tests/LibrarySourceGuardTests.cs: 74 75 76
+tests/Gallery.Web.Tests/LibraryTimingEvidenceTests.cs: 114 116 121 122 129 130 138 148 149 158 159 165 166 172 58
+tests/Gallery.Web.Tests/NewTabLinkTests.cs: 25
+tests/Gallery.Web.Tests/OrganismComponentTests.cs: 42
+tests/Gallery.Web.Tests/PhotoActionsTests.cs: 236
+tests/Gallery.Web.Tests/PublishRefusalTests.cs: 106 109 147 188 213 225 68 83
+tests/Gallery.Web.Tests/TileTimingEvidenceTests.cs: 21 49
+
+== shell (H4): 44 lines in 14 files
+tests/Gallery.Web.Tests/AdminAccessTests.cs: 110 131 192 34 408 57 60 62 79 99
+tests/Gallery.Web.Tests/AdminNavConsistencyTests.cs: 99
+tests/Gallery.Web.Tests/BatchStoreTests.cs: 177
+tests/Gallery.Web.Tests/Fixtures/LibraryHost.cs: 100
+tests/Gallery.Web.Tests/Fixtures/UploadHost.cs: 74
+tests/Gallery.Web.Tests/GalleryActionsTests.cs: 251
+tests/Gallery.Web.Tests/GalleryServiceTests.cs: 62
+tests/Gallery.Web.Tests/LocalSignInBrowserTests.cs: 38 42
+tests/Gallery.Web.Tests/LocalSignInTests.cs: 112 116 135 145 222 248
+tests/Gallery.Web.Tests/OwnerClaimTests.cs: 175 81 87
+tests/Gallery.Web.Tests/OwnerSessionTests.cs: 111 135 151 167 185 222 230 246 260 277 62 66 95
+tests/Gallery.Web.Tests/PhotoActionsTests.cs: 155
+tests/Gallery.Web.Tests/RefusalTests.cs: 224 85
+tests/Gallery.Web.Tests/SignInTimingEvidenceTests.cs: 35
+
+== catalogue (/ui): 15 lines in 4 files
+tests/Gallery.Web.Tests/IndexTests.cs: 13 21
+tests/Gallery.Web.Tests/NavCataloguePageTests.cs: 8
+tests/Gallery.Web.Tests/UiOwnerOnlyTests.cs: 11 36 44 51 58 83 89 90 92 94
+tests/Gallery.Web.Tests/UiPagesUnchangedTests.cs: 6 7
+
+== components being removed, named in tests
+OwnerBar: 3 files
+SelectionBar: 3 files
+PhotoActions: 5 files
+GalleryActions: 3 files
+GalleryBuilder: 4 files
+BatchFooter: 2 files
+BatchItem: 7 files
+DragHandle: 5 files
+CoverMarker: 4 files
+TokenCombobox: 4 files
+VisibilityToggle: 3 files
+IconButton: 3 files
+Icon>: 2 files
+Icons.: 2 files
+LibraryPage: 2 files
+PhotoEditPage: 1 files
+GalleriesPage: 0 files
+GalleryPage: 1 files
+UploadPage: 3 files
+ShellPage: 0 files

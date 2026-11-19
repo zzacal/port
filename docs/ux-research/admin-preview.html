@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin preview · one system</title>
+<style>
+/* Tokens: copied from Gallery.Core/Design/Tokens.cs. Nothing new is added. */
+:root{--space-l:48px;--space-m:32px;--space-s:16px;--tap:44px;--cell-ratio:4/3;
+--type-caption:12px;--type-body:14px;--type-brand:16px;
+--color-bg:#fff;--color-text:#000;--color-muted:#666;--color-rule:#ddd;--color-danger:#b3261e;--color-success:#1e7a3c;--color-surface:#f4f4f4;
+--font:system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+--edge:var(--space-s)}
+@media (min-width:600px){:root{--edge:var(--space-m)}}
+@media (min-width:1200px){:root{--edge:var(--space-l)}}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);font-size:var(--type-body);color:var(--color-text);background:var(--color-bg)}
+a{color:inherit}
+[hidden]{display:none!important}
+
+/* Preview strip: NOT part of the design */
+.pv{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center;padding:6px var(--edge);background:#1b1b1b;color:#bbb;font-size:12px}
+.pv b{color:#fff;font-weight:600}
+.pv a{color:#bbb;text-decoration:none;padding:4px 0}
+.pv a[aria-current]{color:#fff;text-decoration:underline;text-underline-offset:4px}
+.pv .sp{flex:1}
+
+/* 1. Frame: owner bar, breadcrumb, toolbar, status. Same four rows, same left edge, every page. */
+.owner-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;background:var(--color-surface);border-bottom:1px solid var(--color-rule);padding:8px var(--edge)}
+.ob-brand{font-size:var(--type-brand);font-weight:600;text-decoration:none}
+.ob-brand span{font-weight:400;color:var(--color-muted)}
+.owner-bar ul{list-style:none;margin:0;padding:0;display:flex;gap:16px}
+.owner-bar nav a{color:var(--color-muted);text-decoration:none}
+.owner-bar nav a[aria-current]{color:var(--color-text);font-weight:600;text-decoration:underline;text-underline-offset:6px;text-decoration-thickness:2px}
+.ob-actions{display:flex;gap:8px}
+.ob-actions>.btn-quiet:last-child,.toolbar>.btn-quiet:last-child{margin-right:-12px}
+.breadcrumb{display:flex;align-items:center;min-height:var(--tap);padding:0 var(--edge);font-size:var(--type-caption);color:var(--color-muted)}
+.breadcrumb a{text-decoration:underline}
+.breadcrumb .sep{padding:0 8px}
+.breadcrumb .here{color:var(--color-text)}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;min-height:var(--tap);padding:0 var(--edge);margin-bottom:var(--space-s)}
+.toolbar .what{font-weight:600}
+.toolbar .muted{color:var(--color-muted)}
+.toolbar .sp{flex:1}
+.status{margin:0 var(--edge) var(--space-s);padding:8px 12px;background:var(--color-surface);border-radius:4px}
+.page{padding:0 var(--edge) var(--space-l)}
+.page.with-panel{display:grid;gap:var(--space-m);grid-template-columns:1fr}
+@media (min-width:1200px){.page.with-panel{grid-template-columns:minmax(0,1fr) 320px;align-items:start}.page.with-panel>.side-panel{position:sticky;top:var(--space-s)}}
+.main{min-width:0}
+
+/* 2. Controls */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 12px;border:1px solid transparent;border-radius:4px;font:inherit;font-size:var(--type-body);line-height:1;white-space:nowrap;cursor:pointer;text-decoration:none}
+.btn:focus-visible,.icon-button:focus-visible{outline:2px solid var(--color-text);outline-offset:2px}
+.btn-primary{background:var(--color-text);color:var(--color-bg)}
+.btn-secondary{background:var(--color-bg);color:var(--color-text);border-color:var(--color-rule)}
+.btn-secondary:hover{background:var(--color-surface)}
+.btn-quiet{background:transparent;color:var(--color-muted)}
+.btn-quiet:hover{text-decoration:underline;color:var(--color-text)}
+.btn-danger{background:transparent;color:var(--color-danger);border-color:var(--color-danger)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.icon-button{display:inline-flex;align-items:center;justify-content:center;width:var(--tap);height:var(--tap);padding:0;border:0;border-radius:4px;background:transparent;color:var(--color-text);cursor:pointer;position:relative}
+.icon-button:hover{background:var(--color-surface)}
+.icon-button.off{color:var(--color-muted);cursor:default}
+.icon-button.off:hover{background:transparent}
+.icon-button .n{position:absolute;right:4px;bottom:6px;font-size:10px;font-weight:600;background:var(--color-bg);border-radius:6px;padding:0 3px;line-height:12px}
+.seg{display:inline-flex;border:1px solid var(--color-rule);border-radius:4px;overflow:hidden}
+.seg button{height:30px;padding:0 12px;border:0;background:var(--color-bg);font:inherit;font-size:var(--type-body);color:var(--color-muted);cursor:pointer}
+.seg button+button{border-left:1px solid var(--color-rule)}
+.seg button[aria-pressed=true]{background:var(--color-surface);color:var(--color-text);font-weight:600}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label,.lbl{font-size:var(--type-caption);font-weight:600}
+.field input,.field textarea,.field select{width:100%;border:1px solid var(--color-rule);border-radius:4px;padding:8px;font:inherit;font-size:var(--type-body);background:var(--color-bg)}
+.field input,.field select{height:32px;padding:0 8px}
+.hint{font-size:var(--type-caption);color:var(--color-muted);margin:4px 0 0}
+.switch{display:inline-flex;align-items:center;gap:8px;cursor:pointer}
+.switch input{position:absolute;opacity:0;width:1px;height:1px}
+.track{position:relative;width:32px;height:18px;border-radius:9px;background:var(--color-rule);flex-shrink:0}
+.track::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .15s}
+.switch input:checked+.track{background:var(--color-text)}
+.switch input:checked+.track::after{transform:translateX(14px)}
+
+/* 3. One grid, one tile */
+.cs{display:grid;gap:var(--edge);align-items:start;grid-template-columns:repeat(1,minmax(0,1fr))}
+@media (min-width:600px){.cs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:1200px){.cs.c4{grid-template-columns:repeat(4,minmax(0,1fr))}.cs.c3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.sheet{container-type:inline-size}
+@media (min-width:1200px){@container (max-width:1100px){.cs.c4{grid-template-columns:repeat(2,minmax(0,1fr))}}}
+.tile{min-width:0;text-align:center}
+.cell{position:relative;aspect-ratio:var(--cell-ratio);width:100%;overflow:hidden;margin-bottom:4px;background:var(--color-surface);border-radius:2px}
+.cell img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.tile.dim .cell img{opacity:.5}
+.on-photo{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);color:#fff;padding:4px 8px;text-align:left;font-size:var(--type-caption);font-weight:600;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mark{position:absolute;top:0;left:0;width:var(--tap);height:var(--tap);display:flex;align-items:center;justify-content:center;border:0;background:transparent;cursor:pointer;padding:0}
+.dot{width:24px;height:24px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.35);box-shadow:0 0 0 1px rgba(0,0,0,.25)}
+.mark[aria-pressed=true] .dot{background:#000 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2 5 8.7 9.5 3.5' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px 12px no-repeat}
+.tile.sel .cell{outline:2px solid var(--color-text);outline-offset:2px}
+.row{display:flex;justify-content:center;gap:4px;height:var(--tap)}
+.empty{color:var(--color-muted);margin:0}
+
+/* 4. One side panel */
+.side-panel{background:var(--color-surface);padding:var(--space-s);border-radius:6px;display:flex;flex-direction:column;gap:16px}
+.side-panel h2{font-size:var(--type-brand);font-weight:600;margin:0}
+.sp-fields{display:flex;flex-direction:column;gap:12px}
+.sp-save{display:flex;align-items:center;gap:12px}
+.sp-status{color:var(--color-success)}
+.sp-danger{border-top:1px solid var(--color-rule);padding-top:16px}
+.tokens{display:flex;flex-wrap:wrap;gap:4px;padding:4px;min-height:var(--tap);border:1px solid var(--color-rule);border-radius:4px;background:var(--color-bg);align-items:center}
+.token{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 4px 0 8px;border-radius:4px;background:var(--color-surface);font-size:var(--type-caption)}
+.token button{border:0;background:transparent;font:inherit;cursor:pointer;padding:0 4px}
+.tokens input{flex:1;min-width:8ch;border:0;outline:0;font:inherit;padding:4px}
+
+/* 5. One bottom bar: appears only when there are items to act on */
+.action-bar{position:sticky;bottom:0;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:var(--space-m);padding:12px var(--edge);background:var(--color-bg);border-top:1px solid var(--color-rule)}
+.action-bar .sp{flex:1}
+.action-bar .count{font-weight:600}
+.action-bar progress{width:160px;height:4px;accent-color:var(--color-text)}
+.action-bar .why{font-size:var(--type-caption);color:var(--color-muted)}
+
+/* 6. One dialog */
+dialog{max-width:32rem;width:calc(100% - 2*var(--space-s));border:1px solid var(--color-rule);border-radius:6px;background:var(--color-bg);color:var(--color-text);padding:var(--space-m)}
+dialog.wide{max-width:60rem}
+dialog.danger{border-top:4px solid var(--color-danger)}
+dialog::backdrop{background:rgb(0 0 0/.4)}
+dialog h2{margin:0 0 var(--space-s);font-size:var(--type-brand)}
+dialog p{margin:0 0 8px}
+.d-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:var(--space-s)}
+.checks{display:grid;gap:4px;margin:0 0 12px}
+.checks label{display:flex;gap:8px;align-items:center;min-height:32px}
+.checks small{color:var(--color-muted)}
+.pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;max-height:50vh;overflow:auto;padding:2px}
+
+/* Upload */
+.dz{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:160px;border:2px dashed var(--color-rule);border-radius:8px;gap:8px;padding:16px;margin-bottom:var(--space-m)}
+.dz small{color:var(--color-muted)}
+.b-meta{display:flex;gap:8px;font-size:var(--type-caption);margin:4px 0;text-align:left}
+.b-meta span:first-child{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.b-state{display:flex;align-items:center;gap:8px;min-height:var(--tap);font-size:var(--type-caption);text-align:left}
+.b-state progress{flex:1;height:4px;accent-color:var(--color-text)}
+.ok{color:var(--color-success)}.bad{color:var(--color-danger)}.muted{color:var(--color-muted)}
+
+/* Photo */
+.stage{display:flex;justify-content:center;background:var(--color-surface);border-radius:2px}
+.stage img{max-width:100%;max-height:72vh;display:block}
+
+/* Rules page */
+.rules{max-width:76ch;line-height:1.5}
+.rules h1{font-size:var(--type-brand);margin:0 0 var(--space-s)}
+.rules h2{font-size:var(--type-body);margin:var(--space-m) 0 4px}
+.rules table{border-collapse:collapse;width:100%;font-size:13px}
+.rules td,.rules th{border-top:1px solid var(--color-rule);padding:8px 8px 8px 0;text-align:left;vertical-align:top}
+.rules th{font-size:var(--type-caption);color:var(--color-muted)}
+</style>
+</head>
+<body>
+<div class="pv" id="pv"></div>
+<div id="app"></div>
+<div id="dialogs"></div>
+
+<script>
+const IMG = '../../dev-pictures/.admin-preview/';
+const NAMES = ['DSCF1197','DSCF1220','DSCF1296','DSCF1332','DSCF1376','DSCF1411','DSCF1486','DSCF1772','DSCF1836','DSCF2029','DSCF2045','DSCF2060'];
+const photos = NAMES.map((t, i) => ({ id: 'p' + i, src: IMG + 'p' + i + '.jpg', title: t }));
+const galleries = [
+  { id: 'g1', title: 'Ferry crossing', pub: true, items: ['p0', 'p3', 'p5', 'p1', 'p2'], cover: 'p3', desc: '' },
+  { id: 'g2', title: 'Shoreline', pub: true, items: ['p7', 'p9', 'p11'], cover: null, desc: '' },
+  { id: 'g3', title: 'Work in progress', pub: false, items: ['p6', 'p8'], cover: null, desc: '' },
+  { id: 'g4', title: 'New series', pub: false, items: [], cover: null, desc: '' },
+];
+const batch = [
+  { name: 'DSCF1401.jpg', size: '8.2 MB', state: 'ready', src: 4 },
+  { name: 'DSCF1402.jpg', size: '7.9 MB', state: 'ready', src: 6 },
+  { name: 'DSCF1403.jpg', size: '9.1 MB', state: 'ready', src: 8 },
+  { name: 'DSCF1404.jpg', size: '8.8 MB', state: 'uploading', pct: 62, src: 10 },
+  { name: 'DSCF1405.jpg', size: '8.0 MB', state: 'queued', src: 2 },
+  { name: 'DSCF1406.jpg', size: '8.4 MB', state: 'failed', src: 1 },
+];
+const S = { screen: 'library', photo: 'p0', from: 'library', gallery: 'g1', sel: new Set(), last: null, filter: 'all', status: null, saved: false };
+
+const ICON = {
+  folder: '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
+  view: '<path d="M21 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6"/><path d="m21 3-9 9"/><path d="M15 3h6v6"/>',
+  edit: '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>',
+  move: '<circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/>',
+  star: '<path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>',
+  remove: '<path d="M21 9v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"/><line x1="16" x2="22" y1="5" y2="5"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>',
+  eye: '<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/>',
+  eyeoff: '<path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/>',
+  prev: '<path d="m15 18-6-6 6-6"/>', next: '<path d="m9 18 6-6-6-6"/>',
+};
+const svg = (n, fill) => `<svg width="24" height="24" viewBox="0 0 24 24" fill="${fill ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
+const ib = (icon, label, act, arg, o = {}) => `<button class="icon-button${o.off ? ' off' : ''}" title="${label}" aria-label="${label}" ${act ? `data-act="${act}" data-arg="${arg ?? ''}"` : ''}>${svg(icon, o.fill)}${o.n !== undefined ? `<span class="n">${o.n}</span>` : ''}</button>`;
+const P = id => photos.find(p => p.id === id);
+const G = id => galleries.find(g => g.id === id);
+const inGalleries = id => galleries.filter(g => g.items.includes(id));
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+const coverOf = g => g.cover || g.items[0];
+
+/* The one frame. Every page passes the same five slots. */
+function frame({ nav, crumbs, what, tools = '', main, panel = '', bar = '' }) {
+  const link = (k, t) => `<li><a href="#" data-act="go" data-arg="${k}" ${nav === k ? 'aria-current="page"' : ''}>${t}</a></li>`;
+  return `
+  <header class="owner-bar">
+    <a class="ob-brand" href="#" data-act="go" data-arg="library">Gallery <span>admin</span></a>
+    <nav aria-label="Admin"><ul>${link('upload', 'Upload')}${link('library', 'Library')}${link('galleries', 'Galleries')}</ul></nav>
+    <div class="ob-actions"><span class="btn btn-quiet">View site ↗</span><span class="btn btn-quiet">Sign out</span></div>
+  </header>
+  <nav class="breadcrumb" aria-label="Breadcrumb">${crumbs.map((c, i) => i < crumbs.length - 1 ? `<a href="#" data-act="go" data-arg="${c[1]}">${c[0]}</a><span class="sep">/</span>` : `<span class="here">${c[0]}</span>`).join('')}</nav>
+  <div class="toolbar"><span class="what">${what}</span>${tools}</div>
+  ${S.status ? `<p class="status" role="status">${S.status}</p>` : ''}
+  <div class="page${panel ? ' with-panel' : ''}"><div class="main">${main}</div>${panel}</div>
+  ${bar}`;
+}
+
+function photoTile(p, row, o = {}) {
+  const on = S.sel.has(p.id);
+  return `<div class="tile${on ? ' sel' : ''}">
+    <div class="cell"><img src="${p.src}" alt="" loading="lazy">${o.select ? `<button class="mark" aria-pressed="${on}" aria-label="Select ${p.title}" data-act="sel" data-arg="${p.id}"><span class="dot"></span></button>` : ''}<span class="on-photo">${p.title}</span></div>
+    <div class="row">${row}</div></div>`;
+}
+
+const screens = {
+  library() {
+    const list = S.filter === 'loose' ? photos.filter(p => !inGalleries(p.id).length) : photos;
+    const loose = photos.filter(p => !inGalleries(p.id).length).length;
+    const n = S.sel.size;
+    return frame({
+      nav: 'library', crumbs: [['Library']], what: plural(list.length, 'photo'),
+      tools: `<span class="seg"><button aria-pressed="${S.filter === 'all'}" data-act="filter" data-arg="all">All</button><button aria-pressed="${S.filter === 'loose'}" data-act="filter" data-arg="loose">Not in a gallery · ${loose}</button></span><span class="sp"></span><button class="btn btn-secondary" data-act="go" data-arg="upload">Upload photos</button>`,
+      main: list.length ? `<div class="cs c4">${list.map(p => photoTile(p,
+        ib('folder', `In ${plural(inGalleries(p.id).length, 'gallery').replace('gallerys', 'galleries')}`, 'photo', p.id, { n: inGalleries(p.id).length }) +
+        ib('view', inGalleries(p.id).some(g => g.pub) ? `View ${p.title}` : 'No public page', null, null, { off: !inGalleries(p.id).some(g => g.pub) }) +
+        ib('edit', `Edit ${p.title}`, 'photo', p.id), { select: true })).join('')}</div>`
+        : `<p class="empty">Every photo is in a gallery.</p>`,
+      bar: n ? `<div class="action-bar" role="region" aria-label="Selection"><span class="count">${n} selected</span><button class="btn btn-quiet" data-act="clear">Clear</button><button class="btn btn-quiet" data-act="all">Select all</button><span class="sp"></span><button class="btn btn-primary" data-act="dlg" data-arg="add">Add to gallery…</button><button class="btn btn-danger" data-act="dlg" data-arg="del">Delete…</button></div>` : '',
+    });
+  },
+
+  photo() {
+    const list = S.from === 'library' ? photos : G(S.gallery).items.map(P);
+    const i = list.findIndex(p => p.id === S.photo), p = list[i];
+    const back = S.from === 'library' ? [['Library', 'library']] : [['Galleries', 'galleries'], [G(S.gallery).title, 'gallery']];
+    return frame({
+      nav: S.from === 'library' ? 'library' : 'galleries', crumbs: [...back, [p.title]],
+      what: `${i + 1} of ${list.length}`,
+      tools: `${ib('prev', 'Previous photo (←)', i > 0 ? 'photo' : null, i > 0 ? list[i - 1].id : '', { off: i === 0 })}${ib('next', 'Next photo (→)', i < list.length - 1 ? 'photo' : null, i < list.length - 1 ? list[i + 1].id : '', { off: i === list.length - 1 })}<span class="sp"></span><span class="btn btn-quiet">View ↗</span>`,
+      main: `<div class="stage"><img src="${p.src}" alt="${p.title}"></div>`,
+      panel: `<aside class="side-panel" aria-label="Photo"><h2>Photo</h2>
+        <div class="sp-fields">
+          <div class="field"><label for="pt">Title</label><input id="pt" value="${p.title}" data-bind="title"></div>
+          <div class="field"><label for="pc">Caption</label><textarea id="pc" rows="3"></textarea></div>
+          <div class="field"><span class="lbl">Galleries</span><div class="tokens">${inGalleries(p.id).map(g => `<span class="token">${g.title}<button aria-label="Remove from ${g.title}" data-act="leave" data-arg="${g.id}">×</button></span>`).join('')}<input placeholder="${inGalleries(p.id).length ? '' : 'Not in a gallery'}" aria-label="Add to a gallery"></div></div>
+        </div>
+        <div class="sp-save"><button class="btn btn-primary" data-act="save">Save</button><span class="sp-status">${S.saved ? 'Saved' : ''}</span></div>
+        <div class="sp-danger"><button class="btn btn-danger" data-act="dlg" data-arg="delone">Delete photo…</button></div>
+      </aside>`,
+    });
+  },
+
+  galleries() {
+    return frame({
+      nav: 'galleries', crumbs: [['Galleries']], what: plural(galleries.length, 'gallery').replace('gallerys', 'galleries'),
+      tools: `<span class="muted">${galleries.filter(g => g.pub).length} public</span><span class="sp"></span><button class="btn btn-primary" data-act="dlg" data-arg="new">New gallery</button>`,
+      main: `<div class="cs c3">${galleries.map(g => `<div class="tile${g.pub ? '' : ' dim'}">
+        <div class="cell">${g.items.length ? `<img src="${P(coverOf(g)).src}" alt="">` : ''}<span class="on-photo">${g.title}</span></div>
+        <div class="row">${ib('move', `Move ${g.title}`)}${g.items.length || g.pub ? ib(g.pub ? 'eye' : 'eyeoff', g.pub ? `${g.title} is public. Make private` : `${g.title} is private. Make public`, 'vis', g.id) : ib('eyeoff', 'Add a photo before making this public', null, null, { off: true })}${ib('view', g.items.length ? `View ${g.title}` : 'No public page', null, null, { off: !g.items.length })}${ib('edit', `Edit ${g.title}`, 'gallery', g.id)}</div></div>`).join('')}</div>`,
+    });
+  },
+
+  gallery() {
+    const g = G(S.gallery);
+    return frame({
+      nav: 'galleries', crumbs: [['Galleries', 'galleries'], [g.title]], what: plural(g.items.length, 'photo'),
+      tools: `<span class="muted">${g.pub ? 'Public' : 'Private'}</span><span class="sp"></span><button class="btn btn-secondary" data-act="dlg" data-arg="pick">Add photos</button>${g.items.length ? '<span class="btn btn-quiet">View ↗</span>' : ''}`,
+      main: g.items.length ? `<div class="sheet"><div class="cs c4">${g.items.map(P).map(p => photoTile(p,
+        ib('move', `Move ${p.title}`) +
+        ib('star', coverOf(g) === p.id ? `${p.title} is the cover` : `Make ${p.title} the cover`, 'cover', p.id, { fill: coverOf(g) === p.id }) +
+        ib('remove', `Remove ${p.title} from this gallery`, 'remove', p.id) +
+        ib('view', `View ${p.title}`) +
+        ib('edit', `Edit ${p.title}`, 'gphoto', p.id))).join('')}</div></div>`
+        : `<p class="empty">No photos in this gallery yet. <a href="#" data-act="dlg" data-arg="pick">Add photos</a></p>`,
+      panel: `<aside class="side-panel" aria-label="Gallery"><h2>Gallery</h2>
+        <div class="sp-fields">
+          <div class="field"><label for="gt">Title</label><input id="gt" value="${g.title}"></div>
+          <div class="field"><label for="gd">Description</label><textarea id="gd" rows="3"></textarea></div>
+          <div><label class="switch"><input type="checkbox" ${g.pub ? 'checked' : ''} ${g.items.length ? '' : 'disabled'}><span class="track"></span>Public</label>${g.items.length ? '' : '<p class="hint">Add a photo before making this public.</p>'}</div>
+        </div>
+        <div class="sp-save"><button class="btn btn-primary" data-act="save">Save</button><span class="sp-status">${S.saved ? 'Saved' : ''}</span></div>
+        <div class="sp-danger"><button class="btn btn-danger" data-act="dlg" data-arg="delgal">Delete gallery…</button></div>
+      </aside>`,
+    });
+  },
+
+  upload() {
+    const ready = batch.filter(b => b.state === 'ready').length, failed = batch.filter(b => b.state === 'failed').length;
+    const st = b => ({
+      ready: `<span class="ok">Ready</span><span style="flex:1"></span><button class="btn btn-quiet">Remove</button>`,
+      uploading: `<span class="muted">Uploading</span><progress value="${b.pct}" max="100"></progress>`,
+      queued: `<span class="muted">Waiting</span>`,
+      failed: `<span class="bad">Connection lost</span><span style="flex:1"></span><button class="btn btn-secondary">Retry</button><button class="btn btn-quiet">Remove</button>`,
+    })[b.state];
+    return frame({
+      nav: 'upload', crumbs: [['Upload']], what: plural(batch.length, 'photo'),
+      tools: `<span class="muted">in this batch</span><span class="sp"></span><button class="btn btn-secondary">Choose photos</button>`,
+      main: `<div class="dz"><span>Drop photos anywhere on this page</span><small>JPEG · up to 20 MB each · up to 100 at a time</small></div>
+        <div class="cs c4">${batch.map(b => `<div class="tile${b.state === 'ready' ? '' : ' dim'}"><div class="cell"><img src="${photos[b.src].src}" alt=""><span class="on-photo">${b.name}</span></div><div class="b-state">${st(b)}</div></div>`).join('')}</div>`,
+      bar: `<div class="action-bar" role="region" aria-label="Batch"><span class="count">${ready} of ${batch.length} ready</span>${failed ? `<span class="bad">${failed} failed</span>` : ''}<progress value="${ready}" max="${batch.length}"></progress><span class="sp"></span>
+        <span class="why">Retry or remove the failed photo to continue</span>
+        <span class="field" style="flex-direction:row;align-items:center;gap:8px"><label for="ug">Add to</label><select id="ug" style="width:auto"><option>Library only</option>${galleries.map(g => `<option>${g.title}</option>`).join('')}</select></span>
+        <button class="btn btn-primary" disabled>Add ${batch.length} photos</button><button class="btn btn-danger" data-act="dlg" data-arg="discard">Discard…</button></div>`,
+    });
+  },
+
+  rules() {
+    return `<div class="page" style="padding-top:var(--space-m)"><div class="rules">
+      <h1>The rules every page follows</h1>
+      <p>Each rule is one shared component. A page fills slots; it does not place anything itself.</p>
+      <table>
+        <tr><th>Rule</th><th>What you see</th><th>Today</th></tr>
+        <tr><td><b>One frame</b></td><td>Owner bar, breadcrumb, toolbar, then content. All four start on the same left edge.</td><td>Library and Upload have no toolbar row; only Galleries has one. The grid is indented one margin further than the breadcrumb.</td></tr>
+        <tr><td><b>One toolbar</b></td><td>Left: what you are looking at (a count, a filter). Right: what you can open or create.</td><td>Counts appear only as "Page 1 of 2" under the library. Actions sit in the heading row, the side panel or the footer depending on the page.</td></tr>
+        <tr><td><b>One filled button</b></td><td>The filled button is the one that commits work: Save, Add, Create. Buttons that only open something are outlined.</td><td>Mostly true already. Kept.</td></tr>
+        <tr><td><b>One tile row</b></td><td>Fixed slot order under every photo or cover: move, state, remove, view, edit. Edit is always last. A slot that doesn't apply is left out.</td><td>Gallery photo tiles have no edit. Otherwise the order already matches.</td></tr>
+        <tr><td><b>One side panel</b></td><td>Anything you type lives in the right-hand panel with Save. Delete sits at the bottom of that panel. Used by a photo and by a gallery.</td><td>Same, but each panel also carries its own View link. That moves to the toolbar.</td></tr>
+        <tr><td><b>Icons act now, the panel waits</b></td><td>An icon under a tile (visibility, cover, remove, reorder) applies at once and reports in the status line. A field in the panel waits for Save.</td><td>This is how it behaves today. It becomes a stated rule.</td></tr>
+        <tr><td><b>One bottom bar</b></td><td>Appears only when there are several items to act on: a library selection or an upload batch. Count on the left, the committing action on the right.</td><td>Two different components (a floating rounded bar and a full-width footer).</td></tr>
+        <tr><td><b>One status line</b></td><td>Results of an action appear in one place, directly under the toolbar.</td><td>Four separately styled lines (library, galleries, builder, upload).</td></tr>
+        <tr><td><b>One dialog</b></td><td>Title, body, then Cancel and the action on the right. A delete dialog adds the red top edge and nothing else.</td><td>Three separately styled dialogs. Adding to a gallery is a radio list in the library and a token field on the photo.</td></tr>
+        <tr><td><b>One grid</b></td><td>Photo grids are 4 / 2 / 1 columns. The gallery list is 3 / 2 / 1 because it mirrors the public home page.</td><td>Upload uses 4 / 3 / 2.</td></tr>
+      </table>
+      <h2>Behaviour added in this preview</h2>
+      <table>
+        <tr><td>/admin opens the Library</td><td>It is a placeholder page today.</td></tr>
+        <tr><td>Shift-click selects a range</td><td>Try it in the Library.</td></tr>
+        <tr><td>"Not in a gallery" filter</td><td>Library toolbar.</td></tr>
+        <tr><td>Previous / next on a photo</td><td>Toolbar arrows, or the ← → keys.</td></tr>
+        <tr><td>Add photos from inside a gallery</td><td>Gallery toolbar.</td></tr>
+        <tr><td>Add an upload batch straight to a gallery</td><td>Upload bottom bar.</td></tr>
+        <tr><td>Add to several galleries at once</td><td>Library, "Add to gallery…".</td></tr>
+      </table>
+    </div></div>`;
+  },
+};
+
+/* The one dialog. */
+function dialog(kind) {
+  const n = S.sel.size, g = G(S.gallery), p = P(S.photo);
+  const shell = (title, body, action, cls = '', danger = false) => `<dialog class="${cls}${danger ? ' danger' : ''}"><h2>${title}</h2>${body}<div class="d-actions"><button class="btn btn-quiet" data-act="close">Cancel</button><button class="btn ${danger ? 'btn-danger' : 'btn-primary'}" data-act="confirm" data-arg="${kind}">${action}</button></div></dialog>`;
+  const html = {
+    add: () => shell(`Add ${plural(n, 'photo')} to`, `<div class="checks">${galleries.map(x => `<label><input type="checkbox" value="${x.id}">${x.title} <small>${x.pub ? 'Public' : 'Private'} · ${plural(x.items.length, 'photo')}</small></label>`).join('')}</div><div class="field"><label for="ng">Or a new gallery</label><input id="ng"></div>`, 'Add'),
+    del: () => shell(`Delete ${plural(n, 'photo')}?`, `<p>This removes them from every gallery and deletes the original files. It can't be undone.</p>`, 'Delete photos', '', true),
+    delone: () => shell(`Delete “${p.title}”?`, `<p>It is in ${plural(inGalleries(p.id).length, 'gallery').replace('gallerys', 'galleries')}. This removes it from every gallery and deletes the original file. It can't be undone.</p>`, 'Delete photo', '', true),
+    delgal: () => shell(`Delete “${g.title}”?`, `<p>Its ${plural(g.items.length, 'photo')} stay in your library. This can't be undone.</p>`, 'Delete gallery', '', true),
+    discard: () => shell('Discard this batch?', `<p>All ${batch.length} uploaded files are deleted. Nothing is added to your library.</p>`, 'Discard batch', '', true),
+    new: () => shell('New gallery', `<div class="field"><label for="nt">Title</label><input id="nt"></div>`, 'Create'),
+    pick: () => shell(`Add photos to ${g.title}`, `<div class="pick">${photos.filter(x => !g.items.includes(x.id)).map(x => `<div class="tile"><div class="cell"><img src="${x.src}" alt=""><button class="mark" aria-pressed="false" aria-label="Select ${x.title}" data-act="pickone" data-arg="${x.id}"><span class="dot"></span></button><span class="on-photo">${x.title}</span></div></div>`).join('')}</div>`, 'Add', 'wide'),
+  }[kind]();
+  const box = document.getElementById('dialogs');
+  box.innerHTML = html;
+  box.firstElementChild.showModal();
+}
+
+const acts = {
+  go(a) { S.screen = a; S.status = null; S.saved = false; S.sel.clear(); },
+  filter(a) { S.filter = a; S.sel.clear(); },
+  sel(a, e) {
+    const ids = [...document.querySelectorAll('.page .mark')].map(m => m.dataset.arg), i = ids.indexOf(a);
+    if (e.shiftKey && S.last !== null && ids.includes(S.last)) { const j = ids.indexOf(S.last); ids.slice(Math.min(i, j), Math.max(i, j) + 1).forEach(x => S.sel.add(x)); }
+    else S.sel.has(a) ? S.sel.delete(a) : S.sel.add(a);
+    S.last = a;
+  },
+  clear() { S.sel.clear(); },
+  all() { document.querySelectorAll('.page .mark').forEach(m => S.sel.add(m.dataset.arg)); },
+  photo(a) { if (S.screen !== 'photo') S.from = 'library'; S.photo = a; S.screen = 'photo'; S.status = null; S.saved = false; },
+  gphoto(a) { S.from = 'gallery'; S.photo = a; S.screen = 'photo'; S.status = null; S.saved = false; },
+  gallery(a) { S.gallery = a; S.screen = 'gallery'; S.status = null; S.saved = false; },
+  vis(a) { const g = G(a); g.pub = !g.pub; S.status = `${g.title} is now ${g.pub ? 'public' : 'private'}.`; },
+  cover(a) { const g = G(S.gallery); g.cover = a; S.status = `${P(a).title} is the cover.`; },
+  remove(a) { const g = G(S.gallery); g.items = g.items.filter(x => x !== a); if (g.cover === a) g.cover = null; S.status = `${P(a).title} removed from ${g.title}. It stays in your library.`; },
+  leave(a) { const g = G(a); g.items = g.items.filter(x => x !== S.photo); },
+  save() { const t = document.querySelector('[data-bind=title]'); if (t) P(S.photo).title = t.value; S.saved = true; },
+  dlg(a) { dialog(a); return false; },
+  close() { document.querySelector('dialog').close(); return false; },
+  pickone(a, e, el) { el.setAttribute('aria-pressed', el.getAttribute('aria-pressed') !== 'true'); return false; },
+  confirm(a) {
+    const d = document.querySelector('dialog'), n = S.sel.size;
+    if (a === 'add') { const to = [...d.querySelectorAll('input:checked')].map(c => G(c.value)); to.forEach(g => S.sel.forEach(id => g.items.includes(id) || g.items.push(id))); S.status = to.length ? `${plural(n, 'photo')} added to ${to.map(g => g.title).join(', ')}.` : null; S.sel.clear(); }
+    if (a === 'del') { S.sel.forEach(id => { photos.splice(photos.findIndex(p => p.id === id), 1); galleries.forEach(g => g.items = g.items.filter(x => x !== id)); }); S.status = `${plural(n, 'photo')} deleted.`; S.sel.clear(); }
+    if (a === 'pick') { const ids = [...d.querySelectorAll('.mark[aria-pressed=true]')].map(m => m.dataset.arg); G(S.gallery).items.push(...ids); S.status = ids.length ? `${plural(ids.length, 'photo')} added to ${G(S.gallery).title}.` : null; }
+    if (a === 'new') { const t = d.querySelector('input').value.trim() || 'Untitled'; galleries.push({ id: 'g' + Date.now(), title: t, pub: false, items: [], cover: null }); S.status = `${t} created. It is private until you add a photo and make it public.`; }
+    if (a === 'delgal') { galleries.splice(galleries.indexOf(G(S.gallery)), 1); S.gallery = galleries[0].id; S.screen = 'galleries'; S.status = 'Gallery deleted. Its photos stay in your library.'; }
+    if (a === 'delone') { const id = S.photo; photos.splice(photos.findIndex(p => p.id === id), 1); galleries.forEach(g => g.items = g.items.filter(x => x !== id)); S.screen = 'library'; S.status = 'Photo deleted.'; }
+    if (a === 'discard') S.status = 'Batch discarded.';
+    d.close();
+  },
+};
+
+function render() {
+  const y = scrollY;
+  document.getElementById('pv').innerHTML = `<b>Preview</b><span>this strip is not part of the design</span><span class="sp"></span>` +
+    [['upload', 'Upload'], ['library', 'Library'], ['photo', 'Photo'], ['galleries', 'Galleries'], ['gallery', 'Gallery'], ['rules', 'The rules']].map(([k, t]) => `<a href="#" data-act="go" data-arg="${k}" ${S.screen === k ? 'aria-current="page"' : ''}>${t}</a>`).join('');
+  document.getElementById('app').innerHTML = screens[S.screen]();
+  scrollTo(0, y);
+}
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  e.preventDefault();
+  const before = S.screen;
+  if (acts[el.dataset.act](el.dataset.arg, e, el) !== false) { render(); if (S.screen !== before) scrollTo(0, 0); }
+});
+document.addEventListener('keydown', e => {
+  if (S.screen !== 'photo' || e.target.matches('input,textarea') || document.querySelector('dialog[open]')) return;
+  const b = document.querySelector(`.toolbar [title^="${e.key === 'ArrowLeft' ? 'Previous' : e.key === 'ArrowRight' ? 'Next' : '~'}"]`);
+  if (b) b.click();
+});
+if (location.hash && screens[location.hash.slice(1)]) S.screen = location.hash.slice(1);
+render();
+</script>
+</body>
+</html>

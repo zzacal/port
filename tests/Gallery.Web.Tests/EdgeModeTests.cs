@@ -47,20 +47,24 @@ public class EdgeModeTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixtur
     private static string[] Sorted(IEnumerable<string> urls) =>
         urls.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
 
-    private static async Task<string> Post303Async(LibraryHost h, string route, string path,
-        IEnumerable<KeyValuePair<string, string>> fields)
+    /// <summary>020 TI-17: POSTs JSON, asserts <paramref name="expected"/> (200, or 201 for A3), waits for the edge and
+    /// the invariants, and returns the JSON answer.</summary>
+    private static async Task<System.Text.Json.JsonElement> PostOkAsync(LibraryHost h, string route, string path, object body,
+        HttpStatusCode expected = HttpStatusCode.OK)
     {
-        var resp = await h.PostFormAsync(path, fields);
-        Assert.True(resp.StatusCode == HttpStatusCode.SeeOther, $"{route} POST {path} answered {(int)resp.StatusCode}, not 303");
+        var resp = await h.PostJsonAsync(path, body);
+        Assert.True(resp.StatusCode == expected, $"{route} POST {path} answered {(int)resp.StatusCode}, not {(int)expected}");
         await h.EdgeIdleAsync();
         await InvariantChecker.AssertAsync(h.Db);
-        return resp.Headers.Location!.ToString();
+        using var doc = await UploadHost.ParseAsync(resp);
+        Assert.NotNull(doc);
+        return doc!.RootElement.Clone();
     }
 
     // ── log-only (SC-012, FR-042) ────────────────────────────────────────────
 
     [Fact]
-    public async Task With_no_edge_settings_every_009_post_answers_303_and_log_only_lines_carry_the_addresses()
+    public async Task With_no_edge_settings_every_workspace_post_answers_ok_and_log_only_lines_carry_the_addresses()
     {
         // No Edge:* at all. LibraryHost always passes Edge:SiteBaseUrl and Edge:PurgePages in its
         // in-memory overrides, so the configure hook swaps that source for a copy without any Edge:*
@@ -98,41 +102,35 @@ public class EdgeModeTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixtur
         var c = await h.InsertUploadedImageAsync(t0.AddMinutes(2), "Dune");
         var d = await h.InsertUploadedImageAsync(t0.AddMinutes(3), "Gull");
 
-        // G2
-        var loc = await Post303Async(h, "G2", "/admin/galleries", [F("title", "Coast")]);
-        Assert.Matches("^/admin/galleries/[0-9a-z]{26}$", loc);
-        var gid = loc["/admin/galleries/".Length..];
+        // A3
+        var gid = (await PostOkAsync(h, "A3", "/admin/api/galleries", new { title = "Coast" }, HttpStatusCode.Created))
+            .GetProperty("id").GetString()!;
+        Assert.Matches("^[0-9a-z]{26}$", gid);
 
-        // L3 into an existing gallery, then into a new one
-        Assert.Equal($"/admin/library?page=1&added=2&skipped=0&to={gid}",
-            await Post303Async(h, "L3", "/admin/library/add", [F("ids", a.Id), F("ids", b.Id), F("gallery", gid), F("page", "1")]));
-        loc = await Post303Async(h, "L3", "/admin/library/add", [F("ids", c.Id), F("gallery", "new"), F("newTitle", "Dunes"), F("page", "1")]);
-        Assert.Matches("^/admin/galleries/[0-9a-z]{26}\\?added=1$", loc);
-        var gid2 = loc["/admin/galleries/".Length..loc.IndexOf('?')];
+        // A7 into an existing gallery, then A3 with ids into a new one
+        var added = await PostOkAsync(h, "A7", $"/admin/api/galleries/{gid}/photos", new { ids = new[] { a.Id, b.Id } });
+        Assert.Equal((2, 0), (added.GetProperty("added").GetInt32(), added.GetProperty("skipped").GetInt32()));
+        var gid2 = (await PostOkAsync(h, "A3", "/admin/api/galleries", new { title = "Dunes", ids = new[] { c.Id } }, HttpStatusCode.Created))
+            .GetProperty("id").GetString()!;
+        Assert.Matches("^[0-9a-z]{26}$", gid2);
 
-        // L2
-        Assert.Equal($"/admin/library/images/{a.Id}?page=1&saved=1",
-            await Post303Async(h, "L2", $"/admin/library/images/{a.Id}", [F("title", "Pier at dusk"), F("caption", "Low tide"), F("page", "1")]));
+        // A1
+        await PostOkAsync(h, "A1", $"/admin/api/photos/{a.Id}", new { title = "Pier at dusk", caption = "Low tide" });
 
-        // B2, B3, B4 pin and unpin
-        Assert.Equal($"/admin/galleries/{gid}?saved=1",
-            await Post303Async(h, "B2", $"/admin/galleries/{gid}", [F("title", "Coast Path"), F("description", "North shore")]));
+        // A5, A9, A10 pin and unpin
+        await PostOkAsync(h, "A5", $"/admin/api/galleries/{gid}", new { title = "Coast Path", description = "North shore" });
         var items = (await h.Galleries.Find(x => x.Id == gid).FirstAsync()).Items.ToList();
         Assert.Equal(2, items.Count);
         items.Reverse();
-        Assert.Equal($"/admin/galleries/{gid}?ordered=1",
-            await Post303Async(h, "B3", $"/admin/galleries/{gid}/order", items.Select(id => F("order", id))));
-        Assert.Equal($"/admin/galleries/{gid}",
-            await Post303Async(h, "B4", $"/admin/galleries/{gid}/cover", [F("image", a.Id)]));
-        Assert.Equal($"/admin/galleries/{gid}",
-            await Post303Async(h, "B4", $"/admin/galleries/{gid}/cover", []));
+        await PostOkAsync(h, "A9", $"/admin/api/galleries/{gid}/order", new { order = items });
+        await PostOkAsync(h, "A10", $"/admin/api/galleries/{gid}/cover", new { image = a.Id });
+        await PostOkAsync(h, "A10", $"/admin/api/galleries/{gid}/cover", new { image = (string?)null });
 
-        // G4 publish (no confirm step): its edge.purge lines carry exactly P-VIS.
+        // A6 publish (no confirm step): its edge.purge lines carry exactly P-VIS.
         var g = await h.Galleries.Find(x => x.Id == gid).FirstAsync();
         Assert.Equal(items, g.Items);
         var before = PurgeLines(h).Count;
-        Assert.Equal("/admin/galleries?visibility=public",
-            await Post303Async(h, "G4", $"/admin/galleries/{gid}/visibility", [F("public", "on"), F("from", "list")]));
+        await PostOkAsync(h, "A6", $"/admin/api/galleries/{gid}/visibility", new { @public = true });
         var publishLines = PurgeLines(h).Skip(before).ToList();
         Assert.NotEmpty(publishLines);
         Assert.All(publishLines, l => Assert.Equal(("gallery.publish", "log-only", "skipped"), (l.Op, l.Mode, l.Outcome)));
@@ -140,34 +138,28 @@ public class EdgeModeTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixtur
         var pvis = new[] { Page("/g"), Page($"/g/{gid}/{g.Slug}") }.Concat(items.Select(id => Page($"/g/{gid}/{g.Slug}/{id}")));
         Assert.Equal(Sorted(pvis), Sorted(publishLines.SelectMany(l => l.Addresses)));
 
-        // G3: reverse the full home order.
+        // A4: reverse the full home order.
         var order = (await h.SiteAsync()).HomeOrder.ToList();
         Assert.Equal(2, order.Count);
         order.Reverse();
-        Assert.Equal("/admin/galleries?ordered=1",
-            await Post303Async(h, "G3", "/admin/galleries/order", order.Select(id => F("order", id))));
+        await PostOkAsync(h, "A4", "/admin/api/galleries/order", new { order });
 
-        // B5, then G4 unpublish
-        Assert.Equal($"/admin/galleries/{gid}?removed=1",
-            await Post303Async(h, "B5", $"/admin/galleries/{gid}/remove", [F("image", b.Id)]));
-        Assert.Equal($"/admin/galleries/{gid}?visibility=private",
-            await Post303Async(h, "G4", $"/admin/galleries/{gid}/visibility", [F("from", "builder")]));
+        // A8, then A6 unpublish
+        await PostOkAsync(h, "A8", $"/admin/api/galleries/{gid}/photos/remove", new { ids = new[] { b.Id } });
+        await PostOkAsync(h, "A6", $"/admin/api/galleries/{gid}/visibility", new { @public = false });
 
-        // L5 (d is in no gallery): its edge.purge lines carry exactly d's deleted public files.
+        // A2 of d (d is in no gallery): its edge.purge lines carry exactly d's deleted public files.
         before = PurgeLines(h).Count;
-        Assert.Equal("/admin/library?page=1&deleted=1&leftovers=0",
-            await Post303Async(h, "L5", $"/admin/library/images/{d.Id}/delete", [F("page", "1")]));
+        await PostOkAsync(h, "A2", "/admin/api/photos/delete", new { ids = new[] { d.Id } });
         var deleteLines = PurgeLines(h).Skip(before).ToList();
         Assert.NotEmpty(deleteLines);
-        Assert.All(deleteLines, l => Assert.Equal(("image.delete", "log-only", "skipped"), (l.Op, l.Mode, l.Outcome)));
+        Assert.All(deleteLines, l => Assert.Equal(("image.delete.bulk", "log-only", "skipped"), (l.Op, l.Mode, l.Outcome)));
         var dFiles = d.Derivatives.SelectMany(x => new[] { x.Avif, x.Webp }).Select(LibraryHost.File);
         Assert.Equal(Sorted(dFiles), Sorted(deleteLines.SelectMany(l => l.Addresses)));
 
-        // L4, B6
-        Assert.Equal("/admin/library?page=1&deleted=1&leftovers=0&failed=0",
-            await Post303Async(h, "L4", "/admin/library/delete", [F("ids", c.Id), F("page", "1")]));
-        Assert.Equal("/admin/galleries?deleted=1",
-            await Post303Async(h, "B6", $"/admin/galleries/{gid2}/delete", []));
+        // A2, A11
+        await PostOkAsync(h, "A2", "/admin/api/photos/delete", new { ids = new[] { c.Id } });
+        await PostOkAsync(h, "A11", $"/admin/api/galleries/{gid2}/delete", new { });
 
         // Every edge line of the run is log-only and skipped; nothing was sent anywhere.
         var all = PurgeLines(h);
@@ -203,25 +195,28 @@ public class EdgeModeTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixtur
         Assert.Equal(1, h.Recorder.CallCount);
         h.Recorder.Clear();
 
-        async Task<string> Gated303Async(string route, string path, IEnumerable<KeyValuePair<string, string>> fields)
+        // 020 TI-17: JSON workspace calls; 200, or 201 for A3, instead of 303.
+        async Task<System.Text.Json.JsonElement> Gated303Async(string route, string path, object body,
+            HttpStatusCode expected = HttpStatusCode.OK)
         {
-            var send = h.PostFormAsync(path, fields);
+            var send = h.PostJsonAsync(path, body);
             var first = await Task.WhenAny(send, Task.Delay(TimeSpan.FromSeconds(15)));
             Assert.True(first == send, $"{route} did not answer within 15 s with the edge gate closed");
             var resp = await send;
-            Assert.True(resp.StatusCode == HttpStatusCode.SeeOther, $"{route} answered {(int)resp.StatusCode}, not 303");
+            Assert.True(resp.StatusCode == expected, $"{route} answered {(int)resp.StatusCode}, not {(int)expected}");
             Assert.True(h.Recorder.CallCount == 0, $"the recorder received {h.Recorder.CallCount} calls after {route}");
-            return resp.Headers.Location!.ToString();
+            using var doc = await UploadHost.ParseAsync(resp);
+            Assert.NotNull(doc);
+            return doc!.RootElement.Clone();
         }
 
-        var loc = await Gated303Async("L3", "/admin/library/add",
-            [F("ids", a.Id), F("ids", b.Id), F("gallery", "new"), F("newTitle", "Coast"), F("page", "1")]);
-        Assert.Matches("^/admin/galleries/[0-9a-z]{26}\\?added=2$", loc);
-        var gid = loc["/admin/galleries/".Length..loc.IndexOf('?')];
-        Assert.Equal($"/admin/galleries/{gid}?visibility=public",
-            await Gated303Async("G4", $"/admin/galleries/{gid}/visibility", [F("public", "on"), F("from", "builder")]));
-        Assert.Equal("/admin/library?page=1&deleted=1&leftovers=0&failed=0",
-            await Gated303Async("L4", "/admin/library/delete", [F("ids", c.Id), F("page", "1")]));
+        var created = await Gated303Async("A3", "/admin/api/galleries", new { title = "Coast", ids = new[] { a.Id, b.Id } },
+            HttpStatusCode.Created);
+        Assert.Equal(2, created.GetProperty("added").GetInt32());
+        var gid = created.GetProperty("id").GetString()!;
+        Assert.Matches("^[0-9a-z]{26}$", gid);
+        await Gated303Async("A6", $"/admin/api/galleries/{gid}/visibility", new { @public = true });
+        await Gated303Async("A2", "/admin/api/photos/delete", new { ids = new[] { c.Id } });
 
         // The writes are stored although the edge has not run.
         var g = await h.Galleries.Find(x => x.Id == gid).FirstAsync();

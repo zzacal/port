@@ -75,30 +75,3 @@ public sealed class PublicLayoutConsistencyBrowserTests(NavBrowserFixture site)
         Assert.True(failures.Count == 0, string.Join("\n", failures));
     }
 }
-
-[Collection("library-browser")]
-[Trait("Category", "Browser")]
-public sealed class AdminLayoutConsistencyBrowserTests(LibraryBrowserFixture fx)
-{
-    [Fact]
-    public async Task Every_admin_page_type_draws_the_same_chrome()
-    {
-        await using var site = await fx.NewSiteAsync();
-        var ids = await site.ImagesAsync(2);
-        var gid = await site.GalleryAsync("Coast", ids);
-        var pages = new[] { ("upload", "/admin/upload"), ("library", "/admin/library"), ("galleries", "/admin/galleries"), ("builder", $"/admin/galleries/{gid}"), ("photo", $"/admin/library/images/{ids[0]}") }; // + photo (017 B2)
-        var failures = new List<string>();
-        foreach (var width in new[] { 390, 1440 })
-        {
-            var rows = new List<(string, double[])>();
-            foreach (var (name, path) in pages)
-            {
-                var page = await site.OpenAsync(path, width);
-                rows.Add((name, await page.EvaluateAsync<double[]>(ChromeProbe.Script)));
-                await page.Context.CloseAsync();
-            }
-            ChromeProbe.Compare(width, rows, failures);
-        }
-        Assert.True(failures.Count == 0, string.Join("\n", failures));
-    }
-}

@@ -1,0 +1,65 @@
+# T063 hit review of the assembled docs/design.md (after design-record-edit.py, assemble.sh)
+# grep -n -i per term; one line per (term, line). Verdict: current | historical | kept on purpose | not about upload.
+
+== "owner bar": 2 line(s)
+  design.md:225  current: D-21; 'DangerConfirm' is a live component; the owner-bar mentions are dated history ('before 020', 'until feature 020 removed both', 'feature 020's workspace has neither')
+  design.md:276  current: D-27 alternatives describe D-23's owner bar and the rejected confirm
+
+== "Batch confirmed": 1 line(s)
+  design.md:592  kept on purpose: heading 'L-05: Batch confirmed' is pinned by validate.sh C4 (17 exact lifecycle titles); the body (line 593) says feature 020 replaced it with a join per photo
+
+== "confirm": 24 line(s)
+  design.md:129  current: D-10 now says the join copies (the confirm before 020); fixed by edit 'D-10 copy wording'
+  design.md:137  current: D-11 choice rewritten for per-photo join; 'confirm' appears only as 'there is no confirm' and the no-longer-written states
+  design.md:139  current: D-11 alternatives name the rejected confirm (020 decisions #6, #13)
+  design.md:140  current: D-11 pivot cost says how to bring a confirm back
+  design.md:194  not about upload: D-17 'confirmed available on the chosen stack' (English verb)
+  design.md:225  current: D-21; 'DangerConfirm' is a live component; the owner-bar mentions are dated history ('before 020', 'until feature 020 removed both', 'feature 020's workspace has neither')
+  design.md:243  historical: D-23 page list (Upload batch with Confirm); D-23 is marked superseded by D-27 and kept as the record of the earlier direction
+  design.md:250  historical: D-23 ('image-delete confirmation' design owed); superseded, kept as record
+  design.md:276  current: D-27 alternatives describe D-23's owner bar and the rejected confirm
+  design.md:346  current: upload diagram edge 'page calls join at once, no confirm'
+  design.md:392  current: Image exists after join; old rule dated 'before it'
+  design.md:449  current: batch state field; confirmed/discarded documents from before stay inert
+  design.md:459  current: itemId becomes the Image _id at join; old rule dated
+  design.md:505  current: batch paragraph 'there is no confirm and no discard'
+  design.md:508  current: dated history of the batch states
+  design.md:526  current: storage 'On join ... (on confirm before feature 020)'
+  design.md:571  current: L-01 'with no confirm'
+  design.md:592  kept on purpose: heading 'L-05: Batch confirmed' is pinned by validate.sh C4 (17 exact lifecycle titles); the body (line 593) says feature 020 replaced it with a join per photo
+  design.md:593  current: L-05 body explains the replacement
+  design.md:697  current: E-07 rewritten (close with failed photos); old case dated
+  design.md:773  current: III.2 row 'on join (on confirm before feature 020)'
+  design.md:870  not about upload: R-01 recovery, the owner 'confirms one auth.claim' (English verb)
+  design.md:918  not about upload: section 10 'confirmed at provisioning time' (English verb)
+  design.md:937  not about upload: section 10 'column names are confirmed' (English verb)
+
+== "/admin/library": 1 line(s)
+  design.md:244  historical: D-23 page list (Library, /admin/library/images/{id}); superseded by D-27, kept as record
+
+== "/admin/galleries": 0 line(s)
+
+== "/admin/upload": 0 line(s)
+
+Total hit lines reviewed: 28. Stale hits left: 0.
+
+Stale hits found BEFORE the edit (assembled from the unedited drafts) and the edit that fixed each:
+  D-10 'confirm copies with x-amz-copy-source-if-match' -> 'D-10 copy wording'; D-10 pivot 'confirm paths' -> 'D-10 pivot wording'
+  D-11 choice/rationale (batch confirm gate, confirm lock, idempotent confirm) -> 'D-11 choice', 'D-11 item states', 'D-11 rationale', 'D-11 alternatives', 'D-11 pivot'
+  D-21 'AdminLayout (owner bar plus optional side panel)', removed admin components, '/admin/* is AdminLayout + admin organisms' -> the 'D-21 ...' edits
+  D-20 admin grid column counts for library/builder/gallery list -> 'D-20 admin grids'
+  D-23 (owner bar, Upload batch Confirm, /admin/library/images/{id}) -> 'D-23 heading', 'D-23 choice note' (superseded by D-27; text kept as record)
+  Upload diagram 'App Service confirm batch', 'owner presses Confirm' -> 'diagram admin node', 'diagram join node', 'diagram join edges'
+  Section 4: Image exists after batch confirmed; batch state open|confirmed|discarded; itemId at confirm; batch state machine; 'On confirm' storage steps -> the content-model edits
+  L-01..L-06 confirm/discard bodies -> the 'L-0n ...' edits (headings L-05/L-06 kept: validate.sh C4)
+  E-03 'L-05 has not fired, so no image is in the library'; E-07 confirm refused; E-08 'batch is unconfirmed' -> 'E-03 outcome', 'E-03 mechanism', 'E-07', 'E-08'
+  II.5 row 'confirmed batch leave visibility private'; III.2 row 'copied to public on confirm' -> 'II.5 row', 'III.2 row'
+  Section 8 'staging PUTs and confirm copies' -> 'cost class A wording'
+  '/admin/galleries', '/admin/upload': no hits before or after.
+
+docs/architecture.html: admin page names checked (grep -i 'admin|upload|library|galleries|confirm|builder').
+  No admin page name appears (the owner box is 'Owner admin'). Stale upload wording edited by the same script:
+  'upload batch' -> 'upload tray'; 'Restart · Delete · Confirm' -> 'Retry · Remove · join';
+  'staging/ — unconfirmed batch' -> 'staging/ — photos not yet joined'; card 'Upload and confirm' -> 'Upload and join';
+  'Confirm copies to public + masters, then purge + warm (D-11)' -> per-photo join line.
+  Not touched (outside 020's scope, noted only): the card still says '15-min SAS' and 'budget alerts $7 / $10'.

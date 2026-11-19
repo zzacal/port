@@ -72,52 +72,54 @@ public class EdgeSecretTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixt
         var a = await h.InsertUploadedImageAsync(t0, "Pier");
         var b = await h.InsertUploadedImageAsync(t0.AddMinutes(1), "Rocks");
 
-        var add = await Scan("POST /admin/library/add (L3)", h.PostFormAsync("/admin/library/add",
-            [F("ids", a.Id), F("ids", b.Id), F("gallery", "new"), F("newTitle", "Coast"), F("page", "1")]));
-        Assert.Equal(HttpStatusCode.SeeOther, add.StatusCode);
-        var loc = add.Headers.Location!.ToString();
-        var gid = loc["/admin/galleries/".Length..loc.IndexOf('?')];
+        var add = await Scan("POST /admin/api/galleries (A3)", h.PostJsonAsync("/admin/api/galleries",
+            new { title = "Coast", ids = new[] { a.Id, b.Id } }));
+        Assert.Equal(HttpStatusCode.Created, add.StatusCode);
+        using var addJson = System.Text.Json.JsonDocument.Parse(scanned[^1].Body);
+        var gid = addJson.RootElement.GetProperty("id").GetString()!;
 
-        foreach (var (label, path) in new[]
+        foreach (var (label, path, workspace) in new (string, string, string?)[]
                  {
-                     ("GET /admin/library (L1)", "/admin/library"),
-                     ("GET /admin/library?open= (L1)", $"/admin/library?page=1&open={a.Id}"),
-                     ("GET /admin/library/images/{iid} (L6)", $"/admin/library/images/{a.Id}?page=1"), // 017 B1
-                     ("GET /admin/galleries (G1)", "/admin/galleries"),
-                     ("GET /admin/galleries/{gid} (B1)", $"/admin/galleries/{gid}"),
+                     ("GET /admin (W1)", "/admin", null),
+                     ("GET /admin X-Workspace: main (W1)", "/admin", "main"),
+                     ("GET /admin X-Workspace: chrome (W1)", "/admin", "chrome"),
+                     ("GET /admin/g/{gid} (W3)", $"/admin/g/{gid}", null),
+                     ("GET /admin/tiles/{iid} (W4)", $"/admin/tiles/{a.Id}", null),
                  })
         {
-            var resp = await Scan(label, h.GetAsync(path));
+            var request = new HttpRequestMessage(HttpMethod.Get, path);
+            if (workspace is not null) request.Headers.TryAddWithoutValidation("X-Workspace", workspace);
+            var resp = await Scan(label, h.Host.SendAsync(request));
             Assert.True(resp.StatusCode == HttpStatusCode.OK, $"{label} answered {(int)resp.StatusCode}");
         }
 
-        var refused = await Scan("POST /admin/galleries/{gid} (B2 refused, re-rendered)", h.PostFormAsync(
-            $"/admin/galleries/{gid}", [F("title", "   "), F("vis", "1"), F("public", "on")]));
+        var refused = await Scan("POST /admin/api/galleries/{gid} (A5 refused)", h.PostJsonAsync(
+            $"/admin/api/galleries/{gid}", new { title = "   " }));
         Assert.Equal(HttpStatusCode.UnprocessableEntity, refused.StatusCode);
-        var publish = await Scan("POST /admin/galleries/{gid} (B2 save with public)", h.PostFormAsync(
-            $"/admin/galleries/{gid}", [F("title", "Coast"), F("vis", "1"), F("public", "on")]));
-        Assert.Equal(HttpStatusCode.SeeOther, publish.StatusCode);
-        var unpublish = await Scan("POST /admin/galleries/{gid}/visibility (G4 list switch off)", h.PostFormAsync(
-            $"/admin/galleries/{gid}/visibility", [F("from", "list")]));
-        Assert.Equal(HttpStatusCode.SeeOther, unpublish.StatusCode);
-        var republish = await Scan("POST /admin/galleries/{gid}/visibility (G4 list switch on)", h.PostFormAsync(
-            $"/admin/galleries/{gid}/visibility", [F("public", "on"), F("from", "list")]));
-        Assert.Equal(HttpStatusCode.SeeOther, republish.StatusCode);
-        var rename = await Scan("POST /admin/galleries/{gid} (B2 rename)", h.PostFormAsync(
-            $"/admin/galleries/{gid}", [F("title", "Coast Path")]));
-        Assert.Equal(HttpStatusCode.SeeOther, rename.StatusCode);
-        var delete = await Scan("POST /admin/library/images/{iid}/delete (L5)", h.PostFormAsync(
-            $"/admin/library/images/{b.Id}/delete", [F("page", "1")]));
-        Assert.Equal(HttpStatusCode.SeeOther, delete.StatusCode);
-        var gdelete = await Scan("POST /admin/galleries/{gid}/delete (B6)", h.PostFormAsync(
-            $"/admin/galleries/{gid}/delete", []));
-        Assert.Equal(HttpStatusCode.SeeOther, gdelete.StatusCode);
+        var publish = await Scan("POST /admin/api/galleries/{gid}/visibility (A6 on)", h.PostJsonAsync(
+            $"/admin/api/galleries/{gid}/visibility", new { @public = true }));
+        Assert.Equal(HttpStatusCode.OK, publish.StatusCode);
+        var unpublish = await Scan("POST /admin/api/galleries/{gid}/visibility (A6 off)", h.PostJsonAsync(
+            $"/admin/api/galleries/{gid}/visibility", new { @public = false }));
+        Assert.Equal(HttpStatusCode.OK, unpublish.StatusCode);
+        var republish = await Scan("POST /admin/api/galleries/{gid}/visibility (A6 on again)", h.PostJsonAsync(
+            $"/admin/api/galleries/{gid}/visibility", new { @public = true }));
+        Assert.Equal(HttpStatusCode.OK, republish.StatusCode);
+        var rename = await Scan("POST /admin/api/galleries/{gid} (A5 rename)", h.PostJsonAsync(
+            $"/admin/api/galleries/{gid}", new { title = "Coast Path" }));
+        Assert.Equal(HttpStatusCode.OK, rename.StatusCode);
+        var delete = await Scan("POST /admin/api/photos/delete (A2)", h.PostJsonAsync(
+            "/admin/api/photos/delete", new { ids = new[] { b.Id } }));
+        Assert.Equal(HttpStatusCode.OK, delete.StatusCode);
+        var gdelete = await Scan("POST /admin/api/galleries/{gid}/delete (A11)", h.PostJsonAsync(
+            $"/admin/api/galleries/{gid}/delete", new { }));
+        Assert.Equal(HttpStatusCode.OK, gdelete.StatusCode);
 
-        // The pages after the writes (the PRG targets) are owner pages too.
+        // The workspace pages after the writes are owner pages too.
         foreach (var (label, path) in new[]
                  {
-                     ("GET /admin/library (L1, after)", "/admin/library?page=1&deleted=1&leftovers=0"),
-                     ("GET /admin/galleries (G1, after)", "/admin/galleries?deleted=1"),
+                     ("GET /admin (W1, after)", "/admin"),
+                     ("GET /admin/unplaced (W2, after)", "/admin/unplaced"),
                  })
             Assert.Equal(HttpStatusCode.OK, (await Scan(label, h.GetAsync(path))).StatusCode);
 
@@ -126,7 +128,7 @@ public class EdgeSecretTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixt
         Assert.Equal(0, await h.Galleries.CountDocumentsAsync(FilterDefinition<Data.GalleryDoc>.Empty));
 
         // ── no response carries the token ────────────────────────────────────
-        Assert.Equal(15, scanned.Count); // + L6 (017 B1, found at implement)
+        Assert.Equal(15, scanned.Count); // 1 + 5 + 7 + 2 (020 TI-18)
         foreach (var (label, resp, body) in scanned)
         {
             Assert.False(body.Contains(Token, StringComparison.Ordinal), $"{label}: the response body contains Edge:ApiToken");

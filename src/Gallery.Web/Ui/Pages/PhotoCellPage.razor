@@ -1,0 +1,32 @@
+@inject SampleCatalog Samples
+<UiLayout Title="PhotoCell">
+    <Specimen Label="Plain" Width="w-240">
+        <PhotoCell Image="Samples.Landscape[0]" Caption="Morning light on the water." GalleryIds="One" />
+    </Specimen>
+    <Specimen Label="Selected" Width="w-240">
+        <PhotoCell Image="Samples.Landscape[1]" GalleryIds="Two" Selected="true" />
+    </Specimen>
+    <Specimen Label="Cover" Width="w-240">
+        <PhotoCell Image="Samples.Landscape[2]" GalleryIds="One" Cover="true" />
+    </Specimen>
+    <Specimen Label="New" Width="w-240">
+        <PhotoCell Image="Samples.Portrait[0]" New="true" />
+    </Specimen>
+    <Specimen Label="Drop position" Note="A bar on the leading edge: the dragged photos land before this one." Width="w-240">
+        <PhotoCell Image="Samples.Square" GalleryIds="One" Drop="true" />
+    </Specimen>
+    <Specimen Label="Phone width" Note="Constrained to 390 px: the fill grid shows two columns." Width="w-390">
+        <ContactSheet Fill="true">
+            @for (var i = 0; i < Four.Count; i++)
+            {
+                <PhotoCell Image="Four[i]" GalleryIds="One" Selected="@(i == 1)" Priority="@(i < 2 ? PicturePriority.High : PicturePriority.Lazy)" />
+            }
+        </ContactSheet>
+    </Specimen>
+</UiLayout>
+
+@code {
+    private static readonly IReadOnlyList<string> One = ["gal-coast"];
+    private static readonly IReadOnlyList<string> Two = ["gal-coast", "gal-birds"];
+    private IReadOnlyList<ImageView> Four => Samples.All.Take(4).ToList();
+}

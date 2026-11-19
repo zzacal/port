@@ -6,6 +6,7 @@ using Gallery.Web.Library;
 using Gallery.Web.Site;
 using Gallery.Web.Storage;
 using Gallery.Web.Upload;
+using Gallery.Web.Workspace;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
@@ -220,16 +221,8 @@ public static class AdminEndpoints
             .RequireAuthorization("owner")
             .AddEndpointFilter<AdminAntiforgeryFilter>();
 
-        // H4: GET/HEAD /admin — owner shell
-        admin.MapMethods("/", getVerbs, (HttpContext ctx, IAntiforgery antiforgery) =>
-        {
-            var tokens = antiforgery.GetAndStoreTokens(ctx);
-            var af = new FormToken(tokens.FormFieldName, tokens.RequestToken!);
-            return (IResult)new RazorComponentResult<ShellPage>(new Dictionary<string, object?>
-            {
-                [nameof(ShellPage.SignOut)] = af,
-            });
-        });
+        // H4 → 020 W1-W4: the workspace (pages, fragments, tile); before the H6 catch-all
+        admin.MapWorkspace();
 
         // H5: POST /admin/signout — sign out (log, clear cookie, redirect)
         admin.MapPost("/signout", async (HttpContext ctx, ILoggerFactory loggerFactory) =>
@@ -245,8 +238,8 @@ public static class AdminEndpoints
         // 008 upload routes: inherit owner auth + anti-forgery; must stay before the H6 catch-all
         admin.MapUpload();
 
-        // 009 library and gallery routes: inherit owner auth + anti-forgery; must stay before the H6 catch-all
-        admin.MapLibrary();
+        // 020 A1-A11 workspace writes: inherit owner auth + anti-forgery; must stay before the H6 catch-all
+        admin.MapWorkspaceApi();
 
         // H6: Catch-all — any unmatched /admin/** returns 404 (after auth + CSRF)
         admin.MapMethods("{**rest}", ["GET", "HEAD", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],

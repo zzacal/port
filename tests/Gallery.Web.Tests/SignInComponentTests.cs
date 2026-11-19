@@ -94,52 +94,34 @@ public class SignInComponentTests
         Assert.DoesNotContain("si-notice", html);
     }
 
-    // ── OwnerBar: SignOut renders form posting to /admin/signout ─────────────
-
-    [Fact]
-    public async Task OwnerBar_SignOut_renders_form_with_button_and_token()
-    {
-        var html = await Render.Html<OwnerBar>(new
-        {
-            SignOut = TestToken,
-        });
-        Assert.Contains("action=\"/admin/signout\"", html);
-        Assert.Contains("name=\"F\" value=\"V\"", html);
-        Assert.Contains("Sign out", html);
-        Guards.AssertNoInlineStyle(html);
-        Guards.AssertNoScript(html);
-    }
-
-    [Fact]
-    public async Task OwnerBar_SignOut_absent_by_default()
-    {
-        var html = await Render.Html<OwnerBar>();
-        Assert.DoesNotContain("/admin/signout", html);
-    }
-
     // ── AdminLayout: ShowOwnerBar=false renders no owner-bar ─────────────────
 
     [Fact]
-    public async Task AdminLayout_ShowOwnerBar_false_renders_no_owner_bar()
+    public async Task AdminLayout_Bare_renders_no_workspace_frame()
     {
         var html = await Render.Html<AdminLayout>(new Dictionary<string, object?>
         {
             [nameof(AdminLayout.Title)] = "Test",
-            [nameof(AdminLayout.ShowOwnerBar)] = false,
+            ["Bare"] = true,
         });
+        Assert.DoesNotContain("<admin-workspace", html);
+        Assert.DoesNotContain("ws-list", html);
         Assert.DoesNotContain("owner-bar", html);
         Guards.AssertNoInlineStyle(html);
         Guards.AssertNoScript(html);
     }
 
     [Fact]
-    public async Task AdminLayout_default_renders_owner_bar()
+    public async Task AdminLayout_default_renders_the_workspace_frame()
     {
         var html = await Render.Html<AdminLayout>(new Dictionary<string, object?>
         {
             [nameof(AdminLayout.Title)] = "Test",
         });
-        Assert.Contains("owner-bar", html);
+        Assert.Contains("<admin-workspace", html);
+        Assert.Contains("class=\"ws-list\"", html);
+        Assert.Contains("class=\"ws-main\"", html);
+        Assert.Contains("class=\"ws-panel\"", html);
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────

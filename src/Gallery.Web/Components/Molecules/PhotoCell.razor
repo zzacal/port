@@ -1,0 +1,41 @@
+@* Feature 020 K5: one photo in the workspace fill grid. The root carries what the script needs to fill the
+   details panel with no request (R-04): data-id, data-title, data-caption, data-galleries (gallery ids,
+   space-separated) and data-consequence (the one-photo delete confirm text, C-10). One Tile with no link,
+   sized by Sizes.ForFill(); its overlay holds the select mark and, when set, the Cover/New marks.
+   States: is-selected (aria-selected="true") and ws-drop (a bar on the leading edge). *@
+<div class="@RootClass" role="option" tabindex="-1" draggable="true" data-id="@Image.Id" data-title="@Image.Title" data-caption="@(Caption ?? "")" data-galleries="@(string.Join(' ', GalleryIds))" data-consequence="@(Gallery.Web.Workspace.Messages.DeleteConsequence(GalleryIds.Count))" aria-selected="@(Selected ? "true" : "false")"><Tile Image="Image" Sizes="@FillSizes" Priority="Priority" Overlay="@OverlayContent" /></div>
+
+@code {
+    [Parameter, EditorRequired] public ImageView Image { get; set; } = default!;
+    [Parameter] public string? Caption { get; set; }
+
+    /// <summary>The ids of the galleries the photo is in.</summary>
+    [Parameter] public IReadOnlyList<string> GalleryIds { get; set; } = [];
+
+    [Parameter] public bool Cover { get; set; }
+    [Parameter] public bool New { get; set; }
+    [Parameter] public bool Selected { get; set; }
+    [Parameter] public PicturePriority Priority { get; set; } = PicturePriority.Lazy;
+
+    /// <summary>The drop position while photos are dragged within a gallery (class <c>ws-drop</c>).</summary>
+    [Parameter] public bool Drop { get; set; }
+
+    private static readonly string FillSizes = Gallery.Core.Images.Sizes.ForFill();
+
+    private string RootClass => "ws-cell" + (Selected ? " is-selected" : "") + (Drop ? " ws-drop" : "");
+
+    private RenderFragment? Marks => !Cover && !New ? null
+        : @<span class="ws-cell-marks">@(Cover ? CoverMark : null)@(New ? NewMark : null)</span>;
+
+    private static RenderFragment CoverMark => @<Mark Text="Cover" />;
+    private static RenderFragment NewMark => @<Mark Text="New" />;
+
+    private RenderFragment SelectLayer => @<span class="ws-cell-sel"><SelectMark Label="@($"Select {Image.Title}")" Value="@Image.Id" Checked="Selected" /></span>;
+
+    // The overlay: the select mark, then the Cover/New marks when set.
+    private RenderFragment OverlayContent => b =>
+    {
+        b.AddContent(0, SelectLayer);
+        b.AddContent(1, Marks);
+    };
+}

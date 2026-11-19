@@ -1,0 +1,13 @@
+/* Feature 020 K4. Existing tokens only, no size literal: sizes are fractions of --space-s. */
+.ws-mark {
+    display: inline-block;
+    background: var(--color-bg);
+    color: var(--color-text);
+    border: thin solid var(--color-rule);
+    border-radius: calc(var(--space-s) / 4);
+    padding: 0 calc(var(--space-s) / 4);
+    font-size: var(--type-caption);
+    font-weight: 400;
+    line-height: 1.5;
+    white-space: nowrap;
+}

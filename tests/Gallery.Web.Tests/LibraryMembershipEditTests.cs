@@ -17,10 +17,6 @@ namespace Gallery.Web.Tests;
 [Collection("s3")]
 public class LibraryMembershipEditTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFixture<MongoFixture>
 {
-    private const string Op = "library.image.memberships";
-
-    private static KeyValuePair<string, string> F(string k, string v) => new(k, v);
-
     private static Task<OperationResult> Gs(LibraryHost h, Func<GalleryService, Task<OperationResult>> call) => h.RunAsync(call);
 
     private static Task<ImageDoc> ImageAsync(LibraryHost h, string iid) => h.Images.Find(i => i.Id == iid).FirstAsync();
@@ -36,12 +32,6 @@ public class LibraryMembershipEditTests(S3ProxyFixture s3, MongoFixture mongo) :
         if (publish) Assert.True((await Gs(h, s => s.PublishAsync(gid, confirmed: true))).IsOk);
         return gid;
     }
-
-    private static Task<HttpResponseMessage> SaveAsync(LibraryHost h, string iid, params (string, string)[] fields) =>
-        h.PostFormAsync($"/admin/library/images/{iid}", fields.Select(f => F(f.Item1, f.Item2)).Append(F("page", "1")));
-
-    private static string Aside(string html) =>
-        Regex.Match(html, "<aside class=\"side-panel\".*?</aside>", RegexOptions.Singleline).Value;
 
     private static List<string> Lines(LibraryHost h, string op)
     {
@@ -81,6 +71,14 @@ public class LibraryMembershipEditTests(S3ProxyFixture s3, MongoFixture mongo) :
 
     private static string[] Sorted(IEnumerable<string> s) => s.Order(StringComparer.Ordinal).ToArray();
 
+    /// <summary>The JSON answer's root element (020 TI-13).</summary>
+    private static async Task<System.Text.Json.JsonElement> JsonAsync(HttpResponseMessage resp)
+    {
+        using var doc = await UploadHost.ParseAsync(resp);
+        Assert.NotNull(doc);
+        return doc!.RootElement.Clone();
+    }
+
     [Fact]
     public async Task Add_to_an_existing_gallery_is_303_and_purges_exactly_what_the_bulk_add_purges()
     {
@@ -90,20 +88,23 @@ public class LibraryMembershipEditTests(S3ProxyFixture s3, MongoFixture mongo) :
         var gid = await GalleryAsync(h, "Coast", [cover.Id], publish: true);
         await h.SettleAsync();
 
-        var resp = await SaveAsync(h, img.Id, ("add", gid));
-        Assert.Equal(HttpStatusCode.SeeOther, resp.StatusCode);
-        Assert.Equal($"/admin/library/images/{img.Id}?page=1&saved=1", resp.Headers.Location?.ToString());
+        var resp = await h.PostJsonAsync($"/admin/api/galleries/{gid}/photos", new { ids = new[] { img.Id } });
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        var json = await JsonAsync(resp);
+        Assert.Equal((1, 0), (json.GetProperty("added").GetInt32(), json.GetProperty("skipped").GetInt32()));
         Assert.Equal([cover.Id, img.Id], (await LoadAsync(h, gid)).Items);
         Assert.Equal([gid], (await ImageAsync(h, img.Id)).GalleryIds);
         var panel = await h.SettleAsync();
         Assert.NotEmpty(panel);
-        Assert.Single(Lines(h, Op), l => l.EndsWith(" ok", StringComparison.Ordinal));
+        Assert.Single(Lines(h, "library.bulk.add"), l => l.EndsWith(" ok"));
 
-        // Same host, same state again (B5 takes it back out), then L3 adds the same photo to the same gallery.
-        Assert.Equal(1, (await Gs(h, s => s.RemoveAsync(gid, img.Id))).Removed);
+        // Same host, same state again (A8 takes it back out), then A7 adds the same photo to the same gallery.
+        var removed = await h.PostJsonAsync($"/admin/api/galleries/{gid}/photos/remove", new { ids = new[] { img.Id } });
+        Assert.Equal(HttpStatusCode.OK, removed.StatusCode);
+        Assert.Equal(1, (await JsonAsync(removed)).GetProperty("removed").GetInt32());
         await h.SettleAsync();
-        var bulk = await h.PostFormAsync("/admin/library/add", [F("ids", img.Id), F("gallery", gid), F("page", "1")]);
-        Assert.Equal(HttpStatusCode.SeeOther, bulk.StatusCode);
+        var bulk = await h.PostJsonAsync($"/admin/api/galleries/{gid}/photos", new { ids = new[] { img.Id } });
+        Assert.Equal(HttpStatusCode.OK, bulk.StatusCode);
         Assert.Equal(Sorted(await h.SettleAsync()), Sorted(panel));
     }
 
@@ -116,8 +117,8 @@ public class LibraryMembershipEditTests(S3ProxyFixture s3, MongoFixture mongo) :
         await h.SettleAsync();
         var before = await h.Galleries.Find(FilterDefinition<GalleryDoc>.Empty).Project(g => g.Id).ToListAsync();
 
-        var resp = await SaveAsync(h, img.Id, ("create", "Night walks"));
-        Assert.Equal(HttpStatusCode.SeeOther, resp.StatusCode);
+        var resp = await h.PostJsonAsync("/admin/api/galleries", new { title = "Night walks", ids = new[] { img.Id } });
+        Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
 
         var created = await h.Galleries.Find(Builders<GalleryDoc>.Filter.Nin(g => g.Id, before)).ToListAsync();
         var g = Assert.Single(created);
@@ -135,29 +136,6 @@ public class LibraryMembershipEditTests(S3ProxyFixture s3, MongoFixture mongo) :
     }
 
     [Fact]
-    public async Task Create_add_and_title_in_one_POST_are_all_applied_with_one_ok_line()
-    {
-        await using var h = await LibraryHost.CreateAsync(mongo, s3);
-        var img = await h.InsertUploadedImageAsync(files: false, title: "IMG_0001");
-        var gid = await GalleryAsync(h, "Coast", []);
-        await h.SettleAsync();
-
-        var resp = await SaveAsync(h, img.Id, ("title", "Harbour"), ("add", gid), ("create", "Night walks"));
-        Assert.Equal(HttpStatusCode.SeeOther, resp.StatusCode);
-
-        var stored = await ImageAsync(h, img.Id);
-        Assert.Equal("Harbour", stored.Title);
-        var night = await h.Galleries.Find(x => x.Title == "Night walks").SingleAsync();
-        Assert.Equal([img.Id], (await LoadAsync(h, gid)).Items);
-        Assert.Equal([img.Id], night.Items);
-        Assert.Equal(Sorted([gid, night.Id]), Sorted(stored.GalleryIds));
-        var lines = Lines(h, Op);
-        Assert.Single(lines);
-        Assert.EndsWith(" ok", lines[0]);
-        await h.SettleAsync();
-    }
-
-    [Fact]
     public async Task A_201_char_create_title_is_422_and_writes_nothing()
     {
         await using var h = await LibraryHost.CreateAsync(mongo, s3);
@@ -166,62 +144,13 @@ public class LibraryMembershipEditTests(S3ProxyFixture s3, MongoFixture mongo) :
         await h.SettleAsync();
         var before = await SnapAsync(h);
 
-        var resp = await SaveAsync(h, img.Id, ("title", "Changed"), ("add", gid), ("create", new string('t', 201)));
+        var resp = await h.PostJsonAsync("/admin/api/galleries", new { title = new string('t', 201), ids = new[] { img.Id } });
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, resp.StatusCode);
-        Assert.Equal("The title can be at most 200 characters.", LibraryHtml.Status(await LibraryHtml.BodyAsync(resp)));
+        Assert.Equal("The title can be at most 200 characters.", (await JsonAsync(resp)).GetProperty("message").GetString());
         AssertSame(before, await SnapAsync(h));
         Assert.Equal("Stored title", (await ImageAsync(h, img.Id)).Title);
-        Assert.Single(Lines(h, Op), l => l.EndsWith(" refused", StringComparison.Ordinal));
         Assert.Empty(await h.SettleAsync());
-    }
-
-    [Fact]
-    public async Task An_unknown_add_id_with_a_create_is_404_and_creates_nothing()
-    {
-        await using var h = await LibraryHost.CreateAsync(mongo, s3);
-        var img = await h.InsertUploadedImageAsync(files: false, title: "Pier");
-        await GalleryAsync(h, "Bravo", [img.Id]);
-        await GalleryAsync(h, "Alpha", [img.Id]);
-        await h.SettleAsync();
-        var before = await SnapAsync(h);
-
-        var resp = await SaveAsync(h, img.Id, ("add", OpaqueId.NewId()), ("create", "X"));
-
-        Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
-        var html = await LibraryHtml.BodyAsync(resp);
-        Assert.Equal("That gallery no longer exists.", LibraryHtml.Status(html));
-        AssertSame(before, await SnapAsync(h));
-        Assert.Equal(0, await h.Galleries.CountDocumentsAsync(g => g.Title == "X"));
-        Assert.Single(Lines(h, Op), l => l.EndsWith(" notfound", StringComparison.Ordinal));
-        Assert.Empty(await h.SettleAsync());
-    }
-
-    /// <summary>
-    /// The 404 gallery refusal's panel shows the CURRENT memberships (no pending token). Needs the
-    /// TokenCombobox panel of Batch C (T013): red until then.
-    /// </summary>
-    [Fact]
-    public async Task An_unknown_add_id_re_renders_the_panel_on_the_stored_holders_with_no_pending_token()
-    {
-        await using var h = await LibraryHost.CreateAsync(mongo, s3);
-        var img = await h.InsertUploadedImageAsync(files: false, title: "Pier");
-        var bravo = await GalleryAsync(h, "Bravo", [img.Id]);
-        var alpha = await GalleryAsync(h, "Alpha", [img.Id]);
-        await h.SettleAsync();
-
-        var resp = await SaveAsync(h, img.Id, ("add", OpaqueId.NewId()), ("create", "X"));
-        Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
-        var html = await LibraryHtml.BodyAsync(resp);
-
-        // The panel re-renders on the photo's stored holders, in title order, with no pending token.
-        var aside = Aside(html);
-        var tokens = Regex.Match(aside, "<ul class=\"cb-tokens\".*?</ul>", RegexOptions.Singleline);
-        Assert.True(tokens.Success, "no ul.cb-tokens in the panel");
-        Assert.Equal([$"/admin/galleries/{alpha}", $"/admin/galleries/{bravo}"],
-            Regex.Matches(tokens.Value, "href=\"([^\"]+)\"").Select(m => m.Groups[1].Value).ToList());
-        // Scoped to the token list: the molecule always renders a pending-kind <template> (K1).
-        Assert.DoesNotMatch("class=\"[^\"]*\\bis-pending\\b", tokens.Value);
     }
 
     [Fact]
@@ -233,29 +162,10 @@ public class LibraryMembershipEditTests(S3ProxyFixture s3, MongoFixture mongo) :
         await h.SettleAsync();
         var before = await SnapAsync(h);
 
-        var resp = await SaveAsync(h, img.Id, ("title", "Changed"), ("add", "not-an-id"));
+        var resp = await h.PostJsonAsync("/admin/api/galleries/not-an-id/photos", new { ids = new[] { img.Id } });
 
         Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
-        Assert.Equal("That gallery no longer exists.", LibraryHtml.Status(await LibraryHtml.BodyAsync(resp)));
         AssertSame(before, await SnapAsync(h));
-        Assert.Empty(await h.SettleAsync());
-    }
-
-    [Fact]
-    public async Task A_text_refusal_with_an_add_is_422_and_changes_no_membership()
-    {
-        await using var h = await LibraryHost.CreateAsync(mongo, s3);
-        var img = await h.InsertUploadedImageAsync(files: false, title: "Stored title");
-        var gid = await GalleryAsync(h, "Coast", []);
-        await h.SettleAsync();
-        var before = await SnapAsync(h);
-
-        var resp = await SaveAsync(h, img.Id, ("title", ""), ("add", gid));
-
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, resp.StatusCode);
-        Assert.Equal("Enter a title.", LibraryHtml.Status(await LibraryHtml.BodyAsync(resp)));
-        AssertSame(before, await SnapAsync(h));
-        Assert.Empty((await LoadAsync(h, gid)).Items);
         Assert.Empty(await h.SettleAsync());
     }
 
@@ -268,10 +178,11 @@ public class LibraryMembershipEditTests(S3ProxyFixture s3, MongoFixture mongo) :
         await h.SettleAsync();
         var before = await DumpAsync(h);
 
-        var resp = await h.PostFormAsync($"/admin/library/images/{img.Id}",
-            [F("add", gid), F("create", "Hacked"), F("page", "1")], csrf: false);
+        var add = await h.PostJsonAsync($"/admin/api/galleries/{gid}/photos", new { ids = new[] { img.Id } }, csrf: false);
+        var create = await h.PostJsonAsync("/admin/api/galleries", new { title = "Hacked", ids = new[] { img.Id } }, csrf: false);
 
-        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, add.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, create.StatusCode);
         await h.EdgeIdleAsync();
         Assert.Equal(before, await DumpAsync(h));
         Assert.Empty(h.Recorder.AllPurged());
@@ -290,20 +201,6 @@ public class LibraryMembershipEditTests(S3ProxyFixture s3, MongoFixture mongo) :
     }
 
     [Fact]
-    public async Task An_empty_edit_logs_no_memberships_line()
-    {
-        await using var h = await LibraryHost.CreateAsync(mongo, s3);
-        var img = await h.InsertUploadedImageAsync(files: false, title: "Before");
-
-        var resp = await SaveAsync(h, img.Id, ("title", "After"));
-
-        Assert.Equal(HttpStatusCode.SeeOther, resp.StatusCode);
-        Assert.Equal("After", (await ImageAsync(h, img.Id)).Title);
-        Assert.Empty(Lines(h, Op));
-        await h.SettleAsync();
-    }
-
-    [Fact]
     public async Task Adding_an_already_held_gallery_is_303_with_no_duplicate()
     {
         await using var h = await LibraryHost.CreateAsync(mongo, s3);
@@ -311,9 +208,12 @@ public class LibraryMembershipEditTests(S3ProxyFixture s3, MongoFixture mongo) :
         var gid = await GalleryAsync(h, "Coast", [img.Id]);
         await h.SettleAsync();
 
-        var resp = await SaveAsync(h, img.Id, ("add", gid));
+        var resp = await h.PostJsonAsync($"/admin/api/galleries/{gid}/photos", new { ids = new[] { img.Id } });
 
-        Assert.Equal(HttpStatusCode.SeeOther, resp.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        var json = await JsonAsync(resp);
+        Assert.Equal((0, 1, "Already in Coast."),
+            (json.GetProperty("added").GetInt32(), json.GetProperty("skipped").GetInt32(), json.GetProperty("message").GetString()));
         Assert.Equal([img.Id], (await LoadAsync(h, gid)).Items);
         Assert.Equal([gid], (await ImageAsync(h, img.Id)).GalleryIds);
         await h.SettleAsync();
@@ -329,14 +229,14 @@ public class LibraryMembershipEditTests(S3ProxyFixture s3, MongoFixture mongo) :
         var img = await h.InsertUploadedImageAsync(files: false, title: "Pier");
         var gid = await GalleryAsync(h, "Coast", [other.Id, img.Id], publish: true);
         var keep = await GalleryAsync(h, "Harbour", [img.Id]);
-        var cover = await h.PostFormAsync($"/admin/galleries/{gid}/cover", [F("image", img.Id)]);
-        Assert.Equal(HttpStatusCode.SeeOther, cover.StatusCode);
+        var cover = await h.PostJsonAsync($"/admin/api/galleries/{gid}/cover", new { image = img.Id });
+        Assert.Equal(HttpStatusCode.OK, cover.StatusCode);
         Assert.Equal(img.Id, (await LoadAsync(h, gid)).PinnedCover);
         await h.SettleAsync();
 
-        var resp = await SaveAsync(h, img.Id, ("leave", gid));
-        Assert.Equal(HttpStatusCode.SeeOther, resp.StatusCode);
-        Assert.Equal($"/admin/library/images/{img.Id}?page=1&saved=1", resp.Headers.Location?.ToString());
+        var resp = await h.PostJsonAsync($"/admin/api/galleries/{gid}/photos/remove", new { ids = new[] { img.Id } });
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        Assert.Equal(1, (await JsonAsync(resp)).GetProperty("removed").GetInt32());
         var g = await LoadAsync(h, gid);
         Assert.Equal([other.Id], g.Items);
         Assert.Null(g.PinnedCover);
@@ -345,7 +245,6 @@ public class LibraryMembershipEditTests(S3ProxyFixture s3, MongoFixture mongo) :
         Assert.Null((await ImageAsync(h, img.Id)).DeletingAt);
         var panel = await h.SettleAsync();
         Assert.NotEmpty(panel);
-        Assert.Single(Lines(h, Op), l => l.EndsWith(" ok", StringComparison.Ordinal));
 
         // Same host, same state again (the photo back in, pinned as the cover), then B5 removes it.
         Assert.True((await Gs(h, s => s.AddAsync(gid, [img.Id]))).IsOk);
@@ -353,8 +252,8 @@ public class LibraryMembershipEditTests(S3ProxyFixture s3, MongoFixture mongo) :
         await h.SettleAsync();
         Assert.Equal([other.Id, img.Id], (await LoadAsync(h, gid)).Items);
         Assert.Equal(img.Id, (await LoadAsync(h, gid)).PinnedCover);
-        var b5 = await h.PostFormAsync($"/admin/galleries/{gid}/remove", [F("image", img.Id)]);
-        Assert.Equal(HttpStatusCode.SeeOther, b5.StatusCode);
+        var b5 = await h.PostJsonAsync($"/admin/api/galleries/{gid}/photos/remove", new { ids = new[] { img.Id } });
+        Assert.Equal(HttpStatusCode.OK, b5.StatusCode);
         Assert.Equal(Sorted(await h.SettleAsync()), Sorted(panel));
     }
 
@@ -373,8 +272,11 @@ public class LibraryMembershipEditTests(S3ProxyFixture s3, MongoFixture mongo) :
         Assert.Contains($"href=\"/g/{gid}/{slug}\"", homeBefore);
         Assert.Contains($"href=\"/g/{laterGid}/{laterSlug}\"", homeBefore);
 
-        var resp = await SaveAsync(h, img.Id, ("leave", gid));
-        Assert.Equal(HttpStatusCode.SeeOther, resp.StatusCode);
+        var resp = await h.PostJsonAsync($"/admin/api/galleries/{gid}/photos/remove", new { ids = new[] { img.Id } });
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        var json = await JsonAsync(resp);
+        Assert.Equal((1, false), (json.GetProperty("removed").GetInt32(), json.GetProperty("listed").GetBoolean()));
+        Assert.EndsWith(" Visitors can no longer see Coast until it has a photo.", json.GetProperty("message").GetString());
         await h.SettleAsync();
 
         var g = await LoadAsync(h, gid);
@@ -385,26 +287,5 @@ public class LibraryMembershipEditTests(S3ProxyFixture s3, MongoFixture mongo) :
         Assert.DoesNotContain($"/g/{gid}/", home);
         Assert.Contains($"href=\"/g/{laterGid}/{laterSlug}\"", home);
         Assert.Equal(HttpStatusCode.NotFound, (await h.GetAsync($"/g/{gid}/{slug}")).StatusCode);
-    }
-
-    [Fact]
-    public async Task Leave_and_add_of_the_same_id_is_303_and_changes_nothing()
-    {
-        await using var h = await LibraryHost.CreateAsync(mongo, s3);
-        var img = await h.InsertUploadedImageAsync(files: false, title: "Pier");
-        var held = await GalleryAsync(h, "Coast", [img.Id], publish: true);
-        var notHeld = await GalleryAsync(h, "Harbour", []);
-        await h.SettleAsync();
-        var before = await SnapAsync(h);
-
-        var resp = await SaveAsync(h, img.Id, ("leave", held), ("add", held), ("add", notHeld), ("leave", notHeld));
-
-        Assert.Equal(HttpStatusCode.SeeOther, resp.StatusCode);
-        AssertSame(before, await SnapAsync(h));
-        Assert.Equal([img.Id], (await LoadAsync(h, held)).Items);
-        Assert.Empty((await LoadAsync(h, notHeld)).Items);
-        Assert.Equal([held], (await ImageAsync(h, img.Id)).GalleryIds);
-        Assert.Empty(Lines(h, Op));
-        Assert.Empty(await h.SettleAsync());
     }
 }

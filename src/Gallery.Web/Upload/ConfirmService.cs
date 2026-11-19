@@ -8,23 +8,25 @@ using MongoDB.Driver;
 namespace Gallery.Web.Upload;
 
 /// <summary>
-/// U10 confirm (research R-09, contracts/http.md U10, FR-030–FR-033, plan item 6). Scoped.
+/// 020 U12 join (contracts/http.md U12 steps 3–5, research R-06, tasks.md C-02). Scoped. The
+/// endpoint claims the item first (<see cref="BatchStore.TryClaimJoinAsync"/>); then
+/// <see cref="JoinAsync"/>, inside <c>upload.join</c>, with at most 8 storage operations in flight:
 /// <list type="number">
-/// <item>Gate: <see cref="BatchStore.TryStartConfirmAsync"/> (open, ≥1 item, all succeeded).</item>
-/// <item>Per item, inside <c>upload.confirm.item</c>, with at most 8 storage operations in
-///   flight: every staged file is copied with <c>x-amz-copy-source-if-match</c> on the ETag
-///   recorded at validation (<see cref="ImageStore.CopyIfMatchAsync"/>, which sets
-///   <c>ETagToMatch</c>): the master to <c>masters/{itemId}.jpg</c> in the private bucket, each
-///   size to <c>{sha256-16hex}.{ext}</c> in the public bucket with the immutable
-///   <c>Cache-Control</c>. Then <c>ImageDoc{_id=itemId}</c> is upserted with <c>$setOnInsert</c>
-///   (no seed fields, <c>galleryIds: []</c>), then the item prefix is deleted.</item>
-/// <item><see cref="BatchStore.MarkConfirmedAsync"/> and <c>upload.confirmed</c>, all inside
-///   <c>upload.confirm</c>.</item>
+/// <item>Every staged file is copied with <c>x-amz-copy-source-if-match</c> on the ETag recorded
+///   at validation (<see cref="ImageStore.CopyIfMatchAsync"/>, [SAFETY] III.6): the master to
+///   <c>masters/{itemId}.jpg</c> in the private bucket, each size to <c>{sha256-16hex}.{ext}</c>
+///   in the public bucket with the immutable <c>Cache-Control</c>. A staged file that is missing
+///   is accepted only when its destination already exists (an earlier or overlapping join made
+///   it). Then <c>ImageDoc{_id=itemId}</c> is upserted with <c>$setOnInsert</c> (no seed fields,
+///   <c>galleryIds: []</c>), then the item prefix is deleted.</item>
+/// <item><see cref="BatchStore.CompleteJoinAsync"/> pulls the item and records it in
+///   <c>added</c>.</item>
+/// <item>ONLY when the batch has a destination: <see cref="GalleryService.AddAsync"/> (gallery
+///   gone → <see cref="BatchStore.UnsetDestinationAsync"/>). [SAFETY] II.5b: no destination → no
+///   gallery call and no edge work; II.5c: no visibility write, ever.</item>
 /// </list>
-/// A copy refused by if-match fails ONLY that item ("changed after validation"): its prefix and
-/// master copy are deleted and it gets no image; the other items are added and pulled from the
-/// batch, <c>confirmStartedAt</c> is cleared and the answer is 409 (decisions row 45), so the
-/// batch is never locked. No purge or warm runs anywhere (FR-033).
+/// A copy refused by if-match fails the item ("changed after validation"): the public names this
+/// run created and its master copy are removed, its prefix is deleted and it gets no image.
 /// </summary>
 public sealed class ConfirmService
 {
@@ -41,8 +43,8 @@ public sealed class ConfirmService
     private readonly IMongoCollection<ImageDoc> _imageDocs;
     private readonly OpTimer _timer;
     private readonly TimeProvider _clock;
-    private readonly UploadOptions _options;
     private readonly LibraryOptions _library;
+    private readonly GalleryService _galleries;
     private readonly ILogger _log;
     private readonly string _pub;
     private readonly string _priv;
@@ -54,7 +56,7 @@ public sealed class ConfirmService
     /// </param>
     public ConfirmService(
         BatchStore store, ImageStore images, StorageOptions storage, IMongoDatabase db, OpTimer timer,
-        TimeProvider clock, UploadOptions options, LibraryOptions library, ILoggerFactory loggers,
+        TimeProvider clock, LibraryOptions library, GalleryService galleries, ILoggerFactory loggers,
         Func<string, Task>? afterItem = null)
     {
         _store = store;
@@ -62,8 +64,8 @@ public sealed class ConfirmService
         _imageDocs = db.GetCollection<ImageDoc>("images");
         _timer = timer;
         _clock = clock;
-        _options = options;
         _library = library;
+        _galleries = galleries;
         _log = loggers.CreateLogger(UploadEndpoints.LogCategory);
         _pub = storage.PublicBucket ?? string.Empty;
         _priv = storage.PrivateBucket ?? string.Empty;
@@ -83,78 +85,76 @@ public sealed class ConfirmService
         return t.Length == 0 ? "Untitled" : t;
     }
 
-    public async Task<ConfirmResult> ConfirmAsync(string batchId)
+    /// <summary>
+    /// U12 steps 3–5 for one item the endpoint has claimed (stored <c>joining</c>, this attempt).
+    /// The whole call is timed <c>upload.join</c>; success logs <c>upload.joined</c>.
+    /// </summary>
+    public Task<JoinResult> JoinAsync(string batchId, string itemId, string attemptId) =>
+        _timer.Time("upload.join", () => RunJoinAsync(batchId, itemId, attemptId));
+
+    private async Task<JoinResult> RunJoinAsync(string batchId, string itemId, string attemptId)
     {
-        var before = await _store.GetByIdAsync(batchId);
-        if (before is null) return ConfirmResult.NotFound();
-        if (before.State == BatchStates.Confirmed) return ConfirmResult.Confirmed(before.ConfirmedCount ?? 0);
-        if (before.State != BatchStates.Open) return ConfirmResult.NotFound();
+        var start = Stopwatch.GetTimestamp();
+
+        var batch = await _store.GetByIdAsync(batchId);
+        var item = batch is { State: BatchStates.Open } ? batch.Items.FirstOrDefault(i => i.ItemId == itemId) : null;
+        if (item is null) return JoinResult.NotFound();
+        if (!string.Equals(item.AttemptId, attemptId, StringComparison.Ordinal)) return JoinResult.StaleAttempt();
+        // [SAFETY] II.5d: only a claimed item is published; the claim accepts succeeded/joining only.
+        if (item.State != ItemStates.Joining) return JoinResult.NotActive();
 
         // A dev database seeded before 008 has a non-partial unique seedKey_1 index, which refuses
         // a second image with no seedKey (decisions row 60): upgrade it once per process first.
         await Indexes.EnsureOnceAsync(_imageDocs.Database);
 
-        // A run that finds confirmStartedAt already set resumes an earlier, interrupted run.
-        var resumed = before.ConfirmStartedAt is not null;
-
-        if (!await _store.TryStartConfirmAsync(batchId))
-        {
-            // An interrupted run that had already failed an item left the batch locked with a
-            // non-succeeded item, so the gate can never pass again. Finish that run instead: the
-            // succeeded items are added and the lock is released (no lock-out; decisions row 45).
-            if (resumed && before.Items.Count > 0)
-                return await _timer.Time("upload.confirm", () => RunAsync(batchId, resumed: true));
-
-            var now = _clock.GetUtcNow();
-            var notReady = before.Items.Count(i =>
-                EffectiveState.Of(i, now, _options.HeartbeatTimeout) != ItemStates.Succeeded);
-            return ConfirmResult.NotReady(notReady);
-        }
-
-        return await _timer.Time("upload.confirm", () => RunAsync(batchId, resumed));
-    }
-
-    private async Task<ConfirmResult> RunAsync(string batchId, bool resumed)
-    {
-        var start = Stopwatch.GetTimestamp();
-
-        // Re-read after the gate: while confirmStartedAt is set no other request can change the
-        // items (every other mutation answers confirm-in-progress).
-        var batch = await _store.GetByIdAsync(batchId)
-                    ?? throw new InvalidOperationException("Batch vanished after the confirm gate.");
-        var ready = batch.Items.Where(i => i.State == ItemStates.Succeeded).ToList();
-
         using var gate = new SemaphoreSlim(MaxStorageOpsInFlight);
-        var outcomes = await Task.WhenAll(ready.Select(item =>
-            _timer.Time("upload.confirm.item", () => ConfirmItemAsync(batchId, item, gate, resumed))));
-
-        var added = ready.Where((_, i) => outcomes[i]).ToList();
-        var failed = batch.Items.Count - added.Count;
-
-        if (failed > 0)
+        var outcome = await JoinItemAsync(batchId, item, gate);
+        if (outcome == ItemOutcome.Gone) return JoinResult.NotFound();
+        if (outcome == ItemOutcome.Failed)
         {
-            // Copy refused by if-match (contracts/http.md U10, decisions row 45): the added items
-            // leave the batch, the lock is released, and the batch stays open with only the
-            // failed items, so the owner can Restart or Delete them.
-            foreach (var item in added)
-                await _store.PullItemAsync(batchId, item.ItemId);
-            await _store.ClearConfirmStartedAsync(batchId);
-            return ConfirmResult.Changed(added.Count, failed);
+            _log.LogInformation("upload.join-refused {batch} {item} {reason}", batchId, itemId, ChangedAfterValidation);
+            return JoinResult.Changed();
         }
 
-        await _store.MarkConfirmedAsync(batchId, added.Count);
+        var after = await _store.CompleteJoinAsync(batchId, itemId, itemId);
+        // Another join of the same item finished first: it owns the rest (converge, FR-034).
+        if (after is null) return JoinResult.NotFound();
+
+        JoinedGallery? gallery = null;
+        var galleryGone = false;
+        if (after.Destination is { } gid)
+        {
+            var added = await _galleries.AddAsync(gid, [itemId]);
+            var loaded = added.Status == OperationStatus.NotFound ? null : await _galleries.LoadAsync(gid);
+            if (loaded is null)
+            {
+                await _store.UnsetDestinationAsync(batchId);
+                galleryGone = true;
+            }
+            else
+            {
+                gallery = new JoinedGallery(loaded.Id, loaded.Title, loaded.Visibility == "public");
+            }
+        }
+
         var ms = Math.Round(Stopwatch.GetElapsedTime(start).TotalMilliseconds, 2);
-        _log.LogInformation("upload.confirmed {batch} {count} {duration_ms}", batchId, added.Count, ms);
-        return ConfirmResult.Confirmed(added.Count);
+        _log.LogInformation("upload.joined {batch} {item} {gallery} {public} {duration_ms}",
+            batchId, itemId, gallery?.Id ?? "-", gallery is null ? "-" : gallery.Public ? "true" : "false", ms);
+        return JoinResult.Joined(itemId, gallery, galleryGone);
     }
+
+    private enum ItemOutcome { Published, Failed, Gone }
 
     private sealed record Copy(string SrcKey, string DstBucket, string DstKey, string Etag, string ContentType, string CacheControl);
 
-    /// <summary>Returns true when the item has its image, false when it failed.</summary>
-    private async Task<bool> ConfirmItemAsync(string batchId, BatchItemDoc item, SemaphoreSlim gate, bool resumed)
+    /// <summary>
+    /// The per-item body (moved from 008's confirm): <c>Published</c> when the item has its image,
+    /// <c>Failed</c> when a copy was refused, <c>Gone</c> when the item left the batch meanwhile.
+    /// </summary>
+    private async Task<ItemOutcome> JoinItemAsync(string batchId, BatchItemDoc item, SemaphoreSlim gate)
     {
         var v = item.Validated
-                ?? throw new InvalidOperationException("A succeeded item has no validated record.");
+                ?? throw new InvalidOperationException("A joining item has no validated record.");
         var a = item.AttemptId;
 
         var master = new Copy(StagingKeys.Master(batchId, item.ItemId, a), _priv, MasterKey(item.ItemId),
@@ -170,14 +170,13 @@ public sealed class ConfirmService
         // comparison, so the copy itself is the guard (III.6, decisions row 27).
         var heads = await Task.WhenAll(all.Select(c => Limited(gate, () => _images.HeadAsync(_priv, c.SrcKey))));
 
-        // A staged file is deleted only AFTER its image upsert, and nothing else can delete it
-        // while the batch is locked. So a missing one is acceptable only on a resumed run, and only
-        // when its copy already exists (the interrupted run made it); otherwise the item fails.
+        // A staged file is deleted only AFTER its image upsert, and U8/U9 refuse a joining item. So
+        // a missing one is acceptable only when its copy already exists (an interrupted or
+        // overlapping join made it); otherwise the item fails.
         var pending = new List<Copy>();
         for (var i = 0; i < all.Count; i++)
         {
             if (heads[i].exists) { pending.Add(all[i]); continue; }
-            if (!resumed) return await FailAsync(batchId, item, gate, []);
             var c = all[i];
             var (done, _, _) = await Limited(gate, () => _images.HeadAsync(c.DstBucket, c.DstKey));
             if (!done) return await FailAsync(batchId, item, gate, []);
@@ -210,11 +209,27 @@ public sealed class ConfirmService
             await _afterItem(item.ItemId);
 
         await DeleteItemPrefixAsync(batchId, item, gate);
-        return true;
+        return ItemOutcome.Published;
     }
 
-    private Task<CopyOutcome> CopyAsync(Copy c) =>
-        _images.CopyIfMatchAsync(_priv, c.SrcKey, c.DstBucket, c.DstKey, c.Etag, c.ContentType, c.CacheControl);
+    /// <summary>
+    /// Copy-if-match. A source that vanished between the HEAD and the copy (an overlapping join of
+    /// the same item deleted its prefix after publishing) counts as copied only when the
+    /// destination exists, the same rule as a missing staged file; otherwise the error stands.
+    /// </summary>
+    private async Task<CopyOutcome> CopyAsync(Copy c)
+    {
+        try
+        {
+            return await _images.CopyIfMatchAsync(_priv, c.SrcKey, c.DstBucket, c.DstKey, c.Etag, c.ContentType, c.CacheControl);
+        }
+        catch (Amazon.S3.AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            var (exists, _, _) = await _images.HeadAsync(c.DstBucket, c.DstKey);
+            if (exists) return CopyOutcome.Copied;
+            throw;
+        }
+    }
 
     private Task DeleteItemPrefixAsync(string batchId, BatchItemDoc item, SemaphoreSlim gate) =>
         Limited(gate, async () =>
@@ -233,14 +248,16 @@ public sealed class ConfirmService
     /// <summary>
     /// The item fails "changed after validation": stored <c>failed</c> + reason, the public names
     /// this run created for it removed, its private master copy removed, its whole item prefix
-    /// deleted, and no image created.
+    /// deleted, and no image created. When the item is no longer in the batch with this attempt
+    /// (an overlapping join already finished it), nothing is removed: <c>Gone</c>.
     /// </summary>
-    private async Task<bool> FailAsync(string batchId, BatchItemDoc item, SemaphoreSlim gate, IReadOnlyList<Copy> createdPublic)
+    private async Task<ItemOutcome> FailAsync(string batchId, BatchItemDoc item, SemaphoreSlim gate, IReadOnlyList<Copy> createdPublic)
     {
-        await _store.UpdateItemAsync(batchId, item.ItemId, item.AttemptId, Builders<BatchDoc>.Update
+        var marked = await _store.UpdateItemAsync(batchId, item.ItemId, item.AttemptId, Builders<BatchDoc>.Update
             .Set("items.$.state", ItemStates.Failed)
             .Set("items.$.reason", ChangedAfterValidation)
             .Set("items.$.heartbeatAt", _clock.GetUtcNow().UtcDateTime));
+        if (!marked) return ItemOutcome.Gone;
         var deletes = createdPublic.Select(c => (c.DstBucket, c.DstKey))
             .Append((_priv, MasterKey(item.ItemId)));
         await Task.WhenAll(deletes.Select(d => Limited(gate, async () =>
@@ -249,11 +266,11 @@ public sealed class ConfirmService
             return true;
         })));
         await DeleteItemPrefixAsync(batchId, item, gate);
-        return false;
+        return ItemOutcome.Failed;
     }
 
     /// <summary>
-    /// <c>$setOnInsert</c> only, so a repeat confirm never changes an existing image (FR-032).
+    /// <c>$setOnInsert</c> only, so a repeated join never changes an existing image (FR-034).
     /// No <c>seedKey</c>/<c>sourceHash</c> and no caption are written (FR-035, R-10).
     /// </summary>
     private async Task<bool> UpsertImageAsync(BatchItemDoc item, ValidatedDoc v)
@@ -287,12 +304,18 @@ public sealed class ConfirmService
     }
 }
 
-public enum ConfirmStatus { Confirmed, NotFound, NotReady, ChangedAfterValidation }
+/// <summary>The gallery a joined photo was added to (U12 answer <c>gallery</c>).</summary>
+public sealed record JoinedGallery(string Id, string Title, bool Public);
 
-public sealed record ConfirmResult(ConfirmStatus Status, int Count = 0, int NotReadyCount = 0, int Added = 0, int Failed = 0)
+public enum JoinStatus { Joined, NotFound, StaleAttempt, NotActive, ChangedAfterValidation }
+
+/// <summary>Outcome of <see cref="ConfirmService.JoinAsync"/>.</summary>
+public sealed record JoinResult(JoinStatus Status, string? ImageId = null, JoinedGallery? Gallery = null, bool GalleryGone = false)
 {
-    public static ConfirmResult Confirmed(int count) => new(ConfirmStatus.Confirmed, Count: count);
-    public static ConfirmResult NotFound() => new(ConfirmStatus.NotFound);
-    public static ConfirmResult NotReady(int notReady) => new(ConfirmStatus.NotReady, NotReadyCount: notReady);
-    public static ConfirmResult Changed(int added, int failed) => new(ConfirmStatus.ChangedAfterValidation, Added: added, Failed: failed);
+    public static JoinResult Joined(string imageId, JoinedGallery? gallery, bool galleryGone) =>
+        new(JoinStatus.Joined, imageId, gallery, galleryGone);
+    public static JoinResult NotFound() => new(JoinStatus.NotFound);
+    public static JoinResult StaleAttempt() => new(JoinStatus.StaleAttempt);
+    public static JoinResult NotActive() => new(JoinStatus.NotActive);
+    public static JoinResult Changed() => new(JoinStatus.ChangedAfterValidation);
 }

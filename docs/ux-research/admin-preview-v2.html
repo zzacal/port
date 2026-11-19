@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin preview v2 · one workspace</title>
+<style>
+:root{--bg:#fff;--text:#000;--muted:#666;--rule:#ddd;--surface:#f4f4f4;--danger:#b3261e;--success:#1e7a3c;
+--font:system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font-family:var(--font);font-size:14px;color:var(--text);background:var(--bg);display:grid;grid-template-rows:auto minmax(0,1fr)}
+a{color:inherit}
+[hidden]{display:none!important}
+h1,h2,p{margin:0}
+
+/* Preview strip: NOT part of the design */
+.pv{display:flex;gap:16px;align-items:center;padding:6px 16px;background:#1b1b1b;color:#bbb;font-size:12px}
+.pv b{color:#fff}.pv .sp{flex:1}
+.pv button{background:none;border:0;color:#fff;font:inherit;text-decoration:underline;cursor:pointer;padding:0}
+
+.app{display:grid;grid-template-columns:232px minmax(0,1fr) 320px;min-height:0}
+.side,.main,.insp{min-height:0;overflow:auto}
+
+/* Buttons: every action is a word. */
+.btn{display:inline-flex;align-items:center;justify-content:center;height:32px;padding:0 12px;border:1px solid var(--rule);border-radius:4px;background:var(--bg);color:var(--text);font:inherit;white-space:nowrap;cursor:pointer;text-decoration:none}
+.btn:hover{background:var(--surface)}
+.btn:focus-visible,.row:focus-visible,.t:focus-visible{outline:2px solid var(--text);outline-offset:2px}
+.btn.primary{background:var(--text);color:var(--bg);border-color:var(--text)}
+.btn.primary:hover{background:#333}
+.btn.danger{color:var(--danger);border-color:var(--danger)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.block{width:100%}
+.link{background:none;border:0;padding:0;font:inherit;color:var(--text);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.muted{color:var(--muted)}
+
+/* Left: where am I */
+.side{background:var(--surface);border-right:1px solid var(--rule);padding:16px 8px;display:flex;flex-direction:column;gap:2px}
+.brand{font-size:16px;font-weight:600;padding:0 8px 12px}
+.brand span{font-weight:400;color:var(--muted)}
+.row{display:flex;align-items:center;gap:8px;width:100%;min-height:36px;padding:0 8px;border:0;border-radius:4px;background:transparent;font:inherit;text-align:left;cursor:pointer;color:var(--text)}
+.row:hover{background:#e9e9e9}
+.row[aria-current]{background:var(--bg);font-weight:600;box-shadow:0 0 0 1px var(--rule)}
+.row .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .ct{color:var(--muted);font-weight:400;font-variant-numeric:tabular-nums}
+.row .tag{font-size:11px;font-weight:400;color:var(--muted);border:1px solid var(--rule);border-radius:3px;padding:0 4px;background:var(--bg)}
+.row.over{background:var(--text);color:var(--bg)}
+.row.over .ct{color:#ccc}
+.row.before{box-shadow:0 -2px 0 var(--text)}
+.sec{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:16px 8px 4px}
+.sec small{display:block;text-transform:none;letter-spacing:0;font-size:11px}
+.newg{margin:2px 0;padding:0 8px;height:32px;width:100%;border:1px solid var(--text);border-radius:4px;font:inherit}
+.side .grow{flex:1;min-height:16px}
+.side .foot{display:flex;flex-direction:column;gap:2px;border-top:1px solid var(--rule);padding-top:8px}
+
+/* Middle: the photos */
+.main{position:relative;display:flex;flex-direction:column}
+.head{position:sticky;top:0;z-index:3;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:16px 24px;background:var(--bg);border-bottom:1px solid var(--rule)}
+.head h1{font-size:20px;font-weight:600}
+.head .meta{color:var(--muted)}
+.head .sp{flex:1}
+.body{padding:24px;flex:1}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:20px 16px}
+.t{min-width:0;cursor:pointer;border-radius:4px;user-select:none}
+.ph{position:relative;aspect-ratio:4/3;background:var(--surface);border-radius:4px;overflow:hidden}
+.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none}
+.tt{margin-top:6px;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t.sel .ph{outline:3px solid var(--text);outline-offset:2px}
+.t.sel .tt{color:var(--text);font-weight:600}
+.chk{position:absolute;top:0;left:0;width:40px;height:40px;display:flex;align-items:center;justify-content:center;opacity:0}
+.chk i{width:22px;height:22px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.35);box-shadow:0 0 0 1px rgba(0,0,0,.25)}
+.t:hover .chk,.has-sel .chk{opacity:1}
+@media (hover:none){.chk{opacity:1}}
+.t.sel .chk i{background:#000 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2 5 8.7 9.5 3.5' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat}
+.badge{position:absolute;right:6px;top:6px;font-size:11px;font-weight:600;background:#fff;color:#000;border-radius:3px;padding:1px 6px;box-shadow:0 0 0 1px rgba(0,0,0,.2)}
+.t.drop .ph{box-shadow:-4px 0 0 var(--bg),-7px 0 0 var(--text);overflow:visible}
+.empty{color:var(--muted);max-width:52ch;line-height:1.5}
+.one{display:flex;align-items:center;justify-content:center;height:100%;min-height:300px;background:var(--surface);border-radius:4px}
+.one img{max-width:100%;max-height:calc(100vh - 200px);display:block}
+
+/* Upload tray: lives at the top of the photos, closes when done */
+.tray{margin:0 0 24px;border:1px solid var(--rule);border-radius:6px;background:var(--bg)}
+.tray-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 12px}
+.tray-h b{font-weight:600}
+.tray-h progress{width:140px;height:4px;accent-color:var(--text)}
+.tray-h .sp{flex:1}
+.drop{margin:0 12px 12px;border:2px dashed var(--rule);border-radius:6px;padding:28px 16px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.main.filedrag .drop{border-color:var(--text);border-style:solid;background:var(--surface)}
+.ups{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;padding:0 12px 12px}
+.up{display:flex;align-items:center;gap:10px;min-width:0}
+.up img{width:48px;height:36px;object-fit:contain;background:var(--surface);border-radius:3px;flex:none}
+.up .i{min-width:0;flex:1;font-size:12px}
+.up .i div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.up progress{width:100%;height:4px;accent-color:var(--text);display:block}
+.ok{color:var(--success)}.bad{color:var(--danger)}
+
+/* Right: what is selected, and everything you can do to it */
+.insp{border-left:1px solid var(--rule);padding:20px 16px;display:flex;flex-direction:column;gap:16px}
+.insp h2{font-size:16px;font-weight:600}
+.insp .prev{background:var(--surface);border-radius:4px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.insp .prev img{max-width:100%;max-height:100%}
+.stack{display:flex;gap:4px}
+.stack img{width:56px;height:42px;object-fit:contain;background:var(--surface);border-radius:3px}
+.f{display:flex;flex-direction:column;gap:4px}
+.f label,.lbl{font-size:12px;font-weight:600;display:flex;justify-content:space-between}
+.f .saved{font-weight:400;color:var(--success)}
+.f input,.f textarea{width:100%;border:1px solid var(--rule);border-radius:4px;padding:7px 8px;font:inherit;background:var(--bg)}
+.f input:focus,.f textarea:focus{outline:2px solid var(--text);outline-offset:1px}
+.checks{display:flex;flex-direction:column;border:1px solid var(--rule);border-radius:4px}
+.checks label{display:flex;align-items:center;gap:8px;min-height:36px;padding:0 10px;cursor:pointer}
+.checks label~label{border-top:1px solid var(--rule)}
+.checks label:hover{background:var(--surface)}
+.checks .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.checks small{color:var(--muted)}
+.checks input[type=checkbox]{width:16px;height:16px;accent-color:#000;margin:0}
+.checks .gq{border:0;border-bottom:1px solid var(--rule);border-radius:4px 4px 0 0;height:36px;padding:0 10px}
+.checks .gq:focus{outline:2px solid var(--text);outline-offset:-2px}
+.checks .mk{border:0;border-top:1px solid var(--rule);background:var(--bg);font:inherit;font-weight:600;text-align:left;min-height:36px;padding:0 10px;cursor:pointer;border-radius:0 0 4px 4px}
+.checks .mk:hover,.checks .gq:focus~.mk{background:var(--surface)}
+.switch{display:flex;align-items:center;gap:10px;cursor:pointer}
+.switch input{position:absolute;opacity:0;width:1px;height:1px}
+.track{position:relative;width:36px;height:20px;border-radius:10px;background:#bbb;flex:none}
+.track::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s}
+.switch input:checked+.track{background:var(--text)}
+.switch input:checked+.track::after{transform:translateX(16px)}
+.switch input:disabled+.track{opacity:.4}
+.hint{font-size:12px;color:var(--muted);line-height:1.45}
+.acts{display:flex;flex-direction:column;gap:8px}
+.insp .grow{flex:1}
+.insp .end{border-top:1px solid var(--rule);padding-top:16px}
+.tips{line-height:1.6;color:var(--muted);padding-left:18px;margin:0}
+.sheet-done{display:none}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:20;background:#000;color:#fff;border-radius:4px;padding:10px 14px;max-width:calc(100vw - 32px);box-shadow:0 4px 16px rgba(0,0,0,.25)}
+
+dialog{max-width:30rem;width:calc(100% - 32px);border:1px solid var(--rule);border-radius:6px;padding:24px;color:var(--text)}
+dialog.wide{max-width:46rem}
+dialog::backdrop{background:rgb(0 0 0/.4)}
+dialog h2{font-size:16px;margin-bottom:12px}
+dialog p{line-height:1.5}
+dialog .d-acts{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
+dialog table{border-collapse:collapse;width:100%;font-size:13px}
+dialog td,dialog th{text-align:left;vertical-align:top;border-top:1px solid var(--rule);padding:8px 12px 8px 0}
+dialog th{font-size:12px;color:var(--muted)}
+
+/* Phone and small tablet: collections become a strip, the inspector a bottom sheet */
+@media (max-width:899px){
+  .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+  .side{flex-direction:row;align-items:center;overflow-x:auto;padding:8px;border-right:0;border-bottom:1px solid var(--rule);gap:4px}
+  .side .brand,.side .sec,.side .grow,.side .foot{display:none}
+  .row{width:auto;flex:none;min-height:44px}
+  .newg{width:160px;flex:none;height:44px}
+  .head{padding:12px 16px}.body{padding:16px}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 12px}
+  .btn{height:44px}
+  .insp{position:fixed;left:0;right:0;bottom:0;z-index:10;max-height:70vh;background:var(--bg);border-left:0;border-top:1px solid var(--rule);box-shadow:0 -8px 24px rgba(0,0,0,.15);transform:translateY(105%);transition:transform .2s}
+  .sheet .insp{transform:none}
+  .insp .prev{display:none}
+  .sheet-done{display:inline-flex}
+  .only-wide{display:none}
+}
+@media (min-width:900px){.only-narrow{display:none}}
+</style>
+</head>
+<body>
+<div class="pv"><b>Preview v2</b><span>this strip is not part of the design</span><span class="sp"></span><button id="why">What this replaces</button></div>
+<div class="app" id="app">
+  <nav class="side" id="side" aria-label="Collections"></nav>
+  <main class="main" id="main"></main>
+  <aside class="insp" id="insp" aria-label="Details"></aside>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+<div id="dlg"></div>
+
+<script>
+const IMG = '../../dev-pictures/.admin-preview/';
+const NAMES = ['DSCF1197','DSCF1220','DSCF1296','DSCF1332','DSCF1376','DSCF1411','DSCF1486','DSCF1772','DSCF1836','DSCF2029','DSCF2045','DSCF2060'];
+const photos = NAMES.map((t, i) => ({ id: 'p' + i, src: IMG + 'p' + i + '.jpg', title: t, caption: '' }));
+const pool = ['DSCF1390','DSCF1416','DSCF1506','DSCF1810','DSCF1958','DSCF2036'].map((t, i) => ({ id: 'p' + (12 + i), src: IMG + 'p' + (12 + i) + '.jpg', title: t, caption: '' }));
+const galleries = [
+  { id: 'g1', title: 'Ferry crossing', desc: '', pub: true, items: ['p0', 'p3', 'p5', 'p1', 'p2'], cover: 'p3' },
+  { id: 'g2', title: 'Shoreline', desc: '', pub: true, items: ['p7', 'p9', 'p11'], cover: null },
+  { id: 'g3', title: 'Work in progress', desc: '', pub: false, items: ['p6', 'p8'], cover: null },
+];
+const S = { col: 'all', sel: new Set(), last: null, one: false, tray: null, naming: false, sheet: false };
+const $ = id => document.getElementById(id);
+const P = id => photos.find(p => p.id === id), G = id => galleries.find(g => g.id === id);
+const inG = id => galleries.filter(g => g.items.includes(id));
+const n = (c, w) => `${c} ${w}${c === 1 ? '' : 's'}`;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const loose = () => photos.filter(p => !inG(p.id).length);
+const cur = () => S.col === 'all' ? photos : S.col === 'loose' ? loose() : G(S.col).items.map(P);
+const colName = () => S.col === 'all' ? 'All photos' : S.col === 'loose' ? 'Not in a gallery' : G(S.col).title;
+const coverOf = g => g.cover && g.items.includes(g.cover) ? g.cover : g.items[0];
+let toastT;
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 3500); }
+
+/* ---------- left ---------- */
+function renderSide() {
+  const row = (col, name, count, extra = '', attrs = '') => `<button class="row" data-col="${col}" ${S.col === col ? 'aria-current="page"' : ''} ${attrs}><span class="nm">${esc(name)}</span>${extra}<span class="ct">${count}</span></button>`;
+  $('side').innerHTML = `
+    <div class="brand">Gallery <span>admin</span></div>
+    ${row('all', 'All photos', photos.length)}
+    ${row('loose', 'Not in a gallery', loose().length)}
+    <div class="sec">Galleries<small>in home page order · drag to reorder</small></div>
+    ${galleries.map(g => row(g.id, g.title, g.items.length, g.pub ? '' : '<span class="tag">Private</span>', `draggable="true" data-gid="${g.id}"`)).join('')}
+    ${S.naming ? `<input class="newg" id="newg" placeholder="Gallery name, then Enter" aria-label="New gallery name">` : `<button class="row muted" data-new>+ New gallery</button>`}
+    <div class="grow"></div>
+    <div class="foot"><button class="row">View site ↗</button><button class="row">Sign out</button></div>`;
+  if (S.naming) $('newg').focus();
+}
+
+/* ---------- middle ---------- */
+function trayHtml() {
+  const T = S.tray; if (!T) return '';
+  const done = T.items.filter(i => i.state === 'done').length, failed = T.items.filter(i => i.state === 'failed').length;
+  const busy = T.items.some(i => i.state === 'queued' || i.state === 'uploading');
+  const where = T.target === 'all' || T.target === 'loose' ? 'your library' : G(T.target) ? G(T.target).title : 'your library';
+  const title = !T.items.length ? `Add photos to ${esc(where)}` : busy ? `Adding to ${esc(where)} · ${done} of ${T.items.length}` : failed ? `${n(done, 'photo')} added · <span class="bad">${failed} failed</span>` : `${n(done, 'photo')} added to ${esc(where)}`;
+  const head = `<div class="tray-h"><b>${title}</b>${busy ? `<progress value="${done}" max="${T.items.length}"></progress>` : ''}<span class="sp"></span>
+    ${T.items.length ? `<button class="btn" data-tray="toggle">${T.collapsed ? 'Show' : 'Hide'}</button>` : ''}
+    ${!busy && T.items.length ? `<button class="btn" data-tray="choose">Add more</button>` : ''}
+    <button class="btn${!busy && T.items.length && !failed ? ' primary' : ''}" data-tray="close" ${busy ? 'disabled' : ''}>${T.items.length ? 'Done' : 'Close'}</button></div>`;
+  if (T.collapsed) return `<section class="tray" aria-label="Upload">${head}</section>`;
+  const st = i => ({
+    queued: '<span class="muted">Waiting</span>', uploading: `<progress value="${i.pct}" max="100"></progress>`, done: '<span class="ok">Added</span>',
+    failed: `<span class="bad">Connection lost</span> · <button class="link" data-retry="${i.id}">Retry</button> · <button class="link" data-drop="${i.id}">Remove</button>`,
+  })[i.state];
+  return `<section class="tray" aria-label="Upload">${head}
+    ${T.items.length ? `<div class="ups">${T.items.map(i => `<div class="up"><img src="${i.src}" alt=""><div class="i"><div>${i.title}.jpg</div>${st(i)}</div></div>`).join('')}</div>`
+      : `<div class="drop"><span>Drop photos anywhere on this page</span><button class="btn primary" data-tray="choose">Choose files</button><span class="hint">JPEG · up to 20 MB each · up to 100 at a time</span></div>`}
+  </section>`;
+}
+
+function renderMain() {
+  const list = cur(), g = G(S.col), m = $('main'), top = m.scrollTop;
+  document.body.classList.toggle('has-sel', S.sel.size > 0);
+  document.body.classList.toggle('sheet', S.sel.size > 0 || S.sheet);
+  let head, body;
+  if (S.one) {
+    const i = list.findIndex(p => S.sel.has(p.id)), p = list[i];
+    head = `<button class="btn" data-back>← ${esc(colName())}</button><span class="meta">${i + 1} of ${list.length}</span><span class="sp"></span>
+      <button class="btn" data-step="-1" ${i === 0 ? 'disabled' : ''}>Previous</button><button class="btn" data-step="1" ${i === list.length - 1 ? 'disabled' : ''}>Next</button>`;
+    body = `<div class="one"><img src="${p.src}" alt="${esc(p.title)}"></div>`;
+  } else {
+    head = `<h1>${esc(colName())}</h1><span class="meta">${n(list.length, 'photo')}${g ? ` · ${g.pub ? 'Public' : 'Private'}` : ''}</span>
+      ${g && g.pub && g.items.length ? '<button class="link">View on site ↗</button>' : ''}<span class="sp"></span>
+      ${g ? '<button class="btn only-narrow" data-sheet>Gallery settings</button>' : ''}
+      ${S.sel.size ? `<button class="btn" data-clear>Clear selection</button>` : ''}
+      <button class="btn${S.tray ? '' : ' primary'}" data-tray="open" ${S.tray ? 'disabled' : ''}>Add photos</button>`;
+    const cov = g ? coverOf(g) : null;
+    const empty = S.col === 'loose' ? 'Every photo is in a gallery.' : g ? 'This gallery has no photos yet. Use Add photos to upload straight into it, or open All photos and drag photos onto its name on the left.' : 'No photos yet. Use Add photos, or drop files anywhere on this page.';
+    body = trayHtml() + (list.length ? `<div class="grid" id="grid">${list.map(p => `<div class="t${S.sel.has(p.id) ? ' sel' : ''}" data-id="${p.id}" draggable="true" tabindex="0" role="option" aria-selected="${S.sel.has(p.id)}" aria-label="${esc(p.title)}">
+        <div class="ph"><img src="${p.src}" alt="" loading="lazy"><span class="chk" data-chk><i></i></span>${p.id === cov ? '<span class="badge">Cover</span>' : p.isNew ? '<span class="badge">New</span>' : ''}</div><div class="tt">${esc(p.title)}</div></div>`).join('')}</div>` : `<p class="empty">${empty}</p>`);
+  }
+  m.innerHTML = `<div class="head">${head}</div><div class="body">${body}</div>`;
+  m.scrollTop = top;
+}
+
+/* ---------- right ---------- */
+function checklist(ids) {
+  return `<div class="f"><label for="gq">In galleries</label><div class="checks"><input id="gq" class="gq" data-gq autocomplete="off" placeholder="Find a gallery or type a new name">${galleries.map(g => {
+    const c = ids.filter(id => g.items.includes(id)).length;
+    return `<label data-name="${esc(g.title.toLowerCase())}"><input type="checkbox" data-member="${g.id}" ${c === ids.length ? 'checked' : ''} data-some="${c > 0 && c < ids.length}"><span class="nm">${esc(g.title)}</span><small>${g.pub ? 'Public' : 'Private'}</small></label>`;
+  }).join('')}<button class="mk" data-mk hidden></button></div></div>`;
+}
+function renderInsp() {
+  const ids = [...S.sel], g = G(S.col), done = `<button class="btn sheet-done" data-clear>Done</button>`;
+  let h;
+  if (ids.length === 1) {
+    const p = P(ids[0]), pubIn = inG(p.id).some(x => x.pub);
+    h = `<div style="display:flex;justify-content:space-between;align-items:center"><h2>Photo</h2>${done}</div>
+      ${S.one ? '' : `<div class="prev"><img src="${p.src}" alt=""></div>`}
+      <div class="f"><label for="f-title">Title <span class="saved" id="s-title"></span></label><input id="f-title" value="${esc(p.title)}" data-field="title"></div>
+      <div class="f"><label for="f-cap">Caption <span class="saved" id="s-caption"></span></label><textarea id="f-cap" rows="3" data-field="caption">${esc(p.caption)}</textarea></div>
+      ${checklist(ids)}
+      <div class="acts">
+        ${g ? `<button class="btn block" data-cover="${p.id}" ${coverOf(g) === p.id ? 'disabled' : ''}>${coverOf(g) === p.id ? 'This is the gallery cover' : 'Use as gallery cover'}</button>` : ''}
+        ${S.one ? '' : '<button class="btn block" data-open>Open large</button>'}
+        <button class="btn block" ${pubIn ? '' : 'disabled'}>${pubIn ? 'View on site ↗' : 'Not on the site yet'}</button>
+      </div>
+      <div class="grow"></div><div class="end"><button class="btn danger block" data-del>Delete photo…</button></div>`;
+  } else if (ids.length > 1) {
+    h = `<div style="display:flex;justify-content:space-between;align-items:center"><h2>${ids.length} photos selected</h2>${done}</div>
+      <div class="stack">${ids.slice(0, 4).map(id => `<img src="${P(id).src}" alt="">`).join('')}${ids.length > 4 ? `<span class="muted" style="align-self:center">+${ids.length - 4}</span>` : ''}</div>
+      ${checklist(ids)}
+      ${g ? `<p class="hint">Drag the selection in the grid to move these photos within ${esc(g.title)}.</p>` : `<p class="hint">You can also drag the selection onto a gallery on the left.</p>`}
+      <div class="grow"></div><div class="end"><button class="btn danger block" data-del>Delete ${ids.length} photos…</button></div>`;
+  } else if (g) {
+    const can = g.items.length > 0 || g.pub;
+    h = `<div style="display:flex;justify-content:space-between;align-items:center"><h2>Gallery</h2><button class="btn sheet-done" data-sheet>Done</button></div>
+      <div class="f"><label for="g-title">Title <span class="saved" id="s-gtitle"></span></label><input id="g-title" value="${esc(g.title)}" data-gfield="title"></div>
+      <div class="f"><label for="g-desc">Description <span class="saved" id="s-gdesc"></span></label><textarea id="g-desc" rows="4" data-gfield="desc">${esc(g.desc)}</textarea></div>
+      <div><label class="switch"><input type="checkbox" data-pub ${g.pub ? 'checked' : ''} ${can ? '' : 'disabled'}><span class="track"></span><b>${g.pub ? 'Public' : 'Private'}</b></label>
+      <p class="hint" style="margin-top:6px">${!can ? 'Add a photo before making this gallery public.' : g.pub ? 'Visitors can see this gallery and its photos.' : 'Only you can see this gallery.'}</p></div>
+      <p class="hint">Click a photo to edit it. Drag photos to set their order. The first photo is the cover unless you choose another.</p>
+      <div class="grow"></div><div class="end"><button class="btn danger block" data-delg>Delete gallery…</button></div>`;
+  } else {
+    h = `<h2>${S.col === 'all' ? 'Library' : 'Not in a gallery'}</h2>
+      <p class="hint" style="font-size:14px">${n(photos.length, 'photo')} · ${loose().length} not in a gallery</p>
+      <ul class="tips"><li>Click a photo to edit it here.</li><li>Shift-click or ⌘-click to select several.</li><li>Drag photos onto a gallery to add them.</li><li>Double-click to see a photo large.</li></ul>`;
+  }
+  $('insp').innerHTML = h;
+  $('insp').querySelectorAll('[data-some=true]').forEach(c => c.indeterminate = true);
+}
+const renderAll = () => { renderSide(); renderMain(); renderInsp(); };
+function saved(id) { const e = $(id); if (!e) return; e.textContent = 'Saved'; setTimeout(() => { if (e.isConnected) e.textContent = ''; }, 1800); }
+
+/* ---------- find or create a gallery from the inspector ---------- */
+function gqFilter(inp) {
+  const q = inp.value.trim().toLowerCase(), box = inp.closest('.checks'), mk = box.querySelector('[data-mk]');
+  box.querySelectorAll('label[data-name]').forEach(l => l.hidden = !!q && !l.dataset.name.includes(q));
+  const exact = galleries.some(g => g.title.toLowerCase() === q);
+  mk.hidden = !q || exact; mk.textContent = `+ New gallery “${inp.value.trim()}”`;
+}
+function gqCommit() {
+  const inp = $('gq'), name = inp.value.trim(), ids = [...S.sel]; if (!name || !ids.length) return;
+  let g = galleries.find(x => x.title.toLowerCase() === name.toLowerCase()), made = !g;
+  if (made) { g = { id: 'g' + Date.now(), title: name, desc: '', pub: false, items: [], cover: null }; galleries.push(g); }
+  const add = ids.filter(id => !g.items.includes(id)); g.items.push(...add);
+  renderAll(); $('gq')?.focus();
+  toast(made ? `${g.title} created with ${n(ids.length, 'photo')}. It is private.` : add.length ? `${n(add.length, 'photo')} added to ${g.title}.${g.pub ? ' Visitors can see ' + (add.length === 1 ? 'it' : 'them') + ' now.' : ''}` : `Already in ${g.title}.`);
+}
+document.addEventListener('input', e => { if (e.target.id === 'gq') gqFilter(e.target); });
+
+/* ---------- selection ---------- */
+function pick(id, e, viaCheck) {
+  const ids = cur().map(p => p.id);
+  if (e.shiftKey && S.last && ids.includes(S.last)) { const a = ids.indexOf(S.last), b = ids.indexOf(id); ids.slice(Math.min(a, b), Math.max(a, b) + 1).forEach(x => S.sel.add(x)); }
+  else if (viaCheck || e.metaKey || e.ctrlKey) S.sel.has(id) ? S.sel.delete(id) : S.sel.add(id);
+  else if (S.sel.size === 1 && S.sel.has(id)) S.sel.clear();
+  else { S.sel.clear(); S.sel.add(id); }
+  S.last = id; S.sheet = false; renderMain(); renderInsp();
+}
+function go(col) { S.col = col; S.sel.clear(); S.one = false; S.last = null; S.sheet = false; renderAll(); $('main').scrollTop = 0; }
+
+/* ---------- upload (simulated) ---------- */
+let timer, failedOnce = false;
+function choose() {
+  const take = pool.splice(0, 3);
+  if (!take.length) { toast('This preview has no more sample photos to upload.'); return; }
+  take.forEach((u, i) => S.tray.items.push({ ...u, state: 'queued', pct: 0, fail: !failedOnce && i === 1 }));
+  failedOnce = true; renderMain(); pump();
+}
+function pump() {
+  if (timer) return;
+  timer = setInterval(() => {
+    const T = S.tray, it = T && (T.items.find(x => x.state === 'uploading') || T.items.find(x => x.state === 'queued'));
+    if (!it) { clearInterval(timer); timer = null; return; }
+    it.state = 'uploading'; it.pct += 25;
+    if (it.fail && it.pct >= 50) { it.state = 'failed'; it.fail = false; }
+    else if (it.pct >= 100) {
+      it.state = 'done'; photos.unshift({ id: it.id, src: it.src, title: it.title, caption: '', isNew: true });
+      if (G(T.target)) G(T.target).items.push(it.id);
+      renderSide(); if (!S.sel.size) renderInsp();
+    }
+    renderMain();
+  }, 300);
+}
+
+/* ---------- dialog ---------- */
+function ask(title, body, label, fn, wide) {
+  $('dlg').innerHTML = `<dialog class="${wide ? 'wide' : ''}"><h2>${title}</h2>${body}<div class="d-acts"><button class="btn" data-x>${fn ? 'Cancel' : 'Close'}</button>${fn ? `<button class="btn danger" data-ok>${label}</button>` : ''}</div></dialog>`;
+  const d = $('dlg').firstChild; d.showModal();
+  d.querySelector('[data-x]').onclick = () => d.close();
+  if (fn) d.querySelector('[data-ok]').onclick = () => { d.close(); fn(); };
+}
+$('why').onclick = () => ask('Six jobs, one screen', `<table>
+  <tr><th>Job</th><th>Today</th><th>Here</th></tr>
+  <tr><td>Get photos in</td><td>A separate Upload page, then go to the Library</td><td>Add photos, or drop files, wherever you are. They land in the collection you are looking at. The tray closes when you are done.</td></tr>
+  <tr><td>Name and caption</td><td>Library → photo page → Save → back</td><td>Click a photo, type on the right. It saves when you leave the field.</td></tr>
+  <tr><td>Put photos in galleries</td><td>Select, dialog, one gallery at a time</td><td>Tick galleries on the right, or drag photos onto a gallery name.</td></tr>
+  <tr><td>Order and cover</td><td>A separate builder page with five icons per photo</td><td>Open the gallery and drag. "Use as gallery cover" is a labelled button.</td></tr>
+  <tr><td>Publish and order galleries</td><td>A separate Galleries page with four icons per card</td><td>The list on the left is the home page order. Public is a switch on the right.</td></tr>
+  <tr><td>Delete</td><td>Bottom bar or side panel, depending on the page</td><td>Always the last button on the right.</td></tr></table>`, null, null, true);
+
+/* ---------- events ---------- */
+document.addEventListener('click', e => {
+  const t = e.target, c = s => t.closest(s);
+  if (c('dialog')) return;
+  let el;
+  if (c('[data-mk]')) return gqCommit();
+  if (el = c('[data-col]')) return go(el.dataset.col);
+  if (c('[data-new]')) { S.naming = true; return renderSide(); }
+  if (el = c('[data-tray]')) {
+    const a = el.dataset.tray;
+    if (a === 'open') { S.tray = { items: [], collapsed: false, target: S.col }; renderMain(); $('main').scrollTop = 0; }
+    if (a === 'choose') choose();
+    if (a === 'toggle') { S.tray.collapsed = !S.tray.collapsed; renderMain(); }
+    if (a === 'close') { photos.forEach(p => p.isNew = false); S.tray = null; renderMain(); }
+    return;
+  }
+  if (el = c('[data-retry]')) { const it = S.tray.items.find(i => i.id === el.dataset.retry); it.state = 'queued'; it.pct = 0; renderMain(); return pump(); }
+  if (el = c('[data-drop]')) { S.tray.items = S.tray.items.filter(i => i.id !== el.dataset.drop); return renderMain(); }
+  if (c('[data-clear]')) { S.sel.clear(); S.sheet = false; S.one = false; renderMain(); return renderInsp(); }
+  if (c('[data-sheet]')) { S.sheet = !S.sheet; return renderMain(); }
+  if (c('[data-back]')) { S.one = false; renderMain(); return renderInsp(); }
+  if (c('[data-open]')) { S.one = true; renderMain(); return renderInsp(); }
+  if (el = c('[data-step]')) return step(+el.dataset.step);
+  if (el = c('[data-cover]')) { G(S.col).cover = el.dataset.cover; renderMain(); renderInsp(); return toast(`${P(el.dataset.cover).title} is now the cover of ${G(S.col).title}.`); }
+  if (c('[data-del]')) {
+    const ids = [...S.sel];
+    return ask(ids.length === 1 ? `Delete “${esc(P(ids[0]).title)}”?` : `Delete ${ids.length} photos?`, `<p>This removes ${ids.length === 1 ? 'it' : 'them'} from every gallery and deletes the original ${ids.length === 1 ? 'file' : 'files'}. It can't be undone.</p>`, ids.length === 1 ? 'Delete photo' : `Delete ${ids.length} photos`, () => {
+      ids.forEach(id => { photos.splice(photos.findIndex(p => p.id === id), 1); galleries.forEach(g => g.items = g.items.filter(x => x !== id)); });
+      S.sel.clear(); S.one = false; renderAll(); toast(`${n(ids.length, 'photo')} deleted.`);
+    });
+  }
+  if (c('[data-delg]')) { const g = G(S.col); return ask(`Delete “${esc(g.title)}”?`, `<p>Its ${n(g.items.length, 'photo')} stay in your library. This can't be undone.</p>`, 'Delete gallery', () => { galleries.splice(galleries.indexOf(g), 1); go('all'); toast(`${g.title} deleted. Its photos are still in All photos.`); }); }
+  if (el = c('.t')) return pick(el.dataset.id, e, !!c('[data-chk]'));
+  if (c('.body') && !S.one && S.sel.size && !c('.tray')) { S.sel.clear(); renderMain(); renderInsp(); }
+});
+document.addEventListener('dblclick', e => { const el = e.target.closest('.t'); if (!el) return; S.sel.clear(); S.sel.add(el.dataset.id); S.one = true; renderMain(); renderInsp(); });
+function step(d) { const l = cur(), i = l.findIndex(p => S.sel.has(p.id)), p = l[i + d]; if (!p) return; S.sel.clear(); S.sel.add(p.id); S.last = p.id; renderMain(); renderInsp(); }
+
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.id === 'gq') return;
+  if (t.dataset.field) { const p = P([...S.sel][0]); p[t.dataset.field] = t.value; saved('s-' + t.dataset.field); renderMain(); }
+  if (t.dataset.gfield) { const g = G(S.col); g[t.dataset.gfield] = t.value.trim() || g[t.dataset.gfield]; saved(t.dataset.gfield === 'title' ? 's-gtitle' : 's-gdesc'); renderSide(); renderMain(); }
+  if (t.dataset.member) {
+    const g = G(t.dataset.member), ids = [...S.sel];
+    if (t.checked) ids.forEach(id => g.items.includes(id) || g.items.push(id)); else { g.items = g.items.filter(x => !ids.includes(x)); if (S.col === g.id) { S.sel.clear(); S.one = false; } }
+    renderAll(); toast(`${n(ids.length, 'photo')} ${t.checked ? 'added to' : 'removed from'} ${g.title}.${g.pub && t.checked ? ' Visitors can see ' + (ids.length === 1 ? 'it' : 'them') + ' now.' : ''}`);
+  }
+  if (t.hasAttribute('data-pub')) { const g = G(S.col); g.pub = t.checked; renderAll(); toast(`${g.title} is now ${g.pub ? 'public. Visitors can see it.' : 'private.'}`); }
+});
+document.addEventListener('keydown', e => {
+  if (e.target.id === 'newg') {
+    if (e.key === 'Enter' && e.target.value.trim()) { const g = { id: 'g' + Date.now(), title: e.target.value.trim(), desc: '', pub: false, items: [], cover: null }; galleries.push(g); S.naming = false; go(g.id); toast(`${g.title} created. It is private.`); }
+    if (e.key === 'Escape') { S.naming = false; renderSide(); }
+    return;
+  }
+  if (e.target.id === 'gq') { if (e.key === 'Enter') { e.preventDefault(); gqCommit(); } if (e.key === 'Escape') { e.target.value = ''; gqFilter(e.target); } return; }
+  if (e.target.matches('input,textarea') || document.querySelector('dialog[open]')) return;
+  if (S.one && e.key === 'ArrowRight') step(1);
+  if (S.one && e.key === 'ArrowLeft') step(-1);
+  if (e.key === 'Escape') { if (S.one) S.one = false; else S.sel.clear(); renderMain(); renderInsp(); }
+  if (e.key === 'Enter' && e.target.classList.contains('t')) { S.sel.clear(); S.sel.add(e.target.dataset.id); S.one = true; renderMain(); renderInsp(); }
+  if ((e.metaKey || e.ctrlKey) && e.key === 'a' && !S.one) { e.preventDefault(); cur().forEach(p => S.sel.add(p.id)); renderMain(); renderInsp(); }
+});
+document.addEventListener('focusout', e => { if (e.target.id === 'newg') { S.naming = false; setTimeout(renderSide, 0); } });
+
+/* ---------- drag: photos onto galleries, photos within a gallery, galleries in the list ---------- */
+let drag = null;
+document.addEventListener('dragstart', e => {
+  const t = e.target.closest?.('.t'), r = e.target.closest?.('[data-gid]');
+  if (t) { if (!S.sel.has(t.dataset.id)) { S.sel.clear(); S.sel.add(t.dataset.id); S.last = t.dataset.id; setTimeout(() => { renderMain(); renderInsp(); }, 0); } drag = { kind: 'photos', ids: [...S.sel] }; e.dataTransfer.setData('text/plain', 'photos'); e.dataTransfer.effectAllowed = 'copyMove'; }
+  else if (r) { drag = { kind: 'gallery', id: r.dataset.gid }; e.dataTransfer.setData('text/plain', 'gallery'); e.dataTransfer.effectAllowed = 'move'; }
+});
+const clearMarks = () => document.querySelectorAll('.over,.before,.drop').forEach(x => x.classList.remove('over', 'before', 'drop'));
+document.addEventListener('dragover', e => {
+  const files = [...(e.dataTransfer?.types || [])].includes('Files');
+  if (files) { e.preventDefault(); $('main').classList.add('filedrag'); return; }
+  if (!drag) return;
+  clearMarks();
+  const r = e.target.closest?.('[data-gid]'), t = e.target.closest?.('.t');
+  if (r && drag.kind === 'photos') { e.preventDefault(); r.classList.add('over'); }
+  else if (r && drag.kind === 'gallery' && r.dataset.gid !== drag.id) { e.preventDefault(); r.classList.add('before'); }
+  else if (t && drag.kind === 'photos' && G(S.col) && !drag.ids.includes(t.dataset.id)) { e.preventDefault(); t.classList.add('drop'); }
+});
+document.addEventListener('dragend', () => { drag = null; clearMarks(); });
+document.addEventListener('dragleave', e => { if (!e.relatedTarget) $('main').classList.remove('filedrag'); });
+document.addEventListener('drop', e => {
+  if ([...(e.dataTransfer?.types || [])].includes('Files')) { e.preventDefault(); $('main').classList.remove('filedrag'); if (!S.tray) S.tray = { items: [], collapsed: false, target: S.col }; return choose(); }
+  if (!drag) return;
+  const r = e.target.closest?.('[data-gid]'), t = e.target.closest?.('.t'), d = drag; drag = null; e.preventDefault(); clearMarks();
+  if (r && d.kind === 'photos') { const g = G(r.dataset.gid), add = d.ids.filter(id => !g.items.includes(id)); g.items.push(...add); renderAll(); toast(add.length ? `${n(add.length, 'photo')} added to ${g.title}.${g.pub ? ' Visitors can see ' + (add.length === 1 ? 'it' : 'them') + ' now.' : ''}` : `Already in ${g.title}.`); }
+  else if (r && d.kind === 'gallery') { const g = G(d.id); galleries.splice(galleries.indexOf(g), 1); galleries.splice(galleries.indexOf(G(r.dataset.gid)), 0, g); renderSide(); toast('Home page order updated.'); }
+  else if (t && d.kind === 'photos' && G(S.col)) { const g = G(S.col); const moving = g.items.filter(id => d.ids.includes(id)); g.items = g.items.filter(id => !d.ids.includes(id)); g.items.splice(g.items.indexOf(t.dataset.id), 0, ...moving); renderMain(); renderInsp(); toast('Order updated.'); }
+});
+
+renderAll();
+</script>
+</body>
+</html>
