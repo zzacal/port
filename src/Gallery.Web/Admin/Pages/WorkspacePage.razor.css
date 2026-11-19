@@ -10,3 +10,13 @@
 .ws-actions { display: flex; flex-wrap: wrap; gap: var(--space-s); }
 .ws-view { margin: 0; font-size: var(--type-caption); }
 .ws-unseen { color: var(--color-muted); }
+/* Panel previews: the script copies the cell's <picture> in (R-04, no request). The box takes the
+   grid cell's ratio and the photo is letterboxed inside it, whatever its stored size. */
+.ws-preview { aspect-ratio: var(--cell-ratio); background: var(--color-surface); margin: 0 0 var(--space-s); }
+.ws-previews { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: calc(var(--space-s) / 2); margin: 0 0 var(--space-s); }
+.ws-previews ::deep picture { aspect-ratio: var(--cell-ratio); background: var(--color-surface); }
+.ws-preview ::deep picture,
+.ws-previews ::deep picture { display: block; overflow: hidden; }
+.ws-preview ::deep picture { height: 100%; }
+.ws-preview ::deep img,
+.ws-previews ::deep img { display: block; width: 100%; height: 100%; object-fit: contain; }

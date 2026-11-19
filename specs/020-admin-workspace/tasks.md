@@ -517,7 +517,7 @@ inside the `admin` group; commit.
 Batch C2 owns: `src/Gallery.Web/wwwroot/admin-assets/workspace.js`, new
 `tests/Gallery.Web.Tests/WorkspaceBrowserTests.cs`.
 
-- [ ] T036 [SAFETY] [US1] `workspace.js` part 1 (C12): register `<admin-workspace>`;
+- [X] T036 [SAFETY] [US1] `workspace.js` part 1 (C12): register `<admin-workspace>`;
   `swap(region, html)` is the ONLY use of `DOMParser` (`new DOMParser().parseFromString(text,
   'text/html')`, then `region.replaceChildren(...doc.body.children)`); navigation by
   `fetch(href, { headers: { 'X-Workspace': 'main' } })` + `swap` into `.ws-main`, current mark,
@@ -526,7 +526,7 @@ Batch C2 owns: `src/Gallery.Web/wwwroot/admin-assets/workspace.js`, new
   visibility or count; "Show more" and the sentinel's `IntersectionObserver` fetch `more`; every
   write sends `X-CSRF-TOKEN` from `data-csrf` and `credentials: 'same-origin'`; every result line
   is the server's `message` in the `Toast` (template clone). No sink of the four. Depends: T035.
-- [ ] T037 [US1] `workspace.js` part 2: selection per FR-007/FR-008 and C12 (click, Ctrl/⌘,
+- [X] T037 [US1] `workspace.js` part 2: selection per FR-007/FR-008 and C12 (click, Ctrl/⌘,
   select mark, Shift range, Ctrl/⌘+A to `data-cap`, Escape, empty-space click, cap message from the
   template text); roving `tabindex`, arrow keys, Space; panel fill from the cell `data-*` by
   cloning the context template (R-04), no request; save on `change` for title/caption (A1) and
