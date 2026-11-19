@@ -932,6 +932,24 @@ Batch G owns: `AdminLayout.razor.css` (below-1200 px rules only, C-21), `Workspa
 - [ ] T070 OWNER Live walk-through on the local stack with the development sign-in, quickstart
   "Live walk" steps 1–15 at 1440 × 900 and 390 × 844; the owner reports done or lists defects
   (each defect becomes a task before T071).
+- [X] T070a OWNER walk-through, first pass (2026-11-19): three defects reported, tasks T074 to T076.
+- [ ] T074 [US6] (owner, T070) Below 1200 px the collections list is an expandable menu, not a
+  sideways-scrolling strip: one `Button` at the top of the workspace showing the current collection's
+  name (with an `aria-hidden` "▾"), `aria-expanded`/`aria-controls`; open, it shows, full width and in
+  this order, All photos, Not in a gallery, the Galleries heading and each gallery (Private mark,
+  count), New gallery, then View site ↗ and Sign out at the bottom. Choosing a collection navigates and
+  closes it; Escape, the button again, or a tap outside closes it. Every row ≥ 44 × 44. From 1200 px
+  the list is unchanged. Frame CSS stays in `AdminLayout.razor.css`.
+- [ ] T075 [US6] (owner, T070) Below 1200 px a tap on a photo's select mark toggles that photo in the
+  selection and does NOT open the sheet; several photos can be selected this way. While a selection
+  exists and the sheet is closed, a bar fixed at the bottom shows "{n} selected" and one Primary
+  `Button` "Add to gallery", which opens the sheet with the selection panel (or the photo panel for
+  one photo); the bar is hidden while the sheet is open. A tap on the photo itself (not the mark)
+  keeps today's behaviour (select only it, open the sheet). From 1200 px nothing changes.
+- [ ] T076 [US1] (owner, T070) From 1200 px the three regions start their content at the same
+  distance below the top of the window, with space above it: the list, main (so `Add photos` and the
+  heading row) and the panel get the same top padding (`--space-m`). The measured layout test asserts
+  the first box of each of the three regions has the same top, equal to that padding, in every context.
 - [ ] T071 PARENT Merge to `main` (`--no-ff`, body listing the stories, the TI rows, the
   severable phases shipped), push to `origin`, watch the deploy job green. Signed out, `curl -sI`
   `https://port.zacal.me/admin`, `/admin/library`, `/admin/galleries`, `/admin/upload`: each 302
