@@ -15,6 +15,8 @@
    while the large view is open; workspace.js fills its frame.
    Phase 8 (T057, K12): Gallery settings in the heading actions (a gallery only; shown below 1200 px) and a Done in
    the heading row of the gallery, photo and selection panels (SidePanel HeadingAction; shown below 1200 px).
+   T074/T075 (owner walk-through): the chrome opens with the menu button (below 1200 px the list is a menu it
+   opens; the list sits in div#ws-menu), and main holds the selection bar after the grid (below 1200 px).
    Every action is a Button with visible text; deletes are the last control of their panel. *@
 @using Gallery.Web.Components
 @using Gallery.Web.Components.Atoms
@@ -66,8 +68,19 @@
 
     // ── chrome: the list and the collection-independent templates ───────────────────────────
 
-    private RenderFragment Chrome => @<text><CollectionList Current="@Model.Current" Total="@((int)(Model.Counts?.Total ?? 0))" Unplaced="@((int)(Model.Counts?.Unplaced ?? 0))"
-                    Galleries="@ListRows" Csrf="@SignOutToken" NamingTemplate="true" /><template data-panel="photo">@PhotoPanel</template><template data-panel="selection">@SelectionPanel</template><template class="ws-tpl-marks"><Mark Text="Cover" /><Mark Text="New" /></template><template class="ws-tpl-cap"><p class="ws-cap">@Messages.SelectionCap(Model.Options.PageSize)</p></template>@TrayTemplates</text>;
+    private RenderFragment Chrome => @<text><Button Variant="ButtonVariant.Secondary" Type="button" class="ws-menu-toggle" aria-expanded="false" aria-controls="ws-menu"><span class="ws-menu-name">@CurrentName</span><span aria-hidden="true">▾</span></Button><div class="ws-menu" id="ws-menu"><CollectionList Current="@Model.Current" Total="@((int)(Model.Counts?.Total ?? 0))" Unplaced="@((int)(Model.Counts?.Unplaced ?? 0))"
+                    Galleries="@ListRows" Csrf="@SignOutToken" NamingTemplate="true" /></div><template data-panel="photo">@PhotoPanel</template><template data-panel="selection">@SelectionPanel</template><template class="ws-tpl-marks"><Mark Text="Cover" /><Mark Text="New" /></template><template class="ws-tpl-cap"><p class="ws-cap">@Messages.SelectionCap(Model.Options.PageSize)</p></template>@TrayTemplates</text>;
+
+    /// <summary>
+    /// T074: the menu button's text below 1200 px, the open collection's name (from the list's rows, so the
+    /// chrome fragment needs no gallery read). workspace.js copies the current row's name after a main swap.
+    /// </summary>
+    private string CurrentName => Model.Current switch
+    {
+        CollectionList.All => "All photos",
+        CollectionList.UnplacedKey => "Not in a gallery",
+        var id => (Model.Galleries ?? []).FirstOrDefault(g => g.Id == id)?.Title ?? Model.Gallery?.Title ?? "",
+    };
 
     /// <summary>The sign-out form's token (set on Full and Chrome).</summary>
     private FormToken SignOutToken => Model.Csrf ?? throw new InvalidOperationException("The chrome needs the antiforgery token.");
@@ -84,9 +97,17 @@
 
     private RenderFragment PanelRegion => @<text><Toast /><script type="module" src="@Model.ScriptUrl"></script></text>;
 
+    /// <summary>
+    /// T075: below 1200 px, while photos are selected and the sheet is closed, a bar fixed at the bottom of the
+    /// window: "{n} selected" (the script sets only the number) and Add to gallery, which opens the sheet.
+    /// At the end of main (the panel region holds no filled button); hidden by default and from 1200 px
+    /// (AdminLayout.razor.css), and with the rest of main while the large view is open.
+    /// </summary>
+    private static RenderFragment CountBar => @<div class="ws-selbar" hidden><p class="ws-selbar-text"><span class="ws-selbar-n">0</span> selected</p><Button Variant="ButtonVariant.Primary" Type="button" class="ws-selbar-add">Add to gallery</Button></div>;
+
     // ── main: heading, grid or empty sentence, Show more + sentinel, the default panel ──────
 
-    private RenderFragment MainRegion => @<text><upload-tray hidden data-max-bytes="@Upload.MaxFileBytes" data-max-photos="@Upload.MaxPhotosPerBatch"></upload-tray><div class="ws-largeview" hidden><PhotoStage Position="1" Total="@PhotoCount" BackLabel="@DocumentTitle" /></div><div class="ws-head"><PageHeading Text="@DocumentTitle" Actions="@HeadActions" /><p class="ws-meta">@Messages.Photos(PhotoCount)@Visibility@ViewOnSite</p></div>@Grid@More<template data-panel="default">@(IsGallery ? GalleryPanel : LibraryPanel)</template></text>;
+    private RenderFragment MainRegion => @<text><upload-tray hidden data-max-bytes="@Upload.MaxFileBytes" data-max-photos="@Upload.MaxPhotosPerBatch"></upload-tray><div class="ws-largeview" hidden><PhotoStage Position="1" Total="@PhotoCount" BackLabel="@DocumentTitle" /></div><div class="ws-head"><PageHeading Text="@DocumentTitle" Actions="@HeadActions" /><p class="ws-meta">@Messages.Photos(PhotoCount)@Visibility@ViewOnSite</p></div>@Grid@More@CountBar<template data-panel="default">@(IsGallery ? GalleryPanel : LibraryPanel)</template></text>;
 
     private RenderFragment HeadActions => @<text>@(IsGallery ? SettingsButton : null)<Button Variant="ButtonVariant.Quiet" Type="button" class="ws-clear" hidden="@true">Clear selection</Button><Button Variant="ButtonVariant.Primary" Type="button" class="ws-add">Add photos</Button></text>;
 

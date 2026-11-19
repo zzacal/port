@@ -10,7 +10,8 @@ namespace Gallery.Web.Tests;
 /// <c>.ws-main</c> and its first box, are measured in a real browser for a library collection, a
 /// gallery, one photo selected, several photos selected and the upload tray open, and compared for
 /// equality within 0.5 px against the first. Rows for "photo large" (Phase 7) and 390 px (Phase 8)
-/// are added later.
+/// are added later. T076 (owner walk-through): from 1200 px the first box of each of the three regions
+/// starts the same distance below the top of the window, equal to their common top padding --space-m.
 /// </summary>
 [Collection("library-browser")]
 [Trait("Category", "Browser")]
@@ -49,6 +50,32 @@ public sealed class WorkspaceLayoutBrowserTests(LibraryBrowserFixture fx)
         await BrowserWait.LoadedAsync(page, WaitMs);
         await page.Locator("admin-workspace[data-script='ready']").WaitForAsync(new() { State = WaitForSelectorState.Attached, Timeout = WaitMs });
         return page;
+    }
+
+    /// <summary>
+    /// T076: [the top of the highest shown content in the list, in main, in the panel, --space-m in px].
+    /// Content = elements with no element children (text, buttons' labels, images) or with a top border
+    /// (the drop zone's frame), so a wrapper's own inner padding (SidePanel's) counts, as the owner sees it.
+    /// </summary>
+    private const string Tops = """
+        () => {
+          const top = (sel) => {
+            const tops = [...document.querySelector(sel).querySelectorAll('*')]
+              .filter((e) => (e.childElementCount === 0 || parseFloat(getComputedStyle(e).borderTopWidth) > 0) && e.getClientRects().length > 0 && e.getBoundingClientRect().height > 0)
+              .map((e) => e.getBoundingClientRect().top);
+            return tops.length ? Math.min(...tops) : -1;
+          };
+          return [top('.ws-list'), top('.ws-main'), top('.ws-panel'), parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--space-m'))];
+        }
+        """;
+
+    /// <summary>T076: the three regions' content starts at the same top, equal to --space-m (more than 0).</summary>
+    private static async Task AssertEqualTopsAsync(IPage page, string name)
+    {
+        var t = await page.EvaluateAsync<double[]>(Tops);
+        Assert.True(t[3] > 0, $"{name}: --space-m is {t[3]}");
+        Assert.True(Math.Abs(t[0] - t[3]) <= Tolerance && Math.Abs(t[1] - t[3]) <= Tolerance && Math.Abs(t[2] - t[3]) <= Tolerance,
+            $"{name}: the first boxes start at list {t[0]}, main {t[1]}, panel {t[2]} px; the common top padding is {t[3]} px");
     }
 
     private static async Task<(double[] Values, string First)> MeasureAsync(IPage page)
@@ -92,6 +119,7 @@ public sealed class WorkspaceLayoutBrowserTests(LibraryBrowserFixture fx)
             await page.WaitForFunctionAsync(check, null, new() { Timeout = WaitMs, PollingInterval = 25 });
             var (values, first) = await MeasureAsync(page);
             firsts.Add(first);
+            await AssertEqualTopsAsync(page, name);
             Assert.True(values[2] > 0 && values[6] > 0 && values[10] > 0, $"{name}: a region has no width [{string.Join(", ", values)}]");
             expected ??= values;
             for (var i = 0; i < Names.Length; i++)
@@ -101,12 +129,12 @@ public sealed class WorkspaceLayoutBrowserTests(LibraryBrowserFixture fx)
         }
 
         // The frame at 1440: list 232 px, panel 320 px, main between them, all the viewport's height,
-        // and nothing above main's first box.
+        // and main's top padding (--space-m, 32 px; T076) above main's first box.
         Assert.Equal([232, 320], new[] { expected![2], expected[10] });
         Assert.Equal(1440 - 232 - 320, expected[6], Tolerance);
         Assert.All(new[] { expected[1], expected[5], expected[9] }, y => Assert.Equal(0, y, Tolerance));
         Assert.All(new[] { expected[3], expected[7], expected[11] }, h => Assert.Equal(900, h, Tolerance));
-        Assert.Equal(0, expected[12], Tolerance);
+        Assert.Equal(32, expected[12], Tolerance);
         // The open tray is main's first box; otherwise the heading row is.
         Assert.Equal(["div.ws-head", "div.ws-head", "div.ws-head", "div.ws-head", "upload-tray."], firsts.Select(f => f.Split(' ')[0]).ToArray());
     }
@@ -134,10 +162,13 @@ public sealed class WorkspaceLayoutBrowserTests(LibraryBrowserFixture fx)
         for (var i = 0; i < Names.Length; i++)
             Assert.True(Math.Abs(values[i] - expected[i]) <= Tolerance,
                 $"photo large: {Names[i]} is {values[i]:0.##} px, the library collection's is {expected[i]:0.##} px");
-        // The stage is main's first (and only) box, and fills main.
+        // The stage is main's first (and only) box, and fills main below main's top padding (T076: --space-m).
         Assert.Equal("div.ws-largeview", first);
+        await AssertEqualTopsAsync(page, "photo large");
+        var pad = values[12];
+        Assert.Equal(32, pad, Tolerance);
         var stage = (await page.Locator(".ws-main .ws-largeview").BoundingBoxAsync())!;
-        Assert.Equal([values[4], values[5], values[6], values[7]], new[] { (double)stage.X, stage.Y, stage.Width, stage.Height }, new ToleranceComparer(Tolerance));
+        Assert.Equal([values[4], values[5] + pad, values[6], values[7] - pad], new[] { (double)stage.X, stage.Y, stage.Width, stage.Height }, new ToleranceComparer(Tolerance));
         await page.Context.CloseAsync();
     }
 
@@ -150,8 +181,8 @@ public sealed class WorkspaceLayoutBrowserTests(LibraryBrowserFixture fx)
     // ── T058 (FR-038, SC-007): every context at 390 × 844 ──────────────────────────────────
 
     /// <summary>
-    /// Below 1200 px the frame is one column: the collections strip across the top (its row of --tap plus
-    /// --space-s above and below), main under it at full width with nothing above its first box, and the
+    /// Below 1200 px the frame is one column: the collections menu button across the top (T074; its row of
+    /// --tap plus --space-s above and below; the open menu lies over the page), main under it at full width with nothing above its first box, and the
     /// panel either not shown (no sheet) or a sheet fixed to the window's bottom. The strip and main's
     /// position and width must be equal in every context (main's height is its content's); the page never
     /// scrolls sideways.
@@ -233,7 +264,7 @@ public sealed class WorkspaceLayoutBrowserTests(LibraryBrowserFixture fx)
             await page.Context.CloseAsync();
         }
 
-        // One column: the strip at the top, full width, one row of --tap plus --space-s above and below;
+        // One column: the menu button's row at the top, full width, one row of --tap plus --space-s above and below;
         // main under it, full width, nothing above its first box.
         Assert.Equal(new double[] { 0, 0, 390, 44 + 2 * 16 }, expected![..4], new ToleranceComparer(Tolerance));
         Assert.Equal(new double[] { 0, 44 + 2 * 16, 390 }, expected[4..7], new ToleranceComparer(Tolerance));

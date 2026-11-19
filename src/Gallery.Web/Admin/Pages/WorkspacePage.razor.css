@@ -29,8 +29,8 @@ upload-tray ::deep .ws-tray-rows > .dz-refusals { grid-column: 1 / -1; }
 .ws-head ::deep .btn[hidden] { display: none; }
 /* T055 (K11, R-08): the large view. Open, it is main's only box: the tray before it and every sibling after it
    are hidden, and it
-   takes main's height (from 1200 px main is the viewport's height; below, the viewport less the strip of
-   collections: its row of --tap plus the list's --space-s padding above and below; dynamic viewport units,
+   takes main's height (from 1200 px main is the viewport's height; below, the viewport less the collections
+   menu button's row: its --tap plus the list's --space-s padding above and below; dynamic viewport units,
    so a phone's address bar is left out). The script copies the
    cell's whole Picture (.pic, with its scope) into the frame, so Picture's own contain-fit rules size the
    photo to its stored ratio, as large as the frame allows. */
@@ -41,6 +41,8 @@ upload-tray:has(~ .ws-largeview:not([hidden])) { display: none; }
 /* T057 (K12): Gallery settings and the panels' Done exist below 1200 px only. In the bottom sheet the photo
    panel's preview is left out (the photo is in the grid above it, or shown large). */
 .ws-done-row { margin-left: var(--space-s); }
+/* T075: the selection bar's sentence (its place and visibility are frame rules, AdminLayout.razor.css). */
+.ws-selbar-text { margin: 0; font-size: var(--type-body); }
 @media not all and (min-width: 1200px) {
     .ws-preview { display: none; }
     /* The heading row lines up with the grid's own side padding (ContactSheet: --space-s, --space-m from 600 px). */

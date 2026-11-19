@@ -28,6 +28,10 @@
 //   ?photo= loads chunks until it is found.
 //   Sheet (T057, K1/K12): below 1200 px the panel is a bottom sheet shown while admin-workspace has
 //   `ws-sheet`: set while a selection exists or Gallery settings is on, removed by Done.
+//   Owner walk-through (T074, T075): below 1200 px the collections list is a menu under one button
+//   (admin-workspace has `ws-menu-open` while it is open; a collection, Escape, the button again or a
+//   tap outside closes it). A select-mark tap toggles the photo without opening the sheet; while a
+//   selection exists the selection bar shows its count, and its Add to gallery opens the sheet.
 //
 // Markup rules (008 R-11, 020 C12): the only string-to-markup step is the function `swap`, which
 // parses a fragment the server answered. Everything else is cloned from a server-rendered
@@ -165,6 +169,7 @@ async function navigate(href, push) {
     history.replaceState({ ws: true }, '', url.pathname);
   }
   markCurrent(url.pathname);
+  setMenu(false);
   const heading = region.querySelector('.ws-head h1');
   if (heading) document.title = heading.textContent.trim();
   anchorId = null;
@@ -174,6 +179,37 @@ async function navigate(href, push) {
   watchSentinel();
   trayCollectionChanged();
   return true;
+}
+
+// ── the collections menu below 1200 px (T074) ──────────────────────────────────────────────
+
+const menuOpen = () => !!host()?.classList.contains('ws-menu-open');
+
+/** Opens or closes the menu; the button's aria-expanded follows. */
+function setMenu(open) {
+  host()?.classList.toggle('ws-menu-open', open);
+  syncMenu();
+}
+
+/**
+ * The menu button after a swap or a navigation: aria-expanded from the open state, and its text the
+ * current row's name (the chrome fragment renders it; a main swap leaves the old one).
+ */
+function syncMenu() {
+  const button = list()?.querySelector('.ws-menu-toggle');
+  if (!button) return;
+  button.setAttribute('aria-expanded', menuOpen() ? 'true' : 'false');
+  const name = list()?.querySelector('a.ws-coll-row[aria-current="page"] .ws-coll-name')?.textContent;
+  const label = button.querySelector('.ws-menu-name');
+  if (label && name) label.textContent = name;
+}
+
+/** A tap outside the open menu (and its button) only closes it. */
+function onOutsideClick(e) {
+  if (!menuOpen() || !(e.target instanceof Element) || list()?.contains(e.target)) return;
+  e.preventDefault();
+  e.stopPropagation();
+  setMenu(false);
 }
 
 /** True for a plain primary click on a workspace link (W1 to W3) that opens in this tab. */
@@ -208,6 +244,7 @@ function refreshChrome() {
       if (html !== null && region) {
         swap(region, html);
         markCurrent(location.pathname);
+        syncMenu();
         if (panelKind === 'photo' || panelKind === 'selection') showPanel();
         trayCollectionChanged();
       }
@@ -292,24 +329,34 @@ function sayCap() {
   toast(tpl?.content.textContent.trim() ?? '', true);
 }
 
-/** Sets the selection to exactly `want` (cells in page order); past the cap it stops and says so. */
-function select(want) {
+/**
+ * Sets the selection to exactly `want` (cells in page order); past the cap it stops and says so.
+ * `sheet` as afterSelect's.
+ */
+function select(want, sheet = true) {
   const limit = cap();
   const keep = new Set(want.slice(0, limit));
   for (const c of cells()) mark(c, keep.has(c));
   if (want.length > limit) sayCap();
-  afterSelect();
+  afterSelect(sheet);
 }
 
 /**
  * After the selection changed: Clear selection, the sheet and the panel follow it. Below 1200 px the
  * panel is a bottom sheet while `ws-sheet` is set: a selection opens it, Gallery settings opens it with
- * nothing selected. `sheet` false keeps the sheet as it is (a step in the large view).
+ * nothing selected. `sheet` false keeps the sheet as it is (a step in the large view, a select-mark tap).
+ * The selection bar (T075) shows the count while photos are selected (CSS hides it with the sheet open).
  */
 function afterSelect(sheet = true) {
   const n = selected().length;
   const clear = main()?.querySelector('.ws-clear');
   if (clear) clear.hidden = n === 0;
+  const bar = main()?.querySelector('.ws-selbar');
+  if (bar) {
+    bar.hidden = n === 0;
+    const count = bar.querySelector('.ws-selbar-n');
+    if (count) count.textContent = String(n);
+  }
   if (n > 0) settingsOn = false;
   const ws = host();
   if (sheet || n === 0) ws?.classList.toggle('ws-sheet', n > 0 || settingsOn);
@@ -328,6 +375,13 @@ function openSettings() {
   host()?.classList.add('ws-sheet');
 }
 
+/** Add to gallery on the selection bar (T075): the sheet opens on the selection's panel, at its checklist. */
+function openSelectionSheet() {
+  if (selected().length === 0) return;
+  host()?.classList.add('ws-sheet');
+  panel()?.querySelector(':scope > .side-panel .ws-checks')?.scrollIntoView({ block: 'nearest' });
+}
+
 /** Done: the sheet closes; the selection stays (Clear selection clears it). */
 function closeSheet() {
   settingsOn = false;
@@ -339,15 +393,18 @@ function clearSelection() {
   select([]);
 }
 
-/** Ctrl/Cmd-click, the select mark and Space: add or remove one cell; adding past the cap is refused. */
-function toggle(cell) {
+/**
+ * Ctrl/Cmd-click, the select mark and Space: add or remove one cell; adding past the cap is refused.
+ * `sheet` false (the select mark, T075) leaves the sheet as it is.
+ */
+function toggle(cell, sheet = true) {
   const on = cell.getAttribute('aria-selected') !== 'true';
   if (on && selected().length >= cap()) {
     sayCap();
     return;
   }
   anchorId = cell.dataset.id;
-  select(cells().filter((c) => (c === cell ? on : c.getAttribute('aria-selected') === 'true')));
+  select(cells().filter((c) => (c === cell ? on : c.getAttribute('aria-selected') === 'true')), sheet);
 }
 
 /** Shift-click: exactly the range from the last selected cell (the anchor) to this one. */
@@ -369,9 +426,10 @@ function range(cell) {
 function onCellClick(cell, e) {
   rove(cell);
   if (e.target.closest('label.select-mark')) {
-    // The label would also toggle its checkbox; the selection state drives the box instead.
+    // The label would also toggle its checkbox; the selection state drives the box instead. Below
+    // 1200 px the mark multi-selects without opening the sheet (T075); the bar opens it.
     e.preventDefault();
-    toggle(cell);
+    toggle(cell, false);
   } else if (e.shiftKey) {
     range(cell);
   } else if (e.ctrlKey || e.metaKey) {
@@ -403,6 +461,12 @@ const typing = (el) => el instanceof Element && el.closest('input, textarea, sel
 
 function onKey(e) {
   if (document.querySelector('dialog[open]')) return;
+  if (e.key === 'Escape' && menuOpen()) {
+    e.preventDefault();
+    setMenu(false);
+    list()?.querySelector('.ws-menu-toggle')?.focus();
+    return;
+  }
   if (largeId && !typing(e.target) && !e.altKey && !e.ctrlKey && !e.metaKey) {
     if (e.key === 'Escape') {
       e.preventDefault();
@@ -1371,6 +1435,11 @@ async function onJoined({ imageId, gallery }) {
 
 /** [selector, handler(el, event) → handled]: the first row whose selector matches and handles wins. */
 const clicks = [
+  // The collections menu below 1200 px (T074).
+  ['.ws-list .ws-menu-toggle', () => {
+    setMenu(!menuOpen());
+    return true;
+  }],
   ['.ws-list a', (a, e) => {
     if (!isCollectionLink(a, e)) return false;
     e.preventDefault();
@@ -1405,6 +1474,11 @@ const clicks = [
     closeSheet();
     return true;
   }],
+  ['.ws-main .ws-selbar .ws-selbar-add', () => {
+    openSelectionSheet();
+    return true;
+  }],
+  ['.ws-main .ws-selbar', () => true],
   ['.ws-main .ws-cell', (cell, e) => {
     onCellClick(cell, e);
     return true;
@@ -1500,6 +1574,7 @@ function onEmptyClick(e) {
 class AdminWorkspace extends HTMLElement {
   connectedCallback() {
     if (this.dataset.script === 'ready') return;
+    document.addEventListener('click', onOutsideClick, true);
     this.addEventListener('click', (e) => {
       if (!dispatch(clicks, e)) onEmptyClick(e);
     });

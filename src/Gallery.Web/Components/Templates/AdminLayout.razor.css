@@ -32,7 +32,8 @@ body.admin {
 }
 
 /* 020 K1 workspace frame (IX.2: the layout owns all frame geometry; pages add none). Below 1200 px (Tokens.BreakLarge; 020 C-21)
-   one column: the collections list a strip at the top, main, and the panel a bottom sheet (T057, below). */
+   one column: the menu button at the top (the collections list opens under it, T074), main, and the panel a
+   bottom sheet (T057, below). */
 .ws {
     display: block;
 }
@@ -64,41 +65,117 @@ body.admin {
     .ws-panel {
         background: var(--color-surface);
     }
+
+    /* T076: the three regions start their content the same distance below the top of the window. */
+    .ws-list,
+    .ws-main,
+    .ws-panel {
+        padding-top: var(--space-m);
+    }
+
+    /* The panel's SidePanel would add its own inner top padding below the region's. */
+    .ws-panel ::deep .side-panel {
+        padding-top: 0;
+    }
+
+    /* T074: the menu button exists below 1200 px only; here the list is always shown. */
+    .ws-list > ::deep .ws-menu-toggle {
+        display: none;
+    }
 }
 
-/* 020 T057 (K1, US6): below 1200 px. One column; the collections list is a horizontal strip at the top
-   that scrolls inside itself (never the page); the panel is a bottom sheet, shown only while
-   admin-workspace has ws-sheet (a selection, or Gallery settings), over the bottom of the page with the
-   top 4 x --space-l still showing. The Toast stays in the panel region and fixed, so it shows either way.
-   Every control is at least --tap in both directions. */
+/* T075: the selection bar exists below 1200 px only (shown by the rules below). */
+.ws-main > ::deep .ws-selbar {
+    display: none;
+}
+
+/* 020 T057 (K1, US6): below 1200 px. One column; at the top the menu button (T074) names the open
+   collection, and the collections list opens under it, full width, over the page, while admin-workspace
+   has ws-menu-open (its rows in the desktop order; the brand is left out). The panel is a bottom sheet,
+   shown only while admin-workspace has ws-sheet (a selection, or Gallery settings), over the bottom of the
+   page with the top 4 x --space-l still showing. While photos are selected and the sheet is closed, the
+   selection bar (T075) is fixed at the bottom of the window. The Toast stays in the panel region and
+   fixed, so it shows either way. Every control is at least --tap in both directions. */
 @media not all and (min-width: 1200px) {
     .ws-list {
+        position: relative;
         background: var(--color-surface);
     }
 
-    .ws-list > ::deep .ws-collections {
-        flex-direction: row;
-        align-items: center;
-        overflow-x: auto;
-        overscroll-behavior-x: contain;
+    .ws-list > ::deep .ws-menu-toggle {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
     }
 
-    .ws-list > ::deep .ws-collections > * {
-        flex: none;
+    .ws-list > ::deep .ws-menu-toggle .ws-menu-name {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
-    .ws-list > ::deep .ws-collections > .ws-brand,
-    .ws-list > ::deep .ws-collections > .ws-coll-head {
+    .ws:not(.ws-menu-open) .ws-list > ::deep .ws-menu {
         display: none;
     }
 
-    .ws-list > ::deep .ws-collections > .ws-coll-foot {
-        flex-direction: row;
+    .ws-list > ::deep .ws-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 11;
+        box-sizing: border-box;
+        max-height: calc(100dvh - var(--tap) - 2 * var(--space-s));
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding: 0 var(--space-s) var(--space-s);
+        background: var(--color-surface);
+        border-bottom: thin solid var(--color-rule);
+    }
+
+    .ws-list > ::deep .ws-menu .ws-brand {
+        display: none;
+    }
+
+    .ws-list > ::deep .ws-menu .ws-coll-foot {
+        align-items: stretch;
+    }
+
+    /* New gallery, View site and Sign out: full-width rows, their text in line with the collections'. */
+    .ws-list > ::deep .ws-menu .btn {
+        width: 100%;
+        justify-content: flex-start;
+        padding: 0 calc(var(--space-s) / 2);
+    }
+
+    .ws-main > ::deep .ws-selbar:not([hidden]) {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 10;
+        box-sizing: border-box;
+        display: flex;
         align-items: center;
-        margin: 0;
-        padding: 0 0 0 var(--space-s);
-        border-top: 0;
-        border-left: thin solid var(--color-rule);
+        justify-content: space-between;
+        gap: var(--space-s);
+        padding: var(--space-s);
+        background: var(--color-bg);
+        border-top: thin solid var(--color-rule);
+    }
+
+    .ws-sheet .ws-main > ::deep .ws-selbar,
+    .ws:has(.ws-largeview:not([hidden])) .ws-main > ::deep .ws-selbar {
+        display: none;
+    }
+
+    /* The bar does not cover the last photos, and the Toast shows above it. */
+    .ws:not(.ws-sheet):has(.ws-selbar:not([hidden])) .ws-main {
+        padding-bottom: calc(var(--tap) + 2 * var(--space-s));
+    }
+
+    .ws:not(.ws-sheet):has(.ws-selbar:not([hidden])) .ws-panel > ::deep .ws-toast {
+        bottom: calc(var(--tap) + 3 * var(--space-s));
     }
 
     .ws-panel {

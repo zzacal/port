@@ -14,8 +14,10 @@ namespace Gallery.Web.Tests;
 /// photo and add two photos to a gallery, US3 reorder with Move later and turn Public on (here), US2
 /// upload one photo into a gallery (<see cref="WorkspacePhoneUploadBrowserTests"/>). At every step nothing
 /// scrolls sideways and every visible control's box is at least 44 × 44 px (<see cref="PhoneRules"/>).
-/// The details panel is a bottom sheet that opens on a select-mark tap and closes with Done; a gallery's
-/// settings are one tap away (Gallery settings).
+/// The details panel is a bottom sheet that opens on a tap on a photo and closes with Done; a gallery's
+/// settings are one tap away (Gallery settings). Owner walk-through: the collections list is a menu under
+/// one button (T074); a select-mark tap multi-selects without the sheet, and the selection bar's Add to
+/// gallery opens it (T075).
 /// </summary>
 [Collection("library-browser")]
 [Trait("Category", "Browser")]
@@ -68,6 +70,24 @@ public sealed class WorkspacePhoneBrowserTests(LibraryBrowserFixture fx)
 
     private static ILocator Done(IPage page) => page.Locator(".ws-panel > .side-panel .ws-done");
 
+    private static ILocator Bar(IPage page) => page.Locator(".ws-main .ws-selbar");
+
+    private static Task<string[]> SelectedAsync(IPage page) =>
+        page.EvaluateAsync<string[]>("() => [...document.querySelectorAll('.ws-main .ws-cell[aria-selected=\"true\"]')].map(c => c.dataset.id)");
+
+    /// <summary>The selection bar shows "{n} selected" (fixed to the window's bottom, full width), or is not shown.</summary>
+    private static Task WaitForBarAsync(IPage page, int? n) =>
+        WaitForAsync(page, """
+            n => {
+              const bar = document.querySelector('.ws-main .ws-selbar');
+              const shown = bar.getClientRects().length > 0;
+              if (n === null) return !shown;
+              const r = bar.getBoundingClientRect();
+              return shown && bar.querySelector('.ws-selbar-text').textContent === `${n} selected`
+                && getComputedStyle(bar).position === 'fixed' && r.left === 0 && r.right === innerWidth && Math.abs(r.bottom - innerHeight) < 0.5;
+            }
+            """, n, n is null ? "no selection bar" : $"the bar \"{n} selected\"");
+
     /// <summary>
     /// The sheet: fixed to the bottom of the window, full width, below the top 4 × --space-l; Done in its
     /// heading row (vertically centred on the h2, to its right).
@@ -106,8 +126,8 @@ public sealed class WorkspacePhoneBrowserTests(LibraryBrowserFixture fx)
         await PhoneRules.AssertAsync(page, "All photos");
         Assert.Equal(0, await page.Locator(".ws-main .ws-settings").CountAsync());
 
-        // A select-mark tap opens the photo's details as a sheet.
-        await Cells(page).Nth(0).Locator("label.select-mark").TapAsync();
+        // A tap on a photo opens its details as a sheet.
+        await Cells(page).Nth(0).TapAsync();
         await WaitForSheetAsync(page, "Photo");
         await AssertSheetAsync(page, "one photo");
         await PhoneRules.AssertAsync(page, "one photo, sheet open");
@@ -122,9 +142,15 @@ public sealed class WorkspacePhoneBrowserTests(LibraryBrowserFixture fx)
         Assert.Equal("Pier", (await site.Images.Find(i => i.Id == order[0]).SingleAsync()).Title);
         await PhoneRules.AssertAsync(page, "sheet closed, one selected");
 
-        // A second select-mark tap: two selected, the sheet opens on them.
+        // A select-mark tap on a second photo: two selected, the sheet stays closed; Add to gallery opens it on them.
+        await WaitForBarAsync(page, 1);
         await Cells(page).Nth(1).Locator("label.select-mark").TapAsync();
+        await WaitForBarAsync(page, 2);
+        Assert.False(await page.EvaluateAsync<bool>("() => document.querySelector('admin-workspace').classList.contains('ws-sheet')"));
+        await PhoneRules.AssertAsync(page, "two photos, bar");
+        await Bar(page).Locator(".ws-selbar-add").TapAsync();
         await WaitForSheetAsync(page, "2 photos selected");
+        await WaitForBarAsync(page, null);
         await AssertSheetAsync(page, "two photos");
         await PhoneRules.AssertAsync(page, "two photos, sheet open");
 
@@ -163,7 +189,7 @@ public sealed class WorkspacePhoneBrowserTests(LibraryBrowserFixture fx)
         await WaitForNoSheetAsync(page);
 
         // Move later on the first photo (A9).
-        await Cells(page).Nth(0).Locator("label.select-mark").TapAsync();
+        await Cells(page).Nth(0).TapAsync();
         await WaitForSheetAsync(page, "Photo");
         await PhoneRules.AssertAsync(page, "photo in a gallery");
         await ClearToastAsync(page);
@@ -198,48 +224,202 @@ public sealed class WorkspacePhoneBrowserTests(LibraryBrowserFixture fx)
     // ── the sheet and its controls ───────────────────────────────────────────────────────────
 
     [Fact]
-    public async Task Sheet_opens_on_a_select_mark_tap_closes_with_Done_and_Done_and_Gallery_settings_are_phone_only()
+    public async Task Select_mark_taps_multi_select_without_the_sheet_and_the_bar_opens_it_and_desktop_is_unchanged()
     {
         await using var site = await fx.NewSiteAsync();
-        var ids = await site.ImagesAsync(3);
+        var ids = await site.ImagesAsync(4);
         var gid = await site.GalleryAsync("Coast", ids);
         var page = await PhoneAsync(site, $"/admin/g/{gid}");
 
-        // Closed: no panel shown, only the strip and main.
+        // Closed: no panel shown, no bar.
         Assert.False(await page.Locator(".ws-panel > .side-panel").IsVisibleAsync());
+        await WaitForBarAsync(page, null);
+
+        // T075: select-mark taps toggle photos into the selection; the sheet stays closed, the bar counts.
         await Cells(page).Nth(1).Locator("label.select-mark").TapAsync();
-        await WaitForSheetAsync(page, "Photo");
-        Assert.True(await Done(page).IsVisibleAsync());
+        await WaitForBarAsync(page, 1);
+        await Cells(page).Nth(2).Locator("label.select-mark").TapAsync();
+        await WaitForBarAsync(page, 2);
+        await Cells(page).Nth(3).Locator("label.select-mark").TapAsync();
+        await WaitForBarAsync(page, 3);
+        await WaitForNoSheetAsync(page);
+        Assert.Equal([ids[1], ids[2], ids[3]], await SelectedAsync(page));
+        await PhoneRules.AssertAsync(page, "three selected by the mark");
+        // A second tap on a mark takes that photo out.
+        await Cells(page).Nth(3).Locator("label.select-mark").TapAsync();
+        await WaitForBarAsync(page, 2);
+        Assert.Equal([ids[1], ids[2]], await SelectedAsync(page));
+        await WaitForNoSheetAsync(page);
+
+        // The bar's one Primary button opens the sheet on the selection panel (its gallery checklist); the bar hides.
+        var add = Bar(page).Locator("button");
+        Assert.Equal(1, await add.CountAsync());
+        Assert.Equal("Add to gallery", (await add.TextContentAsync())!.Trim());
+        Assert.Equal("btn btn-primary ws-selbar-add", await add.GetAttributeAsync("class"));
+        await add.TapAsync();
+        await WaitForSheetAsync(page, "2 photos selected");
+        await WaitForBarAsync(page, null);
+        Assert.True(await page.Locator(".ws-panel > .side-panel .ws-checks").IsVisibleAsync());
+        await AssertSheetAsync(page, "Add to gallery");
+        await PhoneRules.AssertAsync(page, "selection sheet");
+
+        // Done closes the sheet and keeps the selection: the bar is back.
         await Done(page).TapAsync();
         await WaitForNoSheetAsync(page);
-        // Done closes the sheet; the selection stays (Clear selection clears it).
-        Assert.Equal([ids[1]], await page.EvaluateAsync<string[]>("() => [...document.querySelectorAll('.ws-main .ws-cell[aria-selected=\"true\"]')].map(c => c.dataset.id)"));
+        await WaitForBarAsync(page, 2);
+        Assert.Equal([ids[1], ids[2]], await SelectedAsync(page));
+
+        // One photo: Add to gallery opens the photo panel.
+        await Cells(page).Nth(2).Locator("label.select-mark").TapAsync();
+        await WaitForBarAsync(page, 1);
+        await Bar(page).Locator(".ws-selbar-add").TapAsync();
+        await WaitForSheetAsync(page, "Photo");
+        await Done(page).TapAsync();
+        await WaitForNoSheetAsync(page);
+
+        // A tap on the photo itself keeps today's behaviour: only it is selected, the sheet opens.
+        await Cells(page).Nth(0).TapAsync();
+        await WaitForSheetAsync(page, "Photo");
+        Assert.Equal([ids[0]], await SelectedAsync(page));
+        await WaitForBarAsync(page, null);
+        await Done(page).TapAsync();
+        await WaitForNoSheetAsync(page);
+        await WaitForBarAsync(page, 1);
+
+        // Clear selection: no selection, no bar, no sheet.
         Assert.True(await page.Locator(".ws-main .ws-clear").IsVisibleAsync());
         await page.Locator(".ws-main .ws-clear").TapAsync();
         await WaitForAsync(page, "() => document.querySelectorAll('.ws-main .ws-cell[aria-selected=\"true\"]').length === 0", what: "no selection");
         Assert.False(await page.Locator(".ws-main .ws-clear").IsVisibleAsync());
         Assert.False(await page.Locator(".ws-panel > .side-panel").IsVisibleAsync());
-
-        // The strip scrolls inside itself; the page never does.
-        var strip = await page.EvaluateAsync<double[]>("""
-            () => { const s = document.querySelector('.ws-list .ws-collections'); return [s.scrollWidth, s.clientWidth, document.documentElement.scrollWidth, innerWidth, getComputedStyle(s).overflowX === 'auto' ? 1 : 0]; }
-            """);
-        Assert.True(strip[0] > strip[1], $"the strip holds {strip[0]} px in {strip[1]} px: nothing to scroll");
-        Assert.True(strip[2] <= strip[3], $"the page is {strip[2]} px wide in a {strip[3]} px window");
-        Assert.Equal(1d, strip[4]);
+        await WaitForBarAsync(page, null);
         await page.Context.CloseAsync();
 
-        // From 1200 px: no Gallery settings, no Done, the panel in its column.
+        // From 1200 px: no Gallery settings, no Done, no menu button, no bar; the panel in its column; the
+        // select mark adds to the selection and the panel follows it at once.
         var desk = await site.OpenAsync($"/admin/g/{gid}");
         await desk.Locator("admin-workspace[data-script='ready']").WaitForAsync(new() { State = WaitForSelectorState.Attached, Timeout = WaitMs });
         Assert.Equal(1, await desk.Locator(".ws-main .ws-settings").CountAsync());
         Assert.False(await desk.Locator(".ws-main .ws-settings").IsVisibleAsync());
         Assert.False(await desk.Locator(".ws-panel > .side-panel .ws-done").IsVisibleAsync());
+        Assert.Equal(1, await desk.Locator(".ws-list .ws-menu-toggle").CountAsync());
+        Assert.False(await desk.Locator(".ws-list .ws-menu-toggle").IsVisibleAsync());
+        Assert.True(await desk.Locator(".ws-list .ws-collections").IsVisibleAsync());
         await desk.Locator(".ws-main .ws-cell").Nth(0).ClickAsync();
         Assert.Equal("Photo", await PanelHeadingAsync(desk));
         Assert.False(await desk.Locator(".ws-panel > .side-panel .ws-done").IsVisibleAsync());
         Assert.Equal("static", await desk.Locator(".ws-panel").EvaluateAsync<string>("p => getComputedStyle(p).position"));
+        Assert.False(await Bar(desk).IsVisibleAsync());
+        await desk.Locator(".ws-main .ws-cell").Nth(1).Locator("label.select-mark").ClickAsync();
+        Assert.Equal("2 photos selected", await PanelHeadingAsync(desk));
+        Assert.True(await desk.Locator(".ws-panel > .side-panel").IsVisibleAsync());
+        Assert.False(await Bar(desk).IsVisibleAsync());
         await desk.Context.CloseAsync();
+    }
+
+    // ── T074: the collections menu ───────────────────────────────────────────────────────────
+
+    private static Task WaitForMenuAsync(IPage page, bool open) =>
+        WaitForAsync(page, """
+            open => {
+              const b = document.querySelector('.ws-list .ws-menu-toggle');
+              const m = document.getElementById(b.getAttribute('aria-controls'));
+              return b.getAttribute('aria-expanded') === String(open) && (m.getClientRects().length > 0) === open;
+            }
+            """, open, open ? "the menu open" : "the menu closed");
+
+    private static Task<string> MenuNameAsync(IPage page) =>
+        page.EvaluateAsync<string>("() => document.querySelector('.ws-list .ws-menu-toggle .ws-menu-name').textContent");
+
+    [Fact]
+    public async Task Collections_list_is_a_menu_under_one_button()
+    {
+        await using var site = await fx.NewSiteAsync();
+        var ids = await site.ImagesAsync(3);
+        var coast = await site.GalleryAsync("Coast", ids.Take(2).ToList(), publish: true);
+        var harbour = await site.GalleryAsync("Harbour", [ids[2]]);
+        var page = await PhoneAsync(site, "/admin");
+
+        // Closed: one button at the top of the workspace, full width, naming the open collection; no row shown.
+        var toggle = page.Locator(".ws-list .ws-menu-toggle");
+        Assert.Equal(1, await toggle.CountAsync());
+        Assert.Equal("button", await toggle.EvaluateAsync<string>("b => b.localName"));
+        Assert.Equal("btn btn-secondary ws-menu-toggle", await toggle.GetAttributeAsync("class"));
+        Assert.Equal("ws-menu", await toggle.GetAttributeAsync("aria-controls"));
+        Assert.Equal("All photos", await MenuNameAsync(page));
+        Assert.Equal("▾", await toggle.EvaluateAsync<string>("b => b.querySelector('[aria-hidden=\"true\"]').textContent"));
+        await WaitForMenuAsync(page, false);
+        Assert.Equal(0, await page.Locator(".ws-list a.ws-coll-row:visible").CountAsync());
+        var tb = (await toggle.BoundingBoxAsync())!;
+        var lb = (await page.Locator(".ws-list").BoundingBoxAsync())!;
+        Assert.Equal(0, lb.Y, 0.5);
+        Assert.True(tb.Y < lb.Y + lb.Height && tb.Width >= PhoneRules.Width - 2 * 16 - 0.5, $"the button is at {tb.Y}, {tb.Width} px wide");
+        await PhoneRules.AssertAsync(page, "menu closed");
+
+        // Open: full width, in order All photos, Not in a gallery, the Galleries heading, each gallery (Private
+        // mark, count), New gallery, View site, Sign out; every row at least 44 × 44.
+        await toggle.TapAsync();
+        await WaitForMenuAsync(page, true);
+        var rows = await page.EvaluateAsync<string[]>("""
+            () => [...document.querySelectorAll('#ws-menu .ws-collections > *, #ws-menu .ws-coll-foot > *')]
+              .filter(el => el.getClientRects().length > 0 && !el.matches('.ws-coll-foot'))
+              .map(el => el.textContent.trim().replace(/\s+/g, ' '))
+            """);
+        Assert.Equal(["All photos3", "Not in a gallery0", "Galleries in home page order", "Coast2", "HarbourPrivate1", "New gallery", "View site ↗", "Sign out"], rows);
+        var menu = (await page.Locator("#ws-menu").BoundingBoxAsync())!;
+        Assert.Equal(0, menu.X, 0.5);
+        Assert.Equal(PhoneRules.Width, menu.Width, 0.5);
+        Assert.True(menu.Y >= tb.Y + tb.Height - 0.5, $"the menu starts at {menu.Y}, above the button's bottom {tb.Y + tb.Height}");
+        await PhoneRules.AssertAsync(page, "menu open");
+        foreach (var name in new[] { "View site ↗", "Sign out", "New gallery" })
+        {
+            var b = (await page.Locator("#ws-menu .btn", new() { HasTextString = name }).BoundingBoxAsync())!;
+            Assert.True(b.Width >= 44 && b.Height >= 44, $"{name} is {b.Width} × {b.Height}");
+        }
+
+        // The button again closes it; Escape closes it; a tap outside closes it and does nothing else.
+        await toggle.TapAsync();
+        await WaitForMenuAsync(page, false);
+        await toggle.TapAsync();
+        await WaitForMenuAsync(page, true);
+        await page.Keyboard.PressAsync("Escape");
+        await WaitForMenuAsync(page, false);
+        await toggle.TapAsync();
+        await WaitForMenuAsync(page, true);
+        await page.Mouse.ClickAsync(PhoneRules.Width / 2, PhoneRules.Height - 20);
+        await WaitForMenuAsync(page, false);
+        Assert.Empty(await SelectedAsync(page));
+
+        // A chrome re-read while open (the list is swapped) keeps it open and working.
+        await toggle.TapAsync();
+        await WaitForMenuAsync(page, true);
+        await page.EvaluateAsync("() => { document.querySelector('#ws-menu .ws-collections').dataset.old = '1'; document.dispatchEvent(new CustomEvent('upload:stale')); }");
+        await WaitForAsync(page, "() => !document.querySelector('#ws-menu .ws-collections').dataset.old", what: "the list re-read");
+        await WaitForMenuAsync(page, true);
+        Assert.Equal("All photos", await MenuNameAsync(page));
+
+        // Choosing a collection navigates and closes it; the button names the new collection.
+        await page.Locator($"#ws-menu a.ws-coll-row[data-gid='{harbour}']").TapAsync();
+        await WaitForAsync(page, "g => location.pathname === `/admin/g/${g}` && document.querySelector('.ws-main .ws-head h1')?.textContent === 'Harbour'", harbour, "Harbour open");
+        await WaitForMenuAsync(page, false);
+        Assert.Equal("Harbour", await MenuNameAsync(page));
+        await toggle.TapAsync();
+        await WaitForMenuAsync(page, true);
+        await page.Locator("#ws-menu a.ws-coll-row[href='/admin/unplaced']").TapAsync();
+        await WaitForAsync(page, "() => location.pathname === '/admin/unplaced'", what: "Not in a gallery open");
+        await WaitForMenuAsync(page, false);
+        Assert.Equal("Not in a gallery", await MenuNameAsync(page));
+        // Back: the address, the list's current row and the button follow; the menu stays closed.
+        await page.GoBackAsync();
+        await WaitForAsync(page, "() => document.querySelector('.ws-main .ws-head h1')?.textContent === 'Harbour'", what: "back to Harbour");
+        Assert.Equal("Harbour", await MenuNameAsync(page));
+        await WaitForMenuAsync(page, false);
+        await page.Context.CloseAsync();
+
+        // A gallery address names the gallery in the full document.
+        var direct = await PhoneAsync(site, $"/admin/g/{coast}");
+        Assert.Equal("Coast", await MenuNameAsync(direct));
+        await direct.Context.CloseAsync();
     }
 }
 
@@ -385,7 +565,7 @@ internal static class PhoneRules
         var bad = r.GetProperty("bad").EnumerateArray().Select(b => b.GetString()).ToList();
         Assert.True(iw == Width, $"{when}: the window is {iw} px wide");
         Assert.True(sw <= iw, $"{when}: the page is {sw} px wide in a {iw} px window (sideways scroll)");
-        Assert.True(r.GetProperty("count").GetInt32() > 5, $"{when}: only {r.GetProperty("count")} controls found");
+        Assert.True(r.GetProperty("count").GetInt32() >= 3, $"{when}: only {r.GetProperty("count")} controls found");
         Assert.True(bad.Count == 0, $"{when}: controls under 44 × 44 px:\n" + string.Join("\n", bad));
     }
 }

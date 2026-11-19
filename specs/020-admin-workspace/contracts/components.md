@@ -22,7 +22,7 @@ Markup: document head as today (inline styles, `noindex`), then
 `<body class="admin"><admin-workspace class="ws" data-csrf data-cap data-upload-src data-worker-src>`
 containing `<nav class="ws-list">@List</nav><main class="ws-main">@ChildContent</main><aside class="ws-panel">`.
 The layout owns all frame geometry (IX.2): three columns at 1200 px and wider (**AMENDED (tasks) C-21**: `Tokens.BreakLarge`; was 900 px, which `TokenMediaAgreementTests` refuses: every media query must equal a token breakpoint, and no new token is allowed) (list 232 px, panel
-320 px); below 1200 px one column with the list as a horizontal strip and the panel as a bottom
+320 px); below 1200 px one column with the list as a menu under one button (T074; a selection bar "{n} selected · Add to gallery" at the bottom, T075) and the panel as a bottom
 sheet shown while `admin-workspace` has class `ws-sheet`. Pages add no frame CSS.
 Removed parameters: `Current`, `Crumbs`, `Aside`, `ShowOwnerBar`, `SignOut`.
 **AMENDED (tasks) C-05**: two steps. T029 adds the workspace mode additively (new parameters `List`, `Panel`, `Csrf`, `Cap`, `UploadSrc`, `WorkerSrc`; old parameters kept; render with `List` null byte-identical to today) because the old pages still need `Current`, `Crumbs`, `Aside`, `ShowOwnerBar`, `SignOut`; T052 makes it final as above. **AMENDED (tasks) C-06**: the layout renders no `<script>`; the workspace module `<script>` is rendered by `WorkspacePage` (`OrganismComponentTests.AdminLayout_has_no_script_element` stays unmodified).
