@@ -108,7 +108,7 @@ brk 3 $UJS 'if (/visibleToVisitors/) { s/visibleToVisitors\s*:\s*[^,\n}]+/visibl
 # 4. T042 II.5b: after CompleteJoinAsync, a join with no destination adds the photo to the first
 #    gallery of site.homeOrder through the GalleryService field JoinAsync already uses for AddAsync.
 brk 4 $CS 'my ($g) = /await\s+(_\w+)\.AddAsync\(/; s/(await\s+_\w+\.CompleteJoinAsync\(\s*([\w.]+)\s*,\s*([\w.!]+)\s*,\s*([\w.!]+)\s*\);)/$1\n        { var nvSite = await _imageDocs.Database.GetCollection<SiteDoc>("site").Find(FilterDefinition<SiteDoc>.Empty).FirstOrDefaultAsync(); if (nvSite is { HomeOrder.Count: > 0 }) await $g.AddAsync(nvSite.HomeOrder[0], [$4]); }/ if $g' \
-  "${F}UploadJoinTests.Join_with_no_destination_calls_no_gallery_method_and_enqueues_no_edge_work|${F}Public_pages_byte_identical_around_a_join_with_no_destination" \
+  "${F}UploadJoinTests.Join_with_no_destination_calls_no_gallery_method_and_enqueues_no_edge_work|${F}UploadJoinTests.Public_pages_byte_identical_around_a_join_with_no_destination" \
   'T042 II.5b: a join with no destination adds to the first home gallery'
 # 5. T042 II.5b edge (applies only once JoinAsync calls CompleteJoinAsync): ConfirmService gets an IEdgeCache (optional ctor param, DI fills it) and
 #    enqueues EdgeWork("upload.join", [], ["/g"], [], now) after the join completes.
