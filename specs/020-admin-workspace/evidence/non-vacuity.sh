@@ -132,11 +132,12 @@ brk 8 $BS 's/(TryClaimJoinAsync\((?:(?!\n    (?:public|private|internal) ).)*?)I
 brk 9 $UE 's/(Task<IResult> Delete\((?:(?!\n    (?:public|private|internal) ).)*?)ItemStates\.Joining/$1"nv-never-joining"/s' \
   "${F}UploadJoinTests.Delete_and_restart_of_a_joining_item_are_409_not_active" \
   'T043 claim: U9 deletes a joining item'
-# 10. T041 claim atomicity: read with the claim filter, then write on batch id + item id only.
-#     (Run 15x if flaky: NV_ONLY=10 in a loop; never retry into green.)
-brk 10 $BS 's/(TryClaimJoinAsync\((?:(?!\n    (?:public|private|internal) ).)*?)\(await\s+_col\.UpdateOneAsync\(\s*filter\s*,\s*(\w+)\s*\)\)\.MatchedCount == 1/$1await _col.Find(filter).AnyAsync() \&\& (await _col.UpdateOneAsync(Builders<BatchDoc>.Filter.Eq(b => b.Id, batchId) \& Builders<BatchDoc>.Filter.Eq("items.itemId", itemId), $2)).MatchedCount == 1/s' \
+# 10. T041/T042 exactly-once (C-22 decisions row): a join that lost the atomic pull in
+#     CompleteJoinAsync carries on with a fresh read of the batch instead of answering 404, so a
+#     losing overlapping join also adds and logs upload.joined. (Run 15x if flaky: NV_ONLY=10.)
+brk 10 $CS 's/var after = await _store\.CompleteJoinAsync\(batchId, itemId, itemId\);/var after = await _store.CompleteJoinAsync(batchId, itemId, itemId) ?? await _store.GetByIdAsync(batchId);/' \
   "${F}UploadJoinTests.Fifty_concurrent_claims_of_one_item_let_exactly_one_join" \
-  'T041 claim: read-then-write instead of one conditional UpdateOne'
+  'T042 exactly-once: a losing join continues after the atomic pull missed'
 # 11. T042 III.6: the join copies with no ETag precondition (5th argument of CopyIfMatchAsync is null).
 brk 11 $CS 's/(CopyIfMatchAsync\((?:\s*[^,;()]+,){4})\s*[^,;()]+,/$1 null!,/' \
   "${F}UploadJoinTests.Reput_after_validation_publishes_nothing" \
