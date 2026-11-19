@@ -926,7 +926,7 @@ Batch G owns: `AdminLayout.razor.css` (below-1200 px rules only, C-21), `Workspa
       `UploadJoinTests.Joining_is_never_reported_interrupted` red.
   Accept: `evidence/non-vacuity.txt` shows 21 PASS rows, none "on an EXCEPTION".
 
-- [ ] T069 PARENT Final gate `evidence/gate.sh final` after `dotnet clean`: `-warnaserror` build,
+- [X] T069 PARENT Final gate `evidence/gate.sh final` after `dotnet clean`: `-warnaserror` build,
   full suite incl. `Category=Evidence` and Browser; `p95-output.txt` recorded; earlier features'
   logs restored; `tee evidence/gate-final.txt`; commit.
 - [ ] T070 OWNER Live walk-through on the local stack with the development sign-in, quickstart

@@ -6,3 +6,4 @@ D1 (0cc90c8, C2b + D1 + CP-D rows): Core 124 passed; Web 1856 passed, 1 skipped,
 D (2fe6da8): Core 124 passed; Web 1874 passed, 1 skipped, 1 failed: BrowserTests.Walk_home_gallery_photo_next_back_with_javascript_off (Playwright 30 s timeout after a navigating click, JS off). Re-run alone on HEAD: 1 of 3 passed; on the pre-feature tree a5806fb in a worktree: 1 of 4 passed under the same load. Pre-existing flake, not caused by 020 (JS-off public walk); left untouched, decisions row.
 E (9590aeb): Core 124 passed; Web 1408 passed, 1 skipped, 0 failed (28 retired files took their facts; the JS-off walk flake passed this run).
 FG (3275786): Core 124 passed; Web 1418 passed, 1 skipped, 0 failed.
+final (2de6444, after dotnet clean): Core 124 passed; Web 1420 passed, 1 skipped, 0 failed; build -warnaserror 0 warnings.
