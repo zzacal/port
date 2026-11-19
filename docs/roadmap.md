@@ -315,7 +315,7 @@ OWNER-ONLY (after merge and deploy, not gates):
 
 ### 018 Local sign-in without Google
 
-**Status: built on branch `018-local-dev-signin` (implement in progress).**
+**Status: merged to main (2026-11-18); full suite 123 + 1588 passed, 1 skipped; non-vacuity 8/8.**
 Decisions and defaults in `specs/018-local-dev-signin/decisions.md`. Evidence:
 `specs/018-local-dev-signin/evidence/` (baseline, gates, non-vacuity, test-impact grep).
 

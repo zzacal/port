@@ -245,7 +245,7 @@ Then run the quickstart owner steps against a throwaway dev host, run gate B, an
   - the `auth.local.refused` template gains the submitted password → LocalSignInTests no-leak fact
     red.
   Run `NV_DRYRUN=1`, then the real run; tee to `non-vacuity.txt`.
-- [ ] T020 Final gate (`evidence/gate-final.txt`): `dotnet clean`, `-warnaserror` build, full
+- [X] T020 Final gate (`evidence/gate-final.txt`): `dotnet clean`, `-warnaserror` build, full
   suite; restore earlier features' logs; commit.
 - [ ] T021 Merge to main (`--no-ff`, body as in 017's) and push; watch the deploy go green. Signed
   out, on port.zacal.me:
