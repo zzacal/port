@@ -1,0 +1,30 @@
+SELFTEST OK   pre + pass.log: expected exit 0 (pass), actual 0
+SELFTEST OK   pre + pass-json.log: expected exit 0 (pass), actual 0
+SELFTEST OK   pre + pass-slash.log: expected exit 0 (pass), actual 0
+SELFTEST OK   pre + slow-w1-full.log: expected exit 1 (fail), actual 1; FAIL rows: SC-005 W1-full(reads 4) p95
+SELFTEST OK   pre + slow-w3-full.log: expected exit 1 (fail), actual 1; FAIL rows: SC-005 W3-full(reads 5) p95
+SELFTEST OK   pre + slow-w1-main.log: expected exit 1 (fail), actual 1; FAIL rows: SC-005 W1-main(reads 2) p95
+SELFTEST OK   pre + slow-w3-main.log: expected exit 1 (fail), actual 1; FAIL rows: SC-005 W3-main(reads 2) p95
+SELFTEST OK   pre + slow-a1.log: expected exit 1 (fail), actual 1; FAIL rows: SC-006 A1 p95
+SELFTEST OK   pre + slow-a5.log: expected exit 1 (fail), actual 1; FAIL rows: SC-006 A5 p95
+SELFTEST OK   pre + slow-a7.log: expected exit 1 (fail), actual 1; FAIL rows: SC-006 A7 p95
+SELFTEST OK   pre + slow-a8.log: expected exit 1 (fail), actual 1; FAIL rows: SC-006 A8 p95
+SELFTEST OK   pre + slow-a9.log: expected exit 1 (fail), actual 1; FAIL rows: SC-006 A9 p95
+SELFTEST OK   pre + slow-a10.log: expected exit 1 (fail), actual 1; FAIL rows: SC-006 A10 p95
+SELFTEST OK   pre + reads-w1.log: expected exit 1 (fail), actual 1; FAIL rows: R-02 W1 db_reads
+SELFTEST OK   pre + reads-w2.log: expected exit 1 (fail), actual 1; FAIL rows: R-02 W2 db_reads
+SELFTEST OK   pre + reads-w3.log: expected exit 2 (fail), actual 2; FAIL rows: SC-005 W3-main(reads 2) n R-02 W3 db_reads
+SELFTEST OK   pre + reads-w4.log: expected exit 1 (fail), actual 1; FAIL rows: R-02 W4 db_reads
+SELFTEST OK   pre + w1-full-99.log: expected exit 1 (fail), actual 1; FAIL rows: SC-005 W1-full(reads 4) n
+SELFTEST OK   pre + a1-29.log: expected exit 1 (fail), actual 1; FAIL rows: SC-006 A1 n
+SELFTEST OK   pre + joined-8.log: expected exit 2 (fail), actual 2; FAIL rows: SC-013 joined SC-013 join-ms
+SELFTEST OK   pre + joined-forced.log: expected exit 1 (fail), actual 1; FAIL rows: SC-013 forced item it10
+SELFTEST OK   pre + join-slow.log: expected exit 1 (fail), actual 1; FAIL rows: SC-013 join-ms
+SELFTEST OK   pre + no-forced.log: expected exit 1 (fail), actual 1; FAIL rows: SC-013 forced no
+SELFTEST OK   pre + empty.log: expected exit 1 (fail), actual 1; FAIL rows: missing
+SELFTEST OK   pre + does-not-exist.log: expected exit 1 (fail), actual 1; FAIL rows: missing
+SELFTEST OK   pre-99 + pass.log: expected exit 4 (fail), actual 4; FAIL rows: SC-005 W1-full(reads 4) n SC-005 W3-full(reads 5) n SC-005 W1-main(reads 2) n SC-005 W3-main(reads 2) n
+SELFTEST OK   pre-empty + pass.log: expected exit 1 (fail), actual 1; FAIL rows: missing
+SELFTEST OK   pre-timings + fast.log: expected exit 0 (pass), actual 0
+
+SELFTEST ALL OK

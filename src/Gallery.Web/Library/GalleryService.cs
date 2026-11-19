@@ -570,4 +570,32 @@ public sealed class GalleryService
 
     private void OwnerAction(string action, string target, string detail) =>
         _log.LogInformation("owner.action {action} {target} {count} {detail}", action, target, 1, detail);
+
+    // ── 020 A8 bulk remove ───────────────────────────────────────────────────
+
+    /// <summary>
+    /// 020 A8 (contracts/http.md; data-model.md validation table): <paramref name="ids"/> must hold
+    /// 1..<c>PageSize</c> ids (else 422 with the bulk sentences, nothing written); an unknown gallery
+    /// answers NotFound. Otherwise ONE <see cref="Begin"/> scope, the gallery loaded once, the
+    /// existing <see cref="RemoveOneAsync"/> per distinct id (a non-member is skipped), and ONE
+    /// <see cref="OperationScope.CompleteAsync"/>. Result: <c>Removed</c>, gallery id and title.
+    /// Timed as <c>library.bulk.remove</c>.
+    /// </summary>
+    public Task<OperationResult> RemoveManyAsync(string gid, IReadOnlyList<string> ids) =>
+        _timer.Time("library.bulk.remove", async () =>
+        {
+            if (ids.Count == 0) return Refuse("db.gallery.update", 422, "Select at least one photo.");
+            if (ids.Count > _options.PageSize)
+                return Refuse("db.gallery.update", 422, $"Select at most {_options.PageSize} photos.");
+
+            var gallery = await LoadAsync(gid);
+            if (gallery is null) return OperationResult.NotFound();
+
+            var scope = Begin("gallery.remove.bulk");
+            var removed = 0;
+            foreach (var iid in ids.Distinct(StringComparer.Ordinal))
+                removed += (await RemoveOneAsync(gid, iid, scope, gallery)).Removed;
+            await scope.CompleteAsync();
+            return OperationResult.Ok() with { Removed = removed, GalleryId = gid, GalleryTitle = gallery.Title };
+        });
 }

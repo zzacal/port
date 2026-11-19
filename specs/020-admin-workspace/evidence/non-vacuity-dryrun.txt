@@ -1,0 +1,23 @@
+DRY MISS (1) substitution matched nothing in src/Gallery.Web/Upload/UploadEndpoints.cs | T043 II.5a: Register has no destination-public refusal
+DRY MISS (2) src/Gallery.Web/Components/Organisms/UploadTray.razor does not exist yet: matched nothing | T025 II.5a: public notice only when the tray is Empty
+DRY MISS (3) substitution matched nothing in src/Gallery.Web/wwwroot/admin-assets/upload.js | T046 II.5a: upload.js always consents and drops the notice clone
+DRY MISS (4) substitution matched nothing in src/Gallery.Web/Upload/ConfirmService.cs | T042 II.5b: a join with no destination adds to the first home gallery
+DRY MISS (5) substitution matched nothing in src/Gallery.Web/Upload/ConfirmService.cs | T042 II.5b: a join with no destination enqueues edge work
+DRY MISS (6) substitution matched nothing in src/Gallery.Web/Upload/ConfirmService.cs | T042 II.5c: the join publishes its destination
+DRY OK   (7) src/Gallery.Web/Upload/ConfirmService.cs: 3 changed lines | T053 II.5c: ConfirmService writes visibility "public"
+DRY MISS (8) substitution matched nothing in src/Gallery.Web/Upload/BatchStore.cs | T041 II.5d: the join claim accepts an uploading item
+DRY MISS (9) substitution matched nothing in src/Gallery.Web/Upload/UploadEndpoints.cs | T043 claim: U9 deletes a joining item
+DRY MISS (10) substitution matched nothing in src/Gallery.Web/Upload/BatchStore.cs | T041 claim: read-then-write instead of one conditional UpdateOne
+DRY OK   (11) src/Gallery.Web/Upload/ConfirmService.cs: 2 changed lines | T042 III.6: copy without if-match
+DRY OK   (12) src/Gallery.Web/Workspace/WorkspaceApi.cs: 2 changed lines | T014 II.6: A6 skips the empty-private refusal
+DRY OK   (13) src/Gallery.Web/Workspace/WorkspaceApi.cs: 2 changed lines | T014 I.3: A1 is AllowAnonymous
+DRY OK   (14) src/Gallery.Web/Admin/AdminAntiforgeryFilter.cs: 2 changed lines | T014 I.6: A7 accepted without an antiforgery token
+DRY MISS (15) src/Gallery.Web/Workspace/WorkspaceEndpoints.cs does not exist yet: matched nothing | T033 I.3: W4 is AllowAnonymous
+DRY MISS (16) substitution matched nothing in src/Gallery.Web/Upload/UploadEndpoints.cs | T043 I.3: U12 is AllowAnonymous
+DRY MISS (17) src/Gallery.Web/Workspace/WorkspaceEndpoints.cs does not exist yet: matched nothing | T053: /admin/library mapped again
+DRY MISS (18) src/Gallery.Web/wwwroot/admin-assets/workspace.js does not exist yet: matched nothing | T036/T053: DOMParser outside swap
+DRY OK   (19) src/Gallery.Web/wwwroot/admin-assets/upload.js: 2 changed lines | T053: innerHTML sink in upload.js
+DRY OK   (20) src/Gallery.Web/Components/Templates/PublicLayout.razor: 2 changed lines | TI-36: ws-mark on the public layout
+DRY OK   (21) src/Gallery.Web/Upload/EffectiveState.cs: 2 changed lines | T043: joining ages to interrupted
+
+DRY RUN: 13 matched nothing (code not written yet), 0 broken

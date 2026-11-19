@@ -815,7 +815,7 @@ public static partial class UploadEndpoints
     /// Reads the JSON body whatever its content type (never <c>ReadFormAsync</c>), so a bodiless or
     /// malformed POST answers 400 instead of throwing. An over-limit body answers 413.
     /// </summary>
-    private static async Task<(T? Body, IResult? Fail)> ReadAsync<T>(HttpContext ctx) where T : class
+    internal static async Task<(T? Body, IResult? Fail)> ReadAsync<T>(HttpContext ctx) where T : class
     {
         try
         {
@@ -835,7 +835,7 @@ public static partial class UploadEndpoints
     private static bool IsActive(string effective) =>
         effective is ItemStates.Queued or ItemStates.Processing or ItemStates.Uploading;
 
-    private static IResult Error(int status, string code, string message) =>
+    internal static IResult Error(int status, string code, string message) =>
         Results.Json(new { error = code, message }, statusCode: status);
 
     private static IResult NotFound() =>

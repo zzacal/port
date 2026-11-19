@@ -1,0 +1,109 @@
+# NV_ROOT=<scratch tree with synthetic, contract-shaped copies of the not-yet-written code> NV_DRYRUN=1 NV_SHOWDIFF=1 bash evidence/non-vacuity.sh
+# (proves each pattern on a plausible shape; re-check against the real code after each batch)
+DRY OK   (1) src/Gallery.Web/Upload/UploadEndpoints.cs: 2 changed lines | T043 II.5a: Register has no destination-public refusal
+      859c859
+      <         if (dest is { Visibility: "public" } && body.VisibleToVisitors != true)
+      ---
+      >         if (Environment.ProcessorCount < 0 && (dest is { Visibility: "public" } && body.VisibleToVisitors != true))
+DRY OK   (2) src/Gallery.Web/Components/Organisms/UploadTray.razor: 2 changed lines | T025 II.5a: public notice only when the tray is Empty
+      3c3
+      <     @if (DestinationPublic)
+      ---
+      >     @if (DestinationPublic && State == TrayState.Empty)
+DRY OK   (3) src/Gallery.Web/wwwroot/admin-assets/upload.js: 4 changed lines | T046 II.5a: upload.js always consents and drops the notice clone
+      632,633c632,633
+      < const body = { files, gallery: dest, visibleToVisitors: tray.querySelector('.ws-notice') !== null };
+      < const n = tpl.content.querySelector('.ws-notice').cloneNode(true);
+      ---
+      > const body = { files, gallery: dest, visibleToVisitors: true};
+      > const n = tpl.content.querySelector('.ws-notice-nv-dropped').cloneNode(true);
+DRY OK   (4) src/Gallery.Web/Upload/ConfirmService.cs: 1 changed lines | T042 II.5b: a join with no destination adds to the first home gallery
+      302a303
+      >         { var nvSite = await _imageDocs.Database.GetCollection<SiteDoc>("site").Find(FilterDefinition<SiteDoc>.Empty).FirstOrDefaultAsync(); if (nvSite is { HomeOrder.Count: > 0 }) await _galleries.AddAsync(nvSite.HomeOrder[0], [item.ItemId]); }
+DRY OK   (5) src/Gallery.Web/Upload/ConfirmService.cs: 5 changed lines | T042 II.5b: a join with no destination enqueues edge work
+      49a50
+      >     private readonly Gallery.Web.Edge.IEdgeCache? _nvEdge;
+      58c59
+      <         Func<string, Task>? afterItem = null)
+      ---
+      >         Func<string, Task>? afterItem = null, Gallery.Web.Edge.IEdgeCache? nvEdge = null)
+      70a72
+      >         _nvEdge = nvEdge;
+      302a305
+      >         _nvEdge?.Enqueue(new Gallery.Web.Edge.EdgeWork("upload.join", [], ["/g"], [], _clock.GetUtcNow()));
+DRY OK   (6) src/Gallery.Web/Upload/ConfirmService.cs: 1 changed lines | T042 II.5c: the join publishes its destination
+      305a306
+      >             await _galleries.PublishAsync(gid, confirmed: true);
+DRY OK   (7) src/Gallery.Web/Upload/ConfirmService.cs: 3 changed lines | T053 II.5c: ConfirmService writes visibility "public"
+      72a73,75
+      >     private static UpdateDefinition<GalleryDoc> NvPublish() => Builders<GalleryDoc>.Update.Set(g => g.Visibility, "public");
+      > 
+      > 
+DRY OK   (8) src/Gallery.Web/Upload/BatchStore.cs: 2 changed lines | T041 II.5d: the join claim accepts an uploading item
+      270c270
+      <                 & Builders<BatchItemDoc>.Filter.In(i => i.State, new[] { ItemStates.Succeeded, ItemStates.Joining }));
+      ---
+      >                 & Builders<BatchItemDoc>.Filter.In(i => i.State, new[] { ItemStates.Succeeded, ItemStates.Joining, ItemStates.Uploading }));
+DRY OK   (9) src/Gallery.Web/Upload/UploadEndpoints.cs: 2 changed lines | T043 claim: U9 deletes a joining item
+      868c868
+      <         if (item is not null && d.Effective(item) == ItemStates.Joining) return NotActive();
+      ---
+      >         if (item is not null && d.Effective(item) == "nv-never-joining") return NotActive();
+DRY OK   (10) src/Gallery.Web/Upload/BatchStore.cs: 2 changed lines | T041 claim: read-then-write instead of one conditional UpdateOne
+      273c273
+      <             async () => (await _col.UpdateOneAsync(filter, update)).MatchedCount == 1);
+      ---
+      >             async () => await _col.Find(filter).AnyAsync() && (await _col.UpdateOneAsync(Builders<BatchDoc>.Filter.Eq(b => b.Id, batchId) & Builders<BatchDoc>.Filter.Eq("items.itemId", itemId), update)).MatchedCount == 1);
+DRY OK   (11) src/Gallery.Web/Upload/ConfirmService.cs: 2 changed lines | T042 III.6: copy without if-match
+      217c217
+      <         _images.CopyIfMatchAsync(_priv, c.SrcKey, c.DstBucket, c.DstKey, c.Etag, c.ContentType, c.CacheControl);
+      ---
+      >         _images.CopyIfMatchAsync(_priv, c.SrcKey, c.DstBucket, c.DstKey, null!, c.ContentType, c.CacheControl);
+DRY OK   (12) src/Gallery.Web/Workspace/WorkspaceApi.cs: 2 changed lines | T014 II.6: A6 skips the empty-private refusal
+      12c12
+      <             return gallery.Items.Count == 0
+      ---
+      >             return gallery.Items.Count < 0
+DRY OK   (13) src/Gallery.Web/Workspace/WorkspaceApi.cs: 2 changed lines | T014 I.3: A1 is AllowAnonymous
+      5c5
+      <             .WithMetadata(new RequestSizeLimitAttribute(4096));
+      ---
+      >             .WithMetadata(new RequestSizeLimitAttribute(4096)).AllowAnonymous();
+DRY OK   (14) src/Gallery.Web/Admin/AdminAntiforgeryFilter.cs: 2 changed lines | T014 I.6: A7 accepted without an antiforgery token
+      22c22
+      <         if (!SafeMethods.Contains(httpContext.Request.Method))
+      ---
+      >         if (!SafeMethods.Contains(httpContext.Request.Method) && !(httpContext.Request.Path.Value ?? "").EndsWith("/photos", StringComparison.Ordinal))
+DRY OK   (15) src/Gallery.Web/Workspace/WorkspaceEndpoints.cs: 2 changed lines | T033 I.3: W4 is AllowAnonymous
+      5c5
+      <         admin.MapGet("/tiles/{iid}", (Delegate)Tile);
+      ---
+      >         admin.MapGet("/tiles/{iid}", (Delegate)Tile).AllowAnonymous();
+DRY OK   (16) src/Gallery.Web/Upload/UploadEndpoints.cs: 2 changed lines | T043 I.3: U12 is AllowAnonymous
+      873c873
+      <             .WithMetadata(new RequestSizeLimitAttribute(SmallBodyLimit));
+      ---
+      >             .WithMetadata(new RequestSizeLimitAttribute(SmallBodyLimit)).AllowAnonymous();
+DRY OK   (17) src/Gallery.Web/Workspace/WorkspaceEndpoints.cs: 1 changed lines | T053: /admin/library mapped again
+      3a4
+      >         admin.MapGet("/library", () => Results.Ok());
+DRY OK   (18) src/Gallery.Web/wwwroot/admin-assets/workspace.js: 2 changed lines | T036/T053: DOMParser outside swap
+      1a2,3
+      > 
+      > export const nvParser = new DOMParser();
+DRY OK   (19) src/Gallery.Web/wwwroot/admin-assets/upload.js: 2 changed lines | T053: innerHTML sink in upload.js
+      633a634,635
+      > 
+      > export function nvSink(el) { el.innerHTML = ''; }
+DRY OK   (20) src/Gallery.Web/Components/Templates/PublicLayout.razor: 2 changed lines | TI-36: ws-mark on the public layout
+      17c17
+      <     <main class="public-main">@ChildContent</main>@if (Enhance)
+      ---
+      >     <main class="public-main"><span class="ws-mark">x</span>@ChildContent</main>@if (Enhance)
+DRY OK   (21) src/Gallery.Web/Upload/EffectiveState.cs: 2 changed lines | T043: joining ages to interrupted
+      14c14
+      <         var active = item.State is ItemStates.Queued or ItemStates.Processing or ItemStates.Uploading;
+      ---
+      >         var active = item.State is ItemStates.Queued or ItemStates.Processing or ItemStates.Uploading or ItemStates.Joining;
+
+DRY RUN: 0 matched nothing (code not written yet), 0 broken

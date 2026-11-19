@@ -1,6 +1,6 @@
 @* Shared grid for home (gallery cards) and gallery (thumbnails), D-20. Column counts per
    viewport class become modifier classes; the same counts produce every Tile's sizes. *@
-<div class="cs cs-l@(Large) cs-m@(Medium) cs-s@(Small)">
+<div class="@CssClass">
     @if (ChildContent is not null)
     {
         @ChildContent
@@ -30,12 +30,17 @@
     /// <summary>How many leading tiles load at high priority. Defaults to one large-screen row.</summary>
     [Parameter] public int? PriorityCount { get; set; }
 
+    /// <summary>Feature 020 K3: the workspace fill grid (class <c>cs cs-fill</c>, no column-count classes,
+    /// Tiles sized by <c>Sizes.ForFill()</c>). Default false: render byte-identical.</summary>
+    [Parameter] public bool Fill { get; set; }
+
     private string _sizes = "";
     private int EffectivePriorityCount => PriorityCount ?? Large;
+    private string CssClass => Fill ? "cs cs-fill" : $"cs cs-l{Large} cs-m{Medium} cs-s{Small}";
 
     protected override void OnParametersSet()
     {
         // Sizes.ForGrid validates 1–6 and throws ArgumentOutOfRangeException otherwise.
-        _sizes = Gallery.Core.Images.Sizes.ForGrid(Large, Medium, Small);
+        _sizes = Fill ? Gallery.Core.Images.Sizes.ForFill() : Gallery.Core.Images.Sizes.ForGrid(Large, Medium, Small);
     }
 }

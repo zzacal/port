@@ -1,0 +1,23 @@
+/* Feature 020 K8. Existing tokens only, no size literal. Fixed at the bottom centre of the window. */
+.ws-toast {
+    position: fixed;
+    left: 50%;
+    bottom: var(--space-s);
+    transform: translateX(-50%);
+    z-index: 20;
+    max-width: calc(100vw - 2 * var(--space-s));
+    box-sizing: border-box;
+    padding: calc(var(--space-s) / 2) var(--space-s);
+    border-radius: calc(var(--space-s) / 4);
+    background: var(--color-text);
+    color: var(--color-bg);
+    font-size: var(--type-body);
+}
+
+.ws-toast:empty {
+    display: none;
+}
+
+.ws-refusal {
+    background: var(--color-danger);
+}

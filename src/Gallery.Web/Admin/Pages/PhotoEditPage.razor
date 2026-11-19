@@ -92,11 +92,5 @@
                         ConfirmLabel="Delete photo" FormId="lib-del-one" />;
 
     /// <summary>contracts/components.md "delete confirm (one)".</summary>
-    public static string DeleteConsequence(int galleries) =>
-        (galleries switch
-        {
-            0 => "It is in no gallery.",
-            1 => "It is in 1 gallery.",
-            _ => $"It is in {galleries} galleries.",
-        }) + " This removes it from every gallery and deletes the original file. It can't be undone.";
+    public static string DeleteConsequence(int galleries) => Gallery.Web.Workspace.Messages.DeleteConsequence(galleries);
 }

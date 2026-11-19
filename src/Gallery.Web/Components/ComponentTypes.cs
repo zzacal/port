@@ -28,3 +28,8 @@ public enum AdminPage { Upload, Library, Galleries }
 public sealed record Refusal(string FileName, string Reason);
 
 public sealed record FormToken(string FieldName, string Value);
+
+/// <summary>Feature 020 K7: one upload row in the workspace tray. Item states map queued → Waiting,
+/// processing → Preparing, uploading → Uploading, succeeded|joining → Adding, failed → Failed,
+/// interrupted → Interrupted; Added once the photo has joined.</summary>
+public enum UploadRowState { Waiting, Preparing, Uploading, Adding, Added, Failed, Interrupted }

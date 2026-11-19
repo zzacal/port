@@ -1,0 +1,12 @@
+@* Feature 020 K8: the one place results appear (FR-018), fixed at the bottom centre of the window.
+   Always rendered so the live region exists before the script fills it; empty is not shown. *@
+<div class="@CssClass" role="status">@Text</div>
+
+@code {
+    [Parameter] public string Text { get; set; } = "";
+
+    /// <summary>A refusal rather than a result.</summary>
+    [Parameter] public bool Failed { get; set; }
+
+    private string CssClass => Failed ? "ws-toast ws-refusal" : "ws-toast";
+}

@@ -14,6 +14,10 @@
 .cs-s5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .cs-s6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 
+/* Feature 020 K3: the workspace fill grid. Two columns below 600px; from 600px as many columns of at
+   least 168px (Sizes.FillMin) as fit. Sizes.ForFill() derives the image sizes from these values. */
+.cs-fill { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
 @media (min-width: 600px) {
     .cs { gap: var(--space-m); padding: 0 var(--space-m); }
     .cs-m1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
@@ -22,6 +26,7 @@
     .cs-m4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .cs-m5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
     .cs-m6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .cs-fill { grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); }
 }
 
 @media (min-width: 1200px) {

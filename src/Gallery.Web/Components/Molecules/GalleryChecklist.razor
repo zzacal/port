@@ -1,0 +1,39 @@
+@* Feature 020 K6: the "In galleries" checklist. A labelled find field (data-gq), one row per gallery
+   (<label data-name="{title lower-cased}"> with a checkbox data-member="{id}", the title and Public/Private),
+   then the offer button (data-mk), hidden until the text matches no gallery. Rules: GalleryChecklist.Match;
+   workspace.js mirrors them. A partly ticked row carries aria-checked="mixed" (the script also sets the
+   checkbox's indeterminate property). Query is for the /ui specimens: it renders the rows per Match. *@
+<div class="ws-checks" data-max="@TitleMax">
+    <label class="ws-checks-find"><span class="ws-checks-head">In galleries</span><input class="ws-checks-q" type="text" data-gq autocomplete="off" placeholder="Find a gallery or type a new name" value="@Query" /></label>
+    <div class="ws-checks-box">
+        @foreach (var row in Rows)
+        {
+            <label class="ws-checks-row" data-name="@row.Gallery.Title.ToLowerInvariant()" hidden="@(!row.Shown)"><input type="checkbox" data-member="@row.Gallery.Id" checked="@(row.Gallery.Tick == ChecklistTick.All)" aria-checked="@(row.Gallery.Tick == ChecklistTick.Some ? "mixed" : null)" /><span class="ws-checks-name">@row.Gallery.Title</span><span class="ws-checks-vis">@(row.Gallery.Public ? "Public" : "Private")</span></label>
+        }
+        <Button Variant="ButtonVariant.Quiet" Type="button" class="ws-checks-new" data-mk="" hidden="@(Result.Offer is null)">@(Result.Offer is null ? "" : $"New gallery “{Result.Offer}”")</Button>
+    </div>
+    <p class="ws-checks-msg">@Result.Message</p>
+</div>
+
+@code {
+    /// <summary>Every gallery, in home page order.</summary>
+    [Parameter] public IReadOnlyList<ChecklistGallery> Galleries { get; set; } = [];
+
+    /// <summary>The title limit for a new gallery (<c>LibraryOptions.TitleMax</c>).</summary>
+    [Parameter] public int TitleMax { get; set; } = new Gallery.Web.Library.LibraryOptions().TitleMax;
+
+    /// <summary>Catalogue specimens only: the typed text; rows render narrowed and the offer shown per <see cref="Match(string, IReadOnlyList{string}, int)"/>.</summary>
+    [Parameter] public string? Query { get; set; }
+
+    private ChecklistMatch Result = new([], false, null, null);
+    private IReadOnlyList<(ChecklistGallery Gallery, bool Shown)> Rows = [];
+
+    protected override void OnParametersSet()
+    {
+        Result = Match(Query ?? "", Galleries.Select(g => g.Title).ToList(), TitleMax);
+        // Shown rows first, in Match order; the hidden rest after them, in the given order.
+        var shown = Result.Shown.Select(i => (Galleries[i], true));
+        var hidden = Galleries.Where((_, i) => !Result.Shown.Contains(i)).Select(g => (g, false));
+        Rows = shown.Concat(hidden).ToList();
+    }
+}

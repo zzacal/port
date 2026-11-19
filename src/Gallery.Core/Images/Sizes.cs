@@ -28,4 +28,13 @@ public static class Sizes
         $"(min-width: {Tokens.BreakMedium}px) calc(100vw - {2 * Tokens.SpaceM}px), " +
         $"calc(100vw - {2 * Tokens.SpaceS}px)";
     public const int AsideWidth = 320; // AdminLayout.razor.css .with-aside column
+
+    /// <summary>Feature 020 K5 (C-18): the admin workspace fill grid, <c>repeat(auto-fill, minmax(FillMin px, 1fr))</c>
+    /// inside <c>.cs</c>. A cell is narrower than two minimum columns plus one gap at each width (else one more column
+    /// would fit), so <c>2 × FillMin + gap</c> is an upper bound; below BreakMedium the grid has two columns.</summary>
+    public static string ForFill() =>
+        $"(min-width: {Tokens.BreakLarge}px) {2 * FillMin + Tokens.SpaceL}px, " +
+        $"(min-width: {Tokens.BreakMedium}px) {2 * FillMin + Tokens.SpaceM}px, " +
+        $"calc((100vw - {3 * Tokens.SpaceS}px) / 2)";
+    public const int FillMin = 168; // ContactSheet.razor.css .cs-fill minmax minimum
 }

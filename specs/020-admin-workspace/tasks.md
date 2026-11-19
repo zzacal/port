@@ -229,7 +229,7 @@ copy, run `evidence/gate.sh <label>`, grep each [SAFETY] mechanism, commit.
   Commit the script, the test files of T004 and every capture before T011. Accept: counts file
   shows `GET /admin/library` n ≥ 100 (tile.log), each B2/B3/B4/B5 POST n ≥ 30 (library.log), L2
   POST n ≥ 100 (membership.log); `git status` clean after commit.
-- [ ] T006 [P] PARENT Copy `specs/017-photo-edit-screen/evidence/p95.sh`, `p95-selftest.sh` and
+- [X] T006 [P] PARENT Copy `specs/017-photo-edit-screen/evidence/p95.sh`, `p95-selftest.sh` and
   `p95-selftest/` to `specs/020-admin-workspace/evidence/` and rewrite the rows (C-08, C-17; route
   templates as logged — grep one real line of each first):
   - SC-005 reads (post `workspace-timings.log`, n ≥ 100 per row): `GET /admin` with `db_reads` 4
@@ -249,17 +249,17 @@ copy, run `evidence/gate.sh <label>`, grep each [SAFETY] mechanism, commit.
   Regenerate the self-test logs with `p95-selftest.sh` (one passing log, one per failing row, an
   empty log, a JSON log, an under-sampled log) into `p95-selftest.txt`. Accept: self-test expected
   pass/fail per log holds.
-- [ ] T007 [P] PARENT Write `specs/020-admin-workspace/evidence/compare-public.sh`: runs
+- [X] T007 [P] PARENT Write `specs/020-admin-workspace/evidence/compare-public.sh`: runs
   `PublicCaptureEvidenceTests` with `PUBLIC_CAPTURE_DIR=/tmp/020-post-public`, then
   `diff -r evidence/pre-public /tmp/020-post-public`, prints `EQUAL n files` or each differing file;
   exit = number of differing files. Self-test into `compare-public-selftest.txt`: against itself
   0; with one byte changed in a temp copy 1. Accept: both self-test rows hold.
-- [ ] T008 [P] PARENT Write `specs/020-admin-workspace/evidence/non-vacuity.sh` from
+- [X] T008 [P] PARENT Write `specs/020-admin-workspace/evidence/non-vacuity.sh` from
   `specs/017-photo-edit-screen/evidence/non-vacuity.sh` (same `brk` engine, `NV_DRYRUN`,
   `NV_ONLY`, clean-tree check over its FILES) with the break table of T068 as `brk` lines.
   `NV_DRYRUN=1` now reports "matched nothing" for code not yet written; re-dry-run after every
   checkpoint. Accept: script parses (`bash -n`), dry-run lists every break id.
-- [ ] T009 [P] PARENT Write `specs/020-admin-workspace/evidence/test-impact-edit.py` from 017's:
+- [X] T009 [P] PARENT Write `specs/020-admin-workspace/evidence/test-impact-edit.py` from 017's:
   one count-asserting (file, old, new, count, row) entry per TI row, row filter by id or by
   checkpoint (`--cp CP-D`), `DRYRUN=1`, abort without writing on any count mismatch, print `OK row
   file xN`, tee to `evidence/test-impact-edit-<cp>.txt`. Rewrites carry the full new fact bodies
@@ -282,7 +282,7 @@ Batch A owns: `src/Gallery.Web/Library/GalleryService.cs` (append only),
 `src/Gallery.Web/Admin/Pages/PhotoEditPage.razor` (one body line only), new
 `tests/Gallery.Web.Tests/WorkspaceApiTests.cs`, new `tests/Gallery.Web.Tests/WorkspaceAccessTests.cs`.
 
-- [ ] T011 [P] Add `GalleryService.RemoveManyAsync(string gid, IReadOnlyList<string> ids)` in
+- [X] T011 [P] Add `GalleryService.RemoveManyAsync(string gid, IReadOnlyList<string> ids)` in
   `src/Gallery.Web/Library/GalleryService.cs` (A8, contracts/http.md; data-model.md validation
   table): timed `library.bulk.remove`; ids count 0 or > `LibraryOptions.PageSize` →
   `OperationResult.Refused(422, …)` with the same two sentences `BulkAddAsync` uses ("Select at
@@ -290,7 +290,7 @@ Batch A owns: `src/Gallery.Web/Library/GalleryService.cs` (append only),
   otherwise ONE `Begin("gallery.remove.bulk")`, `LoadAsync` once, `RemoveOneAsync(gid, iid, scope,
   loaded)` per distinct id (non-members skipped), ONE `scope.CompleteAsync()`; result carries the
   removed count. Depends: none. Accept: T016 facts `RemoveMany_*` green.
-- [ ] T012 [P] Write `src/Gallery.Web/Workspace/Messages.cs` (static class `Messages`) with one
+- [X] T012 [P] Write `src/Gallery.Web/Workspace/Messages.cs` (static class `Messages`) with one
   method per row of the contracts/http.md Messages table, `{n}` pluralised photo/photos and
   "it"/"them" for 1/many, A2 per C-07, the U13 and U3 messages, the selection-cap sentence "You
   can select up to {cap} photos at a time.", the empty-collection sentences of components.md K12,
@@ -298,10 +298,10 @@ Batch A owns: `src/Gallery.Web/Library/GalleryService.cs` (append only),
   moved here verbatim; `PhotoEditPage.DeleteConsequence` becomes `=> Messages.DeleteConsequence(galleries);`
   (`src/Gallery.Web/Admin/Pages/PhotoEditPage.razor:95`). Depends: none. Accept: T016
   `Messages_*` facts pin every string; `PhotoEditPageTests`, `LibraryEditTests` stay green.
-- [ ] T013 [P] In `src/Gallery.Web/Upload/UploadEndpoints.cs` change only `private static … ReadAsync<T>`
+- [X] T013 [P] In `src/Gallery.Web/Upload/UploadEndpoints.cs` change only `private static … ReadAsync<T>`
   (line ~818) and `private static IResult Error(…)` (line ~838) to `internal static`. No other
   edit. Depends: none. Accept: `git diff` shows 2 changed lines.
-- [ ] T014 [SAFETY] Write `src/Gallery.Web/Workspace/WorkspaceApi.cs`:
+- [X] T014 [SAFETY] Write `src/Gallery.Web/Workspace/WorkspaceApi.cs`:
   `public static RouteGroupBuilder MapWorkspaceApi(this RouteGroupBuilder admin)` mapping A1–A11
   exactly as contracts/http.md "Writes" (paths, `RequestSizeLimitAttribute` 4 KiB default, 16 KiB
   for A2/A3/A4/A5/A7/A8, 64 KiB for A9), each handler: `OpaqueId.IsValid` on `{gid}`/`{iid}` else
@@ -315,11 +315,11 @@ Batch A owns: `src/Gallery.Web/Library/GalleryService.cs` (append only),
   200 with no write; `public: false` on a public gallery → `UnpublishAsync`. The routes go on the
   `admin` group passed in (owner policy + `AdminAntiforgeryFilter`, [SAFETY I.3, I.6]); never on
   `app`, never `AllowAnonymous`. Depends: T011, T012, T013. Accept: compiles; PARENT wiring T015.
-- [ ] T015 PARENT In `src/Gallery.Web/Admin/AdminEndpoints.cs` `MapAdmin`, add
+- [X] T015 PARENT In `src/Gallery.Web/Admin/AdminEndpoints.cs` `MapAdmin`, add
   `admin.MapWorkspaceApi();` after `admin.MapLibrary();` and before the H6 catch-all. Accept:
   `grep -n 'MapWorkspaceApi' src/Gallery.Web/Admin/AdminEndpoints.cs` shows one line above
   `{**rest}`.
-- [ ] T016 [SAFETY] Write `tests/Gallery.Web.Tests/WorkspaceApiTests.cs` (`LibraryHost`,
+- [X] T016 [SAFETY] Write `tests/Gallery.Web.Tests/WorkspaceApiTests.cs` (`LibraryHost`,
   `PostJsonAsync`): per A-route the status, JSON shape and exact message; the carried facts of
   TI-62 (A3 G2-rules, A4 G3 stale 409 and purge rule, A6 publish/unpublish purges and owner.action
   lines, A5 rename + old-slug redirect, A9/A10 home-card cover, A8 pin cleared and public-last-photo
@@ -331,7 +331,7 @@ Batch A owns: `src/Gallery.Web/Library/GalleryService.cs` (append only),
   `EmptyPublishReason` for `{ public: true }` AND `{ public: false }`, store and recorder unchanged;
   `Messages_*` facts for every message row. Depends: T014, T015. Accept: `--filter
   FullyQualifiedName~WorkspaceApiTests` green.
-- [ ] T017 [SAFETY] Write `tests/Gallery.Web.Tests/WorkspaceAccessTests.cs` [I.3, I.6] with a
+- [X] T017 [SAFETY] Write `tests/Gallery.Web.Tests/WorkspaceAccessTests.cs` [I.3, I.6] with a
   route table of A1–A11 (W1–W4 rows are added in T035): (1) no session: POST 401 with a valid
   token, dump of `images`/`galleries`/`site` unchanged, `no-store` + `noindex`; (2) session, no
   token: JSON POST 400, bare POST 400, wrong token 400, dump unchanged, `Recorder.AllPurged()`
@@ -355,17 +355,17 @@ the 8 new `src/Gallery.Web/Ui/Pages/*Page.razor`, `SidePanelPage.razor` and `Con
 follow speckit-orchestration `references/razor-optional-params.md` (no `@if` beside existing
 markup); default renders must be byte-identical.
 
-- [ ] T018 [P] Add `Sizes.ForFill()` to `src/Gallery.Core/Images/Sizes.cs` (K5): the `sizes`
+- [X] T018 [P] Add `Sizes.ForFill()` to `src/Gallery.Core/Images/Sizes.cs` (K5): the `sizes`
   string for `repeat(auto-fill, minmax(168px, 1fr))` beside a 232 px list and 320 px panel at
   ≥ 900 px and two columns below 600 px: the exact string fixed by C-18 (blocked until T002 has
   written it into contracts/components.md K5; escalate, never invent it). Append one fact to
   `tests/Gallery.Core.Tests/SizesTests.cs` asserting that exact string. Accept: Core tests green.
-- [ ] T019 [P] K2/K3: `SidePanel` gains `[Parameter] public bool Save { get; set; } = true;`
+- [X] T019 [P] K2/K3: `SidePanel` gains `[Parameter] public bool Save { get; set; } = true;`
   (false renders no `sp-save` row); `ContactSheet` gains `Fill` (true → class `cs cs-fill`, no
   `cs-l*/cs-m*/cs-s*`; CSS `.cs-fill { grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)) }`
   and two columns below 600 px in `ContactSheet.razor.css`). Accept: T028 byte-identity facts for
   both defaults; `PublicOutputUnchangedTests`, `UiPagesUnchangedTests` green.
-- [ ] T020 [P] K4 `Mark` (`Components/Atoms/Mark.razor(.css)`, root `ws-mark`, param `Text`) and
+- [X] T020 [P] K4 `Mark` (`Components/Atoms/Mark.razor(.css)`, root `ws-mark`, param `Text`) and
   K8 `Toast` (`Components/Molecules/Toast.razor(.css)`, root `ws-toast`, `role="status"`, params
   `Text`, `Failed`; fixed bottom centre). Accept: T028 facts.
 - [ ] T021 K5 `PhotoCell` (`Components/Molecules/PhotoCell.razor(.css)`): markup exactly as
@@ -373,14 +373,14 @@ markup); default renders must be byte-identical.
   `SelectMark` (label "Select {title}"), `Mark` "Cover"/"New" when set, `Sizes.ForFill()`,
   `Priority`; state classes `is-selected` (with `aria-selected="true"`) and `ws-drop`. Depends:
   T018, T020. Accept: T028 facts for the five states.
-- [ ] T022 [P] K6 `GalleryChecklist` (`Components/Molecules/GalleryChecklist.razor(.css)` +
+- [X] T022 [P] K6 `GalleryChecklist` (`Components/Molecules/GalleryChecklist.razor(.css)` +
   `GalleryChecklist.cs` holding `public static ChecklistMatch Match(string query, IReadOnlyList<string> titles)`:
   trim; case-insensitive contains narrows; case-insensitive whole-title equality = existing;
   ordering mirrors `TokenCombobox.Match`'s `OrdinalIgnoreCase` rule; **call** `GalleryService.TitleProblem`
   for the too-long/blank create offer, never re-implement it). Markup per K6 with `TitleMax`.
   Accept: `GalleryChecklistTests` (T028) cover every K6 state and every `Match` rule the retired
   `TokenComboboxTests` pinned (list them in the file's summary).
-- [ ] T023 [P] K7 `UploadRow` (`Components/Molecules/UploadRow.razor(.css)`) + enum
+- [X] T023 [P] K7 `UploadRow` (`Components/Molecules/UploadRow.razor(.css)`) + enum
   `UploadRowState { Waiting, Preparing, Uploading, Adding, Added, Failed, Interrupted }` appended
   to `ComponentTypes.cs`; words and buttons per K7 (`Retry`, `Remove` are `Button`s with text).
   Accept: T028 facts per state.
@@ -398,7 +398,7 @@ markup); default renders must be byte-identical.
   tooltip or a `title` attribute. `Done` is `disabled` while any row is Waiting, Preparing,
   Uploading or Adding. Depends: T023. Accept: T028 `UploadTray_public_notice_is_plain_text_in_every_state`
   (5 states × public) and the K10 state facts.
-- [ ] T026 [P] K11 `PhotoStage` (`Components/Organisms/PhotoStage.razor(.css)`, root `ws-stage`):
+- [X] T026 [P] K11 `PhotoStage` (`Components/Organisms/PhotoStage.razor(.css)`, root `ws-stage`):
   bar with `Button` "← {BackLabel}", "{Position} of {Total}", `Previous`, `Next` (unavailable at
   the ends), empty frame `ws-stage-frame`. Accept: T028 facts first/middle/last.
 - [ ] T027 Catalogue: 8 pages `src/Gallery.Web/Ui/Pages/{Mark,PhotoCell,GalleryChecklist,UploadRow,Toast,CollectionList,UploadTray,PhotoStage}Page.razor`,
