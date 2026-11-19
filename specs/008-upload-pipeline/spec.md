@@ -375,6 +375,9 @@ one open batch exists.
   finish with exactly one library image per photo and no duplicated or missing files (D-11).
 - **FR-033**: Confirmed images MUST join no gallery and MUST NOT change any gallery's visibility or
   any public page, so confirm triggers no edge purge or warm (Constitution II.5; L-05).
+  **AMENDED by 020-admin-workspace (constitution 6.3.0)**: this is still what the built upload
+  does. II.5 now permits an upload the owner aims at a gallery (rule 5a to 5d); feature 020
+  replaces this requirement with its FR-030 and FR-031 when it ships.
 - **FR-034**: After confirm the owner MUST stay on the upload page, which shows how many photos were
   added, a link to the library page, and an empty drop target for a new batch (Clarification 1).
 - **FR-035**: Library images created by upload MUST be distinguishable from seeded development

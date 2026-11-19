@@ -41,7 +41,8 @@ Owner feedback this spec encodes:
   change (6.2.2 → 6.3.0): "Only the owner decides what is visible; nothing becomes public as a side
   effect of upload, tagging, or editing. An upload the owner aims at a public gallery is the owner's
   decision, not a side effect: the destination, and that visitors will see the photos, MUST be shown
-  before any file is picked." Accepted risk: with the answer below, a wrong file dropped into a
+  before any file is picked." (Done: constitution 6.3.0 carries this as II.5 with four conditions,
+  5a to 5d; where the wording differs, the constitution's is the binding one.) Accepted risk: with the answer below, a wrong file dropped into a
   public gallery is visible to visitors seconds after it finishes, with no confirm step in between.
   Detection is immediate (the photo appears in the open gallery marked New); reversal is one action
   (untick the gallery, or delete the photo).
@@ -475,7 +476,7 @@ gallery, upload a photo into a gallery, reorder a gallery and make it public.
   "site with a frame" direction) is replaced by the workspace, the component list is brought up to
   date, and the upload batch lifecycle entries are rewritten for per-photo joining with no confirm or
   discard step.
-- **FR-046**: BLOCKING, before planning: the constitution's rule that nothing becomes public as a
+- **FR-046**: (amendment DONE: constitution 6.3.0, II.5a to 5d) BLOCKING, before planning: the constitution's rule that nothing becomes public as a
   side effect of upload (II.5) MUST be amended as worded in Clarifications, so that an upload the
   owner aims at a public gallery, announced before files are picked, is the owner's decision.
 - **FR-047**: Requirements in earlier specs that this feature supersedes MUST be annotated in
