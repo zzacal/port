@@ -1,6 +1,12 @@
 <!--
 Sync Impact Report
-- Version change: 6.2.0 → 6.2.1 (PATCH; 6.2.0 MINOR was the same day)
+- Version change: 6.2.1 → 6.2.2 (PATCH; 6.2.0 MINOR and 6.2.1 PATCH were the same day)
+- 6.2.2 (2026-11-18, feature 018 analyze, owner directive "anywhere a configuration could
+  come from"): I.7a said the password is "supplied through the environment at startup"; it is
+  now any configuration source (environment variable, user-secrets, settings file, any other
+  provider). I.7c "password variable" becomes "password setting". No control depended on the
+  source: the development-host gate and the production refusal (which reads the final
+  configuration, so it catches the setting from any source) are unchanged. PATCH.
 - 6.2.1 (2026-11-18, feature 018 plan, research R-02): I.7a said the disabled local sign-in's
   address "answers not found"; the plan does not map the route at all on a non-qualifying host,
   so it answers as any unknown admin address does. Wording only, no guarantee changed: PATCH.
@@ -52,14 +58,14 @@ The site has exactly one administrator: the owner.
    development target), all three — the owner MAY be signed in without Google by a local sign-in,
    and an unclaimed site MAY be claimed by it for the fixed identity `local-owner`. These rules are
    the entire protection for that path:
-   a. It exists only when a local sign-in password of at least 16 characters is supplied through
-      the environment at startup. Otherwise no local sign-in is offered and its address is not
+   a. It exists only when a local sign-in password of at least 16 characters is configured at
+      startup, from any configuration source. Otherwise no local sign-in is offered and its address is not
       mapped, so it answers as any unknown admin address does, creating no session.
    b. Each local sign-in is a deliberate form submission carrying that password and the rule-6
       forgery token. The password is compared in constant time and never appears in any page,
       response or log line; a wrong password creates no session.
    c. No setting can enable it on a host that is not a development host, and a production start
-      MUST refuse to run while the password variable is present (naming the variable, never its
+      MUST refuse to run while the password setting is present (naming the setting, never its
       value). An automated check MUST prove a production-shaped host offers no local sign-in.
    d. A local claim goes through the same atomic claim-once path as rule 1 and is logged per rule 5,
       marked local. After any claim, rules 3 and 4 hold unchanged: the claiming identity, Google or
@@ -341,4 +347,4 @@ These are binding inputs to every plan:
   place, not silently edited.
 - Every plan and analyze pass verifies compliance and cites principles by number.
 
-**Version**: 6.2.1 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-11-18
+**Version**: 6.2.2 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-11-18

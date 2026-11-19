@@ -39,14 +39,15 @@ stronger than a 404 handler). Edits: `evidence/plan-record-edit.py`.
 ## R-03 The password setting
 
 **Decision**: configuration key `LocalSignIn:Password` (environment variable
-`LocalSignIn__Password`). It is read from the process configuration: environment variables, plus
-the per-user secret store on the owner's machine (the host loads user-secrets in Development only).
-A source-scan test fails if any committed `appsettings*.json` or `launchSettings.json` contains
-`LocalSignIn`. Minimum 16 characters; a shorter value counts as unset (state `too_short`).
+`LocalSignIn__Password`). It is read through `IConfiguration`, so any configuration source
+works: environment variables, user-secrets (loaded in Development), settings files, command-line
+arguments or any other provider (owner directive after analyze). Minimum 16 characters; a shorter
+value counts as unset (state `too_short`). ProductionGuard reads the same final configuration, so
+it refuses the key from any source; a production host does not load `appsettings.Development.json`
+or user-secrets, so only a key in a source production actually loads trips it.
 
-**Reading of I.7a "supplied through the environment at startup"**: the run environment outside
-source control (an environment variable or the owner's user-secrets), never a committed file. The
-source-scan test enforces the "never committed" half.
+**I.7a source**: constitution 6.2.2 says "from any configuration source". The earlier plan
+reading ("never committed", enforced by a source-scan test) is withdrawn with that test.
 
 **Comparison**: SHA-256 of the submitted and the configured UTF-8 password, then
 `CryptographicOperations.FixedTimeEquals`. Hashing first makes the comparison time independent of

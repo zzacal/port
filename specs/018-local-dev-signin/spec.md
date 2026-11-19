@@ -13,11 +13,13 @@
 ### Session 2026-11-18
 
 - Q: How is the local sign-in switched on, and who may use it? → A: By a password the person
-  starting the app sets in an environment variable; the sign-in form asks for it. Unset means no
+  starting the app sets in an environment variable; the sign-in form asks for it. (Widened
+  after analyze, owner: any configuration source counts: environment variable, user-secrets,
+  settings file or any other provider.) Unset means no
   local sign-in. The password is the gate, so the button may be visible to anyone who can reach
   the dev stack, and the "request from the same machine" condition is dropped (it also has to work
   for a self-contained CI browser suite). The Development-environment and dev-marked data
-  conditions stay, and a production start refuses to run when the variable is set.
+  conditions stay, and a production start refuses to run when the setting is present.
 - Q: On a dev stack whose site has no owner yet, should the local sign-in (with the right
   password) claim the site? → A: B. It claims the site for a fixed local identity (`local-owner`)
   and signs in, so a self-contained CI browser suite can start from an empty database. A later
@@ -75,9 +77,9 @@ anyone. This story is the condition for allowing Story 1 at all.
 
 **Independent Test**: Start the app in each non-qualifying shape (production environment;
 development environment with production-like data or storage names; no password set), each with
-the password variable set where the shape allows it, and confirm the local sign-in is absent from
+the password setting present where the shape allows it, and confirm the local sign-in is absent from
 the page and its address answers as if it did not exist; and confirm a production start with the
-password variable set refuses to start.
+password setting present refuses to start.
 
 **Acceptance Scenarios**:
 
@@ -90,9 +92,9 @@ password variable set refuses to start.
 3. **Given** the dev stack started without a local sign-in password, **When** the sign-in page
    renders or the local sign-in address is posted to, **Then** no local sign-in is offered and the
    address answers exactly as any unknown admin address does (a signed-out GET is sent to sign-in, any other method is refused).
-4. **Given** a production configuration with the local sign-in password variable set, **When**
-   the app starts, **Then** it refuses to start and names the variable (never its value); without
-   the variable, the existing production configuration check passes or fails exactly as today.
+4. **Given** a production configuration with the local sign-in password setting present, **When**
+   the app starts, **Then** it refuses to start and names the setting (never its value); without
+   the setting, the existing production configuration check passes or fails exactly as today.
 
 ---
 
@@ -111,8 +113,8 @@ password variable set refuses to start.
   point of the feature). The Google button stays as today, but its "Sign-in isn't set up on this
   server." notice is not shown while the local sign-in is offered. (Corrected at plan, R-07: today
   the button is shown with that notice, not hidden.)
-- **Password variable set but too short** (under 16 characters): treated as unset, so no local
-  sign-in, and startup logs a warning naming the variable and the minimum length (never the value).
+- **Password setting present but too short** (under 16 characters): treated as unset, so no local
+  sign-in, and startup logs a warning naming the setting and the minimum length (never the value).
 - **Repeated wrong passwords**: each is refused and logged; no lockout (a dev stack has one user).
 - **A local session cookie copied to another host**: it is useless there, because session cookies
   are only accepted by the instance whose keys signed them, and the owner check on every request
@@ -136,14 +138,15 @@ password variable set refuses to start.
 - **FR-004**: The local sign-in MUST be available only when ALL of these hold: the app runs in the
   development environment; the datastore and the storage are the ones marked as development (the
   same markers the existing development-only maintenance command requires); and a local sign-in
-  password of at least 16 characters is configured through the environment at startup. If any one
+  password of at least 16 characters is configured at startup, from any configuration source (environment variable, user-secrets,
+  settings file or any other provider). If any one
   fails, the sign-in page MUST NOT offer it and its address MUST NOT exist: it
   answers exactly as any unknown admin address does (a signed-out GET is sent to sign-in, any other method is refused), creating no session (corrected at plan, R-02). It MUST NOT depend on where the request comes from.
 - **FR-005**: The password setting is the only on-switch, and it MUST NOT override the environment
   and data conditions of FR-004: with the setting present on a non-qualifying host, the local
   sign-in stays absent.
 - **FR-006**: The production configuration check MUST also refuse a production start when the
-  local sign-in password variable is present (naming the variable, never its value), and otherwise
+  local sign-in password setting is present, from any source (naming the setting, never its value), and otherwise
   behave exactly as today. An automated check MUST prove that a production-shaped host offers no
   local sign-in and that its address answers exactly as any unknown admin address does (a signed-out GET is sent to sign-in, any other method is refused).
 - **FR-007**: On an unclaimed development site, a local sign-in with the right password MUST claim
@@ -221,15 +224,17 @@ password variable set refuses to start.
 - Default (overturnable in clarify): a visible button on the existing sign-in page, used on
   purpose (FR-008), rather than signing in automatically on every request. Automatic sign-in would
   make signed-out pages impossible to see locally.
-- Where the password lives (planning input): on the owner's machine in user-secrets or the
-  launch environment, never committed; on CI as a value the workflow generates per run (or a
+- Where the password lives (planning input): anywhere configuration comes from. On the owner's
+  machine typically user-secrets or the launch environment; on CI as a value the workflow generates per run (or a
   repository secret) and hands to both the app and the browser suite.
 - Tests already mint owner sessions directly in their own fixtures; this feature does not change
   them. The automation browser against the local stack is one consumer of the new sign-in.
 - Accepted risk (constitution I): anyone who knows the local password and can reach a dev stack
   can sign in to it as the owner. A dev stack holds only development data and its own dev
   credentials, and whoever set the password started the process. Production is excluded by FR-004
-  and FR-006, not by the password. Reversal: delete the feature; no stored data depends on it.
+  and FR-006, not by the password. If the password is put in a committed development settings
+  file, anyone who can read the repository can sign in to any dev stack that uses it (owner
+  choice: any configuration source is allowed). Reversal: delete the feature; no stored data depends on it.
 - Planning inputs only: .NET 10 minimal APIs, the existing cookie scheme and Razor sign-in page;
   the sign-in card is a catalogue component, so a new state may move its `/ui` page (plan
   decision).

@@ -734,7 +734,7 @@ slug is cosmetic—a stale slug triggers a 301 redirect to the current one (D-14
 
 ## 7. Traceability Matrix
 
-One row per numbered rule in constitution v6.2.1, plus one per Platform Constraints bullet (`PC.n`,
+One row per numbered rule in constitution v6.2.2, plus one per Platform Constraints bullet (`PC.n`,
 in order). A rule with no numbered list (VI) counts as one rule. Status `deferred:first-build-feature`
 marks rules whose mechanism is designed here but whose compliance is a provisioning setting that
 can only be checked once the resource exists.

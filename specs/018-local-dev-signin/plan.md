@@ -56,7 +56,7 @@ excluded.
 |---|---|---|
 | I.1–I.5 single owner, claim once | PASS | A local claim goes through the existing atomic `TryClaimAsync` (via `ResolveAsync`) and logs `auth.claim`; after any claim the per-request owner check is unchanged. |
 | I.6 CSRF | PASS | H7 validates the antiforgery token by hand, as H2 does. |
-| I.7 development-only local sign-in | PASS | a: `Evaluate` (16+ chars, dev host); unmapped otherwise. b: form with token, `FixedTimeEquals`, never logged. c: `ProductionGuard` rule plus a production-target build test, and the source scan for committed config. d: `ResolveAsync`, then sign in as the winner. e: `auth.local.signin` / `auth.local.refused`. Wording of I.7a corrected by PATCH 6.2.1 (research R-02). |
+| I.7 development-only local sign-in | PASS | a: `Evaluate` (16+ chars, dev host); unmapped otherwise. b: form with token, `FixedTimeEquals`, never logged. c: `ProductionGuard` rule plus a production-target build test (any configuration source; constitution 6.2.2). d: `ResolveAsync`, then sign in as the winner. e: `auth.local.signin` / `auth.local.refused`. Wording of I.7a corrected by PATCH 6.2.1 (research R-02). |
 | II visibility | N/A | No public output changes. |
 | III leak nothing | PASS | No public markup; the password hash lives only in memory; no secret in logs (tested). |
 | IV.1 / IV.4 timing | PASS | `http.request` and the existing `op.timing db.site.*` lines; new `auth.local.*` events (research R-06). |
@@ -103,7 +103,6 @@ tests/Gallery.Web.Tests/
 ├── Fixtures/LibraryBrowserFixture.cs    # + devHost, ownerSession (parent, test infra)
 ├── LocalSignInRuleTests.cs              # new
 ├── LocalSignInTests.cs                  # new
-├── LocalSignInSourceTests.cs            # new
 └── LocalSignInBrowserTests.cs           # new
 ```
 

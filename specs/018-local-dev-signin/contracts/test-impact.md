@@ -41,7 +41,5 @@ batch; a new hit becomes the next row "(found at implement)".
   posts; the session works on an admin form and signs out; no password in any body or log line;
   the `http.request` duration for SC-001; each non-qualifying host shape (no form, the address
   answers 401/302, no cookie); a production-target host with the key refuses to build.
-- `LocalSignInSourceTests`: no committed `appsettings*.json` / `launchSettings.json` contains
-  `LocalSignIn`.
 - `LocalSignInBrowserTests` (`[Collection("library-browser")]`): from an empty dev database, with
   no minted session, type the password, land on `/admin`, then open `/admin/library` (SC-006).

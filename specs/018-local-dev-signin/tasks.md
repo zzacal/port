@@ -60,7 +60,7 @@ test files it names, in the same batch as the code.
   - Existing and unchanged: `auth.claim`, `auth.refused`, `http.request`, `op.timing db.site.*`.
 - **[SAFETY]** marks the I.7 controls: the dev-host and password gate, the unmapped route, the
   production refusal, the password never leaking, and the forgery check. Blocking and
-  non-deferrable; T020 breaks each on purpose.
+  non-deferrable; T019 breaks each on purpose.
 - **Tight assertions**: compare status codes, `Location` and subjects for EQUALITY; "absent" means
   no element (`class="si-local"` / `action="/admin/signin/local"`), never a bare substring; assert
   "no owner cookie" by checking that no `Set-Cookie` names `__Host-gallery`.
@@ -144,8 +144,8 @@ the same route absent everywhere else. One batch implements both, with story-lab
 Batch B owns: `src/Gallery.Web/Admin/AdminEndpoints.cs`,
 `src/Gallery.Web/Admin/Pages/SignInPage.razor`,
 `src/Gallery.Web/Components/Organisms/SignInCard.razor` and `.razor.css`, and the new
-`tests/Gallery.Web.Tests/LocalSignInTests.cs`, `LocalSignInGuardTests.cs`,
-`LocalSignInSourceTests.cs` and `LocalSignInBrowserTests.cs`.
+`tests/Gallery.Web.Tests/LocalSignInTests.cs`, `LocalSignInGuardTests.cs` and
+`LocalSignInBrowserTests.cs`.
 
 - [ ] T010 [P] [US1] K2: in `SignInCard.razor`, add `Local` and `LocalForm` exactly per
   contracts/components.md; `@LocalForm` goes directly after the Google form's `</form>` in the
@@ -206,11 +206,7 @@ Batch B owns: `src/Gallery.Web/Admin/AdminEndpoints.cs`,
     `LocalSignIn:Password` refuses to build: the exception message contains
     `LocalSignIn:Password must not be set` and not the value (follow ProductionGuardTests' existing
     "refuses to build" fact for how it builds the host).
-- [ ] T015 [P] [US2] [SAFETY] Write `tests/Gallery.Web.Tests/LocalSignInSourceTests.cs`: no
-  committed `src/**/appsettings*.json` or `src/**/launchSettings.json` contains `LocalSignIn`
-  (files listed with `git ls-files`, or by walking from `Render.RepoRoot` while skipping
-  `bin`/`obj`/`artifacts`).
-- [ ] T016 [US1] Write `tests/Gallery.Web.Tests/LocalSignInBrowserTests.cs`
+- [ ] T015 [US1] Write `tests/Gallery.Web.Tests/LocalSignInBrowserTests.cs`
   (`[Collection("library-browser")]`, `NewSiteAsync(devHost: true, ownerSession: false,
   extraOverrides: {LocalSignIn:Password})`). SC-006: from an empty database in a fresh browser
   context, open `/admin/library` → lands on `/admin/signin`; fill "Local password", click "Claim
@@ -229,14 +225,14 @@ Then run the quickstart owner steps against a throwaway dev host, run gate B, an
 
 ## Phase 4: Polish (parent)
 
-- [ ] T017 [P] Write `specs/018-local-dev-signin/decisions.md`: the clarify answers (OWNER), the
+- [ ] T016 [P] Write `specs/018-local-dev-signin/decisions.md`: the clarify answers (OWNER), the
   plan corrections (R-02 the 6.2.1 wording, R-07 the notice, the test-impact correction about
   browser fixtures, the "environment" reading of I.7a), every executor `decisions_made`, and the
   severable seam (a `/ui` specimen).
-- [ ] T018 [P] Write the 018 entry in `docs/roadmap.md`: status, evidence, OWNER-ONLY O-01.
-- [ ] T019 Re-run the test-impact grep against the finished tree; confirm no existing test file
+- [ ] T017 [P] Write the 018 entry in `docs/roadmap.md`: status, evidence, OWNER-ONLY O-01.
+- [ ] T018 Re-run the test-impact grep against the finished tree; confirm no existing test file
   changed (`git diff --stat <base> -- tests/` lists only the new files and the T003 fixtures).
-- [ ] T020 Write `specs/018-local-dev-signin/evidence/non-vacuity.sh` from 017's. One break per
+- [ ] T019 Write `specs/018-local-dev-signin/evidence/non-vacuity.sh` from 017's. One break per
   guard, each anchored to the code line (not a comment) and failing on its own assertion:
   - `Evaluate` skips the dev-host check → LocalSignInRuleTests table and GuardTests (b) red;
   - `MinLength` 16 → 1 → RuleTests 15-char row and GuardTests (e) red;
@@ -249,9 +245,9 @@ Then run the quickstart owner steps against a throwaway dev host, run gate B, an
   - the `auth.local.refused` template gains the submitted password → LocalSignInTests no-leak fact
     red.
   Run `NV_DRYRUN=1`, then the real run; tee to `non-vacuity.txt`.
-- [ ] T021 Final gate (`evidence/gate-final.txt`): `dotnet clean`, `-warnaserror` build, full
+- [ ] T020 Final gate (`evidence/gate-final.txt`): `dotnet clean`, `-warnaserror` build, full
   suite; restore earlier features' logs; commit.
-- [ ] T022 Merge to main (`--no-ff`, body as in 017's) and push; watch the deploy go green. Signed
+- [ ] T021 Merge to main (`--no-ff`, body as in 017's) and push; watch the deploy go green. Signed
   out, on port.zacal.me:
   - `curl -s -o /dev/null -w '%{http_code}' -X POST https://port.zacal.me/admin/signin/local` → 401;
   - `/admin/signin` contains no `si-local`.
@@ -268,20 +264,20 @@ Then run the quickstart owner steps against a throwaway dev host, run gate B, an
 
 - Setup (parent): T001 → T002 → T003 → T004.
 - Batch A: T005 ‖ T006 ‖ T007 → T008; then the parent's T009; checkpoint A.
-- Batch B (needs A and T009): T010 ‖ T011, then T012; then T013, T014 ‖ T015, T016; checkpoint B.
-- Polish: T017 ‖ T018, T019 → T020 → T021 → T022.
+- Batch B (needs A and T009): T010 ‖ T011, then T012; then T013, T014, T015; checkpoint B.
+- Polish: T016 ‖ T017, T018 → T019 → T020 → T021.
 
 ## Parallel example
 
 ```text
 Wave 1: Batch A: T005 (rule) ‖ T006 (guard) ‖ T007 (Input), then T008; parent T009
-Wave 2: Batch B: T010 (card) ‖ T011 (page), T012 (routes), then T013–T016
-Wave 3: T017 decisions ‖ T018 roadmap; T019; non-vacuity; final gate; merge
+Wave 2: Batch B: T010 (card) ‖ T011 (page), T012 (routes), then T013–T015
+Wave 3: T016 decisions ‖ T017 roadmap; T018; non-vacuity; final gate; merge
 ```
 
 ## Implementation strategy
 
 - MVP = Phases 1–3: the local sign-in on dev hosts and its absence everywhere else. Each half is
   pointless without the other, so they ship together.
-- Severable seams: a `/ui` "Local sign-in" specimen (moves a baseline); the browser test T016
+- Severable seams: a `/ui` "Local sign-in" specimen (moves a baseline); the browser test T015
   (the HTTP tests cover the same flow; it proves SC-006 in a real browser).
