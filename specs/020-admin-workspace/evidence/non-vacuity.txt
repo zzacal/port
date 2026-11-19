@@ -1,0 +1,38 @@
+PASS (1) T043 II.5a: Register has no destination-public refusal -> red:   Failed Gallery.Web.Tests.UploadJoinTests.Register_into_a_public_gallery_without_the_flag_is_409_destination_public |  Assert.Equal() Failure: Values differ Expected: Conflict 
+PASS (2) T025 II.5a: public notice only when the tray is Empty -> red:   Failed Gallery.Web.Tests.WorkspaceComponentTests.UploadTray_public_notice_is_plain_text_in_every_state(state: FinishedWithFailures) |  the notice does not directly follow the heading 
+PASS (3) T046 II.5a: upload.js always consents and drops the notice clone -> red:   Failed Gallery.Web.Tests.WorkspaceUploadBrowserTests.Public_destination_notice_is_visible_before_picking_and_while_working |  System.TimeoutException : waited 30000 ms for Working into Coast at http://localhost:60351/admin/g/y6kjy46ue7s6crf6xemycnft4m; heading 'Add photos to Coast'; rows [] 
+PASS (4) T042 II.5b: a join with no destination adds to the first home gallery -> red:   Failed Gallery.Web.Tests.UploadJoinTests.Join_with_no_destination_calls_no_gallery_method_and_enqueues_no_edge_work |  Assert.Equal() Failure: Values differ Expected: OK 
+PASS (5) T042 II.5b: a join with no destination enqueues edge work -> red:   Failed Gallery.Web.Tests.UploadJoinTests.Join_with_no_destination_calls_no_gallery_method_and_enqueues_no_edge_work |  Assert.Empty() Failure: Collection was not empty Collection: ["/g"] 
+PASS (6) T042 II.5c: the join publishes its destination -> red:   Failed Gallery.Web.Tests.UploadJoinTests.Join_never_changes_visibility |  Assert.Equal() Failure: Values differ Expected: Tuple ("jy2r3uom7cahdt77swqsoezbo4", "Private with one", False) 
+PASS (7) T053 II.5c: ConfirmService writes visibility "public" -> red:   Failed Gallery.Web.Tests.WorkspaceRemovalGuardTests.Public_visibility_is_written_only_inside_GalleryService_PublishAsync |  src/Gallery.Web/Upload/ConfirmService.cs:75 writes "public" outside GalleryService.PublishAsync 
+FAIL (8) broken build did not compile:
+/Users/zzacal/repos/gallery/src/Gallery.Web/Upload/BatchStore.cs(206,44): error CS0019: Operator '&&' cannot be applied to operands of type 'bool' and '(bool, string)' [/Users/zzacal/repos/gallery/src/Gallery.Web/Gallery.Web.csproj]
+/Users/zzacal/repos/gallery/src/Gallery.Web/Upload/BatchStore.cs(206,44): error CS0019: Operator '&&' cannot be applied to operands of type 'bool' and '(bool, string)' [/Users/zzacal/repos/gallery/src/Gallery.Web/Gallery.Web.csproj]
+PASS (9) T043 claim: U9 deletes a joining item -> red:   Failed Gallery.Web.Tests.UploadJoinTests.Delete_and_restart_of_a_joining_item_are_409_not_active |  Assert.Equal() Failure: Values differ Expected: Conflict 
+PASS (10) T042 exactly-once: a losing join continues after the atomic pull missed -> red:   Failed Gallery.Web.Tests.UploadJoinTests.Fifty_concurrent_claims_of_one_item_let_exactly_one_join |  Assert.Equal() Failure: Values differ Expected: 1 
+PASS (11) T042 III.6: copy without if-match -> red:   Failed Gallery.Web.Tests.UploadJoinTests.Reput_after_validation_publishes_nothing |  Assert.Equal() Failure: Values differ Expected: Conflict 
+PASS (12) T014 II.6: A6 skips the empty-private refusal -> red:   Failed Gallery.Web.Tests.WorkspaceApiTests.A6_empty_private_gallery_is_409_EmptyPublishReason_whatever_is_sent_and_nothing_changes(wantPublic: False) |  expected 409, got 200: {"public":false,"message":"Empty is now private."} 
+PASS (13) T014 I.3: A1 is AllowAnonymous -> red:   Failed Gallery.Web.Tests.WorkspaceAccessTests.Without_a_session_POST_is_401_even_with_the_token(route: "A1") |  Assert.Equal() Failure: Values differ Expected: Unauthorized 
+PASS (14) T014 I.6: A7 accepted without an antiforgery token -> red:   Failed Gallery.Web.Tests.WorkspaceAccessTests.With_a_session_and_no_antiforgery_token_every_POST_is_400_and_stores_nothing(route: "A7") |  Assert.Equal() Failure: Values differ Expected: BadRequest 
+PASS (15) T033 I.3: W4 is AllowAnonymous -> red:   Failed Gallery.Web.Tests.WorkspaceAccessTests.Without_a_session_W_routes_redirect_to_signin_and_show_nothing(route: "W4") |  GET W4 [] answered 200 
+PASS (16) T043 I.3: U12 is AllowAnonymous -> red:   Failed Gallery.Web.Tests.UploadAccessTests.Without_a_session_GET_redirects_to_signin_and_POST_is_401(name: "U12") |  Assert.Equal() Failure: Values differ Expected: Unauthorized 
+PASS (17) T053: /admin/library mapped again -> red:   Failed Gallery.Web.Tests.WorkspaceRemovalGuardTests.Every_removed_address_answers_exactly_like_an_unknown_admin_address |  GET /admin/library answered 200, no-store True, noindex True, 0 body bytes; an unknown address answers 404, no-store True, noindex True, 0 body bytes 
+PASS (18) T036/T053: DOMParser outside swap -> red:   Failed Gallery.Web.Tests.WorkspaceRemovalGuardTests.DOMParser_occurs_exactly_once_in_workspace_js_inside_function_swap |  workspace.js names DOMParser 2 times, expected exactly 1 workspace.js:1543 names DOMParser outside function swap 
+PASS (19) T053: innerHTML sink in upload.js -> red:   Failed Gallery.Web.Tests.UploadSourceGuardTests.Upload_script_has_no_html_injection_sink(file: "upload.js") |  admin-assets/upload.js uses innerHTML 
+   compare-public.sh exit 10
+PASS (20) TI-36: ws-mark on the public layout -> red:   Failed Gallery.Web.Tests.LibrarySourceGuardTests.Public_pages_carry_no_owner_markup_with_or_without_the_owner_session |  GET / (with the owner session) carries owner classes: ws-mark  | extra check held
+PASS (21) T043: joining ages to interrupted -> red:   Failed Gallery.Web.Tests.UploadJoinTests.Joining_is_never_reported_interrupted |  Assert.Equal() Failure: Values differ Expected: Tuple ("4l2bwzfdnbxdbjn27hokwck5o4", "joining") 
+restored: build clean
+
+1 FAILED
+
+== Row 8 (parent, after the run above)
+Run 1: the break did not compile (it inserted a list into a boolean expression); the break was fixed.
+Rerun with NV_ONLY=8: guard stayed GREEN, because II.5d has TWO layers: U12's state check
+(UploadEndpoints.Join, "Effective(item) is not (Succeeded or Joining) -> NotActive") runs before
+the claim filter in BatchStore.TryClaimJoinAsync. Widening only the claim leaves the first layer in place.
+Combined break by hand (both layers accept Uploading), built into artifacts/exec-nv:
+  UploadJoinTests.Join_of_an_item_that_is_not_validated_is_409_not_active -> Failed!
+  Assert.Equal() Failure: Values differ, Expected: Conflict (on its assertion)
+Both files restored with git checkout and touched. Row 8: PASS (combined break).
+Result: 21 of 21 [SAFETY] guards go red on their assertion.

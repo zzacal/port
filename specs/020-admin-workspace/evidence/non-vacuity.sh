@@ -124,7 +124,7 @@ brk 7 $CS 's/(\n(\s*)public static string MasterKey\()/\n$2private static Update
   "${F}WorkspaceRemovalGuardTests" \
   'T053 II.5c: ConfirmService writes visibility "public"'
 # 8. T041 II.5d: the claim filter also accepts `uploading` (state list inside TryClaimJoinAsync).
-brk 8 $BS 's/(TryClaimJoinAsync\((?:(?!\n    (?:public|private|internal) ).)*?)ItemStates\.Joining/$1ItemStates.Joining, ItemStates.Uploading/s' \
+brk 8 $BS 's/(TryClaimJoinAsync\((?:(?!\n    (?:public|private|internal) ).)*?)i\.State == ItemStates\.Joining\)/$1i.State == ItemStates.Joining || i.State == ItemStates.Uploading)/s' \
   "${F}UploadJoinTests.Join_of_an_item_that_is_not_validated_is_409_not_active" \
   'T041 II.5d: the join claim accepts an uploading item'
 # 9. T043 claim: U9 Delete no longer recognises `joining` (its check compares against a value no

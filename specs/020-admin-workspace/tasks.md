@@ -879,7 +879,7 @@ Batch G owns: `AdminLayout.razor.css` (below-1200 px rules only, C-21), `Workspa
   64 KiB), A2/A7/A8 with 100 ids (under 16 KiB); no 413; plus one deliberate 64 KiB + 1 A9 → 413.
   Save statuses and body sizes to `evidence/live-limits.txt`. Never bind :5080/:5081 if the owner's
   watcher holds them; use another port.
-- [ ] T068 [SAFETY] PARENT Non-vacuity: write these `brk` lines into `evidence/non-vacuity.sh`
+- [X] T068 [SAFETY] PARENT Non-vacuity: write these `brk` lines into `evidence/non-vacuity.sh`
   (T008), dry-run, then run it (`| tee evidence/non-vacuity.txt`). One deliberate break per
   [SAFETY] guard; each named test must go red ON ITS ASSERTION; restore + `touch`. Depends: CP-G.
   1. T043 II.5a: delete the `destination-public` branch in `UploadEndpoints` Register →
