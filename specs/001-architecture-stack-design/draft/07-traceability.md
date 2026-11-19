@@ -1,6 +1,6 @@
 ## 7. Traceability Matrix
 
-One row per numbered rule in constitution v6.1.0, plus one per Platform Constraints bullet (`PC.n`,
+One row per numbered rule in constitution v6.2.1, plus one per Platform Constraints bullet (`PC.n`,
 in order). A rule with no numbered list (VI) counts as one rule. Status `deferred:first-build-feature`
 marks rules whose mechanism is designed here but whose compliance is a provisioning setting that
 can only be checked once the resource exists.
@@ -13,6 +13,7 @@ can only be checked once the resource exists.
 | I.4 | D-04: no route writes `site` after the claim; recovery is a datastore operation | integration test: route inventory shows no claim-reset endpoint | designed |
 | I.5 | D-04, D-12: claim event logged with `sub`, client IP from `CF-Connecting-IP`, timestamp | log query: claim event present with all three fields | designed |
 | I.6 | D-06: explicit antiforgery validation filter on every non-safe `/admin` request, token from form field or `X-CSRF-TOKEN` header | integration test: admin POST without token is rejected, with and without an owner session (007 AdminAccessTests I-4) | designed |
+| I.7 | D-04: on a development host only, with a startup password of 16+ characters, `POST /admin/signin/local` signs in the stored owner or claims an unclaimed site for `local-owner`; not mapped on any other host; production start refuses while the setting is present (feature 018) | integration tests: each non-qualifying host shape has no local form and an unmapped address; wrong password creates no session; ProductionGuard refuses the setting; non-vacuity break per guard (018) | designed |
 | II.1 | D-15: public pages need no account, cookie, or consent | integration test: anonymous GET of every public route returns 200 with no `Set-Cookie` | designed |
 | II.2 | D-14, D-16: private galleries absent from the galleries listing (`/g`), listings, sitemap; `noindex`; reachable by link; purge on change, 1-day TTL bound; gallery `nav` stored only on listed galleries and rendered only when public (feature 010) | integration test: private gallery absent from listings and carries `noindex`; L-12; nav projection test: no stored `nav` names or sits on an unlisted gallery, and a planted stale `nav` on a private gallery renders no neighbour links; source scan: only the site projection writes `nav` (feature 010); camera projection test: only photos of listed galleries enter `cameras`, and a private-only camera answers the same 404 as an unknown one; source scan: only the site projection writes `cameras` (feature 013, D-26) | designed |
 | II.3 | D-14, D-07: 128-bit base32 ids; content-hash derivative names | integration test: ids are 26-char base32 and differ across titles | designed |

@@ -1,6 +1,9 @@
 <!--
 Sync Impact Report
-- Version change: 6.1.0 → 6.2.0 (MINOR)
+- Version change: 6.2.0 → 6.2.1 (PATCH; 6.2.0 MINOR was the same day)
+- 6.2.1 (2026-11-18, feature 018 plan, research R-02): I.7a said the disabled local sign-in's
+  address "answers not found"; the plan does not map the route at all on a non-qualifying host,
+  so it answers as any unknown admin address does. Wording only, no guarantee changed: PATCH.
 - Rationale: owner directive (2026-11-18, feature 018 clarify): "a way for local stack to be logged
   in without a real auth", gated by a password the person starting the app sets, and able to claim
   an empty dev database so a self-contained CI browser suite can sign in. I.1 said ownership "MUST
@@ -50,8 +53,8 @@ The site has exactly one administrator: the owner.
    and an unclaimed site MAY be claimed by it for the fixed identity `local-owner`. These rules are
    the entire protection for that path:
    a. It exists only when a local sign-in password of at least 16 characters is supplied through
-      the environment at startup. Otherwise no local sign-in is offered and its address answers not
-      found.
+      the environment at startup. Otherwise no local sign-in is offered and its address is not
+      mapped, so it answers as any unknown admin address does, creating no session.
    b. Each local sign-in is a deliberate form submission carrying that password and the rule-6
       forgery token. The password is compared in constant time and never appears in any page,
       response or log line; a wrong password creates no session.
@@ -338,4 +341,4 @@ These are binding inputs to every plan:
   place, not silently edited.
 - Every plan and analyze pass verifies compliance and cites principles by number.
 
-**Version**: 6.2.0 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-11-18
+**Version**: 6.2.1 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-11-18

@@ -83,12 +83,13 @@ password variable set refuses to start.
 
 1. **Given** the app running in any environment other than development, **When** anyone requests
    the sign-in page or posts to the local sign-in address, **Then** no local sign-in is offered and
-   the address answers not found, with no session created.
+   the address answers exactly as any unknown admin address does (a signed-out GET is sent to sign-in, any other method is refused), with no session created. (Corrected at plan, R-02: "answers not
+   found" was unreachable, because every unmapped `/admin` address sits behind the sign-in check.)
 2. **Given** the development environment but a datastore or storage that is not marked as
    development, **When** the same requests are made, **Then** the same refusal happens.
 3. **Given** the dev stack started without a local sign-in password, **When** the sign-in page
    renders or the local sign-in address is posted to, **Then** no local sign-in is offered and the
-   address answers not found.
+   address answers exactly as any unknown admin address does (a signed-out GET is sent to sign-in, any other method is refused).
 4. **Given** a production configuration with the local sign-in password variable set, **When**
    the app starts, **Then** it refuses to start and names the variable (never its value); without
    the variable, the existing production configuration check passes or fails exactly as today.
@@ -107,7 +108,9 @@ password variable set refuses to start.
   claimed by another account): the session is rejected on the next request, as any session whose
   owner no longer matches is today.
 - **Local stack started without Google configured**: the local sign-in still works (it is the
-  point of the feature); the Google button is absent, as today.
+  point of the feature). The Google button stays as today, but its "Sign-in isn't set up on this
+  server." notice is not shown while the local sign-in is offered. (Corrected at plan, R-07: today
+  the button is shown with that notice, not hidden.)
 - **Password variable set but too short** (under 16 characters): treated as unset, so no local
   sign-in, and startup logs a warning naming the variable and the minimum length (never the value).
 - **Repeated wrong passwords**: each is refused and logged; no lockout (a dev stack has one user).
@@ -134,15 +137,15 @@ password variable set refuses to start.
   development environment; the datastore and the storage are the ones marked as development (the
   same markers the existing development-only maintenance command requires); and a local sign-in
   password of at least 16 characters is configured through the environment at startup. If any one
-  fails, the sign-in page MUST NOT offer it and its address MUST answer not found without creating
-  a session. It MUST NOT depend on where the request comes from.
+  fails, the sign-in page MUST NOT offer it and its address MUST NOT exist: it
+  answers exactly as any unknown admin address does (a signed-out GET is sent to sign-in, any other method is refused), creating no session (corrected at plan, R-02). It MUST NOT depend on where the request comes from.
 - **FR-005**: The password setting is the only on-switch, and it MUST NOT override the environment
   and data conditions of FR-004: with the setting present on a non-qualifying host, the local
   sign-in stays absent.
 - **FR-006**: The production configuration check MUST also refuse a production start when the
   local sign-in password variable is present (naming the variable, never its value), and otherwise
   behave exactly as today. An automated check MUST prove that a production-shaped host offers no
-  local sign-in and answers not found at its address.
+  local sign-in and that its address answers exactly as any unknown admin address does (a signed-out GET is sent to sign-in, any other method is refused).
 - **FR-007**: On an unclaimed development site, a local sign-in with the right password MUST claim
   the site for one fixed local identity (`local-owner`) and sign in as it. The claim MUST go
   through the same atomic claim-once rule as a Google claim (a racing Google or local claim: exactly
@@ -189,7 +192,8 @@ password variable set refuses to start.
   requests to any identity provider.
 - **SC-002**: In 100% of the automated checks across every non-qualifying shape (non-development
   environment, non-development datastore, non-development storage, no or too-short password), the
-  local sign-in is absent from the page, its address answers not found, and no session is created;
+  local sign-in is absent from the page, its address answers as an unknown admin address, and no
+  session is created;
   a wrong password creates no session.
 - **SC-003**: Every existing sign-in, claim, refusal and owner-access test passes unmodified.
 - **SC-006**: A browser suite starting from an empty dev database with only the password reaches

@@ -1,0 +1,33 @@
+OK .specify/memory/constitution.md: '- Version change: 6.1.0 → 6.2.0 (MINOR)\n'
+OK .specify/memory/constitution.md: '      the environment at startup. Otherwise no local sign-in'
+OK .specify/memory/constitution.md: '**Version**: 6.2.0 | **Ratified**: 2026-10-27 | **Last Amend'
+OK specs/018-local-dev-signin/spec.md: '   the address answers not found, with no session created.'
+OK specs/018-local-dev-signin/spec.md: '   renders or the local sign-in address is posted to, **Then'
+OK specs/018-local-dev-signin/spec.md: '  fails, the sign-in page MUST NOT offer it and its address '
+OK specs/018-local-dev-signin/spec.md: '  local sign-in and answers not found at its address.'
+OK specs/018-local-dev-signin/spec.md: '  local sign-in is absent from the page, its address answers'
+OK specs/018-local-dev-signin/spec.md: '  point of the feature); the Google button is absent, as tod'
+OK specs/001-architecture-stack-design/draft/02a-decisions-platform.md: "the framework's automatic single-scheme default suppressed, "
+OK specs/001-architecture-stack-design/draft/02a-decisions-platform.md: '**Alternatives**: An optional claim token to pre-seed the ow'
+OK specs/001-architecture-stack-design/draft/07-traceability.md: 'One row per numbered rule in constitution v6.1.0,'
+OK specs/001-architecture-stack-design/draft/07-traceability.md: '| II.1 | D-15:'
+wrote 4 files
+assembled docs/design.md: 1070 lines
+PASS C1 12 headings in order
+PASS C2.keys 17 area keys each exactly once
+PASS C2.fields D=26 Area=26 Status=26 Choice=26 Rationale=26 Alternatives=26 Pivot cost=26
+PASS C2.status values valid
+PASS C2.pivot values valid
+PASS C2.given given entries cite Constitution
+PASS C3 4 diagrams with mermaid
+PASS C4.titles 17 lifecycle entries in order
+PASS C4.fields  Records=17 Storage=17 Pages and caches=17 Visitor sees=17
+PASS C5 19 edge cases x2 fields
+PASS C6.ids 70 rule ids exactly once
+PASS C6.status all statuses valid
+PASS C6.verif IV.5, IV.11-22 use markup/header or browser verification
+PASS C7 cost table ok; metered=$1.00 < $7
+PASS C8 R=7 Failure=7 Detection=7 Recovery=7 Reversal cost=7
+PASS C9 no banned strings
+---
+failures: 0
