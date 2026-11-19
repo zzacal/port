@@ -1,0 +1,6 @@
+/* The catalogue shows each toast in its specimen instead of fixed to the window. */
+.ws-ui-static ::deep .ws-toast {
+    position: static;
+    transform: none;
+    display: inline-block;
+}

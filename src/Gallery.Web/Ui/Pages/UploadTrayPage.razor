@@ -1,0 +1,48 @@
+<UiLayout Title="UploadTray">
+    <Specimen Label="Empty">
+        <UploadTray State="TrayState.Empty" MaxPhotos="100" />
+    </Specimen>
+    <Specimen Label="Working">
+        <UploadTray State="TrayState.Working" Rows="Working" Added="2" Total="5" />
+    </Specimen>
+    <Specimen Label="Hidden">
+        <UploadTray State="TrayState.Hidden" Rows="Working" Added="2" Total="5" />
+    </Specimen>
+    <Specimen Label="Finished">
+        <UploadTray State="TrayState.Finished" Destination="Desert" Rows="Finished" Added="3" Total="3" />
+    </Specimen>
+    <Specimen Label="Finished with failures">
+        <UploadTray State="TrayState.FinishedWithFailures" Rows="WithFailures" Added="3" Total="5" />
+    </Specimen>
+    <Specimen Label="Public destination" Note="The notice shows in every state while the destination is public.">
+        <UploadTray State="TrayState.Working" Destination="Coast" DestinationPublic="true" Rows="Working" Added="2" Total="5" />
+    </Specimen>
+    <Specimen Label="Phone width" Note="Constrained to 390 px." Width="w-390">
+        <UploadTray State="TrayState.Working" Destination="Coast" DestinationPublic="true" Rows="Working" Added="2" Total="5" />
+    </Specimen>
+</UiLayout>
+
+@code {
+    private static readonly IReadOnlyList<UploadTrayRow> Working =
+    [
+        new("DSC_0412.jpg", UploadRowState.Added, ItemId: "it-1"),
+        new("DSC_0413.jpg", UploadRowState.Added, ItemId: "it-2"),
+        new("DSC_0415.jpg", UploadRowState.Uploading, 64, ItemId: "it-3"),
+        new("DSC_0418.jpg", UploadRowState.Preparing, ItemId: "it-4"),
+        new("DSC_0420.jpg", UploadRowState.Waiting, ItemId: "it-5"),
+    ];
+    private static readonly IReadOnlyList<UploadTrayRow> Finished =
+    [
+        new("DSC_0412.jpg", UploadRowState.Added, ItemId: "it-1"),
+        new("DSC_0413.jpg", UploadRowState.Added, ItemId: "it-2"),
+        new("DSC_0415.jpg", UploadRowState.Added, ItemId: "it-3"),
+    ];
+    private static readonly IReadOnlyList<UploadTrayRow> WithFailures =
+    [
+        new("DSC_0412.jpg", UploadRowState.Added, ItemId: "it-1"),
+        new("DSC_0413.jpg", UploadRowState.Added, ItemId: "it-2"),
+        new("DSC_0415.jpg", UploadRowState.Added, ItemId: "it-3"),
+        new("DSC_0421.jpg", UploadRowState.Failed, Reason: "Connection lost", ItemId: "it-4"),
+        new("DSC_0425.jpg", UploadRowState.Interrupted, ItemId: "it-5"),
+    ];
+}

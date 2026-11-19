@@ -299,4 +299,497 @@ public class WorkspaceComponentTests
         Assert.Equal($"← All photos {pos} Previous Next", Text(html));
         Assert.Contains("<div class=\"ws-stage-frame\"></div>", html);
     }
+
+    // ── K5 PhotoCell (Batch B2) ─────────────────────────────────────────────
+
+    /// <summary>A PhotoCell holds a Tile whose Picture draws its <c>&lt;svg class="sizer"&gt;</c>; that one svg is
+    /// removed before the workspace guards run, so any other svg (an icon) still fails.</summary>
+    private static async Task<string> Cell(Dictionary<string, object?> parameters)
+    {
+        var raw = await Render.Html<PhotoCell>(parameters);
+        Assert.Single(Regex.Matches(raw, "<svg class=\"sizer\""));
+        AssertWorkspaceGuards(Regex.Replace(raw, "<svg class=\"sizer\"[^>]*></svg>", ""));
+        return Unscoped(raw);
+    }
+
+    private static Dictionary<string, object?> CellParams(params (string Key, object? Value)[] extra)
+    {
+        var p = new Dictionary<string, object?>
+        {
+            ["Image"] = Render.Samples.Landscape[0],
+            ["Caption"] = "Morning light",
+            ["GalleryIds"] = (IReadOnlyList<string>)["g-1", "g-2"],
+        };
+        foreach (var (k, v) in extra) p[k] = v;
+        return p;
+    }
+
+    private static List<string> MarkWords(string html)
+        => Regex.Matches(html, "<span class=\"ws-mark\">([^<]*)</span>").Select(m => m.Groups[1].Value).ToList();
+
+    [Fact]
+    public async Task PhotoCell_plain_root_carries_the_contract_attributes()
+    {
+        var img = Render.Samples.Landscape[0];
+        var html = await Cell(CellParams());
+        var root = Tags(html, "div")[0];
+        Assert.Equal("ws-cell", Attr(root, "class"));
+        Assert.Equal("option", Attr(root, "role"));
+        Assert.Equal("-1", Attr(root, "tabindex"));
+        Assert.Equal("true", Attr(root, "draggable"));
+        Assert.Equal(img.Id, Attr(root, "data-id"));
+        Assert.Equal(img.Title, Attr(root, "data-title"));
+        Assert.Equal("Morning light", Attr(root, "data-caption"));
+        Assert.Equal("g-1 g-2", Attr(root, "data-galleries"));
+        Assert.Equal(Gallery.Web.Workspace.Messages.DeleteConsequence(2), Attr(root, "data-consequence"));
+        Assert.Equal("false", Attr(root, "aria-selected"));
+        Assert.Empty(MarkWords(html));
+        Assert.Empty(Tags(html, "a"));
+        Assert.Equal(["tile"], Tags(html, "div").Where(t => Attr(t, "class")?.StartsWith("tile") == true).Select(t => Attr(t, "class")).ToList());
+    }
+
+    [Fact]
+    public async Task PhotoCell_tile_has_no_link_and_is_sized_by_Sizes_ForFill()
+    {
+        var html = await Cell(CellParams());
+        Assert.Empty(Tags(html, "a"));
+        var sizes = Regex.Matches(html, "\\ssizes=\"([^\"]*)\"").Select(m => WebUtility.HtmlDecode(m.Groups[1].Value)).ToList();
+        Assert.Equal(2, sizes.Count);
+        Assert.Equal([Sizes.ForFill()], sizes.Distinct().ToList());
+        Assert.Equal($"<p class=\"title\" title=\"{Render.Samples.Landscape[0].Title}\">{Render.Samples.Landscape[0].Title}</p>",
+            Regex.Match(html, "<p class=\"title\"[^>]*>[^<]*</p>").Value);
+    }
+
+    [Fact]
+    public async Task PhotoCell_overlay_is_the_select_mark_labelled_Select_title()
+    {
+        var img = Render.Samples.Landscape[0];
+        var html = await Cell(CellParams());
+        var overlay = Regex.Match(html, "<div class=\"overlay\">(.*?)</div>", RegexOptions.Singleline).Groups[1].Value;
+        Assert.Equal($"Select {img.Title}", Text(overlay));
+        var box = Assert.Single(Tags(overlay, "input"));
+        Assert.Equal("checkbox", Attr(box, "type"));
+        Assert.Equal(img.Id, Attr(box, "value"));
+        Assert.False(Has(box, "checked"));
+    }
+
+    [Fact]
+    public async Task PhotoCell_selected_has_is_selected_aria_selected_true_and_a_ticked_mark()
+    {
+        var html = await Cell(CellParams(("Selected", true)));
+        var root = Tags(html, "div")[0];
+        Assert.Equal("ws-cell is-selected", Attr(root, "class"));
+        Assert.Equal("true", Attr(root, "aria-selected"));
+        Assert.True(Has(Assert.Single(Tags(html, "input")), "checked"));
+        Assert.Empty(MarkWords(html));
+    }
+
+    [Fact]
+    public async Task PhotoCell_cover_shows_the_Cover_mark_on_the_photo()
+    {
+        var html = await Cell(CellParams(("Cover", true)));
+        Assert.Equal("ws-cell", Attr(Tags(html, "div")[0], "class"));
+        Assert.Equal(["Cover"], MarkWords(html));
+        var overlay = Regex.Match(html, "<div class=\"overlay\">(.*?)</div>", RegexOptions.Singleline).Groups[1].Value;
+        Assert.Equal(["Cover"], MarkWords(overlay));
+    }
+
+    [Fact]
+    public async Task PhotoCell_new_shows_the_New_mark()
+    {
+        var html = await Cell(CellParams(("New", true)));
+        Assert.Equal("ws-cell", Attr(Tags(html, "div")[0], "class"));
+        Assert.Equal(["New"], MarkWords(html));
+    }
+
+    [Fact]
+    public async Task PhotoCell_drop_position_adds_ws_drop()
+    {
+        var html = await Cell(CellParams(("Drop", true)));
+        var root = Tags(html, "div")[0];
+        Assert.Equal("ws-cell ws-drop", Attr(root, "class"));
+        Assert.Equal("false", Attr(root, "aria-selected"));
+        Assert.Empty(MarkWords(html));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(3)]
+    public async Task PhotoCell_data_consequence_follows_the_gallery_count(int count)
+    {
+        var ids = Enumerable.Range(1, count).Select(i => $"g-{i}").ToList();
+        var html = await Cell(CellParams(("GalleryIds", (IReadOnlyList<string>)ids), ("Caption", null)));
+        var root = Tags(html, "div")[0];
+        Assert.Equal(Gallery.Web.Workspace.Messages.DeleteConsequence(count), Attr(root, "data-consequence"));
+        Assert.Equal(string.Join(' ', ids), Attr(root, "data-galleries"));
+        Assert.Equal("", Attr(root, "data-caption"));
+    }
+
+    [Theory]
+    [InlineData(PicturePriority.Lazy, "lazy")]
+    [InlineData(PicturePriority.High, "eager")]
+    public async Task PhotoCell_passes_Priority_to_the_picture(PicturePriority priority, string loading)
+    {
+        var html = await Cell(CellParams(("Priority", priority)));
+        var img = Tags(html, "img").Single(t => Has(t, "loading"));
+        Assert.Equal(loading, Attr(img, "loading"));
+    }
+
+    // ── K9 CollectionList (Batch B2) ────────────────────────────────────────
+
+    private static readonly FormToken ListToken = new("__RequestVerificationToken", "tok-123");
+
+    private static readonly IReadOnlyList<CollectionGallery> ListGalleries =
+    [
+        new("g-1", "coast", "Coast", true, 42),
+        new("g-2", "desert", "Desert", false, 9),
+        new("g-3", "birds", "Birds", true, 31),
+    ];
+
+    private static Task<string> List(params (string Key, object? Value)[] extra)
+    {
+        var p = new Dictionary<string, object?>
+        {
+            ["Current"] = "all", ["Total"] = 128, ["Unplaced"] = 14, ["Galleries"] = ListGalleries, ["Csrf"] = ListToken,
+        };
+        foreach (var (k, v) in extra) p[k] = v;
+        return Html<CollectionList>(p);
+    }
+
+    private static List<string> Links(string html) => Tags(html, "a").Select(t => Attr(t, "href")!).ToList();
+
+    private static List<string> GalleryRows(string html) => Tags(html, "a").Where(t => Has(t, "data-gid")).ToList();
+
+    [Fact]
+    public async Task CollectionList_markup_order_and_hrefs()
+    {
+        var html = await List();
+        Assert.Equal("ws-collections", Attr(Tags(html, "div")[0], "class"));
+        Assert.Equal(["/admin", "/admin", "/admin/unplaced", "/admin/g/g-1", "/admin/g/g-2", "/admin/g/g-3", "/"], Links(html));
+        Assert.Equal("Gallery admin All photos 128 Not in a gallery 14 Galleries in home page order Coast 42 Desert Private 9 Birds 31 New gallery View site ↗ Sign out",
+            Text(html));
+        Assert.Equal(["New gallery", "Sign out"], Buttons(html).Select(b => b.Text).ToList());
+        Assert.Equal(["hidden"], Tags(html, "input").Select(t => Attr(t, "type")).ToList());
+    }
+
+    [Fact]
+    public async Task CollectionList_gallery_rows_carry_gid_slug_public_and_draggable()
+    {
+        var rows = GalleryRows(await List());
+        Assert.Equal(["g-1", "g-2", "g-3"], rows.Select(r => Attr(r, "data-gid")).ToList());
+        Assert.Equal(["coast", "desert", "birds"], rows.Select(r => Attr(r, "data-slug")).ToList());
+        Assert.Equal(["true", "false", "true"], rows.Select(r => Attr(r, "data-public")).ToList());
+        Assert.All(rows, r => Assert.Equal("true", Attr(r, "draggable")));
+        Assert.All(rows, r => Assert.Equal("ws-coll-row", Attr(r, "class")));
+    }
+
+    [Fact]
+    public async Task CollectionList_private_gallery_has_the_Private_mark_and_public_ones_none()
+    {
+        var html = await List();
+        Assert.Equal(["Private"], MarkWords(html));
+        var desert = Regex.Match(html, "<a [^>]*data-gid=\"g-2\"[^>]*>(.*?)</a>", RegexOptions.Singleline).Groups[1].Value;
+        Assert.Equal(["Private"], MarkWords(desert));
+    }
+
+    [Theory]
+    [InlineData("all", "/admin")]
+    [InlineData("unplaced", "/admin/unplaced")]
+    [InlineData("g-2", "/admin/g/g-2")]
+    public async Task CollectionList_current_row_has_aria_current_page(string current, string href)
+    {
+        var html = await List(("Current", current));
+        var marked = Tags(html, "a").Where(t => Has(t, "aria-current")).ToList();
+        var row = Assert.Single(marked);
+        Assert.Equal("page", Attr(row, "aria-current"));
+        Assert.Equal(href, Attr(row, "href"));
+        Assert.NotEqual("ws-brand", Attr(row, "class"));
+    }
+
+    [Fact]
+    public async Task CollectionList_drag_target_row_has_ws_over()
+    {
+        var rows = GalleryRows(await List(("Over", "g-3")));
+        Assert.Equal(["ws-coll-row", "ws-coll-row", "ws-coll-row ws-over"], rows.Select(r => Attr(r, "class")).ToList());
+    }
+
+    [Fact]
+    public async Task CollectionList_reorder_position_row_has_ws_before()
+    {
+        var rows = GalleryRows(await List(("Before", "g-1")));
+        Assert.Equal(["ws-coll-row ws-before", "ws-coll-row", "ws-coll-row"], rows.Select(r => Attr(r, "class")).ToList());
+    }
+
+    [Fact]
+    public async Task CollectionList_naming_shows_the_labelled_input_instead_of_New_gallery()
+    {
+        var html = await List(("Naming", true));
+        Assert.Equal(["Sign out"], Buttons(html).Select(b => b.Text).ToList());
+        var label = Regex.Match(html, "<label class=\"ws-naming\">(.*?)</label>", RegexOptions.Singleline);
+        Assert.True(label.Success);
+        Assert.Equal("New gallery name", Text(label.Groups[1].Value));
+        var input = Assert.Single(Tags(label.Groups[1].Value, "input"));
+        Assert.Equal("text", Attr(input, "type"));
+        Assert.Equal(["text", "hidden"], Tags(html, "input").Select(t => Attr(t, "type")).ToList());
+        Assert.EndsWith("Birds 31 New gallery name View site ↗ Sign out", Text(html));
+    }
+
+    [Fact]
+    public async Task CollectionList_view_site_opens_a_new_tab()
+    {
+        var html = await List();
+        var link = Assert.Single(Tags(html, "a"), t => Attr(t, "href") == "/");
+        Assert.Equal("_blank", Attr(link, "target"));
+        Assert.Equal("noopener", Attr(link, "rel"));
+        Assert.Contains(">View site ↗</a>", html);
+    }
+
+    [Fact]
+    public async Task CollectionList_sign_out_form_carries_the_token()
+    {
+        var html = await List();
+        var form = Regex.Match(html, "(<form\\b[^>]*>)(.*?)</form>", RegexOptions.Singleline);
+        Assert.True(form.Success);
+        Assert.Single(Tags(html, "form"));
+        Assert.Equal("post", Attr(form.Groups[1].Value, "method"));
+        Assert.Equal("/admin/signout", Attr(form.Groups[1].Value, "action"));
+        var hidden = Assert.Single(Tags(form.Groups[2].Value, "input"));
+        Assert.Equal("hidden", Attr(hidden, "type"));
+        Assert.Equal(ListToken.FieldName, Attr(hidden, "name"));
+        Assert.Equal(ListToken.Value, Attr(hidden, "value"));
+        var button = Assert.Single(Buttons(form.Groups[2].Value));
+        Assert.Equal("Sign out", button.Text);
+        Assert.Equal("submit", Attr(button.Tag, "type"));
+    }
+
+    // ── K10 UploadTray (Batch B2) ───────────────────────────────────────────
+
+    private static readonly IReadOnlyList<UploadTrayRow> BusyRows =
+    [
+        new("a.jpg", UploadRowState.Added, ItemId: "i-1"),
+        new("b.jpg", UploadRowState.Uploading, 40, ItemId: "i-2"),
+        new("c.jpg", UploadRowState.Waiting, ItemId: "i-3"),
+    ];
+
+    private static readonly IReadOnlyList<UploadTrayRow> DoneRows =
+    [
+        new("a.jpg", UploadRowState.Added, ItemId: "i-1"),
+        new("b.jpg", UploadRowState.Added, ItemId: "i-2"),
+    ];
+
+    private static readonly IReadOnlyList<UploadTrayRow> FailedRows =
+    [
+        new("a.jpg", UploadRowState.Added, ItemId: "i-1"),
+        new("b.jpg", UploadRowState.Failed, Reason: "Connection lost", ItemId: "i-2"),
+        new("c.jpg", UploadRowState.Interrupted, ItemId: "i-3"),
+    ];
+
+    private static (IReadOnlyList<UploadTrayRow> Rows, int Added, int Total) TrayData(TrayState state) => state switch
+    {
+        TrayState.Empty => ([], 0, 0),
+        TrayState.Working or TrayState.Hidden => (BusyRows, 1, 3),
+        TrayState.Finished => (DoneRows, 2, 2),
+        _ => (FailedRows, 1, 3),
+    };
+
+    private static Task<string> Tray(TrayState state, string? destination = null, bool isPublic = false, IReadOnlyList<UploadTrayRow>? rows = null)
+    {
+        var (r, added, total) = TrayData(state);
+        return Html<UploadTray>(new Dictionary<string, object?>
+        {
+            ["State"] = state, ["Destination"] = destination, ["DestinationPublic"] = isPublic,
+            ["Rows"] = rows ?? r, ["Added"] = added, ["Total"] = total, ["MaxMb"] = 20, ["MaxPhotos"] = 100,
+        });
+    }
+
+    private static string Heading(string html) => Text(Regex.Match(html, "<h2 class=\"ws-tray-head\">(.*?)</h2>", RegexOptions.Singleline).Groups[1].Value);
+
+    private static List<(string Text, string Value, bool Disabled)> TrayButtons(string html)
+        => Buttons(Regex.Match(html, "<div class=\"ws-tray-ctl\">(.*?)</div>", RegexOptions.Singleline).Groups[1].Value)
+            .Select(b => (b.Text, Attr(b.Tag, "value")!, Has(b.Tag, "disabled"))).ToList();
+
+    private const string CoastNotice = "Coast is public. Visitors will see these photos as soon as each one is added.";
+
+    [Theory]
+    [InlineData(TrayState.Empty)]
+    [InlineData(TrayState.Working)]
+    [InlineData(TrayState.Hidden)]
+    [InlineData(TrayState.Finished)]
+    [InlineData(TrayState.FinishedWithFailures)]
+    public async Task UploadTray_public_notice_is_plain_text_in_every_state(TrayState state)
+    {
+        var html = await Tray(state, "Coast", isPublic: true);
+        // Directly after the heading: the </h2> is immediately followed by the notice paragraph.
+        var after = Regex.Match(html, "</h2>(<p class=\"ws-notice\">([^<]*)</p>)");
+        Assert.True(after.Success, "the notice does not directly follow the heading");
+        Assert.Equal(CoastNotice, WebUtility.HtmlDecode(after.Groups[2].Value));
+        Assert.Single(Regex.Matches(html, "class=\"ws-notice\""));
+        Assert.Single(Regex.Matches(html, Regex.Escape("Visitors will see these photos")));
+        Assert.Empty(Tags(html, "details"));
+        Assert.Empty(Tags(html, "summary"));
+        Assert.Empty(Tags(html, "template"));
+        Assert.DoesNotMatch("\\stitle=\"[^\"]*Visitors", html);
+        Assert.DoesNotMatch("<p class=\"ws-notice\"[^>]*\\s(hidden|aria-hidden)", html);
+        Assert.Contains(CoastNotice, Text(html));
+    }
+
+    [Theory]
+    [InlineData(TrayState.Empty)]
+    [InlineData(TrayState.Working)]
+    [InlineData(TrayState.Hidden)]
+    [InlineData(TrayState.Finished)]
+    [InlineData(TrayState.FinishedWithFailures)]
+    public async Task UploadTray_private_or_library_destination_has_no_notice(TrayState state)
+    {
+        Assert.Empty(Regex.Matches(await Tray(state, "Desert"), "class=\"ws-notice\""));
+        Assert.Empty(Regex.Matches(await Tray(state), "class=\"ws-notice\""));
+    }
+
+    [Fact]
+    public async Task UploadTray_public_destination_without_a_title_is_refused()
+    {
+        await Assert.ThrowsAsync<ArgumentException>(() => Tray(TrayState.Working, null, isPublic: true));
+    }
+
+    [Fact]
+    public async Task UploadTray_empty_offers_the_dropzone_and_Close()
+    {
+        var html = await Tray(TrayState.Empty);
+        Assert.Equal("ws-tray", Attr(Tags(html, "section")[0], "class"));
+        Assert.Equal("Add photos to your library", Heading(html));
+        Assert.Equal("Add photos to Desert", Heading(await Tray(TrayState.Empty, "Desert")));
+        Assert.Equal([("Close", "close", false)], TrayButtons(html));
+        Assert.Single(Regex.Matches(html, "class=\"dropzone state-idle\""));
+        Assert.Contains("JPEG only · up to 20 MB each · up to 100 photos per batch", Text(html));
+        Assert.Empty(Tags(html, "progress"));
+        Assert.Empty(Regex.Matches(html, "class=\"ws-up\""));
+    }
+
+    [Fact]
+    public async Task UploadTray_working_shows_count_progress_rows_and_disables_Done()
+    {
+        var html = await Tray(TrayState.Working, "Coast");
+        Assert.Equal("Adding to Coast · 1 of 3", Heading(html));
+        Assert.Equal("Adding to your library · 1 of 3", Heading(await Tray(TrayState.Working)));
+        var bar = Tags(html, "progress").Single(t => Attr(t, "class") == "ws-tray-bar");
+        Assert.Equal("1", Attr(bar, "value"));
+        Assert.Equal("3", Attr(bar, "max"));
+        Assert.Equal([("Hide", "hide", false), ("Done", "done", true)], TrayButtons(html));
+        Assert.Equal(["i-1", "i-2", "i-3"], Tags(html, "div").Where(t => Attr(t, "class") == "ws-up").Select(t => Attr(t, "data-item")).ToList());
+        Assert.Empty(Regex.Matches(html, "class=\"dropzone"));
+    }
+
+    [Theory]
+    [InlineData(UploadRowState.Waiting, true)]
+    [InlineData(UploadRowState.Preparing, true)]
+    [InlineData(UploadRowState.Uploading, true)]
+    [InlineData(UploadRowState.Adding, true)]
+    [InlineData(UploadRowState.Added, false)]
+    [InlineData(UploadRowState.Failed, false)]
+    [InlineData(UploadRowState.Interrupted, false)]
+    public async Task UploadTray_Done_is_disabled_while_any_row_is_on_its_way(UploadRowState state, bool disabled)
+    {
+        IReadOnlyList<UploadTrayRow> rows = [new("a.jpg", UploadRowState.Added, ItemId: "i-1"), new("b.jpg", state, ItemId: "i-2")];
+        var html = await Tray(TrayState.Working, "Coast", rows: rows);
+        Assert.Equal([("Done", "done", disabled)], TrayButtons(html).Where(b => b.Value == "done").ToList());
+    }
+
+    [Fact]
+    public async Task UploadTray_hidden_renders_the_heading_line_only()
+    {
+        var html = await Tray(TrayState.Hidden, "Coast");
+        Assert.Equal("Adding to Coast · 1 of 3", Heading(html));
+        Assert.Equal([("Show", "show", false), ("Done", "done", true)], TrayButtons(html));
+        Assert.Empty(Regex.Matches(html, "class=\"ws-up\""));
+        Assert.Empty(Regex.Matches(html, "class=\"dropzone"));
+        Assert.Empty(Tags(html, "progress"));
+        Assert.Equal("Adding to Coast · 1 of 3 Show Done", Text(html));
+    }
+
+    [Fact]
+    public async Task UploadTray_hidden_after_finishing_shows_the_finished_line()
+    {
+        var html = await Tray(TrayState.Hidden, "Coast", rows: DoneRows);
+        Assert.Equal("1 photo added to Coast", Heading(html));
+        Assert.Equal([("Show", "show", false), ("Add more", "more", false), ("Done", "done", false)], TrayButtons(html));
+    }
+
+    [Fact]
+    public async Task UploadTray_finished_shows_the_count_Add_more_and_Done()
+    {
+        var html = await Tray(TrayState.Finished, "Coast");
+        Assert.Equal("2 photos added to Coast", Heading(html));
+        Assert.Equal("2 photos added to your library", Heading(await Tray(TrayState.Finished)));
+        Assert.Equal([("Hide", "hide", false), ("Add more", "more", false), ("Done", "done", false)], TrayButtons(html));
+        Assert.Equal(2, Regex.Matches(html, "class=\"ws-up\"").Count);
+        Assert.Empty(Tags(html, "progress"));
+    }
+
+    [Fact]
+    public async Task UploadTray_finished_with_failures_counts_failed_and_interrupted_rows()
+    {
+        var html = await Tray(TrayState.FinishedWithFailures, "Coast");
+        Assert.Equal("1 photo added · 2 failed", Heading(html));
+        Assert.Equal([("Hide", "hide", false), ("Add more", "more", false), ("Done", "done", false)], TrayButtons(html));
+        Assert.Equal(3, Regex.Matches(html, "class=\"ws-up\"").Count);
+        Assert.Equal(["Retry", "Remove", "Retry", "Remove"],
+            Buttons(Regex.Match(html, "<div class=\"ws-tray-body ws-tray-rows\">(.*)</div>", RegexOptions.Singleline).Groups[1].Value).Select(b => b.Text).ToList());
+    }
+
+    [Fact]
+    public void TrayState_values_in_order()
+    {
+        Assert.Equal(["Empty", "Working", "Hidden", "Finished", "FinishedWithFailures"], Enum.GetNames<TrayState>());
+    }
+
+    // ── T027 catalogue pages: the state labels, exact and in order (Batch B2) ─
+
+    public static TheoryData<Type, string[]> CataloguePages() => new()
+    {
+        { typeof(Gallery.Web.Ui.Pages.MarkPage), ["Cover", "New", "Private"] },
+        { typeof(Gallery.Web.Ui.Pages.PhotoCellPage), ["Plain", "Selected", "Cover", "New", "Drop position", "Phone width"] },
+        { typeof(Gallery.Web.Ui.Pages.GalleryChecklistPage), ["Unticked", "Ticked", "Partly ticked", "Narrowed", "Offering a new gallery", "No galleries"] },
+        { typeof(Gallery.Web.Ui.Pages.UploadRowPage), ["Waiting", "Preparing", "Uploading", "Adding", "Added", "Failed", "Interrupted"] },
+        { typeof(Gallery.Web.Ui.Pages.ToastPage), ["Result", "Refusal"] },
+        { typeof(Gallery.Web.Ui.Pages.CollectionListPage), ["Collection current", "Private gallery", "Drag target", "Reorder position", "Naming", "Phone width"] },
+        { typeof(Gallery.Web.Ui.Pages.UploadTrayPage), ["Empty", "Working", "Hidden", "Finished", "Finished with failures", "Public destination", "Phone width"] },
+        { typeof(Gallery.Web.Ui.Pages.PhotoStagePage), ["First", "Middle", "Last"] },
+    };
+
+    [Theory]
+    [MemberData(nameof(CataloguePages))]
+    public async Task Catalogue_page_shows_every_state_label_in_order(Type page, string[] labels)
+    {
+        var html = await Render.Html(page);
+        var headings = Regex.Matches(html, "<h2 class=\"specimen-label\"[^>]*>([^<]*)</h2>")
+            .Select(m => WebUtility.HtmlDecode(m.Groups[1].Value)).ToList();
+        Assert.Equal(labels, headings);
+        Guards.AssertNoInlineStyle(html);
+        Guards.AssertNoScript(html);
+    }
+
+    [Fact]
+    public async Task Catalogue_phone_width_specimens_are_390px_wide()
+    {
+        foreach (var page in new[] { typeof(Gallery.Web.Ui.Pages.PhotoCellPage), typeof(Gallery.Web.Ui.Pages.CollectionListPage), typeof(Gallery.Web.Ui.Pages.UploadTrayPage) })
+        {
+            var html = Unscoped(await Render.Html(page));
+            Assert.Single(Regex.Matches(html, "class=\"specimen-body w-390\""));
+        }
+    }
+
+    [Fact]
+    public async Task Catalogue_appended_specimens_close_SidePanel_and_ContactSheet_pages()
+    {
+        static List<string> Labels(string html) => Regex.Matches(html, "<h2 class=\"specimen-label\"[^>]*>([^<]*)</h2>").Select(m => m.Groups[1].Value).ToList();
+        var side = Unscoped(await Render.Html<Gallery.Web.Ui.Pages.SidePanelPage>());
+        Assert.Equal("Without a save row", Labels(side)[^1]);
+        Assert.Equal(5, Regex.Matches(side, "class=\"sp-save\"").Count);
+        var sheet = Unscoped(await Render.Html<Gallery.Web.Ui.Pages.ContactSheetPage>());
+        Assert.Equal("Workspace fill grid", Labels(sheet)[^1]);
+        var last = sheet[sheet.LastIndexOf("<section class=\"specimen\"", StringComparison.Ordinal)..];
+        Assert.Single(Regex.Matches(last, "class=\"cs cs-fill\""));
+        Assert.Equal(8, Regex.Matches(last, "<div class=\"ws-cell[ \"]").Count);
+    }
 }

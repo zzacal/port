@@ -40,10 +40,10 @@ public sealed class LibraryReader(IMongoDatabase db, OpTimer timer, LibraryOptio
     private readonly IMongoCollection<BsonDocument> _galleries = db.GetCollection<BsonDocument>("galleries");
     private readonly IMongoCollection<BsonDocument> _site = db.GetCollection<BsonDocument>("site");
 
-    private static readonly FilterDefinition<ImageDoc> Live = Builders<ImageDoc>.Filter.Exists(i => i.DeletingAt, false);
+    internal static readonly FilterDefinition<ImageDoc> Live = Builders<ImageDoc>.Filter.Exists(i => i.DeletingAt, false);
 
     /// <summary>The image fields a <see cref="LibraryTile"/> needs (the page read and the photo read).</summary>
-    private static readonly ProjectionDefinition<ImageDoc> TileFields = Builders<ImageDoc>.Projection
+    internal static readonly ProjectionDefinition<ImageDoc> TileFields = Builders<ImageDoc>.Projection
         .Include(i => i.Id).Include(i => i.Title).Include(i => i.Caption)
         .Include(i => i.Width).Include(i => i.Height).Include(i => i.Placeholder)
         .Include(i => i.Derivatives).Include(i => i.GalleryIds).Include(i => i.CreatedAt);

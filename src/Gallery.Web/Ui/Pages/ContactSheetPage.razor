@@ -58,6 +58,16 @@
         </div>
         <BatchFooter State="BatchState.Blocked" Total="40" Ready="38" Failed="2" />
     </Specimen>
+    <Specimen Label="Workspace fill grid" Note="Fill: as many columns of at least 168 px as fit; two below 600 px.">
+        <div class="bleed">
+            <ContactSheet Fill="true">
+                @for (var i = 0; i < Eight.Count; i++)
+                {
+                    <PhotoCell Image="Eight[i]" Selected="@(i == 2)" Priority="@(i < 4 ? PicturePriority.High : PicturePriority.Lazy)" />
+                }
+            </ContactSheet>
+        </div>
+    </Specimen>
 </UiLayout>
 
 @code {

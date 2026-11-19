@@ -21,6 +21,7 @@ public static class LibrarySetup
         s.TryAddScoped<IObjectDeleter, ImageStoreObjectDeleter>(); // TryAdd: a test `configure` replacement wins
         s.AddScoped<ImageDeleteService>();
         s.AddScoped<LibraryReader>();
+        s.AddScoped<Gallery.Web.Workspace.WorkspaceReader>(); // 020 T034
         return s;
     }
 

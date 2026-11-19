@@ -368,7 +368,7 @@ markup); default renders must be byte-identical.
 - [X] T020 [P] K4 `Mark` (`Components/Atoms/Mark.razor(.css)`, root `ws-mark`, param `Text`) and
   K8 `Toast` (`Components/Molecules/Toast.razor(.css)`, root `ws-toast`, `role="status"`, params
   `Text`, `Failed`; fixed bottom centre). Accept: T028 facts.
-- [ ] T021 K5 `PhotoCell` (`Components/Molecules/PhotoCell.razor(.css)`): markup exactly as
+- [X] T021 K5 `PhotoCell` (`Components/Molecules/PhotoCell.razor(.css)`): markup exactly as
   components.md K5 plus `data-consequence` (C-10); one `Tile` with no `Href`, `Overlay` =
   `SelectMark` (label "Select {title}"), `Mark` "Cover"/"New" when set, `Sizes.ForFill()`,
   `Priority`; state classes `is-selected` (with `aria-selected="true"`) and `ws-drop`. Depends:
@@ -384,13 +384,13 @@ markup); default renders must be byte-identical.
   `UploadRowState { Waiting, Preparing, Uploading, Adding, Added, Failed, Interrupted }` appended
   to `ComponentTypes.cs`; words and buttons per K7 (`Retry`, `Remove` are `Button`s with text).
   Accept: T028 facts per state.
-- [ ] T024 K9 `CollectionList` (`Components/Organisms/CollectionList.razor(.css)`, root
+- [X] T024 K9 `CollectionList` (`Components/Organisms/CollectionList.razor(.css)`, root
   `ws-collections`): markup order per K9; the sign-out `<form method="post" action="/admin/signout">`
   with the antiforgery hidden input from `Csrf` and a `Button` "Sign out"; "View site ↗" with
   `target="_blank" rel="noopener"`; `aria-current="page"` on the current row; states `ws-over`,
   `ws-before`, naming input (label "New gallery name"). Depends: T020. Accept: T028 facts incl.
   `CollectionList_sign_out_form_carries_the_token`.
-- [ ] T025 [SAFETY] K10 `UploadTray` (`Components/Organisms/UploadTray.razor(.css)`, root `ws-tray`)
+- [X] T025 [SAFETY] K10 `UploadTray` (`Components/Organisms/UploadTray.razor(.css)`, root `ws-tray`)
   + enum `TrayState` in `ComponentTypes.cs`: heading lines, controls and body per K10.
   **[SAFETY II.5a]**: when `DestinationPublic`, the sentence "{destination} is public. Visitors
   will see these photos as soon as each one is added." renders as plain text in a `<p class="ws-notice">`
@@ -401,7 +401,7 @@ markup); default renders must be byte-identical.
 - [X] T026 [P] K11 `PhotoStage` (`Components/Organisms/PhotoStage.razor(.css)`, root `ws-stage`):
   bar with `Button` "← {BackLabel}", "{Position} of {Total}", `Previous`, `Next` (unavailable at
   the ends), empty frame `ws-stage-frame`. Accept: T028 facts first/middle/last.
-- [ ] T027 Catalogue: 8 pages `src/Gallery.Web/Ui/Pages/{Mark,PhotoCell,GalleryChecklist,UploadRow,Toast,CollectionList,UploadTray,PhotoStage}Page.razor`,
+- [X] T027 Catalogue: 8 pages `src/Gallery.Web/Ui/Pages/{Mark,PhotoCell,GalleryChecklist,UploadRow,Toast,CollectionList,UploadTray,PhotoStage}Page.razor`,
   each showing every state of components.md (PhotoCell, CollectionList, UploadTray also a 390 px
   specimen); 8 `UiCatalog.Entries` lines at the C-03 positions with slugs `atoms/mark`,
   `molecules/photo-cell`, `molecules/gallery-checklist`, `molecules/upload-row`,
@@ -412,7 +412,7 @@ markup); default renders must be byte-identical.
   `AllPagesTests` green; `UiPagesUnchangedTests` red ONLY for the 8 new slugs (missing baseline,
   delete what it wrote), `index`, `organisms/side-panel`, `organisms/contact-sheet`;
   `IndexTests` and `OrganismStatePageTests` SidePanelPage row red (TI-50, TI-56).
-- [ ] T028 Write `tests/Gallery.Web.Tests/WorkspaceComponentTests.cs` and
+- [X] T028 Write `tests/Gallery.Web.Tests/WorkspaceComponentTests.cs` and
   `tests/Gallery.Web.Tests/GalleryChecklistTests.cs` (`Render.Html<T>`): every K4–K11 state as a
   named fact; K2/K3 default renders byte-identical to the render with the new parameter at its
   default; the state-label list of each new catalogue page (exact, in order); no `<script`, no
@@ -441,7 +441,7 @@ new `src/Gallery.Web/Workspace/{WorkspaceModels.cs,WorkspaceReader.cs,WorkspaceE
 new `src/Gallery.Web/Admin/Pages/WorkspacePage.razor(.css)`, `src/Gallery.Web/Upload/AdminAssets.cs`,
 new `tests/Gallery.Web.Tests/WorkspacePageTests.cs`, `WorkspaceAccessTests.cs` (append rows).
 
-- [ ] T029 [US1] AdminLayout additive mode (C-05) in `src/Gallery.Web/Components/Templates/AdminLayout.razor(.css)`:
+- [X] T029 [US1] AdminLayout additive mode (C-05) in `src/Gallery.Web/Components/Templates/AdminLayout.razor(.css)`:
   new parameters `List`, `Panel` (RenderFragment), `Csrf` (FormToken), `Cap` (int),
   `UploadSrc`, `WorkerSrc` (string?); when `List` is not null render K1's
   `<admin-workspace class="ws" data-csrf data-cap data-upload-src data-worker-src>` with
@@ -450,9 +450,9 @@ new `tests/Gallery.Web.Tests/WorkspacePageTests.cs`, `WorkspaceAccessTests.cs` (
   `AdminLayout.razor.css` only (IX.2). When `List` is null the output is byte-identical to today.
   Accept: `UiPagesUnchangedTests` (templates/admin-layout) and every `OrganismComponentTests`
   AdminLayout fact green unmodified; T035 facts.
-- [ ] T030 [P] [US1] Make `LibraryReader.Live` and `LibraryReader.TileFields` `internal static`
+- [X] T030 [P] [US1] Make `LibraryReader.Live` and `LibraryReader.TileFields` `internal static`
   (C-16) in `src/Gallery.Web/Library/LibraryReader.cs`; nothing else. Accept: 2 changed lines.
-- [ ] T031 [US1] `src/Gallery.Web/Workspace/WorkspaceModels.cs` + `WorkspaceReader.cs` (scoped;
+- [X] T031 [US1] `src/Gallery.Web/Workspace/WorkspaceModels.cs` + `WorkspaceReader.cs` (scoped;
   research R-02, R-03, data-model "Read models"): `CountsAsync()` = ONE aggregate timed
   `db.library.count` returning total live and live-with-empty-`galleryIds`; `ChunkAsync(bool
   unplaced, string? before)` = ONE `db.library.page` keyset find on `Live` (+ `galleryIds` empty

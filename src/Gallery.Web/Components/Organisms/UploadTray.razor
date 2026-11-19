@@ -1,0 +1,79 @@
+@* Feature 020 K10: the upload tray (inside <upload-tray>). The heading line, then [SAFETY II.5a] the public
+   notice as plain text directly after the heading in EVERY state (Hidden included) when the destination is
+   public, then the progress bar while working, the controls (Hide/Show, Add more, Close/Done) and the body
+   (UploadDropzone when Empty, else the UploadRows; Hidden has none). Done is disabled while any row is
+   Waiting, Preparing, Uploading or Adding. Buttons carry name="tray" and value hide|show|more|close|done. *@
+<section class="ws-tray" aria-label="Upload">
+    <h2 class="ws-tray-head">@Heading</h2>@Notice
+    @Bar
+    <div class="ws-tray-ctl">@Controls</div>
+    @Body
+</section>
+
+@code {
+    [Parameter] public TrayState State { get; set; } = TrayState.Empty;
+
+    /// <summary>The destination gallery's title; null uploads to the library.</summary>
+    [Parameter] public string? Destination { get; set; }
+
+    /// <summary>The destination gallery is public: the II.5a notice shows in every state.</summary>
+    [Parameter] public bool DestinationPublic { get; set; }
+
+    [Parameter] public IReadOnlyList<UploadTrayRow> Rows { get; set; } = [];
+    [Parameter] public int Added { get; set; }
+    [Parameter] public int Total { get; set; }
+    [Parameter] public int MaxMb { get; set; } = 20;
+    [Parameter] public int? MaxPhotos { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (DestinationPublic && string.IsNullOrEmpty(Destination))
+            throw new ArgumentException("A public destination needs its title for the notice.", nameof(Destination));
+    }
+
+    private string Where => Destination ?? "your library";
+
+    /// <summary>Any row still on its way (Waiting, Preparing, Uploading, Adding).</summary>
+    private bool Busy => Rows.Any(r => r.State is UploadRowState.Waiting or UploadRowState.Preparing or UploadRowState.Uploading or UploadRowState.Adding);
+
+    private int Failed => Rows.Count(r => r.State is UploadRowState.Failed or UploadRowState.Interrupted);
+
+    /// <summary>The state the heading line shows; Hidden shows the line of the state it hides.</summary>
+    private TrayState Shown => State != TrayState.Hidden ? State
+        : Busy ? TrayState.Working
+        : Failed > 0 ? TrayState.FinishedWithFailures
+        : TrayState.Finished;
+
+    private string Heading => Shown switch
+    {
+        TrayState.Empty => $"Add photos to {Where}",
+        TrayState.Working => $"Adding to {Where} · {Added} of {Total}",
+        TrayState.Finished => $"{Gallery.Web.Workspace.Messages.Photos(Added)} added to {Where}",
+        _ => $"{Gallery.Web.Workspace.Messages.Photos(Added)} added · {Failed} failed",
+    };
+
+    // [SAFETY II.5a] plain text in a <p>, never <details>, a tooltip or a title attribute.
+    private RenderFragment? Notice => !DestinationPublic ? null
+        : @<p class="ws-notice">@Destination is public. Visitors will see these photos as soon as each one is added.</p>;
+
+    private RenderFragment? Bar => State != TrayState.Working ? null
+        : @<progress class="ws-tray-bar" value="@Added" max="@Total">@Added of @Total</progress>;
+
+    private RenderFragment Controls => b =>
+    {
+        if (State == TrayState.Hidden) b.AddContent(0, Btn("show", "Show"));
+        else if (Rows.Count > 0) b.AddContent(1, Btn("hide", "Hide"));
+        if (State is TrayState.Finished or TrayState.FinishedWithFailures || (State == TrayState.Hidden && !Busy)) b.AddContent(2, Btn("more", "Add more"));
+        b.AddContent(3, State == TrayState.Empty ? Btn("close", "Close") : Btn("done", "Done", Busy));
+    };
+
+    private static RenderFragment Btn(string value, string text, bool disabled = false)
+        => @<Button Type="button" Name="tray" Value="@value" Disabled="disabled">@text</Button>;
+
+    private RenderFragment? Body => State switch
+    {
+        TrayState.Hidden => null,
+        TrayState.Empty => @<div class="ws-tray-body"><UploadDropzone MaxMb="MaxMb" MaxPhotos="MaxPhotos" /></div>,
+        _ => @<div class="ws-tray-body ws-tray-rows">@foreach (var r in Rows){<UploadRow FileName="@r.FileName" State="r.State" Percent="r.Percent" Reason="@r.Reason" ItemId="@r.ItemId" />}</div>,
+    };
+}

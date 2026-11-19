@@ -1,0 +1,31 @@
+<UiLayout Title="CollectionList">
+    <Specimen Label="Collection current" Note="All photos is open." Width="w-240">
+        <CollectionList Current="all" Total="128" Unplaced="14" Galleries="Galleries" Csrf="Token" />
+    </Specimen>
+    <Specimen Label="Private gallery" Note="Desert is open; it is private." Width="w-240">
+        <CollectionList Current="gal-desert" Total="128" Unplaced="14" Galleries="Galleries" Csrf="Token" />
+    </Specimen>
+    <Specimen Label="Drag target" Note="Photos dragged over Birds." Width="w-240">
+        <CollectionList Current="all" Total="128" Unplaced="14" Galleries="Galleries" Csrf="Token" Over="gal-birds" />
+    </Specimen>
+    <Specimen Label="Reorder position" Note="Desert dragged before Birds." Width="w-240">
+        <CollectionList Current="unplaced" Total="128" Unplaced="14" Galleries="Galleries" Csrf="Token" Before="gal-birds" />
+    </Specimen>
+    <Specimen Label="Naming" Width="w-240">
+        <CollectionList Current="all" Total="128" Unplaced="14" Galleries="Galleries" Csrf="Token" Naming="true" />
+    </Specimen>
+    <Specimen Label="Phone width" Note="Constrained to 390 px." Width="w-390">
+        <CollectionList Current="gal-coast" Total="128" Unplaced="14" Galleries="Galleries" Csrf="Token" />
+    </Specimen>
+</UiLayout>
+
+@code {
+    private static readonly FormToken Token = new("__RequestVerificationToken", "catalogue-sample");
+    private static readonly IReadOnlyList<CollectionGallery> Galleries =
+    [
+        new("gal-coast", "coast", "Coast", true, 42),
+        new("gal-birds", "birds", "Birds", true, 31),
+        new("gal-desert", "desert", "Desert", false, 9),
+        new("gal-winter", "coast-winter", "Coast, winter", true, 18),
+    ];
+}

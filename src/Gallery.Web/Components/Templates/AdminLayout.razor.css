@@ -81,3 +81,38 @@ body.admin {
         overflow: auto;
     }
 }
+
+/* 020 K1 workspace frame (IX.2: the layout owns all frame geometry; pages add none). Below 900 px
+   one simple column for now (the phone strip and bottom sheet come with T057). */
+.ws {
+    display: block;
+}
+
+.ws-list,
+.ws-panel {
+    padding: var(--space-s);
+}
+
+.ws-main {
+    min-width: 0;
+}
+
+@media (min-width: 900px) {
+    .ws {
+        display: grid;
+        grid-template-columns: 232px minmax(0, 1fr) 320px;
+        height: 100vh;
+    }
+
+    .ws-list,
+    .ws-main,
+    .ws-panel {
+        min-width: 0;
+        overflow: auto;
+    }
+
+    .ws-list,
+    .ws-panel {
+        background: var(--color-surface);
+    }
+}

@@ -24,6 +24,7 @@ public static class UiCatalog
         new(UiLevel.Atoms, "Input", "atoms/input", typeof(InputPage)),
         new(UiLevel.Atoms, "Switch", "atoms/switch", typeof(SwitchPage)),
         new(UiLevel.Atoms, "SelectMark", "atoms/select-mark", typeof(SelectMarkPage)),
+        new(UiLevel.Atoms, "Mark", "atoms/mark", typeof(MarkPage)),
         new(UiLevel.Atoms, "Icon", "atoms/icon", typeof(IconPage)),
         new(UiLevel.Atoms, "IconButton", "atoms/icon-button", typeof(IconButtonPage)),
 
@@ -37,6 +38,10 @@ public static class UiCatalog
         new(UiLevel.Molecules, "DragHandle", "molecules/drag-handle", typeof(DragHandlePage)),
         new(UiLevel.Molecules, "SelectionBar", "molecules/selection-bar", typeof(SelectionBarPage)),
         new(UiLevel.Molecules, "DangerConfirm", "molecules/danger-confirm", typeof(DangerConfirmPage)),
+        new(UiLevel.Molecules, "PhotoCell", "molecules/photo-cell", typeof(PhotoCellPage)),
+        new(UiLevel.Molecules, "GalleryChecklist", "molecules/gallery-checklist", typeof(GalleryChecklistPage)),
+        new(UiLevel.Molecules, "UploadRow", "molecules/upload-row", typeof(UploadRowPage)),
+        new(UiLevel.Molecules, "Toast", "molecules/toast", typeof(ToastPage)),
         new(UiLevel.Molecules, "VisibilityToggle", "molecules/visibility-toggle", typeof(VisibilityTogglePage)),
         new(UiLevel.Molecules, "Gallery actions", "molecules/gallery-actions", typeof(GalleryActionsPage)),
         new(UiLevel.Molecules, "TokenCombobox", "molecules/token-combobox", typeof(TokenComboboxPage)),
@@ -55,6 +60,9 @@ public static class UiCatalog
         new(UiLevel.Organisms, "BatchFooter", "organisms/batch-footer", typeof(BatchFooterPage)),
         new(UiLevel.Organisms, "GalleryBuilder", "organisms/gallery-builder", typeof(GalleryBuilderPage)),
         new(UiLevel.Organisms, "SignInCard", "organisms/sign-in-card", typeof(SignInCardPage)),
+        new(UiLevel.Organisms, "CollectionList", "organisms/collection-list", typeof(CollectionListPage)),
+        new(UiLevel.Organisms, "UploadTray", "organisms/upload-tray", typeof(UploadTrayPage)),
+        new(UiLevel.Organisms, "PhotoStage", "organisms/photo-stage", typeof(PhotoStagePage)),
 
         new(UiLevel.Templates, "PublicLayout", "templates/public-layout", typeof(PublicLayoutPage)),
         new(UiLevel.Templates, "AdminLayout", "templates/admin-layout", typeof(AdminLayoutPage)),

@@ -1,4 +1,5 @@
 @* Admin layout template (feature 005): full document with owner bar, main, and optional aside. *@
+@* 020 C-05: with List set it renders the workspace frame (K1) instead; List null is today's document. *@
 @inject Gallery.Web.Styles.InlineStyles Styles
 <!doctype html>
 <html lang="en">
@@ -9,16 +10,7 @@
     <meta name="robots" content="noindex">
     <style>@((MarkupString)Styles.Css)</style>
 </head>
-<body class="admin">
-    @(ShowOwnerBar ? Bar : null)@CrumbsContent
-    <div class="@BodyClass">
-        <main class="admin-main">@ChildContent</main>
-        @if (Aside is not null)
-        {
-            <aside class="admin-aside">@Aside</aside>
-        }
-    </div>
-</body>
+@(List is null ? ClassicBody : WorkspaceBody)
 </html>
 
 @code {
@@ -35,6 +27,20 @@
     [Parameter] public bool ShowOwnerBar { get; set; } = true;
     [Parameter] public FormToken? SignOut { get; set; }
 
+    // ── 020 workspace mode (K1, C-05): set List to get the three-region frame ──
+    /// <summary>The collections list (left region). Non-null switches the layout to the workspace frame.</summary>
+    [Parameter] public RenderFragment? List { get; set; }
+    /// <summary>The details panel (right region) of the workspace frame.</summary>
+    [Parameter] public RenderFragment? Panel { get; set; }
+    /// <summary>The CSRF request token the workspace script sends (<c>data-csrf</c>).</summary>
+    [Parameter] public FormToken? Csrf { get; set; }
+    /// <summary>The bulk cap, <c>Library:PageSize</c> (<c>data-cap</c>).</summary>
+    [Parameter] public int Cap { get; set; }
+    /// <summary>The upload module address (<c>data-upload-src</c>).</summary>
+    [Parameter] public string? UploadSrc { get; set; }
+    /// <summary>The upload worker address (<c>data-worker-src</c>).</summary>
+    [Parameter] public string? WorkerSrc { get; set; }
+
     private string BodyClass => Aside is not null ? "admin-body with-aside" : "admin-body";
 
     // One bar on every admin page (010 owner review 1): same links, View site, Sign out; only aria-current differs.
@@ -49,4 +55,19 @@
         AdminPage.Galleries => "Galleries",
         _ => Title,
     })];
+
+    // Today's body, unchanged (rendered when List is null).
+    private RenderFragment ClassicBody => @<body class="admin">
+    @(ShowOwnerBar ? Bar : null)@CrumbsContent
+    <div class="@BodyClass">
+        <main class="admin-main">@ChildContent</main>
+        @if (Aside is not null)
+        {
+            <aside class="admin-aside">@Aside</aside>
+        }
+    </div>
+</body>;
+
+    // K1: no owner bar, no breadcrumb, no <script> (C-06: WorkspacePage renders the module script).
+    private RenderFragment WorkspaceBody => @<body class="admin"><admin-workspace class="ws" data-csrf="@Csrf?.Value" data-cap="@Cap" data-upload-src="@UploadSrc" data-worker-src="@WorkerSrc"><nav class="ws-list">@List</nav><main class="ws-main">@ChildContent</main><aside class="ws-panel">@Panel</aside></admin-workspace></body>;
 }
