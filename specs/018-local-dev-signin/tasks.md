@@ -102,7 +102,7 @@ Batch A owns: the new `src/Gallery.Web/Admin/Auth/LocalSignIn.cs`,
 `src/Gallery.Web/Hosting/ProductionGuard.cs` (one rule), `src/Gallery.Web/Components/Atoms/Input.razor`
 (K1), and the new `tests/Gallery.Web.Tests/LocalSignInRuleTests.cs`.
 
-- [ ] T005 [P] [SAFETY] Write `LocalSignIn.cs` per data-model.md:
+- [X] T005 [P] [SAFETY] Write `LocalSignIn.cs` per data-model.md:
   - `Evaluate` order: absent/whitespace → `Absent`; `DevTargetGuard.Check(environmentName, storage, mongo)`
     not empty → `NotDevelopmentHost`; length < 16 → `TooShort`; else `Enabled`;
   - the constructor computes `State` and, only when `Enabled`, keeps the SHA-256 of the UTF-8
@@ -110,13 +110,13 @@ Batch A owns: the new `src/Gallery.Web/Admin/Auth/LocalSignIn.cs`,
   - `Matches`: false when not enabled or the input is null/empty; else SHA-256 of the input compared
     with `CryptographicOperations.FixedTimeEquals`;
   - no logging in this class.
-- [ ] T006 [P] [SAFETY] In `ProductionGuard.Check`, add: when `c[LocalSignIn.PasswordKey] is not null`,
+- [X] T006 [P] [SAFETY] In `ProductionGuard.Check`, add: when `c[LocalSignIn.PasswordKey] is not null`,
   add the failure `LocalSignIn:Password must not be set` (the key, never the value). Nothing else
   changes.
-- [ ] T007 [P] K1: add `[Parameter] public string? Type` to `Input.razor` and render `type="@Type"`
+- [X] T007 [P] K1: add `[Parameter] public string? Type` to `Input.razor` and render `type="@Type"`
   on the single-line `<input>` only. Existing usages must render byte-identically
   (`UiPagesUnchangedTests` must stay green).
-- [ ] T008 Write `tests/Gallery.Web.Tests/LocalSignInRuleTests.cs` (pure, no host):
+- [X] T008 Write `tests/Gallery.Web.Tests/LocalSignInRuleTests.cs` (pure, no host):
   - `Evaluate` truth table over environment {Development, Production}, database {`x_dev`, `x`},
     public bucket {`gallery-dev-p`, `p`}, password {absent, whitespace, 15 chars, 16 chars}:
     `Enabled` only for Development + `_dev` + `gallery-dev-` + 16 chars; `NotDevelopmentHost` for
@@ -132,7 +132,7 @@ Batch A owns: the new `src/Gallery.Web/Admin/Auth/LocalSignIn.cs`,
 
 **Checkpoint A (parent)**: read the diff; T009; gate A (full suite green, no test changes); commit.
 
-- [ ] T009 Parent seam, `src/Gallery.Web/AppBuilder.cs`: after the Storage and Mongo options are
+- [X] T009 Parent seam, `src/Gallery.Web/AppBuilder.cs`: after the Storage and Mongo options are
   built, register `new LocalSignIn(builder.Configuration, builder.Environment.EnvironmentName,
   storageOptions, mongoOptions)` as a singleton. Nothing else in AppBuilder changes.
 

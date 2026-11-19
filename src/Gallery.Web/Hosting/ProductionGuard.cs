@@ -1,3 +1,4 @@
+using Gallery.Web.Admin.Auth;
 using Gallery.Web.Maintenance;
 
 namespace Gallery.Web.Hosting;
@@ -73,6 +74,10 @@ public static class ProductionGuard
 
         if (Missing(c["APPLICATIONINSIGHTS_CONNECTION_STRING"]))
             failed.Add("APPLICATIONINSIGHTS_CONNECTION_STRING must be present");
+
+        // 018 R-04 [SAFETY]: the local sign-in password must never reach a production host.
+        if (c[LocalSignIn.PasswordKey] is not null)
+            failed.Add($"{LocalSignIn.PasswordKey} must not be set");
 
         return failed;
     }
