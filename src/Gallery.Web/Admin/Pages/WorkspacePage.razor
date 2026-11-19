@@ -5,7 +5,11 @@
    "Show more" and the sentinel, and <template data-panel="default"> for this collection (library or
    gallery). Chrome: CollectionList and the collection-independent templates (photo, selection, marks,
    the cap sentence). More: cells only, then the sentinel when more exist.
-   Until Phase 5 there is no Add photos and no <upload-tray> mount (C-15); PhotoStage arrives in Phase 7.
+   Phase 5 (T045): Add photos (Primary) in the heading actions, the <upload-tray> mount at the top of main
+   (empty and hidden until upload.js fills it; it carries the upload limits for the at-pick refusals), and the
+   UploadTray / UploadRow / refusal <template>s in the chrome. The tray names its destination from the open
+   gallery's CollectionList row (title, data-public), so the [SAFETY II.5a] notice shows before any file is
+   picked; no attribute carries the destination. PhotoStage arrives in Phase 7.
    Every action is a Button with visible text; deletes are the last control of their panel. *@
 @using Gallery.Web.Components
 @using Gallery.Web.Components.Atoms
@@ -13,7 +17,9 @@
 @using Gallery.Web.Components.Organisms
 @using Gallery.Web.Components.Templates
 @using Gallery.Web.Library
+@using Gallery.Web.Upload
 @using Gallery.Web.Workspace
+@inject UploadOptions Upload
 
 @switch (Model.Part)
 {
@@ -56,7 +62,7 @@
     // ── chrome: the list and the collection-independent templates ───────────────────────────
 
     private RenderFragment Chrome => @<text><CollectionList Current="@Model.Current" Total="@((int)(Model.Counts?.Total ?? 0))" Unplaced="@((int)(Model.Counts?.Unplaced ?? 0))"
-                    Galleries="@ListRows" Csrf="@SignOutToken" NamingTemplate="true" /><template data-panel="photo">@PhotoPanel</template><template data-panel="selection">@SelectionPanel</template><template class="ws-tpl-marks"><Mark Text="Cover" /><Mark Text="New" /></template><template class="ws-tpl-cap"><p class="ws-cap">@Messages.SelectionCap(Model.Options.PageSize)</p></template></text>;
+                    Galleries="@ListRows" Csrf="@SignOutToken" NamingTemplate="true" /><template data-panel="photo">@PhotoPanel</template><template data-panel="selection">@SelectionPanel</template><template class="ws-tpl-marks"><Mark Text="Cover" /><Mark Text="New" /></template><template class="ws-tpl-cap"><p class="ws-cap">@Messages.SelectionCap(Model.Options.PageSize)</p></template>@TrayTemplates</text>;
 
     /// <summary>The sign-out form's token (set on Full and Chrome).</summary>
     private FormToken SignOutToken => Model.Csrf ?? throw new InvalidOperationException("The chrome needs the antiforgery token.");
@@ -75,9 +81,54 @@
 
     // ── main: heading, grid or empty sentence, Show more + sentinel, the default panel ──────
 
-    private RenderFragment MainRegion => @<text><div class="ws-head"><PageHeading Text="@DocumentTitle" Actions="@HeadActions" /><p class="ws-meta">@Messages.Photos(PhotoCount)@Visibility@ViewOnSite</p></div>@Grid@More<template data-panel="default">@(IsGallery ? GalleryPanel : LibraryPanel)</template></text>;
+    private RenderFragment MainRegion => @<text><upload-tray hidden data-max-bytes="@Upload.MaxFileBytes" data-max-photos="@Upload.MaxPhotosPerBatch"></upload-tray><div class="ws-head"><PageHeading Text="@DocumentTitle" Actions="@HeadActions" /><p class="ws-meta">@Messages.Photos(PhotoCount)@Visibility@ViewOnSite</p></div>@Grid@More<template data-panel="default">@(IsGallery ? GalleryPanel : LibraryPanel)</template></text>;
 
-    private RenderFragment HeadActions => @<Button Variant="ButtonVariant.Quiet" Type="button" class="ws-clear" hidden="@true">Clear selection</Button>;
+    private RenderFragment HeadActions => @<text><Button Variant="ButtonVariant.Quiet" Type="button" class="ws-clear" hidden="@true">Clear selection</Button><Button Variant="ButtonVariant.Primary" Type="button" class="ws-add">Add photos</Button></text>;
+
+    // ── upload tray templates (T045, C13): upload.js clones these and fills them ─────────────────
+    // Strings are sentinels (U+2063 key U+2063) replaced in text nodes and attribute values; counts are
+    // integers, so the heading's numbers are replaced by position (working: added, total; finished:
+    // added; failed: added, failed) and "1 photo" / "{n} photos" each has its own template. One set for
+    // the library ("lib") and one for a gallery ("gal", rendered public: the script removes the notice
+    // for a private one). Rows render Grouped so no control is named only by an aria-label.
+
+    private const string TokenMark = "\u2063";
+    private static string Token(string key) => TokenMark + key + TokenMark;
+
+    private static readonly (string Key, TrayState State, UploadRowState? Row, int Added)[] TrayVariants =
+    [
+        ("empty", TrayState.Empty, null, 0),
+        ("working", TrayState.Working, UploadRowState.Waiting, 0),
+        ("finished-1", TrayState.Finished, UploadRowState.Added, 1),
+        ("finished-n", TrayState.Finished, UploadRowState.Added, 2),
+        ("failed-1", TrayState.FinishedWithFailures, UploadRowState.Failed, 1),
+        ("failed-n", TrayState.FinishedWithFailures, UploadRowState.Failed, 2),
+        ("hidden-busy", TrayState.Hidden, UploadRowState.Waiting, 0),
+        ("hidden-idle", TrayState.Hidden, UploadRowState.Added, 1),
+    ];
+
+    private static readonly UploadRowState[] RowStates =
+    [
+        UploadRowState.Waiting, UploadRowState.Preparing, UploadRowState.Uploading, UploadRowState.Adding,
+        UploadRowState.Added, UploadRowState.Failed, UploadRowState.Interrupted,
+    ];
+
+    private static IReadOnlyList<UploadTrayRow> SampleRows(UploadRowState? state) =>
+        state is { } s ? [new UploadTrayRow(Token("name"), s, 0, Token("reason"), Token("id"))] : [];
+
+    private int MaxMb => (int)Upload.MaxMb;
+
+    private RenderFragment TrayTemplates => @<text>@foreach (var kind in new[] { "lib", "gal" })
+        {
+            foreach (var v in TrayVariants)
+            {
+                <template class="@($"ws-tpl-tray-{kind}-{v.Key}")"><UploadTray State="v.State" Destination="@(kind == "gal" ? Token("dest") : null)" DestinationPublic="@(kind == "gal")"
+                    Rows="@SampleRows(v.Row)" Added="v.Added" Total="0" MaxMb="MaxMb" MaxPhotos="Upload.MaxPhotosPerBatch" GroupedRows="true" /></template>
+            }
+        }@foreach (var r in RowStates)
+        {
+            <template class="@($"ws-tpl-row-{r.ToString().ToLowerInvariant()}")"><UploadRow FileName="@Token("name")" State="r" Percent="0" Reason="@Token("reason")" ItemId="@Token("id")" Grouped="true" /></template>
+        }<template class="ws-tpl-refusals"><UploadDropzone State="DropzoneState.Refused" Refusals="@([new Refusal(Token("name"), Token("reason"))])" MaxMb="MaxMb" MaxPhotos="Upload.MaxPhotosPerBatch" /></template></text>;
 
     private RenderFragment? Visibility => IsGallery ? @<text> · @(IsPublic ? "Public" : "Private")</text> : null;
 

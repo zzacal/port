@@ -20,3 +20,8 @@
 .ws-preview ::deep picture { height: 100%; }
 .ws-preview ::deep img,
 .ws-previews ::deep img { display: block; width: 100%; height: 100%; object-fit: contain; }
+/* T045: the upload tray mount at the top of main. Empty and hidden until upload.js fills it; open, it is
+   a block whose tray (UploadTray's own rules) has no top margin, so the frame's first box does not move.
+   At-pick refusals span the rows grid. */
+upload-tray:not([hidden]) { display: block; }
+upload-tray ::deep .ws-tray-rows > .dz-refusals { grid-column: 1 / -1; }

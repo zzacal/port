@@ -25,6 +25,9 @@
     [Parameter] public int MaxMb { get; set; } = 20;
     [Parameter] public int? MaxPhotos { get; set; }
 
+    /// <summary>020 T045 hook (default off: the default render is unchanged): rows render <see cref="UploadRow.Grouped"/>.</summary>
+    [Parameter] public bool GroupedRows { get; set; }
+
     protected override void OnParametersSet()
     {
         if (DestinationPublic && string.IsNullOrEmpty(Destination))
@@ -74,6 +77,6 @@
     {
         TrayState.Hidden => null,
         TrayState.Empty => @<div class="ws-tray-body"><UploadDropzone MaxMb="MaxMb" MaxPhotos="MaxPhotos" /></div>,
-        _ => @<div class="ws-tray-body ws-tray-rows">@foreach (var r in Rows){<UploadRow FileName="@r.FileName" State="r.State" Percent="r.Percent" Reason="@r.Reason" ItemId="@r.ItemId" />}</div>,
+        _ => @<div class="ws-tray-body ws-tray-rows">@foreach (var r in Rows){<UploadRow FileName="@r.FileName" State="r.State" Percent="r.Percent" Reason="@r.Reason" ItemId="@r.ItemId" Grouped="GroupedRows" />}</div>,
     };
 }

@@ -97,7 +97,7 @@ brk 1 $UE 's/\bif\s*(\((?:[^()]++|(?1))*\))((?:(?!\bif\s*\().)*?"destination-pub
   "${F}UploadJoinTests.Register_into_a_public_gallery_without_the_flag_is_409_destination_public" \
   'T043 II.5a: Register has no destination-public refusal'
 # 2. T025 II.5a notice: the ws-notice paragraph renders only in the Empty state.
-brk 2 $TRAY 's/\@if\s*\(\s*DestinationPublic\s*\)(\s*\{?\s*<p class="ws-notice")/\@if (DestinationPublic && State == TrayState.Empty)$1/' \
+brk 2 $TRAY 's/private RenderFragment\? Notice => !DestinationPublic \? null/private RenderFragment? Notice => !(DestinationPublic \&\& State == TrayState.Empty) ? null/' \
   "${F}WorkspaceComponentTests.UploadTray_public_notice_is_plain_text_in_every_state|${F}WorkspaceUploadBrowserTests.Public_destination_notice_is_visible_before_picking_and_while_working" \
   'T025 II.5a: public notice only when the tray is Empty'
 # 3. T046 II.5a flag (applies only once upload.js sends visibleToVisitors): U3 always sends visibleToVisitors: true, and the script never finds the

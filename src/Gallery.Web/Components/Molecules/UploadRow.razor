@@ -1,7 +1,9 @@
 @* Feature 020 K7: one upload in the workspace tray: the file name, then the state's words
    ("Waiting", "Preparing", a progress bar, "Adding", "Added", the reason or "Interrupted" with
-   Retry and Remove). data-item carries the batch item id (the 008 C2 name upload.js reads). *@
-<div class="ws-up" data-item="@ItemId">
+   Retry and Remove). data-item carries the batch item id (the 008 C2 name upload.js reads).
+   Grouped (020 T045 hook, default off: the default render is unchanged): the row is a group named by the
+   file name and Retry/Remove are named by their visible words only, for the workspace's templates. *@
+<div class="ws-up" data-item="@ItemId" role="@(Grouped ? "group" : null)" aria-label="@(Grouped ? FileName : null)">
     <span class="ws-up-name" title="@FileName">@FileName</span>
     @StateContent
 </div>
@@ -12,6 +14,9 @@
     [Parameter] public int Percent { get; set; }
     [Parameter] public string? Reason { get; set; }
     [Parameter] public string? ItemId { get; set; }
+
+    /// <summary>020 T045 hook: the row is a named group; its buttons carry no aria-label.</summary>
+    [Parameter] public bool Grouped { get; set; }
 
     private RenderFragment StateContent => State switch
     {
@@ -24,5 +29,5 @@
         _ => Problem("Interrupted"),
     };
 
-    private RenderFragment Problem(string words) => @<span class="ws-up-state ws-up-problem"><span class="ws-up-reason">@words</span><Button Variant="ButtonVariant.Quiet" Type="button" Name="action" Value="retry" AriaLabel="@($"Retry {FileName}")">Retry</Button><Button Variant="ButtonVariant.Quiet" Type="button" Name="action" Value="remove" AriaLabel="@($"Remove {FileName}")">Remove</Button></span>;
+    private RenderFragment Problem(string words) => @<span class="ws-up-state ws-up-problem"><span class="ws-up-reason">@words</span><Button Variant="ButtonVariant.Quiet" Type="button" Name="action" Value="retry" AriaLabel="@(Grouped ? null : $"Retry {FileName}")">Retry</Button><Button Variant="ButtonVariant.Quiet" Type="button" Name="action" Value="remove" AriaLabel="@(Grouped ? null : $"Remove {FileName}")">Remove</Button></span>;
 }

@@ -655,13 +655,13 @@ only), `src/Gallery.Web/Admin/Pages/WorkspacePage.razor(.css)` (Add photos, tray
 templates), new `tests/Gallery.Web.Tests/WorkspaceUploadBrowserTests.cs`,
 `tests/Gallery.Web.Tests/WorkspaceLayoutBrowserTests.cs`.
 
-- [ ] T045 [SAFETY] [US2] `WorkspacePage`: `Add photos` (`Button` Primary) in the heading actions;
+- [X] T045 [SAFETY] [US2] `WorkspacePage`: `Add photos` (`Button` Primary) in the heading actions;
   the `<upload-tray>` mount at the top of `.ws-main`; the `UploadTray`/`UploadRow` `<template>`s in
   the `chrome` templates; `data-upload-src`/`data-worker-src` from `AdminAssets`
   (`ScriptUrl`, `WorkerUrl`); no new attribute for the destination: the tray reads the open gallery's title and
   `data-public` from its `CollectionList` row, so it can show the [SAFETY II.5a] notice before any
   file is picked. Accept: T035 facts still green; T047.
-- [ ] T046 [SAFETY] [US2] `upload.js` rework (C13): register `<upload-tray>`; keep register, PUT,
+- [X] T046 [SAFETY] [US2] `upload.js` rework (C13): register `<upload-tray>`; keep register, PUT,
   master check, worker, size PUTs (≤ 4), heartbeats, U7, U6, U8, U9, reconcile from U2, at-pick
   refusals; U3 sends `gallery` (the open collection when it is a gallery, from the tray's stored
   destination after the first register) and `visibleToVisitors: true` ONLY while the tray shows
@@ -673,7 +673,7 @@ templates), new `tests/Gallery.Web.Tests/WorkspaceUploadBrowserTests.cs`,
   anywhere on the window opens the tray; the tray element is moved across `swap`, never
   re-created; remove footer/confirm/discard code and templates. Four sinks banned. Loaded by
   dynamic `import()` from `workspace.js` on Add photos, a drop, or a U2 batch. Depends: T044, T045.
-- [ ] T047 [SAFETY] [US2] Write `tests/Gallery.Web.Tests/WorkspaceUploadBrowserTests.cs`
+- [X] T047 [SAFETY] [US2] Write `tests/Gallery.Web.Tests/WorkspaceUploadBrowserTests.cs`
   (`UploadBrowserFixture`, `OpenWorkspaceAsync`) with the TI-70 UploadBrowserTests mapping and:
   US2 independent test (gallery: four photos, Hide, Show, Done; all four in the gallery and in All
   photos; repeat from All photos → in no gallery); `Public_destination_notice_is_visible_before_picking_and_while_working`
@@ -686,7 +686,7 @@ templates), new `tests/Gallery.Web.Tests/WorkspaceUploadBrowserTests.cs`,
   `Visitors_see_a_photo_joined_into_a_public_gallery` (anonymous context loads the public gallery
   page after a join and finds the photo; US2-6 visitor-visible); `Done_clears_the_New_marks`.
   Depends: T046.
-- [ ] T048 [US2] Write `tests/Gallery.Web.Tests/WorkspaceLayoutBrowserTests.cs` (IX.4, FR-038)
+- [X] T048 [US2] Write `tests/Gallery.Web.Tests/WorkspaceLayoutBrowserTests.cs` (IX.4, FR-038)
   at 1440 × 900: frame geometry (`.ws-list`, `.ws-main`, `.ws-panel` boxes; the gap above
   `.ws-main`'s first box) equal across library collection, gallery, one photo, several photos,
   upload area open; expected values measured in the browser, compared for equality within 0.5 px;

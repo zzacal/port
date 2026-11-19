@@ -14,6 +14,12 @@
 //   a gallery name A7, cells within a gallery A9, gallery names A4), Move earlier/later (A9) and
 //   Move up/down (A4), cover (A10), the Public switch (A6), DangerConfirm then A2/A11, and naming a
 //   new gallery in the list (A3, then open it). Its rows are in the `clicks` / `changes` tables.
+//   Tray hooks (T046, C13): upload.js is loaded by dynamic import() only, on Add photos, a file drop
+//   anywhere on the window, or when U2 reports an open batch as the page loads (`ready` waits for that
+//   check). Its <upload-tray> is moved across `swap`, never re-created. upload.js tells this script
+//   what happened through CustomEvents on the document: `upload:joined` (fetch the cell by W4, place
+//   it, mark it New, refresh the chrome at most once a second), `upload:closed` (the New marks go),
+//   `upload:said` (the server's message for the Toast) and `upload:stale` (re-read the chrome).
 //
 // Markup rules (008 R-11, 020 C12): the only string-to-markup step is the function `swap`, which
 // parses a fragment the server answered. Everything else is cloned from a server-rendered
@@ -142,9 +148,11 @@ async function navigate(href, push) {
   const heading = region.querySelector('.ws-head h1');
   if (heading) document.title = heading.textContent.trim();
   anchorId = null;
+  markNew();
   afterSelect();
   rove(null);
   watchSentinel();
+  trayCollectionChanged();
   return true;
 }
 
@@ -181,6 +189,7 @@ function refreshChrome() {
         swap(region, html);
         markCurrent(location.pathname);
         if (panelKind === 'photo' || panelKind === 'selection') showPanel();
+        trayCollectionChanged();
       }
     } while (chromeAgain);
     chromeBusy = null;
@@ -207,6 +216,7 @@ async function loadMore() {
     const next = box.querySelector('span[data-next]');
     next?.remove();
     grid()?.append(...box.children);
+    markNew();
     if (next) {
       sentinel.setAttribute('data-next', next.getAttribute('data-next') ?? '');
     } else {
@@ -838,9 +848,13 @@ function moveCoverMark(id) {
     m.remove();
     if (holder && holder.children.length === 0) holder.remove();
   }
-  const cell = cellById(id);
+  marksOf(cellById(id))?.prepend(tpl.cloneNode(true));
+}
+
+/** The cell's marks holder (Cover, New), made when missing; null when the cell is not a PhotoCell. */
+function marksOf(cell) {
   const sel = cell?.querySelector('.ws-cell-sel');
-  if (!sel) return;
+  if (!sel) return null;
   let holder = cell.querySelector('.ws-cell-marks');
   if (!holder) {
     holder = document.createElement('span');
@@ -849,7 +863,7 @@ function moveCoverMark(id) {
     for (const a of sel.attributes) if (a.name.startsWith('b-')) holder.setAttribute(a.name, a.value);
     sel.after(holder);
   }
-  holder.prepend(tpl.cloneNode(true));
+  return holder;
 }
 
 async function setCover() {
@@ -971,6 +985,150 @@ function onFocusOut(e) {
   if (naming && !naming.busy && e.target instanceof Element && e.target.matches('.ws-list .ws-naming-input')) stopNaming();
 }
 
+
+// ── the upload tray's hooks (T046, C13) ─────────────────────────────────────────────────────
+
+const STATE_URL = '/admin/upload/state';
+let uploadModule = null;
+
+/** upload.js, imported once (dynamic import only: the page has exactly one <script>). */
+function upload() {
+  uploadModule ??= import(host()?.dataset.uploadSrc ?? '').catch((e) => {
+    uploadModule = null;
+    toast(statusLine(null, e), true);
+    return null;
+  });
+  return uploadModule;
+}
+
+function trayCollectionChanged() {
+  uploadModule?.then((m) => m?.collectionChanged());
+}
+
+/** U2 as the page loads: an open batch reopens the tray (and its New marks). */
+async function resumeUpload() {
+  let state = null;
+  try {
+    const res = await fetch(STATE_URL, { credentials: 'same-origin' });
+    if (res.ok && !res.redirected) state = await res.json();
+  } catch {
+    state = null;
+  }
+  if (!state?.batch) return;
+  const m = await upload();
+  for (const id of m?.resume(state) ?? []) newIds.add(id);
+  markNew();
+}
+
+const carriesFiles = (e) => Array.from(e.dataTransfer?.types ?? []).includes('Files');
+
+/** Files dragged anywhere over the window may be dropped (US2-2). */
+function onFileDragOver(e) {
+  if (!carriesFiles(e)) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'copy';
+}
+
+/** Files dropped anywhere on the window open the tray, which takes them (US2-2). */
+function onFileDrop(e) {
+  if (!carriesFiles(e)) return;
+  e.preventDefault();
+  const files = Array.from(e.dataTransfer.files ?? []);
+  if (files.length > 0) upload().then((m) => m?.show(files));
+}
+
+/** Photos joined while this page is open; they carry the New mark until Done or Close. */
+const newIds = new Set();
+
+function newMark() {
+  return list()?.querySelector('template.ws-tpl-marks')?.content.querySelectorAll('.ws-mark')[1] ?? null;
+}
+
+/** Every cell of a joined photo on the page carries the New mark once. */
+function markNew() {
+  const tpl = newMark();
+  if (!tpl || newIds.size === 0) return;
+  for (const cell of cells()) {
+    if (!newIds.has(cell.dataset.id)) continue;
+    const marks = [...cell.querySelectorAll('.ws-cell-marks .ws-mark')];
+    if (marks.some((m) => m.textContent === tpl.textContent)) continue;
+    marksOf(cell)?.append(tpl.cloneNode(true));
+  }
+}
+
+/** Done / Close: the New marks go. */
+function clearNew() {
+  newIds.clear();
+  const word = newMark()?.textContent;
+  for (const m of main()?.querySelectorAll('.ws-cell .ws-cell-marks .ws-mark') ?? []) {
+    if (m.textContent !== word) continue;
+    const holder = m.parentElement;
+    m.remove();
+    if (holder && holder.children.length === 0) holder.remove();
+  }
+}
+
+/**
+ * Where a joined photo goes on this page (C13): first in All photos; first in Not in a gallery when
+ * it went to no gallery; last in its destination gallery when that is open; elsewhere nowhere.
+ */
+function placeFor(gallery) {
+  const path = location.pathname;
+  if (path === '/admin') return 'first';
+  if (path === '/admin/unplaced') return gallery ? null : 'first';
+  const open = galleryOf(path);
+  return open && gallery?.id === open ? 'last' : null;
+}
+
+/** W4: the photo's cell, rendered by the server; null when it cannot be read. */
+async function tileCell(id) {
+  let res;
+  try {
+    res = await fetch(`/admin/tiles/${encodeURIComponent(id)}`, { credentials: 'same-origin' });
+  } catch {
+    return null;
+  }
+  if (!res.ok || res.redirected) return null;
+  const box = document.createElement('div');
+  swap(box, await res.text());
+  return box.querySelector('.ws-cell');
+}
+
+let chromeTimer = 0;
+let chromeAt = 0;
+
+/** A chrome refresh (counts) at most once a second while photos keep joining. */
+function refreshChromeSoon() {
+  if (chromeTimer) return;
+  chromeTimer = setTimeout(() => {
+    chromeTimer = 0;
+    chromeAt = Date.now();
+    refreshChrome();
+  }, Math.max(0, chromeAt + 1000 - Date.now()));
+}
+
+async function onJoined({ imageId, gallery }) {
+  newIds.add(imageId);
+  const where = placeFor(gallery);
+  const path = location.pathname;
+  if (where && !cellById(imageId)) {
+    const cell = await tileCell(imageId);
+    if (cell && location.pathname === path && !cellById(imageId)) {
+      const sheet = grid();
+      if (!sheet) {
+        // The collection was empty (the sentence, no grid): the server renders it with the photo.
+        await reloadMain();
+      } else {
+        if (where === 'first') sheet.prepend(cell);
+        else sheet.append(cell);
+        rove(null);
+      }
+    }
+  }
+  markNew();
+  refreshChromeSoon();
+}
+
 // ── event tables (part 3, T038, appends its own rows) ───────────────────────────────────────
 
 /** [selector, handler(el, event) → handled]: the first row whose selector matches and handles wins. */
@@ -993,6 +1151,12 @@ const clicks = [
     onCellClick(cell, e);
     return true;
   }],
+  // The tray (T046): Add photos opens it; its own clicks are upload.js's.
+  ['.ws-main .ws-add', () => {
+    upload().then((m) => m?.show());
+    return true;
+  }],
+  ['.ws-main upload-tray', () => true],
   // Part 3 (T038).
   ['.ws-list button[name="collection"][value="new"]', (button) => {
     startNaming(button);
@@ -1093,10 +1257,19 @@ class AdminWorkspace extends HTMLElement {
     this.addEventListener('dragend', onDragEnd);
     document.addEventListener('keydown', onKey);
     window.addEventListener('popstate', () => navigate(location.href, false));
+    document.addEventListener('dragover', onFileDragOver);
+    document.addEventListener('drop', onFileDrop);
+    document.addEventListener('upload:joined', (e) => onJoined(e.detail ?? {}));
+    document.addEventListener('upload:closed', clearNew);
+    document.addEventListener('upload:said', (e) => toast(e.detail?.text ?? '', !!e.detail?.failed));
+    document.addEventListener('upload:stale', () => refreshChrome());
     afterSelect();
     rove(null);
     watchSentinel();
-    this.dataset.script = 'ready';
+    // `ready` after the U2 check, so an open batch's tray is back before anyone looks.
+    resumeUpload().finally(() => {
+      this.dataset.script = 'ready';
+    });
   }
 }
 
