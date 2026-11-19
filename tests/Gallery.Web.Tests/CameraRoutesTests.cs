@@ -342,9 +342,9 @@ public partial class CameraRoutesTests(S3ProxyFixture s3, MongoFixture mongo) : 
         var built = await BuildAsync(h);
 
         // Non-vacuity: the owner session is live (an admin page renders the owner bar).
-        var lib = await h.GetAsync("/admin/library");
+        var lib = await h.GetAsync("/admin");
         Assert.Equal(HttpStatusCode.OK, lib.StatusCode);
-        Assert.Contains("owner-bar", await lib.Content.ReadAsStringAsync());
+        Assert.Contains("class=\"ws-collections\"", await lib.Content.ReadAsStringAsync());
 
         foreach (var session in new[] { "with the owner session", "anonymous" })
         {
@@ -360,7 +360,7 @@ public partial class CameraRoutesTests(S3ProxyFixture s3, MongoFixture mongo) : 
             }
         }
 
-        var signedOut = await h.GetAsync("/admin/library");
+        var signedOut = await h.GetAsync("/admin");
         Assert.Equal(HttpStatusCode.Redirect, signedOut.StatusCode);
     }
 

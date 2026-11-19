@@ -792,4 +792,23 @@ public class WorkspaceComponentTests
         Assert.Single(Regex.Matches(last, "class=\"cs cs-fill\""));
         Assert.Equal(8, Regex.Matches(last, "<div class=\"ws-cell[ \"]").Count);
     }
+
+    // ── K1 AdminLayout Bare (T053, FR-001) ──────────────────────────────────
+
+    /// <summary>The sign-in page's document is unchanged by 020: Bare renders byte for byte what the
+    /// pre-020 layout rendered with <c>ShowOwnerBar=false</c> (captured in T005).</summary>
+    [Fact]
+    public async Task AdminLayout_Bare_equals_the_pre_change_sign_in_layout()
+    {
+        RenderFragment body = b => b.AddMarkupContent(0, "<p>x</p>");
+        var html = await Render.Html<Gallery.Web.Components.Templates.AdminLayout>(new Dictionary<string, object?>
+        {
+            ["Title"] = "Sign in · Gallery",
+            ["Bare"] = true,
+            ["ChildContent"] = body,
+        });
+        var pre = await File.ReadAllTextAsync(Path.Combine(
+            Render.RepoRoot, "specs", "020-admin-workspace", "evidence", "pre-admin-layout-bare.html"));
+        Assert.Equal(pre, html);
+    }
 }

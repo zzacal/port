@@ -6,11 +6,9 @@
    - Cancel is first (leading/left), the outlined danger action last (trailing/right), one action only;
    - initial focus goes to Cancel (autofocus), never to the destructive button; Esc cancels;
    - the dialog is opened with showModal(), so the page behind it is inert.
-   Opening/closing uses HTML invoker commands (command / commandfor); admin-assets/library.js (loaded
-   on every page with a DangerConfirm except /admin/upload, whose upload.js drives its own) is the
-   fallback for browsers without them and returns focus to the trigger on close. Open=true renders the
-   dialog open in place (non-modal), for the /ui specimens and the upload footer's confirmdiscard
-   template, which upload.js re-opens modally. *@
+   Opening/closing uses HTML invoker commands (command / commandfor); admin-assets/workspace.js is the
+   fallback for browsers without them. Open=true renders the dialog open in place (non-modal), for the
+   /ui specimens. *@
 <div class="danger-confirm">
     @if (Trigger)
     {

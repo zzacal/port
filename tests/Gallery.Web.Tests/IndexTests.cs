@@ -13,7 +13,7 @@ public class IndexTests
         var hrefs = System.Text.RegularExpressions.Regex.Matches(html, "href=\"/ui/([^\"]+)\"")
             .Select(m => m.Groups[1].Value).ToList();
         Assert.Equal(UiCatalog.Entries.Select(e => e.Slug), hrefs);
-        Assert.Equal(48, hrefs.Count); // 14 from feature 003 + 17 from 005 + 5 from 010 (stated changes, T025 and owner review 1) + 1 from 014 (TokenCombobox) + 2 from 015 (Icon, IconButton) and MembershipStatus → PhotoActions + 1 from 016 (Gallery actions), one list (owner: no admin split) + 8 from 020
+        Assert.Equal(35, hrefs.Count); // 14 from feature 003 + 17 from 005 + 5 from 010 (stated changes, T025 and owner review 1) + 1 from 014 (TokenCombobox) + 2 from 015 (Icon, IconButton) and MembershipStatus → PhotoActions + 1 from 016 (Gallery actions), one list (owner: no admin split) + 8 from 020 − 13 removed by 020
 
         foreach (var heading in new[] { "Tokens", "Atoms", "Molecules", "Organisms", "Templates" })
             Assert.Matches($"<h2[^>]*>{heading}</h2>", html);

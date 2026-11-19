@@ -28,6 +28,14 @@ public class PublishRefusalTests(S3ProxyFixture s3, MongoFixture mongo) : IClass
     private const string Reason = "Add a photo before making this gallery public";
     private static KeyValuePair<string, string> F(string k, string v) => GalleryHtml.F(k, v);
 
+    /// <summary>The JSON answer's root element (020 TI-15).</summary>
+    private static async Task<System.Text.Json.JsonElement> JsonAsync(HttpResponseMessage resp)
+    {
+        using var doc = await UploadHost.ParseAsync(resp);
+        Assert.NotNull(doc);
+        return doc!.RootElement.Clone();
+    }
+
     private static async Task<string> DumpAsync(LibraryHost h)
     {
         var parts = new List<string>();
@@ -43,7 +51,7 @@ public class PublishRefusalTests(S3ProxyFixture s3, MongoFixture mongo) : IClass
     private static async Task AssertRefusedAsync(LibraryHost h, HttpResponseMessage resp, string gid, string home, string dump, string what)
     {
         Assert.True(resp.StatusCode == HttpStatusCode.Conflict, $"{what}: answered {(int)resp.StatusCode}, expected 409");
-        Assert.Equal(Reason, LibraryHtml.Status(await LibraryHtml.BodyAsync(resp)));
+        Assert.Equal(Reason, (await JsonAsync(resp)).GetProperty("message").GetString());
         Assert.Equal("private", (await GalleryHtml.LoadAsync(h, gid)).Visibility);
         await h.EdgeIdleAsync();
         Assert.Equal(0, h.Recorder.CallCount);
@@ -65,26 +73,25 @@ public class PublishRefusalTests(S3ProxyFixture s3, MongoFixture mongo) : IClass
         var home = await GalleryHtml.HomeRawAsync(h);
         Assert.Contains("/listed", home);
         var dump = await DumpAsync(h);
-        var path = $"/admin/galleries/{gid}/visibility";
+        var path = $"/admin/api/galleries/{gid}/visibility";
 
-        await AssertRefusedAsync(h, await h.PostFormAsync(path, [F("public", "on"), F("from", "list")]),
-            gid, home, dump, "public=on from the list");
-        await AssertRefusedAsync(h, await h.PostFormAsync(path, [F("public", "on"), F("confirm", "1"), F("from", "builder")]),
-            gid, home, dump, "public=on with the retired confirm=1 from the builder");
-        await AssertRefusedAsync(h, await h.PostFormAsync(path, [F("public", "on")]),
-            gid, home, dump, "public=on only");
-        await AssertRefusedAsync(h, await h.PostFormAsync(path, []),
-            gid, home, dump, "a form carrying only the CSRF token");
-        await AssertRefusedAsync(h, await h.PostBareAsync(path, csrfHeader: true),
-            gid, home, dump, "a bodiless POST with only the CSRF header");
+        // 020 TI-15: the three G4 publish shapes are one A6 request; the old form with no fields is A6 { public: false }.
+        await AssertRefusedAsync(h, await h.PostJsonAsync(path, new { @public = true }),
+            gid, home, dump, "A6 { public: true }");
+        await AssertRefusedAsync(h, await h.PostJsonAsync(path, new { @public = false }),
+            gid, home, dump, "A6 { public: false } on the empty private gallery");
 
-        // B2: the builder's Save with a forged public=on (the switch is disabled for an empty
-        // gallery) is refused the same way, and the typed text is not stored either.
-        var save = $"/admin/galleries/{gid}";
-        await AssertRefusedAsync(h, await h.PostFormAsync(save, [F("title", "Renamed"), F("description", "Typed."), F("vis", "1"), F("public", "on")]),
-            gid, home, dump, "B2 save with title, description, vis=1 and public=on");
-        await AssertRefusedAsync(h, await h.PostFormAsync(save, [F("vis", "1"), F("public", "on")]),
-            gid, home, dump, "B2 save with vis=1 and public=on only");
+        // A bodiless POST with only the CSRF header parses nothing: 400 bad-request, and nothing changes.
+        var bare = await h.PostBareAsync(path, csrfHeader: true);
+        Assert.Equal(HttpStatusCode.BadRequest, bare.StatusCode);
+        Assert.Equal("bad-request", (await JsonAsync(bare)).GetProperty("error").GetString());
+        Assert.Equal("private", (await GalleryHtml.LoadAsync(h, gid)).Visibility);
+        Assert.Equal(dump, await DumpAsync(h));
+        Assert.Equal(home, await GalleryHtml.HomeRawAsync(h));
+
+        // The builder's forged public=on saves are A6 { public: true } (A5 is not sent: text is not the subject).
+        await AssertRefusedAsync(h, await h.PostJsonAsync(path, new { @public = true }),
+            gid, home, dump, "the builder's forged public=on save, now A6 { public: true }");
 
         // A bodiless POST with no token at all never reaches the handler (antiforgery, 400) and stores nothing either.
         var noToken = await h.PostBareAsync(path);
@@ -95,23 +102,6 @@ public class PublishRefusalTests(S3ProxyFixture s3, MongoFixture mongo) : IClass
         await h.EdgeIdleAsync();
         Assert.Equal(0, h.Recorder.CallCount);
         Assert.DoesNotContain(h.LogLines, l => l.StartsWith($"owner.action gallery.publish {gid} ", StringComparison.Ordinal));
-    }
-
-    [Fact]
-    public async Task The_refusal_rerenders_the_page_it_came_from()
-    {
-        await using var h = await LibraryHost.CreateAsync(mongo, s3);
-        var gid = await GalleryHtml.GalleryAsync(h, "Empty", []);
-        await h.SettleAsync();
-        var path = $"/admin/galleries/{gid}/visibility";
-
-        var fromList = await LibraryHtml.BodyAsync(await h.PostFormAsync(path, [F("public", "on"), F("from", "list")]));
-        Assert.Matches("<a href=\"/admin/galleries\" aria-current=\"page\"", fromList);
-        Assert.Contains("<form id=\"gal-order\"", fromList);
-
-        var fromBuilder = await LibraryHtml.BodyAsync(await h.PostFormAsync(path, [F("public", "on"), F("from", "builder")]));
-        Assert.Contains("<form id=\"b-panel\"", fromBuilder);
-        Assert.Equal(Reason, LibraryHtml.Status(fromBuilder));
     }
 
     [Fact]
@@ -144,11 +134,11 @@ public class PublishRefusalTests(S3ProxyFixture s3, MongoFixture mongo) : IClass
         await h.SettleAsync();
         var home = await GalleryHtml.HomeRawAsync(h);
 
-        var resp = await h.PostFormAsync($"/admin/galleries/{gid}/visibility", [F("public", "on"), F("from", "builder")]);
+        var resp = await h.PostJsonAsync($"/admin/api/galleries/{gid}/visibility", new { @public = true });
 
         Assert.Equal(1, fired);
         Assert.Equal(HttpStatusCode.Conflict, resp.StatusCode);
-        Assert.Equal(Reason, LibraryHtml.Status(await LibraryHtml.BodyAsync(resp)));
+        Assert.Equal(Reason, (await JsonAsync(resp)).GetProperty("message").GetString());
         var g = await GalleryHtml.LoadAsync(h, gid);
         Assert.Equal("private", g.Visibility);
         Assert.Empty(g.Items);
@@ -156,82 +146,6 @@ public class PublishRefusalTests(S3ProxyFixture s3, MongoFixture mongo) : IClass
         Assert.Equal(home, await GalleryHtml.HomeRawAsync(h));
         Assert.DoesNotContain(h.LogLines, l => l.StartsWith($"owner.action gallery.publish {gid} ", StringComparison.Ordinal));
         await InvariantChecker.AssertAsync(h.Db);
-    }
-
-    [Fact]
-    public async Task A_remove_racing_the_Save_publish_is_refused_by_the_conditional_write_and_stores_no_text()
-    {
-        var fired = 0;
-        string? photo = null;
-        LibraryHost? host = null;
-        Func<string, Task> emptyIt = async gid =>
-        {
-            if (Interlocked.Exchange(ref fired, 1) == 1) return;
-            using var other = host!.Scope();
-            var r = await other.ServiceProvider.GetRequiredService<GalleryService>().RemoveAsync(gid, photo!);
-            Assert.Equal(1, r.Removed);
-        };
-        await using var h = await LibraryHost.CreateAsync(mongo, s3, configure: b =>
-            b.Host.UseServiceProviderFactory(new SwapAtBuild(services =>
-            {
-                services.RemoveAll<GalleryService>();
-                services.AddScoped(sp => ActivatorUtilities.CreateInstance<GalleryService>(sp, emptyIt));
-            })));
-        host = h;
-        var ids = await GalleryHtml.ImageIdsAsync(h, 1);
-        photo = ids[0];
-        var gid = await GalleryHtml.GalleryAsync(h, "Race", ids);
-        await h.SettleAsync();
-        var home = await GalleryHtml.HomeRawAsync(h);
-
-        // B2: Save with new text and the switch on; the photo goes in "another tab" before the write.
-        var resp = await h.PostFormAsync($"/admin/galleries/{gid}",
-            [F("title", "Renamed"), F("description", "Typed."), F("vis", "1"), F("public", "on")]);
-
-        Assert.Equal(1, fired);
-        Assert.Equal(HttpStatusCode.Conflict, resp.StatusCode);
-        var body = await LibraryHtml.BodyAsync(resp);
-        Assert.Equal(Reason, LibraryHtml.Status(body));
-        var g = await GalleryHtml.LoadAsync(h, gid);
-        Assert.Equal("private", g.Visibility);
-        Assert.Equal("Race", g.Title);
-        Assert.Null(g.Description);
-        Assert.Empty(g.Items);
-        Assert.Empty((await h.SiteAsync()).HomeCards);
-        Assert.Equal(home, await GalleryHtml.HomeRawAsync(h));
-        Assert.DoesNotContain(h.LogLines, l => l.StartsWith($"owner.action gallery.publish {gid} ", StringComparison.Ordinal));
-        await InvariantChecker.AssertAsync(h.Db);
-    }
-
-    [Fact]
-    public async Task The_empty_card_and_the_empty_builder_render_the_switch_disabled_with_the_reason()
-    {
-        await using var h = await LibraryHost.CreateAsync(mongo, s3);
-        var gid = await GalleryHtml.GalleryAsync(h, "Empty", []);
-        await h.SettleAsync();
-
-        var list = await GalleryHtml.GetOkAsync(h, "/admin/galleries");
-        var card = GalleryHtml.CardOf(list, gid);
-        // 016 A4 (stated change): the empty private card's eye-off is an unavailable span (no form, no
-        // button) carrying the reason in its label.
-        var vis = GalleryHtml.VisibilityOf(card);
-        var visTag = Regex.Match(vis, "^<[^>]*>").Value;
-        Assert.StartsWith("<span ", visTag);
-        Assert.Contains("role=\"img\"", visTag);
-        Assert.Contains($"aria-label=\"Private. {Reason}\"", visTag);
-        Assert.False(GalleryHtml.HasAttr(visTag, "form"), visTag);
-        Assert.DoesNotContain("<button", vis);
-
-        var builder = await GalleryHtml.GetOkAsync(h, $"/admin/galleries/{gid}");
-        var aside = Regex.Match(builder, "<aside class=\"side-panel\".*?</aside>", RegexOptions.Singleline).Value;
-        var builderSwitch = GalleryHtml.SwitchOf(aside);
-        Assert.True(GalleryHtml.HasAttr(builderSwitch, "disabled"), builderSwitch);
-        Assert.False(GalleryHtml.HasAttr(builderSwitch, "checked"), builderSwitch);
-        Assert.Matches("form=\"b-panel\"", builderSwitch);
-        Assert.DoesNotContain("<form id=\"b-vis\"", builder);
-        // No Save-time warning is offered for a gallery that cannot be published.
-        Assert.DoesNotContain("publish-warning", aside);
-        Assert.Matches($"<p class=\"hint\"[^>]*>{Regex.Escape(Reason)}</p>", aside);
     }
 
     /// <summary>The default container, with <paramref name="edit"/> applied to the final service collection.</summary>

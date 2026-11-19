@@ -1,9 +1,9 @@
-@* Sign-in page for /admin/signin (T014). Renders AdminLayout without the owner bar. *@
+@* Sign-in page for /admin/signin (T014). Renders the bare AdminLayout (no workspace frame). *@
 @using Gallery.Web.Components
 @using Gallery.Web.Components.Organisms
 @using Gallery.Web.Components.Templates
 
-<AdminLayout Title="Sign in · Gallery" ShowOwnerBar="false">
+<AdminLayout Title="Sign in · Gallery" Bare="true">
     <SignInCard State="@State" Cover="@Cover" Notice="@Notice" Antiforgery="@Antiforgery" Local="@Local" />
 </AdminLayout>
 

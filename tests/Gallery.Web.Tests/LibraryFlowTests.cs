@@ -22,6 +22,14 @@ public class LibraryFlowTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         await InvariantChecker.AssertAsync(h.Db);
     }
 
+    /// <summary>The JSON answer's root element (020 TI-14).</summary>
+    private static async Task<System.Text.Json.JsonElement> JsonAsync(HttpResponseMessage resp)
+    {
+        using var doc = await UploadHost.ParseAsync(resp);
+        Assert.NotNull(doc);
+        return doc!.RootElement.Clone();
+    }
+
     [Fact]
     public async Task Forty_photos_become_a_public_gallery_in_three_actions()
     {
@@ -33,48 +41,40 @@ public class LibraryFlowTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         var forty = images.Take(40).Select(i => i.Id).ToList();
         var five = images.Skip(40).Select(i => i.Id).ToList();
 
-        Assert.Equal(HttpStatusCode.OK, (await h.GetAsync("/admin/library")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await h.GetAsync("/admin")).StatusCode);
         var actions = 0;
 
-        // (1) L3: add the 40 to a new gallery "Coast" → 303 to its builder with ?added=40.
-        var add = await h.PostFormAsync("/admin/library/add",
-            forty.Select(id => F("ids", id)).Append(F("gallery", "new")).Append(F("newTitle", "Coast")).Append(F("page", "1")));
+        // (1) A3: a new gallery "Coast" holding the 40 → 201 with its id and added 40.
+        var add = await h.PostJsonAsync("/admin/api/galleries", new { title = "Coast", ids = forty });
         actions++;
-        Assert.Equal(HttpStatusCode.SeeOther, add.StatusCode);
-        var loc = add.Headers.Location!.ToString();
-        Assert.Matches("^/admin/galleries/[0-9a-z]{26}\\?added=40$", loc);
-        var gid = loc["/admin/galleries/".Length..loc.IndexOf('?')];
+        Assert.Equal(HttpStatusCode.Created, add.StatusCode);
+        var created = await JsonAsync(add);
+        Assert.Equal(40, created.GetProperty("added").GetInt32());
+        var gid = created.GetProperty("id").GetString()!;
+        Assert.Matches("^[0-9a-z]{26}$", gid);
         var gallery = await h.Galleries.Find(g => g.Id == gid).FirstAsync();
         Assert.Equal(("Coast", "private"), (gallery.Title, gallery.Visibility));
         Assert.Equal(forty, gallery.Items);
         await StepDoneAsync(h);
 
-        // (2) B3: move the 4th photo first.
+        // (2) A9: move the 4th photo first.
         var order = new List<string> { forty[3] };
         order.AddRange(forty.Where((_, i) => i != 3));
-        var reorder = await h.PostFormAsync($"/admin/galleries/{gid}/order", order.Select(id => F("order", id)));
+        var reorder = await h.PostJsonAsync($"/admin/api/galleries/{gid}/order", new { order });
         actions++;
-        Assert.Equal(HttpStatusCode.SeeOther, reorder.StatusCode);
-        Assert.Equal($"/admin/galleries/{gid}?ordered=1", reorder.Headers.Location?.ToString());
+        Assert.Equal(HttpStatusCode.OK, reorder.StatusCode);
         Assert.Equal(order, (await h.Galleries.Find(g => g.Id == gid).FirstAsync()).Items);
         await StepDoneAsync(h);
 
-        // (3) B1: the builder's Save form carries the switch, with the Save-time warning (no buttons).
-        var builder = await h.GetAsync($"/admin/galleries/{gid}");
-        Assert.Equal(HttpStatusCode.OK, builder.StatusCode);
-        var builderHtml = WebUtility.HtmlDecode(await builder.Content.ReadAsStringAsync());
-        Assert.Contains("When you save, “Coast” becomes public: it will be listed on the home page with its 40 photos, and anyone can see them.",
-            builderHtml);
-        Assert.DoesNotContain("Make public", builderHtml);
+        // (3) 020 TI-14: no builder page and no Save form; the gallery is still private before the switch.
         Assert.Equal("private", (await h.Galleries.Find(g => g.Id == gid).FirstAsync()).Visibility);
         await StepDoneAsync(h);
 
-        // (4) B2 Save with the switch on → 303 back to the builder, public.
-        var publish = await h.PostFormAsync($"/admin/galleries/{gid}",
-            [F("title", "Coast"), F("description", ""), F("vis", "1"), F("public", "on")]);
+        // (4) A6: the public switch on → 200, public.
+        var publish = await h.PostJsonAsync($"/admin/api/galleries/{gid}/visibility", new { @public = true });
         actions++;
-        Assert.Equal(HttpStatusCode.SeeOther, publish.StatusCode);
-        Assert.Equal($"/admin/galleries/{gid}?saved=1&visibility=public", publish.Headers.Location?.ToString());
+        Assert.Equal(HttpStatusCode.OK, publish.StatusCode);
+        Assert.Equal("Coast is now public. Visitors can see it.", (await JsonAsync(publish)).GetProperty("message").GetString());
         Assert.Equal("public", (await h.Galleries.Find(g => g.Id == gid).FirstAsync()).Visibility);
         await StepDoneAsync(h);
 
@@ -94,23 +94,14 @@ public class LibraryFlowTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         Assert.Contains(moved.Derivatives[0].Avif, home);
         Assert.DoesNotContain(images[0].Derivatives[0].Avif, home);
 
-        // Library tiles' gallery icon says "In 1 gallery" (015 A4, stated change, owner clarify: count only).
-        var lib = await LibraryHtml.BodyAsync(await h.GetAsync("/admin/library"));
-        foreach (var id in forty)
-            Assert.Single(LibraryHtml.Blocks(LibraryHtml.TileOf(lib, id), "a", "pa-group"));
-        static string GroupLabel(string tile) => Regex.Match(
-            LibraryHtml.Blocks(tile, "a", "pa-group").Single(), "aria-label=\"([^\"]*)\"").Groups[1].Value;
-        Assert.Equal(40, LibraryHtml.Blocks(lib, "div", "lib-tile").Count(t => GroupLabel(t) == "In 1 gallery"));
-
-        // L3 of the same 40 plus 5 new → "5 added · 40 were already in Coast".
-        var again = await h.PostFormAsync("/admin/library/add",
-            forty.Concat(five).Select(id => F("ids", id)).Append(F("gallery", gid)).Append(F("page", "1")));
-        Assert.Equal(HttpStatusCode.SeeOther, again.StatusCode);
-        var againLoc = again.Headers.Location!.ToString();
-        Assert.Equal($"/admin/library?page=1&added=5&skipped=40&to={gid}", againLoc);
+        // A7 of the same 40 plus 5 new → added 5, skipped 40.
+        var again = await h.PostJsonAsync($"/admin/api/galleries/{gid}/photos", new { ids = forty.Concat(five).ToList() });
+        Assert.Equal(HttpStatusCode.OK, again.StatusCode);
+        var againJson = await JsonAsync(again);
+        Assert.Equal((5, 40), (againJson.GetProperty("added").GetInt32(), againJson.GetProperty("skipped").GetInt32()));
+        Assert.Equal("5 photos added to Coast. 40 were already in it. Visitors can see them now.",
+            againJson.GetProperty("message").GetString());
         await StepDoneAsync(h);
-        var status = LibraryHtml.Status(await LibraryHtml.BodyAsync(await h.GetAsync(againLoc)));
-        Assert.Equal("5 added · 40 were already in Coast", status);
         Assert.Equal(forty.Count + five.Count, (await h.Galleries.Find(g => g.Id == gid).FirstAsync()).Items.Count);
     }
 }

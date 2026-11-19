@@ -238,8 +238,7 @@ public static class AdminEndpoints
         // 008 upload routes: inherit owner auth + anti-forgery; must stay before the H6 catch-all
         admin.MapUpload();
 
-        // 009 library and gallery routes: inherit owner auth + anti-forgery; must stay before the H6 catch-all
-        admin.MapLibrary();
+        // 020 A1-A11 workspace writes: inherit owner auth + anti-forgery; must stay before the H6 catch-all
         admin.MapWorkspaceApi();
 
         // H6: Catch-all — any unmatched /admin/** returns 404 (after auth + CSRF)

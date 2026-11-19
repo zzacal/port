@@ -67,13 +67,18 @@ public partial class InvariantTests(S3ProxyFixture s3, MongoFixture mongo) : ICl
         return html;
     }
 
-    private static string GidOf(string location) =>
-        location["/admin/galleries/".Length..(location.IndexOf('?') is var q and >= 0 ? q : location.Length)];
-
-    private static async Task<HttpResponseMessage> Post(LibraryHost h, string step, HttpStatusCode expected, string path,
-        IEnumerable<KeyValuePair<string, string>> fields)
+    /// <summary>The JSON answer's root element (020 TI-16).</summary>
+    private static async Task<System.Text.Json.JsonElement> JsonAsync(HttpResponseMessage resp)
     {
-        var resp = await h.PostFormAsync(path, fields);
+        using var doc = await UploadHost.ParseAsync(resp);
+        Assert.NotNull(doc);
+        return doc!.RootElement.Clone();
+    }
+
+    // 020 TI-16: every step is a JSON workspace call.
+    private static async Task<HttpResponseMessage> Post(LibraryHost h, string step, HttpStatusCode expected, string path, object body)
+    {
+        var resp = await h.PostJsonAsync(path, body);
         Assert.True(resp.StatusCode == expected, $"{step}: POST {path} answered {(int)resp.StatusCode}, expected {(int)expected}");
         return resp;
     }
@@ -90,93 +95,91 @@ public partial class InvariantTests(S3ProxyFixture s3, MongoFixture mongo) : ICl
         await AfterAsync(h, "setup");
 
         // 1. create (G2): Coast, and an empty Spare for the refusals.
-        var created = await Post(h, "create", HttpStatusCode.SeeOther, "/admin/galleries", [F("title", "Coast")]);
-        var gid = GidOf(created.Headers.Location!.ToString());
+        var created = await Post(h, "create", HttpStatusCode.Created, "/admin/api/galleries", new { title = "Coast" });
+        var gid = (await JsonAsync(created)).GetProperty("id").GetString()!;
         Assert.Matches("^[0-9a-z]{26}$", gid);
         await AfterAsync(h, "create");
-        var spare = GidOf((await Post(h, "create spare", HttpStatusCode.SeeOther, "/admin/galleries", [F("title", "Spare")]))
-            .Headers.Location!.ToString());
+        var spare = (await JsonAsync(await Post(h, "create spare", HttpStatusCode.Created, "/admin/api/galleries", new { title = "Spare" })))
+            .GetProperty("id").GetString()!;
         await AfterAsync(h, "create spare");
 
         // 2. bulk add (L3): all five into Coast.
-        var add = await Post(h, "bulk add", HttpStatusCode.SeeOther, "/admin/library/add",
-            ids.Select(id => F("ids", id)).Append(F("gallery", gid)).Append(F("page", "1")));
-        Assert.Equal($"/admin/library?page=1&added=5&skipped=0&to={gid}", add.Headers.Location?.ToString());
+        var add = await Post(h, "bulk add", HttpStatusCode.OK, $"/admin/api/galleries/{gid}/photos", new { ids });
+        var added = await JsonAsync(add);
+        Assert.Equal((5, 0), (added.GetProperty("added").GetInt32(), added.GetProperty("skipped").GetInt32()));
         await AfterAsync(h, "bulk add");
         var items = (await h.Galleries.Find(g => g.Id == gid).FirstAsync()).Items.ToList();
         Assert.Equal(ids.ToHashSet(), items.ToHashSet());
 
         // 3. reorder (B3): last first.
         var order = items.Skip(items.Count - 1).Concat(items.Take(items.Count - 1)).ToList();
-        await Post(h, "reorder", HttpStatusCode.SeeOther, $"/admin/galleries/{gid}/order", order.Select(id => F("order", id)));
+        await Post(h, "reorder", HttpStatusCode.OK, $"/admin/api/galleries/{gid}/order", new { order });
         Assert.Equal(order, (await h.Galleries.Find(g => g.Id == gid).FirstAsync()).Items);
         await AfterAsync(h, "reorder");
 
         // 4. pin (B4) the third item, 5. unpin.
-        await Post(h, "pin", HttpStatusCode.SeeOther, $"/admin/galleries/{gid}/cover", [F("image", order[2])]);
+        await Post(h, "pin", HttpStatusCode.OK, $"/admin/api/galleries/{gid}/cover", new { image = order[2] });
         Assert.Equal(order[2], (await h.Galleries.Find(g => g.Id == gid).FirstAsync()).PinnedCover);
         await AfterAsync(h, "pin");
-        await Post(h, "unpin", HttpStatusCode.SeeOther, $"/admin/galleries/{gid}/cover", []);
+        await Post(h, "unpin", HttpStatusCode.OK, $"/admin/api/galleries/{gid}/cover", new { image = (string?)null });
         Assert.Null((await h.Galleries.Find(g => g.Id == gid).FirstAsync()).PinnedCover);
         await AfterAsync(h, "unpin");
 
         // 6. remove (B5) the first item.
-        var removed = await Post(h, "remove", HttpStatusCode.SeeOther, $"/admin/galleries/{gid}/remove", [F("image", order[0])]);
-        Assert.Equal($"/admin/galleries/{gid}?removed=1", removed.Headers.Location?.ToString());
+        var removed = await Post(h, "remove", HttpStatusCode.OK, $"/admin/api/galleries/{gid}/photos/remove", new { ids = new[] { order[0] } });
+        Assert.Equal(1, (await JsonAsync(removed)).GetProperty("removed").GetInt32());
         await AfterAsync(h, "remove");
 
         // 7. publish (G4, the switch on): the home page now lists Coast.
-        await Post(h, "publish", HttpStatusCode.SeeOther, $"/admin/galleries/{gid}/visibility",
-            [F("public", "on"), F("from", "builder")]);
+        await Post(h, "publish", HttpStatusCode.OK, $"/admin/api/galleries/{gid}/visibility", new { @public = true });
         var home = await AfterAsync(h, "publish");
         Assert.Contains($"/g/{gid}/coast", home);
 
         // 8. rename (B2): the listing follows the new slug.
-        await Post(h, "rename", HttpStatusCode.SeeOther, $"/admin/galleries/{gid}", [F("title", "Coast Path")]);
+        await Post(h, "rename", HttpStatusCode.OK, $"/admin/api/galleries/{gid}", new { title = "Coast Path" });
         home = await AfterAsync(h, "rename");
         Assert.Contains($"/g/{gid}/coast-path", home);
         Assert.DoesNotContain($"/g/{gid}/coast\"", home);
 
         // 9. unpublish (G4 without public): the home page no longer lists it.
-        await Post(h, "unpublish", HttpStatusCode.SeeOther, $"/admin/galleries/{gid}/visibility", [F("from", "list")]);
+        await Post(h, "unpublish", HttpStatusCode.OK, $"/admin/api/galleries/{gid}/visibility", new { @public = false });
         home = await AfterAsync(h, "unpublish");
         Assert.DoesNotContain($"/g/{gid}/", home);
 
         // Publish again so the bulk delete changes a listed gallery's cover and count.
-        await Post(h, "republish", HttpStatusCode.SeeOther, $"/admin/galleries/{gid}/visibility",
-            [F("public", "on"), F("from", "list")]);
+        await Post(h, "republish", HttpStatusCode.OK, $"/admin/api/galleries/{gid}/visibility", new { @public = true });
         await AfterAsync(h, "republish");
 
         // 10. bulk delete (L4): two members, one of them the current cover.
         var members = (await h.Galleries.Find(g => g.Id == gid).FirstAsync()).Items.ToList();
         var doomed = new[] { members[0], members[1] };
-        var del = await Post(h, "bulk delete", HttpStatusCode.SeeOther, "/admin/library/delete",
-            doomed.Select(id => F("ids", id)).Append(F("page", "1")));
-        Assert.Equal("/admin/library?page=1&deleted=2&leftovers=0&failed=0", del.Headers.Location?.ToString());
+        var del = await Post(h, "bulk delete", HttpStatusCode.OK, "/admin/api/photos/delete", new { ids = doomed });
+        var deleted = await JsonAsync(del);
+        Assert.Equal((2, 0, 0),
+            (deleted.GetProperty("deleted").GetInt32(), deleted.GetProperty("leftovers").GetInt32(), deleted.GetProperty("failed").GetInt32()));
         Assert.Equal(members.Skip(2).ToList(), (await h.Galleries.Find(g => g.Id == gid).FirstAsync()).Items);
         home = await AfterAsync(h, "bulk delete");
         Assert.Contains($"/g/{gid}/coast-path", home);
 
         // 11. gallery delete (B6).
-        var gdel = await Post(h, "gallery delete", HttpStatusCode.SeeOther, $"/admin/galleries/{gid}/delete", []);
-        Assert.Equal("/admin/galleries?deleted=1", gdel.Headers.Location?.ToString());
+        await Post(h, "gallery delete", HttpStatusCode.OK, $"/admin/api/galleries/{gid}/delete", new { });
         Assert.Equal(0, await h.Galleries.CountDocumentsAsync(g => g.Id == gid));
         home = await AfterAsync(h, "gallery delete");
         Assert.DoesNotContain($"/g/{gid}/", home);
 
         // 12. publish refusal (G4 on the empty Spare): 409, nothing stored.
         var dump = await DumpAsync(h);
-        var refused = await Post(h, "publish refusal", HttpStatusCode.Conflict, $"/admin/galleries/{spare}/visibility",
-            [F("public", "on"), F("from", "list")]);
-        Assert.Contains(GalleryService.EmptyPublishReason, WebUtility.HtmlDecode(await refused.Content.ReadAsStringAsync()));
+        var refused = await Post(h, "publish refusal", HttpStatusCode.Conflict, $"/admin/api/galleries/{spare}/visibility",
+            new { @public = true });
+        Assert.Contains(GalleryService.EmptyPublishReason, (await JsonAsync(refused)).GetProperty("message").GetString());
         Assert.Equal(dump, await DumpAsync(h));
         await AfterAsync(h, "publish refusal");
 
         // 13. stale reorder (B3 on Spare naming a photo it does not hold): 409, nothing stored.
-        var stale = await Post(h, "stale reorder", HttpStatusCode.Conflict, $"/admin/galleries/{spare}/order",
-            [F("order", members[2])]);
-        Assert.Contains("This gallery changed in another tab. Reload to see the current order.",
-            WebUtility.HtmlDecode(await stale.Content.ReadAsStringAsync()));
+        var stale = await Post(h, "stale reorder", HttpStatusCode.Conflict, $"/admin/api/galleries/{spare}/order",
+            new { order = new[] { members[2] } });
+        Assert.Equal("This gallery changed in another tab. Reload to see the current order.",
+            (await JsonAsync(stale)).GetProperty("message").GetString());
         Assert.Equal(dump, await DumpAsync(h));
         await AfterAsync(h, "stale reorder");
     }

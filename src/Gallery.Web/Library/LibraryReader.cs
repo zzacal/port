@@ -1,135 +1,33 @@
-using Gallery.Core.Images;
 using Gallery.Web.Data;
 using Gallery.Web.Observability;
-using Gallery.Web.Site;
-using Gallery.Web.Storage;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Gallery.Web.Library;
 
-/// <summary>One gallery as the library sees it: the picker option and the status lines (data-model "GalleryRef").</summary>
+/// <summary>One gallery as the workspace sees it: a collections-list row and a checklist option (data-model "GalleryRef").</summary>
 public sealed record GalleryRef(string Id, string Slug, string Title, string Visibility, int PhotoCount)
 {
     public bool IsPublic => Visibility == "public";
 }
 
-/// <summary>One library tile (data-model "LibraryPage").</summary>
-/// <param name="Galleries">The galleries holding the image, in home order.</param>
-/// <param name="ViewHref">The photo page in the first gallery (home order) holding it, or null (FR-005, UI-1).</param>
-/// <param name="FirstByTitle">The holder with the least title (case-insensitive, ties by id), any visibility, or null (010 FR-011).</param>
-public sealed record LibraryTile(
-    ImageView Image, string? Caption, string Status, string? ViewHref,
-    int GalleryCount, int PublicGalleryCount, IReadOnlyList<GalleryRef> Galleries,
-    GalleryRef? FirstByTitle);
-
-/// <summary>One page of the library (data-model "LibraryPage").</summary>
-public sealed record LibraryPageData(
-    int Page, int TotalPages, long Total, IReadOnlyList<LibraryTile> Tiles, IReadOnlyList<GalleryRef> Galleries);
-
 /// <summary>
-/// The library read (research R-04, tasks.md T028): four timed reads, <c>db.library.count</c>,
-/// <c>db.library.page</c>, <c>db.galleries.list</c> and <c>db.site.order</c>. Tombstoned images
-/// (<c>deletingAt</c>) are hidden; the order is <c>{createdAt:-1, _id:-1}</c> (index
-/// <c>library_page</c>); <c>PageSize</c> tiles per page; a page past the end renders the last page.
-/// Status lines and View links are computed in memory from the gallery list. Scoped.
+/// The gallery list read (two timed reads, <c>db.galleries.list</c> and <c>db.site.order</c>) and the
+/// live-image filter and tile projection that <see cref="Gallery.Web.Workspace.WorkspaceReader"/> reuses
+/// (020 C-16). Tombstoned images (<c>deletingAt</c>) are never live. Scoped.
 /// </summary>
-public sealed class LibraryReader(IMongoDatabase db, OpTimer timer, LibraryOptions options, StorageOptions storage)
+public sealed class LibraryReader(IMongoDatabase db, OpTimer timer)
 {
-    private readonly IMongoCollection<ImageDoc> _images = db.GetCollection<ImageDoc>("images");
     private readonly IMongoCollection<BsonDocument> _galleries = db.GetCollection<BsonDocument>("galleries");
     private readonly IMongoCollection<BsonDocument> _site = db.GetCollection<BsonDocument>("site");
 
     internal static readonly FilterDefinition<ImageDoc> Live = Builders<ImageDoc>.Filter.Exists(i => i.DeletingAt, false);
 
-    /// <summary>The image fields a <see cref="LibraryTile"/> needs (the page read and the photo read).</summary>
+    /// <summary>The image fields a workspace tile needs.</summary>
     internal static readonly ProjectionDefinition<ImageDoc> TileFields = Builders<ImageDoc>.Projection
         .Include(i => i.Id).Include(i => i.Title).Include(i => i.Caption)
         .Include(i => i.Width).Include(i => i.Height).Include(i => i.Placeholder)
         .Include(i => i.Derivatives).Include(i => i.GalleryIds).Include(i => i.CreatedAt);
-
-    /// <summary>The FR-007 status line.</summary>
-    public static string StatusLine(int galleries, int publicGalleries) => galleries switch
-    {
-        0 => "Not in a gallery",
-        _ when publicGalleries == 0 => $"In {galleries} {Plural(galleries, "gallery", "galleries")}",
-        _ => $"In {galleries} {Plural(galleries, "gallery", "galleries")} · public in {publicGalleries}",
-    };
-
-    private static string Plural(int n, string one, string many) => n == 1 ? one : many;
-
-    /// <summary>
-    /// Page <paramref name="page"/> (1-based; below 1 reads page 1, past the end reads the last page).
-    /// </summary>
-    public async Task<LibraryPageData> PageAsync(int page)
-    {
-        var total = await timer.Time("db.library.count", () => _images.CountDocumentsAsync(Live), isDbRead: true);
-        var size = options.PageSize;
-        var totalPages = Math.Max(1, (int)((total + size - 1) / size));
-        page = Math.Clamp(page, 1, totalPages);
-
-        var docs = await timer.Time("db.library.page", () => _images.Find(Live)
-            .Sort(Builders<ImageDoc>.Sort.Descending(i => i.CreatedAt).Descending(i => i.Id))
-            .Skip((page - 1) * size)
-            .Limit(size)
-            .Project<ImageDoc>(TileFields)
-            .ToListAsync(), isDbRead: true);
-
-        var galleries = await GalleriesAsync();
-        var byId = galleries.ToDictionary(g => g.Id, StringComparer.Ordinal);
-        var rank = galleries.Select((g, i) => (g.Id, i)).ToDictionary(x => x.Id, x => x.i, StringComparer.Ordinal);
-
-        var url = PublicEndpoints.MakeUrl(storage);
-        var tiles = docs.Select(d => Tile(d, byId, rank, url)).ToList();
-
-        return new LibraryPageData(page, totalPages, total, tiles, galleries);
-    }
-
-    /// <summary>
-    /// The edit screen's photo (017 R-04): one <c>db.library.page</c> find of a live image, then
-    /// <see cref="GalleriesAsync"/>. An unknown or tombstoned id answers <c>(null, [])</c> with no
-    /// further read.
-    /// </summary>
-    public async Task<(LibraryTile? Photo, IReadOnlyList<GalleryRef> Galleries)> PhotoAsync(string iid)
-    {
-        var doc = await timer.Time("db.library.page", () => _images
-            .Find(Live & Builders<ImageDoc>.Filter.Eq(i => i.Id, iid))
-            .Project<ImageDoc>(TileFields)
-            .FirstOrDefaultAsync(), isDbRead: true);
-        if (doc is null) return (null, []);
-
-        var galleries = await GalleriesAsync();
-        var byId = galleries.ToDictionary(g => g.Id, StringComparer.Ordinal);
-        var rank = galleries.Select((g, i) => (g.Id, i)).ToDictionary(x => x.Id, x => x.i, StringComparer.Ordinal);
-        return (Tile(doc, byId, rank, PublicEndpoints.MakeUrl(storage)), galleries);
-    }
-
-    /// <summary>One tile: holders in home order, status line, View link and first holder by title.</summary>
-    private static LibraryTile Tile(
-        ImageDoc d, IReadOnlyDictionary<string, GalleryRef> byId, IReadOnlyDictionary<string, int> rank, Func<string, string> url)
-    {
-        var holders = d.GalleryIds
-            .Distinct(StringComparer.Ordinal)
-            .Where(byId.ContainsKey)
-            .OrderBy(id => rank[id])
-            .Select(id => byId[id])
-            .ToList();
-        var publicCount = holders.Count(g => g.IsPublic);
-        var first = holders.FirstOrDefault();
-        var firstByTitle = holders
-            .OrderBy(g => g.Title, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(g => g.Id, StringComparer.Ordinal)
-            .FirstOrDefault();
-        return new LibraryTile(
-            ViewMapper.ToView(d, url),
-            d.Caption,
-            StatusLine(holders.Count, publicCount),
-            first is null ? null : $"/g/{first.Id}/{first.Slug}/{d.Id}",
-            holders.Count,
-            publicCount,
-            holders,
-            firstByTitle);
-    }
 
     /// <summary>
     /// Every gallery as a <see cref="GalleryRef"/>, in <c>site.homeOrder</c> order (galleries missing

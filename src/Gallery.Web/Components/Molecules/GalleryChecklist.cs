@@ -25,7 +25,7 @@ public partial class GalleryChecklist
     /// <summary>
     /// THE checklist rules (contracts K6). Pure, no I/O; <c>workspace.js</c> mirrors them.
     /// Trim; blank text narrows nothing (every row, in the given order) and offers nothing; otherwise the rows whose
-    /// title contains the text, ignoring case, ordered as <c>TokenCombobox.Match</c> orders (exact, then prefix, then
+    /// title contains the text, ignoring case, ordered by rank (exact, then prefix, then
     /// contains; within a rank by title <c>OrdinalIgnoreCase</c>; then the given order). A title equal to the text
     /// ignoring case is "existing" and hides the offer. The offer and its refusal come from
     /// <see cref="GalleryService.TitleProblem"/>, never a second copy of the rule.

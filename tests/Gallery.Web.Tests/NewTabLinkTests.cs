@@ -22,7 +22,7 @@ public partial class NewTabLinkTests(S3ProxyFixture s3, MongoFixture mongo) : IC
         var priv = await GalleryHtml.GalleryAsync(h, "Studio", ids[2..]);
         await h.SettleAsync();
 
-        foreach (var path in new[] { "/admin/library", "/admin/galleries", $"/admin/galleries/{pub}", $"/admin/galleries/{priv}" })
+        foreach (var path in new[] { "/admin", $"/admin/g/{pub}", $"/admin/g/{priv}" })
         {
             var html = await GalleryHtml.GetOkAsync(h, path);
             var links = Anchor().Matches(html).Select(m => (Attrs: m.Groups[1].Value, Text: Regex.Replace(m.Groups[2].Value, "<[^>]*>", "").Trim(), Inner: m.Groups[2].Value)).ToList();

@@ -31,12 +31,17 @@ public class LibraryEditTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         return gid;
     }
 
+    // 020 TI-10: L2 → A1 (JSON; an absent field keeps the stored value).
     private static Task<HttpResponseMessage> SaveAsync(LibraryHost h, string iid, params (string, string)[] fields) =>
-        h.PostFormAsync($"/admin/library/images/{iid}",
-            fields.Select(f => new KeyValuePair<string, string>(f.Item1, f.Item2)).Append(new("page", "1")));
+        h.PostJsonAsync($"/admin/api/photos/{iid}", fields.ToDictionary(f => f.Item1, f => f.Item2));
 
-    private static string Aside(string html) =>
-        Regex.Match(html, "<aside class=\"side-panel\".*?</aside>", RegexOptions.Singleline).Value;
+    /// <summary>The JSON answer's root element (020 TI-10).</summary>
+    private static async Task<System.Text.Json.JsonElement> JsonAsync(HttpResponseMessage resp)
+    {
+        using var doc = await UploadHost.ParseAsync(resp);
+        Assert.NotNull(doc);
+        return doc!.RootElement.Clone();
+    }
 
     private static int Count(LibraryHost h, string op)
     {
@@ -51,18 +56,13 @@ public class LibraryEditTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         var img = await h.InsertUploadedImageAsync(files: false, title: "IMG_0001");
 
         var resp = await SaveAsync(h, img.Id, ("title", "  Harbour at dusk "), ("caption", "Low tide & gulls."));
-        Assert.Equal(HttpStatusCode.SeeOther, resp.StatusCode);
-        Assert.Equal($"/admin/library/images/{img.Id}?page=1&saved=1", resp.Headers.Location?.ToString());
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        var json = await JsonAsync(resp);
+        Assert.Equal(("Harbour at dusk", "Low tide & gulls.", "Saved"),
+            (json.GetProperty("title").GetString(), json.GetProperty("caption").GetString(), json.GetProperty("message").GetString()));
 
         var stored = await ImageAsync(h, img.Id);
         Assert.Equal(("Harbour at dusk", "Low tide & gulls."), (stored.Title, stored.Caption));
-
-        var html = await LibraryHtml.BodyAsync(await h.GetAsync(resp.Headers.Location!.ToString()));
-        var aside = Aside(html);
-        Assert.Matches("<input[^>]*name=\"title\"[^>]*value=\"Harbour at dusk\"", aside);
-        Assert.Matches("<textarea[^>]*name=\"caption\"[^>]*>Low tide & gulls.</textarea>", aside);
-        Assert.Matches("<span class=\"sp-status\"[^>]*>Saved</span>", aside);
-        Assert.Equal("Saved", LibraryHtml.Status(html));
     }
 
     public static TheoryData<string, string?, string> Refusals() => new()
@@ -88,24 +88,24 @@ public class LibraryEditTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         var resp = await SaveAsync(h, img.Id, fields);
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, resp.StatusCode);
-        var html = await LibraryHtml.BodyAsync(resp);
-        Assert.Equal(reason, LibraryHtml.Status(html));
+        Assert.Equal(reason, (await JsonAsync(resp)).GetProperty("message").GetString());
         var stored = await ImageAsync(h, img.Id);
         Assert.Equal(("Stored title", "Stored caption"), (stored.Title, stored.Caption));
         Assert.Empty(await h.SettleAsync());
     }
 
     [Fact]
-    public async Task Bare_POST_answers_303_and_keeps_both_stored_values()
+    public async Task Bare_POST_answers_400_and_keeps_both_stored_values()
     {
         await using var h = await LibraryHost.CreateAsync(mongo, s3);
         var img = await h.InsertUploadedImageAsync(files: false, title: "Stored title");
         await SaveAsync(h, img.Id, ("title", "Stored title"), ("caption", "Stored caption"));
         await h.SettleAsync();
 
-        var resp = await h.PostBareAsync($"/admin/library/images/{img.Id}", csrfHeader: true);
+        var resp = await h.PostBareAsync($"/admin/api/photos/{img.Id}", csrfHeader: true);
 
-        Assert.Equal(HttpStatusCode.SeeOther, resp.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+        Assert.Equal("bad-request", (await JsonAsync(resp)).GetProperty("error").GetString());
         var stored = await ImageAsync(h, img.Id);
         Assert.Equal(("Stored title", "Stored caption"), (stored.Title, stored.Caption));
         Assert.Empty(await h.SettleAsync());
@@ -129,13 +129,13 @@ public class LibraryEditTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         var gid = await GalleryAsync(h, "Coast", [cover.Id, img.Id], publish: true);
         await h.SettleAsync();
 
-        Assert.Equal(HttpStatusCode.SeeOther, (await SaveAsync(h, img.Id, ("title", "New title"))).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await SaveAsync(h, img.Id, ("title", "New title"))).StatusCode);
         var purged = await h.SettleAsync();
         Assert.Equal(
             new[] { LibraryHost.Page($"/g/{gid}/coast"), LibraryHost.Page($"/g/{gid}/coast/{img.Id}") }.Order(StringComparer.Ordinal).ToArray(),
             purged.Order(StringComparer.Ordinal).ToArray());
 
-        Assert.Equal(HttpStatusCode.SeeOther, (await SaveAsync(h, loose.Id, ("title", "Loose title"))).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await SaveAsync(h, loose.Id, ("title", "Loose title"))).StatusCode);
         Assert.Empty(await h.SettleAsync());
         Assert.Equal("Loose title", (await ImageAsync(h, loose.Id)).Title);
     }
@@ -157,7 +157,7 @@ public class LibraryEditTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
         Assert.Equal(1, Count(h, "db.gallery.read"));
         Assert.Equal(1, Count(h, "db.site.read"));
 
-        Assert.Equal(HttpStatusCode.SeeOther, (await SaveAsync(h, img.Id, ("title", "After"))).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await SaveAsync(h, img.Id, ("title", "After"))).StatusCode);
 
         var page = await h.GetAsync(photo);
         Assert.Equal(HttpStatusCode.OK, page.StatusCode);
@@ -168,41 +168,5 @@ public class LibraryEditTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFix
 
         Assert.Equal(HttpStatusCode.OK, (await h.GetAsync("/g")).StatusCode);
         Assert.Equal(1, Count(h, "db.site.read"));
-    }
-
-    [Fact]
-    public async Task Panel_links_each_holding_gallery_builder_and_states_the_delete_consequence()
-    {
-        await using var h = await LibraryHost.CreateAsync(mongo, s3);
-        var img = await h.InsertUploadedImageAsync(files: false, title: "Pier");
-        var loose = await h.InsertUploadedImageAsync(files: false, title: "Loose");
-        var a = await GalleryAsync(h, "Alpha", [img.Id]);
-        var b = await GalleryAsync(h, "Bravo", [img.Id]);
-        await h.SettleAsync();
-
-        var aside = Aside(await LibraryHtml.BodyAsync(await h.GetAsync($"/admin/library/images/{img.Id}")));
-        var list = Regex.Match(aside, "<ul class=\"cb-tokens\".*?</ul>", RegexOptions.Singleline).Value;
-        Assert.Equal([$"/admin/galleries/{a}", $"/admin/galleries/{b}"],
-            Regex.Matches(list, "href=\"([^\"]+)\"").Select(m => m.Groups[1].Value).ToList());
-        Assert.Contains(
-            "It is in 2 galleries. This removes it from every gallery and deletes the original file. It can't be undone.",
-            aside);
-        Assert.Matches($"<form id=\"lib-del-one\"[^>]*action=\"/admin/library/images/{img.Id}/delete\"", await LibraryHtml.BodyAsync(await h.GetAsync($"/admin/library/images/{img.Id}")));
-
-        var looseAside = Aside(await LibraryHtml.BodyAsync(await h.GetAsync($"/admin/library/images/{loose.Id}")));
-        Assert.Contains("It is in no gallery. This removes it from every gallery and deletes the original file. It can't be undone.", looseAside);
-        Assert.Contains("Not in a gallery", looseAside);
-        Assert.DoesNotContain("View ↗", looseAside);
-    }
-
-    [Fact]
-    public async Task Unknown_open_id_leaves_the_panel_closed()
-    {
-        await using var h = await LibraryHost.CreateAsync(mongo, s3);
-        await h.InsertUploadedImageAsync(files: false);
-
-        var html = await LibraryHtml.BodyAsync(await h.GetAsync($"/admin/library?open={Gallery.Core.Ids.OpaqueId.NewId()}"));
-        Assert.DoesNotContain("side-panel", html);
-        Assert.DoesNotContain("lib-del-one", html);
     }
 }

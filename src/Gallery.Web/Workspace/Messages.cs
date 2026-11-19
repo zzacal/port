@@ -108,9 +108,12 @@ public static class Messages
     public const string GalleryEmpty =
         "This gallery has no photos yet. Use Add photos to upload straight into it, or open All photos and drag photos onto its name.";
 
-    // ── delete confirm (one photo) ───────────────────────────────────────────
+    // ── delete confirms ──────────────────────────────────────────────────────
 
-    /// <summary>contracts/components.md "delete confirm (one)" (moved from <c>PhotoEditPage</c>).</summary>
+    /// <summary>The selection confirm's consequence (contracts K12 "Confirm wording": the pre-020 bulk text).</summary>
+    public const string BulkDeleteConsequence = "This removes them from every gallery and deletes the original files. It can't be undone.";
+
+    /// <summary>contracts/components.md "delete confirm (one)" (the pre-020 photo edit page's text).</summary>
     public static string DeleteConsequence(int galleries) =>
         (galleries switch
         {

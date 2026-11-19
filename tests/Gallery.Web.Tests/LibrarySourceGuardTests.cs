@@ -53,6 +53,7 @@ public partial class LibrarySourceGuardTests(S3ProxyFixture s3, MongoFixture mon
         var owner = ClassTokens(html)
             .Where(c => c.StartsWith("lib-", StringComparison.Ordinal)
                         || c.StartsWith("gal-", StringComparison.Ordinal)
+                        || c.StartsWith("ws-", StringComparison.Ordinal)
                         || c == "b-ctl")
             .Distinct(StringComparer.Ordinal)
             .ToList();
@@ -66,24 +67,22 @@ public partial class LibrarySourceGuardTests(S3ProxyFixture s3, MongoFixture mon
         var a = await h.InsertUploadedImageAsync(title: "Pier", files: false);
         var b = await h.InsertUploadedImageAsync(title: "Rocks", files: false);
 
-        // Built the way the owner builds it: L3 into a new gallery, then G4 (the list switch).
-        var add = await h.PostFormAsync("/admin/library/add",
-            [F("ids", a.Id), F("ids", b.Id), F("gallery", "new"), F("newTitle", "Coast"), F("page", "1")]);
-        Assert.Equal(HttpStatusCode.SeeOther, add.StatusCode);
-        var loc = add.Headers.Location!.ToString();
-        Assert.Matches("^/admin/galleries/[0-9a-z]{26}\\?added=2$", loc);
-        var gid = loc["/admin/galleries/".Length..loc.IndexOf('?')];
-        var publish = await h.PostFormAsync($"/admin/galleries/{gid}/visibility",
-            [F("public", "on"), F("from", "builder")]);
-        Assert.Equal(HttpStatusCode.SeeOther, publish.StatusCode);
+        // Built the way the owner builds it: A3 with the photos, then A6 (the public switch).
+        var add = await h.PostJsonAsync("/admin/api/galleries", new { title = "Coast", ids = new[] { a.Id, b.Id } });
+        Assert.Equal(HttpStatusCode.Created, add.StatusCode);
+        using var created = await UploadHost.ParseAsync(add);
+        var gid = created!.RootElement.GetProperty("id").GetString()!;
+        Assert.Matches("^[0-9a-z]{26}$", gid);
+        var publish = await h.PostJsonAsync($"/admin/api/galleries/{gid}/visibility", new { @public = true });
+        Assert.Equal(HttpStatusCode.OK, publish.StatusCode);
         await h.SettleAsync();
 
         var paths = new[] { "/", "/g", $"/g/{gid}/coast", $"/g/{gid}/coast/{a.Id}" };
 
-        // Non-vacuity: the owner session is live (an admin page renders the owner bar).
-        var lib = await h.GetAsync("/admin/library");
+        // Non-vacuity: the owner session is live (the workspace renders its collections list).
+        var lib = await h.GetAsync("/admin");
         Assert.Equal(HttpStatusCode.OK, lib.StatusCode);
-        Assert.Contains("owner-bar", await lib.Content.ReadAsStringAsync());
+        Assert.Contains("class=\"ws-collections\"", await lib.Content.ReadAsStringAsync());
 
         foreach (var session in new[] { "with the owner session", "anonymous" })
         {
@@ -100,15 +99,14 @@ public partial class LibrarySourceGuardTests(S3ProxyFixture s3, MongoFixture mon
         }
 
         // Non-vacuity: after ClearCookies the admin page no longer renders for this client.
-        var signedOut = await h.GetAsync("/admin/library");
+        var signedOut = await h.GetAsync("/admin");
         Assert.Equal(HttpStatusCode.Redirect, signedOut.StatusCode);
     }
 
     // ── C4 ───────────────────────────────────────────────────────────────────
 
     [Theory]
-    [InlineData("library.js")]
-    [InlineData("reorder.js")]
+    [InlineData("workspace.js")]
     public void Library_script_has_no_html_injection_sink(string file)
     {
         var text = File.ReadAllText(Path.Combine(Render.WebRoot, "admin-assets", file));

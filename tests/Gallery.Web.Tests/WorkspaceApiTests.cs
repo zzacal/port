@@ -749,7 +749,5 @@ public class WorkspaceApiTests(S3ProxyFixture s3, MongoFixture mongo) : IClassFi
             Messages.DeleteConsequence(1));
         Assert.Equal("It is in 3 galleries. This removes it from every gallery and deletes the original file. It can't be undone.",
             Messages.DeleteConsequence(3));
-        foreach (var n in new[] { 0, 1, 3 })
-            Assert.Equal(Messages.DeleteConsequence(n), PhotoEditPage.DeleteConsequence(n));
     }
 }

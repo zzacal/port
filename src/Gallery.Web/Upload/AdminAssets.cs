@@ -20,8 +20,6 @@ public sealed class AdminAssets
         WorkerVersion = VersionOf(env, WorkerPath);
         _versions = new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            [LibraryScriptPath] = VersionOf(env, LibraryScriptPath),
-            [ReorderScriptPath] = VersionOf(env, ReorderScriptPath),
             [WorkspaceScriptPath] = VersionOf(env, WorkspaceScriptPath),
         };
     }
@@ -32,19 +30,14 @@ public sealed class AdminAssets
     public string ScriptUrl => $"/{ScriptPath}?v={ScriptVersion}";
     public string WorkerUrl => $"/{WorkerPath}?v={WorkerVersion}";
 
-    // 009 T003 (contracts/components.md): the library and builder scripts, versioned once at startup
-    // with the same VersionOf as upload.js. Additive: the members above keep their behaviour.
-    public const string LibraryScriptPath = "admin-assets/library.js";
-    public const string ReorderScriptPath = "admin-assets/reorder.js";
-
     /// <summary>020 T033: the workspace module (C12), versioned like the others.</summary>
     public const string WorkspaceScriptPath = "admin-assets/workspace.js";
 
     private readonly Dictionary<string, string> _versions;
 
     /// <summary>
-    /// <c>/{relPath}?v={hash8}</c> for an asset versioned at startup (<see cref="LibraryScriptPath"/>,
-    /// <see cref="ReorderScriptPath"/>); a file missing at startup gets <c>dev</c>. Any other path
+    /// <c>/{relPath}?v={hash8}</c> for an asset versioned at startup (<see cref="WorkspaceScriptPath"/>);
+    /// a file missing at startup gets <c>dev</c>. Any other path
     /// throws, so a page can never link an asset whose version is not computed.
     /// </summary>
     public string UrlFor(string relPath) =>

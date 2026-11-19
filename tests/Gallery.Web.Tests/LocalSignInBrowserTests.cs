@@ -41,16 +41,16 @@ public sealed class LocalSignInBrowserTests(LibraryBrowserFixture fx)
         await BrowserWait.LoadedAsync(page, WaitMs);
         Assert.Equal("/admin", new Uri(page.Url).AbsolutePath);
 
-        // The library opens: 200 and its heading.
+        // The workspace opens: 200, its title, one workspace frame and one collections list (020 TI-70).
         await page.Mouse.MoveAsync(0, 0);
-        var resp = await page.GotoAsync(site.BaseUrl + "/admin/library");
+        var resp = await page.GotoAsync(site.BaseUrl + "/admin");
         await BrowserWait.LoadedAsync(page, WaitMs);
         Assert.NotNull(resp);
         Assert.Equal(200, resp!.Status);
-        Assert.Equal("/admin/library", new Uri(page.Url).AbsolutePath);
-        Assert.Equal("Library", await page.TitleAsync());
-        Assert.Equal("Library", (await page.Locator("nav.breadcrumb li[aria-current='page']").InnerTextAsync()).Trim());
-        Assert.Equal(1, await page.Locator("section.lib").CountAsync());
+        Assert.Equal("/admin", new Uri(page.Url).AbsolutePath);
+        Assert.Equal("All photos", await page.TitleAsync());
+        Assert.Equal(1, await page.Locator("admin-workspace").CountAsync());
+        Assert.Equal(1, await page.Locator(".ws-collections").CountAsync());
 
         // The datastore: claimed for local-owner.
         var doc = await site.Db.GetCollection<BsonDocument>("site").Find(new BsonDocument("_id", "site")).FirstAsync();

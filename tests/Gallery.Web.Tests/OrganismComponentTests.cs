@@ -12,50 +12,6 @@ public class OrganismComponentTests
 {
     private static RenderFragment Frag(string text) => b => b.AddContent(0, text);
 
-    // ── OwnerBar ──────────────────────────────────────────────────────────────
-
-    [Fact]
-    public async Task OwnerBar_upload_current_has_aria_current_page_on_upload_link()
-    {
-        var html = await Render.Html<OwnerBar>(new { Current = AdminPage.Upload });
-        // exactly one aria-current="page"
-        var matches = Regex.Matches(html, "aria-current=\"page\"");
-        Assert.Single(matches);
-        Assert.Matches(@"href=""/admin/upload""[^>]*aria-current=""page""", html);
-    }
-
-    [Fact]
-    public async Task OwnerBar_library_current_has_aria_current_page_on_library_link()
-    {
-        var html = await Render.Html<OwnerBar>(new { Current = AdminPage.Library });
-        var matches = Regex.Matches(html, "aria-current=\"page\"");
-        Assert.Single(matches);
-        Assert.Matches(@"href=""/admin/library""[^>]*aria-current=""page""", html);
-    }
-
-    [Fact]
-    public async Task OwnerBar_galleries_current_has_aria_current_page_on_galleries_link()
-    {
-        var html = await Render.Html<OwnerBar>(new { Current = AdminPage.Galleries });
-        var matches = Regex.Matches(html, "aria-current=\"page\"");
-        Assert.Single(matches);
-        Assert.Matches(@"href=""/admin/galleries""[^>]*aria-current=""page""", html);
-    }
-
-    [Fact]
-    public async Task OwnerBar_no_current_has_no_aria_current()
-    {
-        var html = await Render.Html<OwnerBar>(new Dictionary<string, object?> { ["Current"] = null });
-        Assert.DoesNotContain("aria-current", html);
-    }
-
-    [Fact]
-    public async Task OwnerBar_renders_owner_bar_class()
-    {
-        var html = await Render.Html<OwnerBar>();
-        Assert.Matches(@"class=""owner-bar""", html);
-    }
-
     // ── SidePanel ─────────────────────────────────────────────────────────────
 
     [Fact]
@@ -181,90 +137,6 @@ public class OrganismComponentTests
         Assert.Contains("has-cover", html);
     }
 
-    // ── BatchFooter ───────────────────────────────────────────────────────────
-
-    [Fact]
-    public async Task BatchFooter_inprogress_primary_is_disabled()
-    {
-        var html = await Render.Html<BatchFooter>(new { State = BatchState.InProgress, Total = 40, Ready = 12, Failed = 0 });
-        Assert.Contains("disabled", html);
-    }
-
-    [Fact]
-    public async Task BatchFooter_inprogress_shows_reason_text()
-    {
-        var html = await Render.Html<BatchFooter>(new { State = BatchState.InProgress, Total = 40, Ready = 12, Failed = 0 });
-        Assert.Contains("Available when every photo is ready", html);
-    }
-
-    [Fact]
-    public async Task BatchFooter_blocked_primary_is_disabled()
-    {
-        var html = await Render.Html<BatchFooter>(new { State = BatchState.Blocked, Total = 40, Ready = 38, Failed = 2 });
-        Assert.Contains("disabled", html);
-    }
-
-    [Fact]
-    public async Task BatchFooter_blocked_shows_reason_text()
-    {
-        var html = await Render.Html<BatchFooter>(new { State = BatchState.Blocked, Total = 40, Ready = 38, Failed = 2 });
-        Assert.Contains("Restart or delete the", html);
-        Assert.Contains("failed photos to continue", html);
-    }
-
-    [Fact]
-    public async Task BatchFooter_ready_primary_has_no_disabled()
-    {
-        var html = await Render.Html<BatchFooter>(new { State = BatchState.Ready, Total = 40, Ready = 40, Failed = 0 });
-        Assert.DoesNotContain("disabled", html);
-    }
-
-    // ── GalleryBuilder ────────────────────────────────────────────────────────
-
-    [Fact]
-    public async Task GalleryBuilder_dragging_renders_exactly_one_drop_slot()
-    {
-        var items = Render.Samples.Landscape.Take(4).ToList();
-        var html = await Render.Html<GalleryBuilder>(new
-        {
-            Title = "Test",
-            Items = (IReadOnlyList<ImageView>)items,
-            State = BuilderState.Dragging,
-            ActiveIndex = 1,
-            DropIndex = 3
-        });
-        var matches = Regex.Matches(html, @"class=""drop-slot""[^>]*");
-        Assert.Single(matches);
-    }
-
-    [Fact]
-    public async Task GalleryBuilder_empty_renders_library_link_and_no_contact_sheet()
-    {
-        var html = await Render.Html<GalleryBuilder>(new
-        {
-            Title = "Test",
-            Items = (IReadOnlyList<ImageView>)new List<ImageView>(),
-            State = BuilderState.Empty
-        });
-        Assert.Contains("/admin/library", html);
-        Assert.DoesNotContain("class=\"cs", html);
-    }
-
-    [Fact]
-    public async Task GalleryBuilder_at_rest_has_exactly_one_cover_pinned_tag()
-    {
-        var items = Render.Samples.Landscape.Take(4).ToList();
-        var html = await Render.Html<GalleryBuilder>(new
-        {
-            Title = "Test",
-            Items = (IReadOnlyList<ImageView>)items,
-            State = BuilderState.Rest,
-            PinnedIndex = (int?)2
-        });
-        var pinnedMatches = Regex.Matches(html, @"aria-label=""Unpin cover""");
-        Assert.Single(pinnedMatches);
-    }
-
     // ── AdminLayout ───────────────────────────────────────────────────────────
 
     [Fact]
@@ -287,12 +159,5 @@ public class OrganismComponentTests
     {
         var html = await Render.Html<AdminLayout>(new { Title = "Test" });
         Assert.Contains("noindex", html);
-    }
-
-    [Fact]
-    public async Task AdminLayout_has_owner_bar_class()
-    {
-        var html = await Render.Html<AdminLayout>(new { Title = "Test" });
-        Assert.Matches(@"class=""owner-bar""", html);
     }
 }

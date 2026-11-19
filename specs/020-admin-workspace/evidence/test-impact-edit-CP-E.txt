@@ -1,0 +1,118 @@
+020 test-impact-edit: 116 of 140 rows (CP-E); root /Users/zzacal/repos/gallery
+OK TI-10 CP-E tests/Gallery.Web.Tests/LibraryEditTests.cs x1
+OK TI-10 CP-E tests/Gallery.Web.Tests/LibraryEditTests.cs x1
+OK TI-10 CP-E tests/Gallery.Web.Tests/LibraryEditTests.cs x1
+OK TI-10 CP-E tests/Gallery.Web.Tests/LibraryEditTests.cs x1
+OK TI-10 CP-E tests/Gallery.Web.Tests/LibraryEditTests.cs x1
+OK TI-10 CP-E tests/Gallery.Web.Tests/LibraryEditTests.cs x1
+OK TI-10 CP-E tests/Gallery.Web.Tests/LibraryEditTests.cs x1
+OK TI-10 CP-E tests/Gallery.Web.Tests/LibraryEditTests.cs x1
+OK TI-10 CP-E tests/Gallery.Web.Tests/LibraryEditTests.cs x1
+OK TI-11 CP-E tests/Gallery.Web.Tests/LibraryDeleteTests.cs x1
+OK TI-11 CP-E tests/Gallery.Web.Tests/LibraryDeleteTests.cs x1
+OK TI-11 CP-E tests/Gallery.Web.Tests/LibraryDeleteTests.cs x1
+OK TI-11 CP-E tests/Gallery.Web.Tests/LibraryDeleteTests.cs x1
+OK TI-11 CP-E tests/Gallery.Web.Tests/LibraryDeleteTests.cs x1
+OK TI-11 CP-E tests/Gallery.Web.Tests/LibraryDeleteTests.cs x1
+OK TI-11 CP-E tests/Gallery.Web.Tests/LibraryDeleteTests.cs x1
+OK TI-12 CP-E tests/Gallery.Web.Tests/LibraryMembershipTests.cs RETIRE (exists; deleting)
+OK TI-13 CP-E tests/Gallery.Web.Tests/LibraryMembershipEditTests.cs x1
+OK TI-13 CP-E tests/Gallery.Web.Tests/LibraryMembershipEditTests.cs x1
+OK TI-13 CP-E tests/Gallery.Web.Tests/LibraryMembershipEditTests.cs x1
+OK TI-13 CP-E tests/Gallery.Web.Tests/LibraryMembershipEditTests.cs x1
+OK TI-13 CP-E tests/Gallery.Web.Tests/LibraryMembershipEditTests.cs x1
+OK TI-13 CP-E tests/Gallery.Web.Tests/LibraryMembershipEditTests.cs x1
+OK TI-13 CP-E tests/Gallery.Web.Tests/LibraryMembershipEditTests.cs x1
+OK TI-13 CP-E tests/Gallery.Web.Tests/LibraryMembershipEditTests.cs x1
+OK TI-13 CP-E tests/Gallery.Web.Tests/LibraryMembershipEditTests.cs x1
+OK TI-13 CP-E tests/Gallery.Web.Tests/LibraryMembershipEditTests.cs x1
+OK TI-13 CP-E tests/Gallery.Web.Tests/LibraryMembershipEditTests.cs x1
+OK TI-13 CP-E tests/Gallery.Web.Tests/LibraryMembershipEditTests.cs x1
+OK TI-13 CP-E tests/Gallery.Web.Tests/LibraryMembershipEditTests.cs x1
+OK TI-13 CP-E tests/Gallery.Web.Tests/LibraryMembershipEditTests.cs x1
+OK TI-13 CP-E tests/Gallery.Web.Tests/LibraryMembershipEditTests.cs x1
+OK TI-13 CP-E tests/Gallery.Web.Tests/LibraryMembershipEditTests.cs x1
+OK TI-13 CP-E tests/Gallery.Web.Tests/LibraryMembershipEditTests.cs x1
+OK TI-14 CP-E tests/Gallery.Web.Tests/LibraryFlowTests.cs x1
+OK TI-14 CP-E tests/Gallery.Web.Tests/LibraryFlowTests.cs x1
+OK TI-15 CP-E tests/Gallery.Web.Tests/PublishRefusalTests.cs x1
+OK TI-15 CP-E tests/Gallery.Web.Tests/PublishRefusalTests.cs x1
+OK TI-15 CP-E tests/Gallery.Web.Tests/PublishRefusalTests.cs x1
+OK TI-15 CP-E tests/Gallery.Web.Tests/PublishRefusalTests.cs x1
+OK TI-15 CP-E tests/Gallery.Web.Tests/PublishRefusalTests.cs x1
+OK TI-15 CP-E tests/Gallery.Web.Tests/PublishRefusalTests.cs x1
+OK TI-15 CP-E tests/Gallery.Web.Tests/PublishRefusalTests.cs x1
+OK TI-16 CP-E tests/Gallery.Web.Tests/InvariantTests.cs x1
+OK TI-16 CP-E tests/Gallery.Web.Tests/InvariantTests.cs x1
+OK TI-17 CP-E tests/Gallery.Web.Tests/EdgeModeTests.cs x1
+OK TI-17 CP-E tests/Gallery.Web.Tests/EdgeModeTests.cs x1
+OK TI-17 CP-E tests/Gallery.Web.Tests/EdgeModeTests.cs x1
+OK TI-18 CP-E tests/Gallery.Web.Tests/EdgeSecretTests.cs x1
+OK TI-19 CP-E tests/Gallery.Web.Tests/NewTabLinkTests.cs x1
+OK TI-34 CP-E tests/Gallery.Web.Tests/AdminAccessTests.cs x1
+OK TI-35 CP-E tests/Gallery.Web.Tests/LibraryAccessTests.cs RETIRE (exists; deleting)
+OK TI-36 CP-E tests/Gallery.Web.Tests/LibrarySourceGuardTests.cs x1
+OK TI-36 CP-E tests/Gallery.Web.Tests/LibrarySourceGuardTests.cs x1
+OK TI-36 CP-E tests/Gallery.Web.Tests/LibrarySourceGuardTests.cs x1
+OK TI-38 CP-E tests/Gallery.Web.Tests/CameraRoutesTests.cs x1
+OK TI-42 CP-E tests/Gallery.Web.Tests/SignInComponentTests.cs x1
+OK TI-42 CP-E tests/Gallery.Web.Tests/SignInComponentTests.cs x1
+OK TI-42 CP-E tests/Gallery.Web.Tests/SignInComponentTests.cs x1
+OK TI-50 CP-E tests/Gallery.Web.Tests/IndexTests.cs x1
+OK TI-50 CP-E tests/Gallery.Web.Tests/IndexTests.cs x1
+OK TI-51 CP-E tests/Gallery.Web.Tests/NavCataloguePageTests.cs x1
+OK TI-51 CP-E tests/Gallery.Web.Tests/NavCataloguePageTests.cs x1
+OK TI-51 CP-E tests/Gallery.Web.Tests/NavCataloguePageTests.cs x1
+OK TI-53 CP-E tests/Gallery.Web.Tests/AtomMoleculeStatePageTests.cs x1
+OK TI-53 CP-E tests/Gallery.Web.Tests/AtomMoleculeStatePageTests.cs x1
+OK TI-53 CP-E tests/Gallery.Web.Tests/AtomMoleculeStatePageTests.cs x1
+OK TI-53 CP-E tests/Gallery.Web.Tests/AtomMoleculeStatePageTests.cs x1
+OK TI-53 CP-E tests/Gallery.Web.Tests/AtomMoleculeStatePageTests.cs x1
+OK TI-54 CP-E tests/Gallery.Web.Tests/MoleculeComponentTests.cs x1
+OK TI-54 CP-E tests/Gallery.Web.Tests/MoleculeComponentTests.cs x1
+OK TI-54 CP-E tests/Gallery.Web.Tests/MoleculeComponentTests.cs x1
+OK TI-54 CP-E tests/Gallery.Web.Tests/MoleculeComponentTests.cs x1
+OK TI-54 CP-E tests/Gallery.Web.Tests/MoleculeComponentTests.cs x1
+OK TI-55 CP-E tests/Gallery.Web.Tests/OrganismComponentTests.cs x1
+OK TI-55 CP-E tests/Gallery.Web.Tests/OrganismComponentTests.cs x1
+OK TI-55 CP-E tests/Gallery.Web.Tests/OrganismComponentTests.cs x1
+OK TI-55 CP-E tests/Gallery.Web.Tests/OrganismComponentTests.cs x1
+OK TI-56 CP-E tests/Gallery.Web.Tests/OrganismStatePageTests.cs x1
+OK TI-56 CP-E tests/Gallery.Web.Tests/OrganismStatePageTests.cs x1
+OK TI-56 CP-E tests/Gallery.Web.Tests/OrganismStatePageTests.cs x1
+OK TI-56 CP-E tests/Gallery.Web.Tests/OrganismStatePageTests.cs x1
+OK TI-56 CP-E tests/Gallery.Web.Tests/OrganismStatePageTests.cs x1
+OK TI-59 CP-E tests/Gallery.Web.Tests/LibraryComponentAdditionsTests.cs x1
+OK TI-59 CP-E tests/Gallery.Web.Tests/LibraryComponentAdditionsTests.cs x1
+OK TI-59 CP-E tests/Gallery.Web.Tests/LibraryComponentAdditionsTests.cs x1
+OK TI-59 CP-E tests/Gallery.Web.Tests/LibraryComponentAdditionsTests.cs x1
+OK TI-59 CP-E tests/Gallery.Web.Tests/UploadComponentAdditionsTests.cs x1
+OK TI-59 CP-E tests/Gallery.Web.Tests/UploadComponentAdditionsTests.cs x1
+OK TI-60 CP-E tests/Gallery.Web.Tests/GalleryActionsTests.cs RETIRE (exists; deleting)
+OK TI-60 CP-E tests/Gallery.Web.Tests/PhotoActionsTests.cs RETIRE (exists; deleting)
+OK TI-60 CP-E tests/Gallery.Web.Tests/BuilderIconTests.cs RETIRE (exists; deleting)
+OK TI-60 CP-E tests/Gallery.Web.Tests/IconTests.cs RETIRE (exists; deleting)
+OK TI-60 CP-E tests/Gallery.Web.Tests/IconRegistryGuardTests.cs RETIRE (exists; deleting)
+OK TI-60 CP-E tests/Gallery.Web.Tests/TokenComboboxTests.cs RETIRE (exists; deleting)
+OK TI-61 CP-E tests/Gallery.Web.Tests/PhotoReaderTests.cs RETIRE (exists; deleting)
+OK TI-62 CP-E tests/Gallery.Web.Tests/LibraryPageTests.cs RETIRE (exists; deleting)
+OK TI-62 CP-E tests/Gallery.Web.Tests/PhotoEditPageTests.cs RETIRE (exists; deleting)
+OK TI-62 CP-E tests/Gallery.Web.Tests/GalleryListTests.cs RETIRE (exists; deleting)
+OK TI-62 CP-E tests/Gallery.Web.Tests/BuilderTests.cs RETIRE (exists; deleting)
+OK TI-63 CP-E tests/Gallery.Web.Tests/LibraryTimingEvidenceTests.cs RETIRE (exists; deleting)
+OK TI-63 CP-E tests/Gallery.Web.Tests/GalleryListTimingEvidenceTests.cs RETIRE (exists; deleting)
+OK TI-63 CP-E tests/Gallery.Web.Tests/PhotoEditTimingEvidenceTests.cs RETIRE (exists; deleting)
+OK TI-63 CP-E tests/Gallery.Web.Tests/MembershipTimingEvidenceTests.cs RETIRE (exists; deleting)
+OK TI-63 CP-E tests/Gallery.Web.Tests/TileTimingEvidenceTests.cs RETIRE (exists; deleting)
+OK TI-70 CP-E tests/Gallery.Web.Tests/LibraryBrowserTests.cs RETIRE (exists; deleting)
+OK TI-70 CP-E tests/Gallery.Web.Tests/PhotoEditBrowserTests.cs RETIRE (exists; deleting)
+OK TI-70 CP-E tests/Gallery.Web.Tests/TileIconBrowserTests.cs RETIRE (exists; deleting)
+OK TI-70 CP-E tests/Gallery.Web.Tests/BuilderIconBrowserTests.cs RETIRE (exists; deleting)
+OK TI-70 CP-E tests/Gallery.Web.Tests/GalleryListBrowserTests.cs RETIRE (exists; deleting)
+OK TI-70 CP-E tests/Gallery.Web.Tests/GalleryFieldBrowserTests.cs RETIRE (exists; deleting)
+OK TI-70 CP-E tests/Gallery.Web.Tests/GridWidthBrowserTests.cs RETIRE (exists; deleting)
+OK TI-70 CP-E tests/Gallery.Web.Tests/LibraryTileGeometryTests.cs RETIRE (exists; deleting)
+OK TI-70 CP-E tests/Gallery.Web.Tests/LayeringBrowserTests.cs RETIRE (exists; deleting)
+OK TI-70 CP-E tests/Gallery.Web.Tests/AdminNavBrowserTests.cs RETIRE (exists; deleting)
+OK TI-70 CP-E tests/Gallery.Web.Tests/LocalSignInBrowserTests.cs x1
+wrote 22 files, deleted 28

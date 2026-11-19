@@ -169,7 +169,7 @@ public static class WorkspaceApi
     // ── A6 POST /admin/api/galleries/{gid}/visibility [SAFETY] II.6 ──────────
 
     /// <summary>
-    /// A6 in the G4 handler's order (LibraryEndpoints.Visibility): unknown → 404; <c>public: true</c>
+    /// A6 in the pre-020 G4 handler's order: unknown → 404; <c>public: true</c>
     /// → <see cref="GalleryService.PublishAsync"/> (emptiness FIRST, then the conditional
     /// <c>items.0</c> write); <c>public: false</c> on a gallery that is not public → 409
     /// <see cref="GalleryService.EmptyPublishReason"/> when it is empty, else 200 with no write;

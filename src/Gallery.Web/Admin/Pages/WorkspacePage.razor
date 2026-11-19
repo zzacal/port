@@ -41,8 +41,8 @@
 @code {
     [Parameter, EditorRequired] public WorkspacePageModel Model { get; set; } = default!;
 
-    /// <summary>The selection confirm's consequence (today's bulk text, contracts K12 "Confirm wording").</summary>
-    public const string BulkDeleteConsequence = "This removes them from every gallery and deletes the original files. It can't be undone.";
+    /// <summary>The selection confirm's consequence: <see cref="Messages.BulkDeleteConsequence"/> (the one copy).</summary>
+    public const string BulkDeleteConsequence = Messages.BulkDeleteConsequence;
 
     /// <summary>The single-line title rule (not whitespace-only), as the pages before it.</summary>
     private const string TitlePattern = @".*\S.*";
@@ -214,5 +214,5 @@
     </SidePanel>;
 
     private static RenderFragment SelectionDanger => @<DangerConfirm Id="ws-del-selection" Action="Delete 0 photos" Target="0 photos" Title="Delete 0 photos?"
-                       Consequence="@BulkDeleteConsequence" ConfirmLabel="Delete photos" />;
+                       Consequence="@Messages.BulkDeleteConsequence" ConfirmLabel="Delete photos" />;
 }

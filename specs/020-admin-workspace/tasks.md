@@ -715,13 +715,13 @@ Batch E owns every file it deletes, `src/Gallery.Web/Components/Templates/AdminL
 `src/Gallery.Web/Workspace/Messages.cs` (no change expected), new
 `tests/Gallery.Web.Tests/WorkspaceRemovalGuardTests.cs`.
 
-- [ ] T049 [US4] Delete the old pages and routes: `src/Gallery.Web/Admin/Pages/{LibraryPage,PhotoEditPage,GalleriesPage,GalleryPage}.razor`
+- [X] T049 [US4] Delete the old pages and routes: `src/Gallery.Web/Admin/Pages/{LibraryPage,PhotoEditPage,GalleriesPage,GalleryPage}.razor`
   with their `.razor.css`; `src/Gallery.Web/Library/LibraryEndpoints.cs` (L1–L6, G1–G4, B1–B6);
   `src/Gallery.Web/wwwroot/admin-assets/library.js`, `reorder.js`; `AdminAssets.LibraryScriptPath`,
   `ReorderScriptPath` and their `_versions` entries. `LibraryReader` per C-16 (delete `PageAsync`,
   `PhotoAsync`, `Tile`, `StatusLine`, `Plural`, `LibraryTile`, `LibraryPageData`). Do NOT touch
   `Site/Pages/GalleryPage.razor` (the public page). Report the wiring line for T051. Depends: CP-D.
-- [ ] T050 [US4] Delete the 13 components and their catalogue pages: `Components/Organisms/{OwnerBar,BatchFooter,GalleryBuilder}.razor(.css)`,
+- [X] T050 [US4] Delete the 13 components and their catalogue pages: `Components/Organisms/{OwnerBar,BatchFooter,GalleryBuilder}.razor(.css)`,
   `Components/Molecules/{SelectionBar,PhotoActions,GalleryActions,BatchItem,DragHandle,CoverMarker,TokenCombobox,VisibilityToggle}.razor(.css)`
   plus `PhotoActions.cs`, `GalleryActions.cs`, `TokenCombobox.cs`, `Components/Atoms/{Icon,IconButton}.razor(.css)`,
   `Components/Atoms/Icons.cs`; `Ui/Pages/{OwnerBar,BatchFooter,GalleryBuilder,SelectionBar,PhotoActions,GalleryActions,BatchItem,DragHandle,CoverMarker,TokenCombobox,VisibilityToggle,Icon,IconButton}Page.razor`
@@ -729,18 +729,18 @@ Batch E owns every file it deletes, `src/Gallery.Web/Components/Templates/AdminL
   `BatchState`, `BuilderState`, `CoverState`, `HandleState`, `AdminPage` from `ComponentTypes.cs`;
   `ContactSheetPage` specimens 4–6 (C-04), keeping the three public ones and the fill specimen;
   `MembershipEdit`/services untouched. Depends: T049.
-- [ ] T051 [US4] PARENT Wiring: remove `admin.MapLibrary();` from `AdminEndpoints.MapAdmin` and
+- [X] T051 [US4] PARENT Wiring: remove `admin.MapLibrary();` from `AdminEndpoints.MapAdmin` and
   `MapLibrary` (only the endpoint mapping; `AddLibrary` stays) from `LibrarySetup.cs`; ensure
   `MapWorkspace`, `MapWorkspaceApi`, `MapUpload` precede the catch-all. Accept: build green;
   `grep -rn 'MapLibraryEndpoints\|LibraryEndpoints' src` empty.
-- [ ] T052 [US4] AdminLayout final (K1, C-05): parameters `Title`, `Bare`, `List`, `ChildContent`,
+- [X] T052 [US4] AdminLayout final (K1, C-05): parameters `Title`, `Bare`, `List`, `ChildContent`,
   `Panel`, `Csrf`, `Cap`, `UploadSrc`, `WorkerSrc`; remove `Current`, `Crumbs`, `Aside`,
   `ShowOwnerBar`, `SignOut` and the owner-bar/breadcrumb render; `Bare=true` renders today's
   bar-less document byte-identical to `evidence/pre-admin-layout-bare.html` for the same inputs;
   `SignInPage.razor` passes `Bare="true"`; delete CSS only the old frame used; rewrite
   `Ui/Pages/AdminLayoutPage.razor` to the three regions with sample content and a current row
   (C-09). Depends: T050.
-- [ ] T053 [SAFETY] [US4] Write `tests/Gallery.Web.Tests/WorkspaceRemovalGuardTests.cs` (SC-009,
+- [X] T053 [SAFETY] [US4] Write `tests/Gallery.Web.Tests/WorkspaceRemovalGuardTests.cs` (SC-009,
   FR-004, FR-039): every removed address of contracts/http.md "Removed routes" (with real ids),
   GET and POST with a valid token, answers EXACTLY what `GET/POST /admin/never-existed-{n}`
   answers (status, `no-store`, `noindex`, body bytes) [SAFETY]; a source scan of `src/` (`*.cs`,
