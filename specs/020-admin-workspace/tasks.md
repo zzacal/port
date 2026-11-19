@@ -167,6 +167,7 @@ applies that checkpoint's test-impact rows) and the admin usable.
   from K1's frame (list 232 px, panel 320 px, the existing `--space-*` gaps, columns of at least
   168 px, two columns below 600 px) and writes it into contracts/components.md K5; T018 uses it
   verbatim and is blocked until then.
+- **C-21** (found at gate B) The workspace frame switches at `Tokens.BreakLarge` (1200 px), not 900 px: `TokenMediaAgreementTests` requires every media query width to equal a token breakpoint, and decisions row 22 forbids a new token. Between 600 and 1199 px the workspace uses the one-column arrangement of US6.
 - **C-19** Labels not in the contracts (planning defaults, PARENT may reword in T002 before
   Batch B): the naming input's label "New gallery name"; the photo cell's select-mark label
   "Select {title}".
@@ -357,7 +358,7 @@ markup); default renders must be byte-identical.
 
 - [X] T018 [P] Add `Sizes.ForFill()` to `src/Gallery.Core/Images/Sizes.cs` (K5): the `sizes`
   string for `repeat(auto-fill, minmax(168px, 1fr))` beside a 232 px list and 320 px panel at
-  ≥ 900 px and two columns below 600 px: the exact string fixed by C-18 (blocked until T002 has
+  ≥ 1200 px (C-21) and two columns below 600 px: the exact string fixed by C-18 (blocked until T002 has
   written it into contracts/components.md K5; escalate, never invent it). Append one fact to
   `tests/Gallery.Core.Tests/SizesTests.cs` asserting that exact string. Accept: Core tests green.
 - [X] T019 [P] K2/K3: `SidePanel` gains `[Parameter] public bool Save { get; set; } = true;`
@@ -446,7 +447,7 @@ new `tests/Gallery.Web.Tests/WorkspacePageTests.cs`, `WorkspaceAccessTests.cs` (
   `UploadSrc`, `WorkerSrc` (string?); when `List` is not null render K1's
   `<admin-workspace class="ws" data-csrf data-cap data-upload-src data-worker-src>` with
   `<nav class="ws-list">`, `<main class="ws-main">`, `<aside class="ws-panel">` and NO owner bar,
-  breadcrumb or `<script>`; the frame CSS for ≥ 900 px (list 232 px, panel 320 px) lives in
+  breadcrumb or `<script>`; the frame CSS for ≥ 1200 px (C-21) (list 232 px, panel 320 px) lives in
   `AdminLayout.razor.css` only (IX.2). When `List` is null the output is byte-identical to today.
   Accept: `UiPagesUnchangedTests` (templates/admin-layout) and every `OrganismComponentTests`
   AdminLayout fact green unmodified; T035 facts.
@@ -796,14 +797,14 @@ Batch F owns: `workspace.js` (large view only), `WorkspacePage.razor` (the hidde
 Severable: cut → the admin is desktop-only until a later feature (spec Assumptions); the 390 px
 rows of FR-038/SC-007/SC-008 are then recorded as not delivered.
 
-Batch G owns: `AdminLayout.razor.css` (below-900 px rules only), `WorkspacePage.razor(.css)`
+Batch G owns: `AdminLayout.razor.css` (below-1200 px rules only, C-21), `WorkspacePage.razor(.css)`
 (`Gallery settings`, panel `Done`), `workspace.js` (sheet only), new
 `tests/Gallery.Web.Tests/WorkspacePhoneBrowserTests.cs`, `WorkspaceLayoutBrowserTests.cs` (append).
 
-- [ ] T057 [US6] Below 900 px (K1, K12, C12): one column, the collections list a horizontal strip
+- [ ] T057 [US6] Below 1200 px (C-21) (K1, K12, C12): one column, the collections list a horizontal strip
   at the top (scrolls inside itself, never the page), the panel a bottom sheet shown while
-  `admin-workspace` has `ws-sheet`; `Gallery settings` (gallery only, shown below 900 px) and a
-  `Done` in each panel heading row below 900 px; `workspace.js` sets `ws-sheet` while a selection
+  `admin-workspace` has `ws-sheet`; `Gallery settings` (gallery only, shown below 1200 px) and a
+  `Done` in each panel heading row below 1200 px; `workspace.js` sets `ws-sheet` while a selection
   exists or `Gallery settings` is on, removes it on `Done`. Every control ≥ 44 × 44 px (the
   existing `--tap` token, `Tokens.Tap`; no new token). Frame CSS only in `AdminLayout.razor.css`. Depends: CP-F (or CP-E
   if Phase 7 is cut).

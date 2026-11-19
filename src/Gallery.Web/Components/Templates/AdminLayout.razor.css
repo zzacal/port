@@ -82,7 +82,7 @@ body.admin {
     }
 }
 
-/* 020 K1 workspace frame (IX.2: the layout owns all frame geometry; pages add none). Below 900 px
+/* 020 K1 workspace frame (IX.2: the layout owns all frame geometry; pages add none). Below 1200 px (Tokens.BreakLarge; 020 C-21)
    one simple column for now (the phone strip and bottom sheet come with T057). */
 .ws {
     display: block;
@@ -97,7 +97,7 @@ body.admin {
     min-width: 0;
 }
 
-@media (min-width: 900px) {
+@media (min-width: 1200px) {
     .ws {
         display: grid;
         grid-template-columns: 232px minmax(0, 1fr) 320px;

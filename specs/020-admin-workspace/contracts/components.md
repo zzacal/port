@@ -21,8 +21,8 @@ parameters and behaviour. Rules for every component here:
 Markup: document head as today (inline styles, `noindex`), then
 `<body class="admin"><admin-workspace class="ws" data-csrf data-cap data-upload-src data-worker-src>`
 containing `<nav class="ws-list">@List</nav><main class="ws-main">@ChildContent</main><aside class="ws-panel">`.
-The layout owns all frame geometry (IX.2): three columns at 900 px and wider (list 232 px, panel
-320 px); below 900 px one column with the list as a horizontal strip and the panel as a bottom
+The layout owns all frame geometry (IX.2): three columns at 1200 px and wider (**AMENDED (tasks) C-21**: `Tokens.BreakLarge`; was 900 px, which `TokenMediaAgreementTests` refuses: every media query must equal a token breakpoint, and no new token is allowed) (list 232 px, panel
+320 px); below 1200 px one column with the list as a horizontal strip and the panel as a bottom
 sheet shown while `admin-workspace` has class `ws-sheet`. Pages add no frame CSS.
 Removed parameters: `Current`, `Crumbs`, `Aside`, `ShowOwnerBar`, `SignOut`.
 **AMENDED (tasks) C-05**: two steps. T029 adds the workspace mode additively (new parameters `List`, `Panel`, `Csrf`, `Cap`, `UploadSrc`, `WorkerSrc`; old parameters kept; render with `List` null byte-identical to today) because the old pages still need `Current`, `Crumbs`, `Aside`, `ShowOwnerBar`, `SignOut`; T052 makes it final as above. **AMENDED (tasks) C-06**: the layout renders no `<script>`; the workspace module `<script>` is rendered by `WorkspacePage` (`OrganismComponentTests.AdminLayout_has_no_script_element` stays unmodified).
@@ -103,7 +103,7 @@ middle, last.
 - List: `CollectionList`.
 - Main: `PageHeading` (the collection's name; then "{n} photos", "· Public|Private" for a gallery,
   "View on site ↗" for a public gallery with photos; actions: `Gallery settings` (shown below
-  900 px, gallery only), `Clear selection` (hidden until a selection exists), `Add photos`
+  1200 px, gallery only), `Clear selection` (hidden until a selection exists), `Add photos`
   (Primary)); the `<upload-tray>` mount; `ContactSheet Fill` of `PhotoCell`s (first 4 at high
   priority) or the empty sentence; the "Show more" button and sentinel when more exist; a hidden
   `PhotoStage`.
@@ -119,7 +119,7 @@ middle, last.
     `DangerConfirm` "Delete photo…".
   - `selection`: heading "{n} photos selected"; up to four small previews; `GalleryChecklist`;
     danger slot: `DangerConfirm` "Delete {n} photos…".
-  Below 900 px each panel heading row also holds `Done`.
+  Below 1200 px each panel heading row also holds `Done`.
 - A `<noscript>` sentence: "The admin needs JavaScript."
 - **AMENDED (tasks) C-15**: until Phase 5 the page renders neither `Add photos` nor the `<upload-tray>` mount (the old upload page still uploads; R-15). **C-12**: document titles W1 "All photos", W2 "Not in a gallery", W3 the gallery title.
 
@@ -184,7 +184,7 @@ Scripts: `library.js`, `reorder.js`.
 - Large view (R-08): `?photo=` in the address; Previous/Next and ←/→; Escape or the back button
   returns to the grid with the cell selected and scrolled into view.
 - More: the sentinel's intersection or "Show more" fetches `more` and appends the cells.
-- Below 900 px: `ws-sheet` is set while a selection exists or `Gallery settings` is on.
+- Below 1200 px: `ws-sheet` is set while a selection exists or `Gallery settings` is on.
 - Every result message comes from the server's `message` and is shown in `Toast`.
 
 **C13 `upload.js`** (reworked; registers `<upload-tray>`; loaded by dynamic `import()` when `Add
