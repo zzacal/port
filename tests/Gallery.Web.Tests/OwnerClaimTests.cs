@@ -175,7 +175,7 @@ public class OwnerClaimTests(MongoFixture mongo) : IAsyncLifetime
         var resp = await _host.GetAsync("/admin");
         var html = await resp.Content.ReadAsStringAsync();
         Assert.Equal(1, Guards.Count(html, "<script"));
-        Assert.Matches("<script type=\"module\" src=\"/admin-assets/workspace\\.js\\?v=\"", html);
+        Assert.Matches("<script type=\"module\" src=\"/admin-assets/workspace\\.js\\?v=[^\"]+\"", html);
         Guards.AssertNoInlineStyle(html);
     }
 
