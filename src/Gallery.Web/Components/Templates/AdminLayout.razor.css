@@ -73,6 +73,11 @@ body.admin {
         padding-top: var(--space-m);
     }
 
+    /* Owner walk-through: main's content keeps the same space from the list and from the panel. */
+    .ws-main {
+        padding-inline: var(--space-m);
+    }
+
     /* The panel's SidePanel would add its own inner top padding below the region's. */
     .ws-panel ::deep .side-panel {
         padding-top: 0;

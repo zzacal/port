@@ -78,6 +78,30 @@ public sealed class WorkspaceLayoutBrowserTests(LibraryBrowserFixture fx)
             $"{name}: the first boxes start at list {t[0]}, main {t[1]}, panel {t[2]} px; the common top padding is {t[3]} px");
     }
 
+    /// <summary>
+    /// Owner walk-through: [main's leftmost shown content minus main's left edge, main's inner right edge (left of
+    /// any scrollbar) minus its rightmost shown content, --space-m in px]. Content = leaf elements, as in Tops.
+    /// </summary>
+    private const string SideGaps = """
+        () => {
+          const main = document.querySelector('.ws-main');
+          const box = main.getBoundingClientRect();
+          const rects = [...main.querySelectorAll('*')]
+            .filter((e) => e.childElementCount === 0 && e.getClientRects().length > 0 && e.getBoundingClientRect().width > 0)
+            .map((e) => e.getBoundingClientRect());
+          return [Math.min(...rects.map((r) => r.left)) - box.left, box.left + main.clientLeft + main.clientWidth - Math.max(...rects.map((r) => r.right)),
+            parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--space-m'))];
+        }
+        """;
+
+    /// <summary>Owner walk-through: from 1200 px main's content keeps --space-m from the list and from the panel.</summary>
+    private static async Task AssertSideGapsAsync(IPage page, string name)
+    {
+        var g = await page.EvaluateAsync<double[]>(SideGaps);
+        Assert.True(Math.Abs(g[0] - g[2]) <= Tolerance && Math.Abs(g[1] - g[2]) <= Tolerance,
+            $"{name}: main's content is {g[0]} px from the list and {g[1]} px from the panel; the side padding is {g[2]} px");
+    }
+
     private static async Task<(double[] Values, string First)> MeasureAsync(IPage page)
     {
         var raw = await page.EvaluateAsync<JsonElement>(Frame);
@@ -120,6 +144,7 @@ public sealed class WorkspaceLayoutBrowserTests(LibraryBrowserFixture fx)
             var (values, first) = await MeasureAsync(page);
             firsts.Add(first);
             await AssertEqualTopsAsync(page, name);
+            await AssertSideGapsAsync(page, name);
             Assert.True(values[2] > 0 && values[6] > 0 && values[10] > 0, $"{name}: a region has no width [{string.Join(", ", values)}]");
             expected ??= values;
             for (var i = 0; i < Names.Length; i++)
@@ -162,13 +187,14 @@ public sealed class WorkspaceLayoutBrowserTests(LibraryBrowserFixture fx)
         for (var i = 0; i < Names.Length; i++)
             Assert.True(Math.Abs(values[i] - expected[i]) <= Tolerance,
                 $"photo large: {Names[i]} is {values[i]:0.##} px, the library collection's is {expected[i]:0.##} px");
-        // The stage is main's first (and only) box, and fills main below main's top padding (T076: --space-m).
+        // The stage is main's first (and only) box, and fills main inside its top and side padding (--space-m).
         Assert.Equal("div.ws-largeview", first);
         await AssertEqualTopsAsync(page, "photo large");
+        await AssertSideGapsAsync(page, "photo large");
         var pad = values[12];
         Assert.Equal(32, pad, Tolerance);
         var stage = (await page.Locator(".ws-main .ws-largeview").BoundingBoxAsync())!;
-        Assert.Equal([values[4], values[5] + pad, values[6], values[7] - pad], new[] { (double)stage.X, stage.Y, stage.Width, stage.Height }, new ToleranceComparer(Tolerance));
+        Assert.Equal([values[4] + pad, values[5] + pad, values[6] - 2 * pad, values[7] - pad], new[] { (double)stage.X, stage.Y, stage.Width, stage.Height }, new ToleranceComparer(Tolerance));
         await page.Context.CloseAsync();
     }
 

@@ -9,3 +9,4 @@ FG (3275786): Core 124 passed; Web 1418 passed, 1 skipped, 0 failed.
 final (2de6444, after dotnet clean): Core 124 passed; Web 1420 passed, 1 skipped, 0 failed; build -warnaserror 0 warnings.
 owner1 (T074-T076, under load avg ~15, 11 m 45 s): Core 124; Web 1419 passed, 2 failed (Upload_carries_on_across_a_collection_switch: 30 s navigation timeout; Selecting_a_photo_fills_the_panel_within_100_ms: median 108.2 ms), 1 skipped. Both passed 3/3 alone.
 owner1b (same tree, load ~4): Core 124; Web 1420 passed, 1 failed, 1 skipped. Failure: 006 BrowserTests.Without_a_hover_the_photo_is_not_fetched_before_the_click (public page, 30 s timeout), passed 3/3 alone. A different test failed each run; every Workspace* test passed in owner1b.
+owner2 (bcd42ae, main side padding): Core 124; Web 1421 passed, 1 skipped, 0 failed.
