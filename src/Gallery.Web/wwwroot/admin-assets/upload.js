@@ -251,7 +251,17 @@ function build(kind, key, dest) {
 
 const SWAPPED_FOCUS = { hide: 'show', show: 'hide' };
 
+/** Working into another collection than the open one: a set has one destination, so Add photos is
+ *  unavailable (Button's disabled state) until it finishes; the tray's heading names where it is adding. */
+const busyElsewhere = () => counts().working && (destination?.id ?? null) !== (openGallery()?.id ?? null);
+
+function syncAdd() {
+  const add = document.querySelector('.ws-main .ws-head .ws-add');
+  if (add instanceof HTMLButtonElement) add.disabled = busyElsewhere();
+}
+
 function render() {
+  syncAdd();
   const el = tray();
   if (!el) return;
   if (!open) {
@@ -714,6 +724,7 @@ window.addEventListener('pageshow', (e) => { if (e.persisted && open) reconcile(
 
 /** Add photos, or files dropped on the window: open (or show) the tray, then take the files. */
 export async function show(files = []) {
+  if (busyElsewhere()) { open = true; hidden = false; render(); return; } // a drop here: show where it is adding
   // Owner walk-through: Add photos (or a drop) after a set has finished starts a new set for the open
   // collection; the finished one closes first, exactly as Done closes it. There is no second control for this.
   if (filled() && !counts().working) {
