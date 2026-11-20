@@ -1,0 +1,18 @@
+020 T071: production after the merge (df623b6; CI run 44592499021: build, test 22m58s, deploy 38s, smoke test all green), 2026-11-19.
+
+Signed out, curl -s -o /dev/null -w '%{http_code} %{redirect_url}':
+/admin 302 https://port.zacal.me/admin/signin
+/admin/library 302 https://port.zacal.me/admin/signin
+/admin/galleries 302 https://port.zacal.me/admin/signin
+/admin/upload 302 https://port.zacal.me/admin/signin
+
+Anonymous browser (cookies cleared), each page scrolled to the bottom and back. admin = requests to /admin-assets/;
+ws = elements with a ws-* class; broken = completed <img> with naturalWidth 0.
+390 / {"admin": 0, "ws": 0, "imgs": 0, "broken": 0, "sideways": false}
+390 /g {"admin": 0, "ws": 0, "imgs": 14, "broken": 0, "sideways": false}
+390 /g/6ooqncythozucqrihverctauvi/nature {"admin": 0, "ws": 0, "imgs": 28, "broken": 0, "sideways": false}
+390 /g/6ooqncythozucqrihverctauvi/nature/vp5tjcmxdt3wsqahhbtjp7jkgq {"admin": 0, "ws": 0, "imgs": 3, "broken": 0, "sideways": false}
+1440 / {"admin": 0, "ws": 0, "imgs": 0, "broken": 0, "sideways": false}
+1440 /g {"admin": 0, "ws": 0, "imgs": 14, "broken": 0, "sideways": false}
+1440 /g/6ooqncythozucqrihverctauvi/nature {"admin": 0, "ws": 0, "imgs": 28, "broken": 0, "sideways": false}
+1440 /g/6ooqncythozucqrihverctauvi/nature/vp5tjcmxdt3wsqahhbtjp7jkgq {"admin": 0, "ws": 0, "imgs": 3, "broken": 0, "sideways": false}

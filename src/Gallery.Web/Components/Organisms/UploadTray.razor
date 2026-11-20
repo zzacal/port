@@ -1,6 +1,6 @@
 @* Feature 020 K10: the upload tray (inside <upload-tray>). The heading line, then [SAFETY II.5a] the public
    notice as plain text directly after the heading in EVERY state (Hidden included) when the destination is
-   public, then the progress bar while working, the controls (Hide/Show, Add more, Close/Done) and the body
+   public, then the progress bar while working, the controls (Hide/Show, Close/Done) and the body
    (UploadDropzone when Empty, else the UploadRows; Hidden has none). Done is disabled while any row is
    Waiting, Preparing, Uploading or Adding. Buttons carry name="tray" and value hide|show|more|close|done. *@
 <section class="ws-tray" aria-label="Upload">
@@ -66,7 +66,6 @@
     {
         if (State == TrayState.Hidden) b.AddContent(0, Btn("show", "Show"));
         else if (Rows.Count > 0) b.AddContent(1, Btn("hide", "Hide"));
-        if (State is TrayState.Finished or TrayState.FinishedWithFailures || (State == TrayState.Hidden && !Busy)) b.AddContent(2, Btn("more", "Add more"));
         b.AddContent(3, State == TrayState.Empty ? Btn("close", "Close") : Btn("done", "Done", Busy));
     };
 

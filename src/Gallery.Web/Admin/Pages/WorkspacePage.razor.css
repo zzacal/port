@@ -45,15 +45,12 @@ upload-tray:has(~ .ws-largeview:not([hidden])) { display: none; }
 .ws-selbar-text { margin: 0; font-size: var(--type-body); }
 @media not all and (min-width: 1200px) {
     .ws-preview { display: none; }
-    /* The heading row lines up with the grid's own side padding (ContactSheet: --space-s, --space-m from 600 px). */
-    .ws-head { padding: var(--space-s) var(--space-s) 0; }
+    /* Side padding is the frame's (main's); the heading row adds only its top. */
+    .ws-head { padding: var(--space-s) 0 0; }
     /* The rows holding a "View on site" link are --tap high and stretch their items, so the link's box is
        --tap high too (TextLink's own tap rule stays the one tap rule for links; none is added for links here). */
     .ws-meta,
     .ws-view { display: flex; flex-wrap: wrap; align-items: stretch; column-gap: calc(var(--space-s) / 4); min-height: var(--tap); }
-}
-@media (min-width: 600px) and (not (min-width: 1200px)) {
-    .ws-head { padding: var(--space-s) var(--space-m) 0; }
 }
 @media (min-width: 1200px) {
     .ws-largeview:not([hidden]) { height: 100%; }
