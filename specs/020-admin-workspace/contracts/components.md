@@ -89,8 +89,11 @@ of {total}" + progress; Finished "{n} added to {…}"; FinishedWithFailures "{n}
 [SAFETY] II.5a: when `DestinationPublic`, a visible sentence directly under the heading in every
 state: "{destination} is public. Visitors will see these photos as soon as each one is added." It
 is plain text, never inside `<details>`, a tooltip or a `title` attribute.
-Controls: `Hide`/`Show` (when it has rows), `Add more` (finished), and the closing button: `Close`
+Controls: `Hide`/`Show` (when it has rows) and the closing button: `Close`
 (Empty), `Done` (otherwise; unavailable while any row is Waiting, Preparing, Uploading or Adding).
+No "Add more" (removed at the owner's production look): Add photos, or a drop, after a finished set
+closes it as Done does and starts a new set for the open collection; while working into the open
+collection, Add photos opens the file picker for the same set.
 Body: `UploadDropzone` (Empty), else the `UploadRow`s. Hidden renders the heading line only.
 
 **K11 `PhotoStage`** (organism, `ws-stage`). Parameters: `Position`, `Total`, `BackLabel`.

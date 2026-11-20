@@ -241,7 +241,7 @@ function build(kind, key, dest) {
   section.querySelector('.ws-tray-rows')?.replaceChildren();
   // "Hide" is offered while the tray has rows (K10).
   if (items.size === 0) section.querySelector('button[name="tray"][value="hide"]')?.remove();
-  // The file picker: the dropzone's own input when empty, else a hidden copy of it for "Add more".
+  // The file picker: the dropzone's own input when empty, else a hidden copy of it for Add photos while working.
   if (!section.querySelector('input.dz-input')) {
     const input = clone(`ws-tpl-tray-${kind}-empty`)?.querySelector('input.dz-input');
     if (input) section.append(input);
@@ -686,7 +686,6 @@ function onClick(e) {
   e.preventDefault();
   if (button.value === 'hide') { hidden = true; render(); }
   else if (button.value === 'show') { hidden = false; render(); }
-  else if (button.value === 'more') tray()?.querySelector('input.dz-input')?.click();
   else if (button.value === 'close' || button.value === 'done') finish();
 }
 
@@ -714,7 +713,13 @@ window.addEventListener('pageshow', (e) => { if (e.persisted && open) reconcile(
 // ── the hooks workspace.js calls ────────────────────────────────────────────────────────────
 
 /** Add photos, or files dropped on the window: open (or show) the tray, then take the files. */
-export function show(files = []) {
+export async function show(files = []) {
+  // Owner walk-through: Add photos (or a drop) after a set has finished starts a new set for the open
+  // collection; the finished one closes first, exactly as Done closes it. There is no second control for this.
+  if (filled() && !counts().working) {
+    await finish();
+    if (filled()) return; // U13 refused; its message is in the Toast and the set stays.
+  }
   open = true;
   hidden = false;
   render();
@@ -722,6 +727,9 @@ export function show(files = []) {
     addFiles(files);
   } else if (!filled()) {
     tray()?.querySelector('input.dz-input')?.focus();
+  } else if ((destination?.id ?? null) === (openGallery()?.id ?? null)) {
+    // Still working, into the open collection: Add photos picks more files for the same set.
+    tray()?.querySelector('input.dz-input')?.click();
   }
 }
 

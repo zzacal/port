@@ -45,6 +45,19 @@ body.admin {
 
 .ws-main {
     min-width: 0;
+    padding-inline: var(--space-s);
+}
+
+/* The frame owns main's side padding (above, and --space-m from 600 px); what main holds adds none, so the
+   heading, the upload tray and the grid share one left and one right edge. */
+.ws-main ::deep .cs-fill {
+    padding-inline: 0;
+}
+
+@media (min-width: 600px) {
+    .ws-main {
+        padding-inline: var(--space-m);
+    }
 }
 
 @media (min-width: 1200px) {
@@ -71,11 +84,6 @@ body.admin {
     .ws-main,
     .ws-panel {
         padding-top: var(--space-m);
-    }
-
-    /* Owner walk-through: main's content keeps the same space from the list and from the panel. */
-    .ws-main {
-        padding-inline: var(--space-m);
     }
 
     /* The panel's SidePanel would add its own inner top padding below the region's. */

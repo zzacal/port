@@ -607,6 +607,48 @@ public sealed class WorkspaceUploadBrowserTests(UploadBrowserFixture fx)
         }
     }
 
+    // Owner walk-through on production: after a finished upload into one gallery, Add photos in another
+    // gallery did nothing, and the finished tray's "Add more" kept adding to the first gallery. "Add more" is
+    // gone (no two controls that do the same thing); Add photos after a finished set starts a new set for the
+    // collection that is open.
+    [Fact]
+    public async Task Add_photos_after_a_finished_upload_starts_a_new_set_for_the_open_gallery()
+    {
+        var dir = Directory.CreateTempSubdirectory("gallery-ws-upload-");
+        try
+        {
+            await using var site = await fx.NewSiteAsync();
+            var urban = await GalleryAsync(site, "Urban", []);
+            var birds = await GalleryAsync(site, "Birds", []);
+            var page = await OpenAsync(site, $"/admin/g/{urban}");
+
+            await AddPhotosAsync(page);
+            await PickAsync(page, Copies(dir, 2, prefix: "u"));
+            await SettledAsync(page, 2);
+            Assert.Equal("2 photos added to Urban", await HeadingAsync(page));
+            Assert.Equal(0, await TrayButton(page, "more").CountAsync());
+
+            await page.Locator($".ws-list a.ws-coll-row[data-gid='{birds}']").ClickAsync();
+            await WaitForAsync(page, "() => document.querySelector('.ws-main .ws-head h1')?.textContent === 'Birds'", what: "Birds open");
+            await AddPhotosAsync(page);
+            await WaitForAsync(page, "() => document.querySelector('upload-tray .ws-tray-head')?.textContent === 'Add photos to Birds'",
+                what: "a new, empty set for Birds");
+            await PickAsync(page, Copies(dir, 1, prefix: "b"));
+            await SettledAsync(page, 1);
+            Assert.Equal("1 photo added to Birds", await HeadingAsync(page));
+
+            var urbanItems = (await Galleries(site).Find(g => g.Id == urban).SingleAsync()).Items;
+            var birdItems = (await Galleries(site).Find(g => g.Id == birds).SingleAsync()).Items;
+            Assert.Equal(2, urbanItems.Count);
+            Assert.Single(birdItems);
+            Assert.DoesNotContain(birdItems[0], urbanItems);
+        }
+        finally
+        {
+            dir.Delete(true);
+        }
+    }
+
     // ── [SAFETY II.5a] the public notice before any file is picked ──────────────────────────
 
     [Fact]

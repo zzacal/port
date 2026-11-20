@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using Gallery.Web.Tests.Fixtures;
 using Microsoft.Playwright;
@@ -79,27 +80,38 @@ public sealed class WorkspaceLayoutBrowserTests(LibraryBrowserFixture fx)
     }
 
     /// <summary>
-    /// Owner walk-through: [main's leftmost shown content minus main's left edge, main's inner right edge (left of
-    /// any scrollbar) minus its rightmost shown content, --space-m in px]. Content = leaf elements, as in Tops.
+    /// Owner walk-throughs: main's boxes share one left and one right edge, --space-m inside main (the frame owns
+    /// the side padding; the heading row, the upload tray, the grid and the large view add none). Returns
+    /// "name left right" per shown box, then main's inner left, inner right (left of any scrollbar) and --space-m.
     /// </summary>
-    private const string SideGaps = """
+    private const string SideEdges = """
         () => {
           const main = document.querySelector('.ws-main');
           const box = main.getBoundingClientRect();
-          const rects = [...main.querySelectorAll('*')]
-            .filter((e) => e.childElementCount === 0 && e.getClientRects().length > 0 && e.getBoundingClientRect().width > 0)
-            .map((e) => e.getBoundingClientRect());
-          return [Math.min(...rects.map((r) => r.left)) - box.left, box.left + main.clientLeft + main.clientWidth - Math.max(...rects.map((r) => r.right)),
-            parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--space-m'))];
+          const boxes = [['head', '.ws-head'], ['tray', 'upload-tray > .ws-tray'], ['grid', '.cs-fill'], ['first cell', '.cs-fill .ws-cell'], ['stage', '.ws-largeview:not([hidden])']]
+            .map(([n, s]) => [n, main.querySelector(s)]).filter(([, e]) => e && e.getClientRects().length > 0)
+            .map(([n, e]) => { const r = e.getBoundingClientRect(); return `${n} ${r.left} ${r.right}`; });
+          return [...boxes, String(box.left + main.clientLeft), String(box.left + main.clientLeft + main.clientWidth),
+            String(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--space-m')))];
         }
         """;
 
-    /// <summary>Owner walk-through: from 1200 px main's content keeps --space-m from the list and from the panel.</summary>
+    /// <summary>Every shown box in main starts --space-m from the list; the full-width ones end --space-m from the panel.</summary>
     private static async Task AssertSideGapsAsync(IPage page, string name)
     {
-        var g = await page.EvaluateAsync<double[]>(SideGaps);
-        Assert.True(Math.Abs(g[0] - g[2]) <= Tolerance && Math.Abs(g[1] - g[2]) <= Tolerance,
-            $"{name}: main's content is {g[0]} px from the list and {g[1]} px from the panel; the side padding is {g[2]} px");
+        var raw = await page.EvaluateAsync<string[]>(SideEdges);
+        var n = raw.Length - 3;
+        double left = double.Parse(raw[n], CultureInfo.InvariantCulture), right = double.Parse(raw[n + 1], CultureInfo.InvariantCulture);
+        var pad = double.Parse(raw[n + 2], CultureInfo.InvariantCulture);
+        Assert.True(n >= 1, $"{name}: no box in main ({string.Join("; ", raw)})");
+        foreach (var b in raw.Take(n))
+        {
+            var p = b.Split(' ');
+            var (box, l, r) = (string.Join(' ', p[..^2]), double.Parse(p[^2], CultureInfo.InvariantCulture), double.Parse(p[^1], CultureInfo.InvariantCulture));
+            Assert.True(Math.Abs(l - left - pad) <= Tolerance, $"{name}: the {box} starts {l - left:0.##} px inside main; the side padding is {pad} px");
+            if (box != "first cell")
+                Assert.True(Math.Abs(right - r - pad) <= Tolerance, $"{name}: the {box} ends {right - r:0.##} px inside main's right edge; the side padding is {pad} px");
+        }
     }
 
     private static async Task<(double[] Values, string First)> MeasureAsync(IPage page)

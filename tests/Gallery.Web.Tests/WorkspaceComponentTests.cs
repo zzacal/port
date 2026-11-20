@@ -712,16 +712,16 @@ public class WorkspaceComponentTests
     {
         var html = await Tray(TrayState.Hidden, "Coast", rows: DoneRows);
         Assert.Equal("1 photo added to Coast", Heading(html));
-        Assert.Equal([("Show", "show", false), ("Add more", "more", false), ("Done", "done", false)], TrayButtons(html));
+        Assert.Equal([("Show", "show", false), ("Done", "done", false)], TrayButtons(html));
     }
 
     [Fact]
-    public async Task UploadTray_finished_shows_the_count_Add_more_and_Done()
+    public async Task UploadTray_finished_shows_the_count_Hide_and_Done()
     {
         var html = await Tray(TrayState.Finished, "Coast");
         Assert.Equal("2 photos added to Coast", Heading(html));
         Assert.Equal("2 photos added to your library", Heading(await Tray(TrayState.Finished)));
-        Assert.Equal([("Hide", "hide", false), ("Add more", "more", false), ("Done", "done", false)], TrayButtons(html));
+        Assert.Equal([("Hide", "hide", false), ("Done", "done", false)], TrayButtons(html));
         Assert.Equal(2, Regex.Matches(html, "class=\"ws-up\"").Count);
         Assert.Empty(Tags(html, "progress"));
     }
@@ -731,7 +731,7 @@ public class WorkspaceComponentTests
     {
         var html = await Tray(TrayState.FinishedWithFailures, "Coast");
         Assert.Equal("1 photo added · 2 failed", Heading(html));
-        Assert.Equal([("Hide", "hide", false), ("Add more", "more", false), ("Done", "done", false)], TrayButtons(html));
+        Assert.Equal([("Hide", "hide", false), ("Done", "done", false)], TrayButtons(html));
         Assert.Equal(3, Regex.Matches(html, "class=\"ws-up\"").Count);
         Assert.Equal(["Retry", "Remove", "Retry", "Remove"],
             Buttons(Regex.Match(html, "<div class=\"ws-tray-body ws-tray-rows\">(.*)</div>", RegexOptions.Singleline).Groups[1].Value).Select(b => b.Text).ToList());
