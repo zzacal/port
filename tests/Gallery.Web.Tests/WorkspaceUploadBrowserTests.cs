@@ -610,7 +610,7 @@ public sealed class WorkspaceUploadBrowserTests(UploadBrowserFixture fx)
     // Owner walk-through on production: after a finished upload into one gallery, Add photos in another
     // gallery did nothing, and the finished tray's "Add more" kept adding to the first gallery. "Add more" is
     // gone (no two controls that do the same thing); Add photos after a finished set starts a new set for the
-    // collection that is open.
+    // collection that is open; while a set is still working into another collection, Add photos is disabled.
     [Fact]
     public async Task Add_photos_after_a_finished_upload_starts_a_new_set_for_the_open_gallery()
     {
@@ -620,16 +620,23 @@ public sealed class WorkspaceUploadBrowserTests(UploadBrowserFixture fx)
             await using var site = await fx.NewSiteAsync();
             var urban = await GalleryAsync(site, "Urban", []);
             var birds = await GalleryAsync(site, "Birds", []);
-            var page = await OpenAsync(site, $"/admin/g/{urban}");
+            var page = await OpenAsync(site, $"/admin/g/{urban}", before: p => SlowStorageAsync(p, 800));
+            var add = page.Locator(".ws-main .ws-head .ws-add");
 
             await AddPhotosAsync(page);
             await PickAsync(page, Copies(dir, 2, prefix: "u"));
+            await WaitForAsync(page, "() => /^Adding to Urban/.test(document.querySelector('upload-tray .ws-tray-head')?.textContent ?? '')", what: "working into Urban");
+
+            // Working into Urban while Birds is open: Add photos is unavailable, and looks it (Button's disabled state).
+            await page.Locator($".ws-list a.ws-coll-row[data-gid='{birds}']").ClickAsync();
+            await WaitForAsync(page, "() => document.querySelector('.ws-main .ws-head h1')?.textContent === 'Birds'", what: "Birds open");
+            await WaitForAsync(page, "() => document.querySelector('.ws-main .ws-head .ws-add')?.disabled === true", what: "Add photos disabled");
+            Assert.True(await add.EvaluateAsync<double>("b => parseFloat(getComputedStyle(b).opacity)") < 1);
+
             await SettledAsync(page, 2);
             Assert.Equal("2 photos added to Urban", await HeadingAsync(page));
             Assert.Equal(0, await TrayButton(page, "more").CountAsync());
-
-            await page.Locator($".ws-list a.ws-coll-row[data-gid='{birds}']").ClickAsync();
-            await WaitForAsync(page, "() => document.querySelector('.ws-main .ws-head h1')?.textContent === 'Birds'", what: "Birds open");
+            await WaitForAsync(page, "() => document.querySelector('.ws-main .ws-head .ws-add')?.disabled === false", what: "Add photos available again");
             await AddPhotosAsync(page);
             await WaitForAsync(page, "() => document.querySelector('upload-tray .ws-tray-head')?.textContent === 'Add photos to Birds'",
                 what: "a new, empty set for Birds");
